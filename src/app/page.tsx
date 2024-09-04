@@ -1,5 +1,3 @@
-"use client";
-
 import { columns } from "@/_data-table/columns";
 import { data, filterFields } from "@/_data-table/constants";
 import { DataTable } from "@/_data-table/data-table";
