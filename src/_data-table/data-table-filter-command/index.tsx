@@ -92,6 +92,7 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
     );
 
     if (searchParams.success) {
+      console.log(searchParams);
       for (const key of Object.keys(searchParams.data)) {
         const value = searchParams.data[key as keyof typeof searchParams.data];
         table.getColumn(key)?.setFilterValue(value);
@@ -105,14 +106,23 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
         table.getColumn(filter.id)?.setFilterValue(undefined);
       }
 
+      if (open) return;
+
+      console.log(open);
+
       if (typeof searchParams.data === "object") {
         const search: Record<string, unknown> = {};
         const values = { ...commandDisabledFilterKeys, ...searchParams.data };
         Object.entries(values).map(([key, value]) => {
           const field = _filterFields?.find((field) => field.value === key);
-          search[key] = getFieldValueByType({ field, value });
+          if (Array.isArray(value)) {
+            search[key] = value;
+          } else {
+            search[key] = getFieldValueByType({ field, value });
+          }
         });
-        // setSearch(search);
+        console.log(search);
+        setSearch(search);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

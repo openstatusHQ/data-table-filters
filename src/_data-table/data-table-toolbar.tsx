@@ -27,7 +27,7 @@ export function DataTableToolbar<TData>({
   setControlsOpen,
 }: DataTableToolbarProps<TData>) {
   const filters = table.getState().columnFilters;
-  const [_, setSearch] = useQueryStates(searchParamsParser);
+  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -85,7 +85,10 @@ export function DataTableToolbar<TData>({
             variant="ghost"
             onClick={() => {
               table.resetColumnFilters();
-              setSearch({});
+              Object.keys(search).forEach((key) => {
+                search[key as keyof typeof search] = null;
+              });
+              setSearch(search);
             }}
           >
             <X className="mr-2 h-4 w-4" />

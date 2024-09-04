@@ -34,7 +34,7 @@ export function DataTableFilterControls<TData, TValue>({
   filterFields,
 }: DataTableFilterControlsProps<TData, TValue>) {
   const filters = table.getState().columnFilters;
-  const [_, setSearch] = useQueryStates(searchParamsParser);
+  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   return (
     <div className="flex flex-col gap-4">
@@ -47,7 +47,10 @@ export function DataTableFilterControls<TData, TValue>({
               size="sm"
               onClick={() => {
                 table.resetColumnFilters();
-                setSearch({});
+                Object.keys(search).forEach((key) => {
+                  search[key as keyof typeof search] = null;
+                });
+                setSearch(search);
               }}
             >
               <X className="mr-2 h-4 w-4" />

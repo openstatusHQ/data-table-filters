@@ -175,6 +175,10 @@ export function getFieldValueByType<TData>({
       if (Array.isArray(value)) {
         return value.join(ARRAY_DELIMITER);
       }
+      // REMINER: inversed logic
+      if (typeof value === "string") {
+        return value.split(ARRAY_DELIMITER);
+      }
       return value;
     }
     case "timerange": {
