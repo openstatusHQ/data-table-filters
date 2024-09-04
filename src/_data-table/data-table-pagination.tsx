@@ -7,7 +7,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import {
   Select,
@@ -18,8 +17,6 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
-
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
 }
@@ -27,14 +24,6 @@ interface DataTablePaginationProps<TData> {
 export function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
-
-  const updatePageSearchParams = (values: Record<string, unknown>) => {
-    const newSearchParams = updateSearchParams(values);
-    router.replace(`?${newSearchParams}`, { scroll: false });
-  };
-
   return (
     <div className="flex items-center justify-end space-x-4 md:space-x-6 lg:space-x-8">
       <div className="flex items-center space-x-2">
@@ -43,7 +32,6 @@ export function DataTablePagination<TData>({
           value={`${table.getState().pagination.pageSize}`}
           onValueChange={(value) => {
             table.setPageSize(Number(value));
-            updatePageSearchParams({ pageSize: value });
           }}
         >
           <SelectTrigger className="h-8 w-[70px]">

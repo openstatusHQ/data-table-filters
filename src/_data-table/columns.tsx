@@ -146,9 +146,10 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       if (Array.isArray(value)) {
         if (isArrayOfDates(value) && rowValue instanceof Date) {
           const sorted = value.sort((a, b) => a.getTime() - b.getTime());
+          // TODO: check length
           return (
-            sorted[0].getTime() <= rowValue.getTime() &&
-            rowValue.getTime() <= sorted[1].getTime()
+            sorted[0]?.getTime() <= rowValue.getTime() &&
+            rowValue.getTime() <= sorted[1]?.getTime()
           );
         }
       }

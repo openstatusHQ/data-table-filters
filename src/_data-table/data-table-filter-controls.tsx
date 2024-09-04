@@ -11,14 +11,14 @@ import {
 import type React from "react";
 import type { DataTableFilterField } from "./types";
 import { DataTableFilterResetButton } from "./data-table-filter-reset-button";
-import { DataTableFilterCheckobox } from "./data-table-filter-checkbox";
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
-import { useRouter } from "next/navigation";
+import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
 import { Button } from "@/components/ui/button";
 import { DataTableFilterSlider } from "./data-table-filter-slider";
 import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 import { X } from "lucide-react";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "./search-params";
 
 // TODO: only pass the columns to generate the filters!
 // https://tanstack.com/table/v8/docs/framework/react/examples/filters
@@ -34,13 +34,7 @@ export function DataTableFilterControls<TData, TValue>({
   filterFields,
 }: DataTableFilterControlsProps<TData, TValue>) {
   const filters = table.getState().columnFilters;
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
-
-  const updatePageSearchParams = (values: Record<string, string | null>) => {
-    const newSearchParams = updateSearchParams(values);
-    router.replace(`?${newSearchParams}`, { scroll: false });
-  };
+  const [_, setSearch] = useQueryStates(searchParamsParser);
 
   return (
     <div className="flex flex-col gap-4">
@@ -53,14 +47,7 @@ export function DataTableFilterControls<TData, TValue>({
               size="sm"
               onClick={() => {
                 table.resetColumnFilters();
-                const resetValues = filters.reduce<Record<string, null>>(
-                  (prev, curr) => {
-                    prev[curr.id] = null;
-                    return prev;
-                  },
-                  {}
-                );
-                updatePageSearchParams(resetValues);
+                setSearch({});
               }}
             >
               <X className="mr-2 h-4 w-4" />
@@ -96,7 +83,7 @@ export function DataTableFilterControls<TData, TValue>({
                   switch (field.type) {
                     case "checkbox": {
                       return (
-                        <DataTableFilterCheckobox table={table} {...field} />
+                        <DataTableFilterCheckbox table={table} {...field} />
                       );
                     }
                     case "slider": {

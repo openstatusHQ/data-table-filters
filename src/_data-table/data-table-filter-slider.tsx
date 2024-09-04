@@ -1,15 +1,13 @@
 "use client";
 
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
 import type { Table } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
 import type { DataTableSliderFilterField } from "./types";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/custom/slider";
 import { isArrayOfNumbers } from "./utils";
-import { SLIDER_DELIMITER } from "./schema";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "./search-params";
 
 type DataTableFilterSliderProps<TData> = DataTableSliderFilterField<TData> & {
   table: Table<TData>;
@@ -25,10 +23,10 @@ export function DataTableFilterSlider<TData>({
   max,
 }: DataTableFilterSliderProps<TData>) {
   const value = _value as string;
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
+  // REMINDER: MAYBE USE A DEBOUNCE AND USEEFFECT TO UPDATE ON PARENT COMPONENT
+  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   const filters =
     typeof filterValue === "number"
@@ -36,14 +34,6 @@ export function DataTableFilterSlider<TData>({
       : Array.isArray(filterValue) && isArrayOfNumbers(filterValue)
       ? filterValue
       : undefined;
-
-  const updatePageSearchParams = useCallback(
-    (values: Record<string, string | null>) => {
-      const newSearchParams = updateSearchParams(values);
-      router.replace(`?${newSearchParams}`, { scroll: false });
-    },
-    [router, updateSearchParams]
-  );
 
   return (
     <div className="grid gap-2">
@@ -72,9 +62,7 @@ export function DataTableFilterSlider<TData>({
                   ? [val, filters[1]]
                   : [val, max];
               column?.setFilterValue(newValue);
-              updatePageSearchParams({
-                [value]: newValue.join(SLIDER_DELIMITER),
-              });
+              setSearch({ ...search, [value]: newValue });
             }}
           />
         </div>
@@ -102,9 +90,7 @@ export function DataTableFilterSlider<TData>({
                   ? [filters[0], val]
                   : [min, val];
               column?.setFilterValue(newValue);
-              updatePageSearchParams({
-                [value]: newValue.join(SLIDER_DELIMITER),
-              });
+              setSearch({ ...search, [value]: newValue });
             }}
           />
         </div>
@@ -115,9 +101,7 @@ export function DataTableFilterSlider<TData>({
         value={filters || [min, max]}
         onValueChange={(values) => {
           column?.setFilterValue(values);
-          updatePageSearchParams({
-            [value]: values.join(SLIDER_DELIMITER),
-          });
+          setSearch({ ...search, [value]: values });
         }}
       />
     </div>

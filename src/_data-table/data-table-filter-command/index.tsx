@@ -20,8 +20,6 @@ import type { Table } from "@tanstack/react-table";
 import type { z } from "zod";
 import type { DataTableFilterField } from "../types";
 import { deserialize, serializeColumFilters } from "../utils";
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
-import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import {
   getFieldOptions,
@@ -32,6 +30,8 @@ import {
 } from "./utils";
 import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "../search-params";
 
 // FIXME: too many updates
 
@@ -57,18 +57,13 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
   const [inputValue, setInputValue] = useState<string>(
     serializeColumFilters(columnFilters, filterFields)
   );
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
+  const [_, setSearch] = useQueryStates(searchParamsParser);
   const [lastSearches, setLastSearches] = useLocalStorage<
     {
       search: string;
       timestamp: number;
     }[]
   >("data-table-command", []);
-  const updatePageSearchParams = (values: Record<string, unknown>) => {
-    const newSearchParams = updateSearchParams(values, { override: true });
-    router.replace(`?${newSearchParams}`, { scroll: false });
-  };
 
   useEffect(() => {
     // TODO: we could check for ARRAY_DELIMITER or SLIDER_DELIMITER to auto-set filter when typing
@@ -117,7 +112,7 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
           const field = _filterFields?.find((field) => field.value === key);
           search[key] = getFieldValueByType({ field, value });
         });
-        updatePageSearchParams(search);
+        // setSearch(search);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

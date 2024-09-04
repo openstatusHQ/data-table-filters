@@ -1,11 +1,11 @@
 "use client";
 
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
 import type { Table } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
 import type { DataTableFilterField } from "./types";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "./search-params";
 
 type DataTableFilterResetButtonProps<TData> = DataTableFilterField<TData> & {
   table: Table<TData>;
@@ -16,10 +16,9 @@ export function DataTableFilterResetButton<TData>({
   value: _value,
 }: DataTableFilterResetButtonProps<TData>) {
   const value = _value as string;
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
+  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   // TODO: check if we could useMemo
   const filters = filterValue
@@ -27,11 +26,6 @@ export function DataTableFilterResetButton<TData>({
       ? filterValue
       : [filterValue]
     : [];
-
-  const updatePageSearchParams = (values: Record<string, string | null>) => {
-    const newSearchParams = updateSearchParams(values);
-    router.replace(`?${newSearchParams}`, { scroll: false });
-  };
 
   if (filters.length === 0) return null;
 
@@ -42,7 +36,7 @@ export function DataTableFilterResetButton<TData>({
       onClick={(e) => {
         e.stopPropagation();
         column?.setFilterValue(undefined);
-        updatePageSearchParams({ [value]: null });
+        setSearch({ ...search, [value]: null });
       }}
       asChild
     >

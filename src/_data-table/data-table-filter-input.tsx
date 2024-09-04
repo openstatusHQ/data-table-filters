@@ -1,13 +1,12 @@
 "use client";
 
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
 import type { Table } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
 import type { DataTableInputFilterField } from "./types";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "./search-params";
 
 type DataTableFilterInputProps<TData> = DataTableInputFilterField<TData> & {
   table: Table<TData>;
@@ -18,20 +17,11 @@ export function DataTableFilterInput<TData>({
   value: _value,
 }: DataTableFilterInputProps<TData>) {
   const value = _value as string;
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
+  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   const filters = typeof filterValue === "string" ? filterValue : "";
-
-  const updatePageSearchParams = useCallback(
-    (values: Record<string, string | null>) => {
-      const newSearchParams = updateSearchParams(values);
-      router.replace(`?${newSearchParams}`, { scroll: false });
-    },
-    [router, updateSearchParams]
-  );
 
   return (
     <div className="grid w-full gap-1.5">
@@ -49,14 +39,9 @@ export function DataTableFilterInput<TData>({
           const val = e.target.value;
           const newValue = val.trim() === "" ? null : val;
           column?.setFilterValue(newValue);
-          updatePageSearchParams({
-            [value]: newValue,
-          });
+          setSearch({ ...search, [value]: newValue });
         }}
       />
-      <p className="px-2 text-xs text-muted-foreground">
-        Spaces are not allowed in this field.
-      </p>
     </div>
   );
 }

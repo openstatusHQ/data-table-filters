@@ -1,8 +1,6 @@
 "use client";
 
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
 import type { Table } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { DataTableCheckboxFilterField } from "./types";
 import { cn } from "@/lib/utils";
@@ -10,48 +8,46 @@ import { Search } from "lucide-react";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ARRAY_DELIMITER } from "./schema";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "./search-params";
 
 type DataTableFilterCheckboxProps<TData> =
   DataTableCheckboxFilterField<TData> & {
     table: Table<TData>;
   };
 
-export function DataTableFilterCheckobox<TData>({
+export function DataTableFilterCheckbox<TData>({
   table,
   value: _value,
   options,
   component,
 }: DataTableFilterCheckboxProps<TData>) {
-  const value = _value as string;
+  const value = _value as keyof typeof searchParamsParser;
   const [inputValue, setInputValue] = useState("");
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
   const column = table.getColumn(value);
   const facetedValue = column?.getFacetedUniqueValues();
   const filterValue = column?.getFilterValue();
+  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   if (!options?.length) return null;
 
-  const updatePageSearchParams = (values: Record<string, string | null>) => {
-    const newSearchParams = updateSearchParams(values);
-    router.replace(`?${newSearchParams}`, { scroll: false });
-  };
+  const Component = component;
 
+  // filter out the options based on the input value
   const filterOptions = options.filter(
     (option) =>
       inputValue === "" ||
       option.label.toLowerCase().includes(inputValue.toLowerCase())
   );
 
-  // TODO: check if we could useMemo
+  // const searchValue = search[value]; // can be anything currently
+
+  // CHECK: it could be filterValue or searchValue
   const filters = filterValue
     ? Array.isArray(filterValue)
       ? filterValue
       : [filterValue]
     : [];
-
-  const Component = component;
 
   return (
     <div className="grid gap-2">
@@ -86,11 +82,7 @@ export function DataTableFilterCheckobox<TData>({
                   column?.setFilterValue(
                     newValue?.length ? newValue : undefined
                   );
-                  updatePageSearchParams({
-                    [value]: newValue?.length
-                      ? newValue.join(ARRAY_DELIMITER)
-                      : null,
-                  });
+                  setSearch({ ...search, [value]: newValue });
                 }}
               />
               <Label
@@ -109,9 +101,7 @@ export function DataTableFilterCheckobox<TData>({
                   type="button"
                   onClick={() => {
                     column?.setFilterValue(option.value);
-                    updatePageSearchParams({
-                      [value]: `${option.value}`,
-                    });
+                    setSearch({ ...search, [value]: option.value });
                   }}
                   className="absolute inset-y-0 right-0 hidden font-normal text-muted-foreground backdrop-blur-sm hover:text-foreground group-hover:block"
                 >

@@ -10,10 +10,10 @@ import {
 import type { Table } from "@tanstack/react-table";
 import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
-import useUpdateSearchParams from "@/hooks/use-update-search-params";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Kbd } from "@/components/custom/kbd";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "./search-params";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -27,13 +27,7 @@ export function DataTableToolbar<TData>({
   setControlsOpen,
 }: DataTableToolbarProps<TData>) {
   const filters = table.getState().columnFilters;
-  const updateSearchParams = useUpdateSearchParams();
-  const router = useRouter();
-
-  const updatePageSearchParams = (values: Record<string, string | null>) => {
-    const newSearchParams = updateSearchParams(values);
-    router.replace(`?${newSearchParams}`, { scroll: false });
-  };
+  const [_, setSearch] = useQueryStates(searchParamsParser);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -91,14 +85,7 @@ export function DataTableToolbar<TData>({
             variant="ghost"
             onClick={() => {
               table.resetColumnFilters();
-              const resetValues = filters.reduce<Record<string, null>>(
-                (prev, curr) => {
-                  prev[curr.id] = null;
-                  return prev;
-                },
-                {}
-              );
-              updatePageSearchParams(resetValues);
+              setSearch({});
             }}
           >
             <X className="mr-2 h-4 w-4" />
