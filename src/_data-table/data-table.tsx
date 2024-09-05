@@ -36,6 +36,8 @@ import type { DataTableFilterField } from "./types";
 import { DataTableToolbar } from "./data-table-toolbar"; // TODO: check where to put this
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useQueryStates } from "nuqs";
+import { searchParamsParser } from "./search-params";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -63,6 +65,7 @@ export function DataTable<TData, TValue>({
     "data-table-controls",
     true
   );
+  const [_, setSearch] = useQueryStates(searchParamsParser);
 
   const table = useReactTable({
     data,
@@ -94,6 +97,24 @@ export function DataTable<TData, TValue>({
       return map;
     },
   });
+
+  React.useEffect(() => {
+    const columnFiltersWithNullable = filterFields.map((field) => {
+      const filterValue = columnFilters.find(
+        (filter) => filter.id === field.value
+      );
+      if (!filterValue) return { id: field.value, value: null };
+      return { id: field.value, value: filterValue.value };
+    });
+
+    const search = columnFiltersWithNullable.reduce((prev, curr) => {
+      prev[curr.id as string] = curr.value;
+      return prev;
+    }, {} as Record<string, unknown>);
+
+    setSearch(search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnFilters]);
 
   return (
     <div className="flex w-full flex-col gap-3 sm:flex-row">

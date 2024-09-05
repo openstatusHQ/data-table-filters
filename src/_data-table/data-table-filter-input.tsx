@@ -5,8 +5,6 @@ import type { DataTableInputFilterField } from "./types";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
-import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "./search-params";
 
 type DataTableFilterInputProps<TData> = DataTableInputFilterField<TData> & {
   table: Table<TData>;
@@ -19,7 +17,6 @@ export function DataTableFilterInput<TData>({
   const value = _value as string;
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
-  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   const filters = typeof filterValue === "string" ? filterValue : "";
 
@@ -39,7 +36,6 @@ export function DataTableFilterInput<TData>({
           const val = e.target.value;
           const newValue = val.trim() === "" ? null : val;
           column?.setFilterValue(newValue);
-          setSearch({ ...search, [value]: newValue });
         }}
       />
     </div>

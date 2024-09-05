@@ -1,14 +1,13 @@
 import {
-  createParser,
   createSearchParamsCache,
   parseAsArrayOf,
   parseAsBoolean,
   parseAsInteger,
-  parseAsJson,
   parseAsString,
   parseAsStringLiteral,
   parseAsTimestamp,
 } from "nuqs/server";
+// Note: import from 'nuqs/server' to avoid the "use client" directive
 import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
@@ -16,28 +15,6 @@ import {
   SLIDER_DELIMITER,
   TAGS,
 } from "./schema";
-import { z } from "zod";
-// Note: import from 'nuqs/server' to avoid the "use client" directive
-
-const zodSchema = z.object({
-  foo: z.string(),
-  bar: z.number(),
-});
-
-const parseAsStarRating = createParser({
-  parse(queryValue) {
-    const inBetween = queryValue.split("★");
-    const isValid = inBetween.length > 1 && inBetween.every((s) => s === "");
-    if (!isValid) return null;
-    const numStars = inBetween.length - 1;
-    return Math.min(5, numStars);
-  },
-  serialize(value) {
-    return Array.from({ length: value }, () => "★").join("");
-  },
-});
-
-export const test = parseAsJson(zodSchema.parse);
 
 export const searchParamsParser = {
   url: parseAsString,

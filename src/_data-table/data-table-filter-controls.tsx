@@ -17,8 +17,6 @@ import { DataTableFilterSlider } from "./data-table-filter-slider";
 import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 import { X } from "lucide-react";
-import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "./search-params";
 
 // TODO: only pass the columns to generate the filters!
 // https://tanstack.com/table/v8/docs/framework/react/examples/filters
@@ -34,7 +32,6 @@ export function DataTableFilterControls<TData, TValue>({
   filterFields,
 }: DataTableFilterControlsProps<TData, TValue>) {
   const filters = table.getState().columnFilters;
-  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   return (
     <div className="flex flex-col gap-4">
@@ -45,13 +42,7 @@ export function DataTableFilterControls<TData, TValue>({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                table.resetColumnFilters();
-                Object.keys(search).forEach((key) => {
-                  search[key as keyof typeof search] = null;
-                });
-                setSearch(search);
-              }}
+              onClick={() => table.resetColumnFilters()}
             >
               <X className="mr-2 h-4 w-4" />
               Reset

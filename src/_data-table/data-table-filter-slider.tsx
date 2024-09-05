@@ -6,15 +6,10 @@ import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/custom/slider";
 import { isArrayOfNumbers } from "./utils";
-import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "./search-params";
 
 type DataTableFilterSliderProps<TData> = DataTableSliderFilterField<TData> & {
   table: Table<TData>;
 };
-
-// TBD: add debounce to reduce to number of filters
-// TODO: extract onChange
 
 export function DataTableFilterSlider<TData>({
   table,
@@ -25,8 +20,6 @@ export function DataTableFilterSlider<TData>({
   const value = _value as string;
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
-  // REMINDER: MAYBE USE A DEBOUNCE AND USEEFFECT TO UPDATE ON PARENT COMPONENT
-  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   const filters =
     typeof filterValue === "number"
@@ -62,7 +55,6 @@ export function DataTableFilterSlider<TData>({
                   ? [val, filters[1]]
                   : [val, max];
               column?.setFilterValue(newValue);
-              setSearch({ ...search, [value]: newValue });
             }}
           />
         </div>
@@ -90,7 +82,6 @@ export function DataTableFilterSlider<TData>({
                   ? [filters[0], val]
                   : [min, val];
               column?.setFilterValue(newValue);
-              setSearch({ ...search, [value]: newValue });
             }}
           />
         </div>
@@ -99,10 +90,7 @@ export function DataTableFilterSlider<TData>({
         min={min}
         max={max}
         value={filters || [min, max]}
-        onValueChange={(values) => {
-          column?.setFilterValue(values);
-          setSearch({ ...search, [value]: values });
-        }}
+        onValueChange={(values) => column?.setFilterValue(values)}
       />
     </div>
   );

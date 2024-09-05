@@ -12,8 +12,6 @@ import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { useEffect } from "react";
 import { Kbd } from "@/components/custom/kbd";
-import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "./search-params";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -27,7 +25,6 @@ export function DataTableToolbar<TData>({
   setControlsOpen,
 }: DataTableToolbarProps<TData>) {
   const filters = table.getState().columnFilters;
-  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -83,13 +80,7 @@ export function DataTableToolbar<TData>({
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => {
-              table.resetColumnFilters();
-              Object.keys(search).forEach((key) => {
-                search[key as keyof typeof search] = null;
-              });
-              setSearch(search);
-            }}
+            onClick={() => table.resetColumnFilters()}
           >
             <X className="mr-2 h-4 w-4" />
             Reset

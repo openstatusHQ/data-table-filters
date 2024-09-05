@@ -23,17 +23,12 @@ import { deserialize, serializeColumFilters } from "../utils";
 import { Separator } from "@/components/ui/separator";
 import {
   getFieldOptions,
-  getFieldValueByType,
   getFilterValue,
   getWordByCaretPosition,
   replaceInputByFieldType,
 } from "./utils";
 import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "../search-params";
-
-// FIXME: too many updates
 
 interface DataTableFilterCommandProps<TData, TSchema extends z.AnyZodObject> {
   table: Table<TData>;
@@ -57,7 +52,6 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
   const [inputValue, setInputValue] = useState<string>(
     serializeColumFilters(columnFilters, filterFields)
   );
-  const [_, setSearch] = useQueryStates(searchParamsParser);
   const [lastSearches, setLastSearches] = useLocalStorage<
     {
       search: string;
@@ -92,37 +86,15 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
     );
 
     if (searchParams.success) {
-      console.log(searchParams);
       for (const key of Object.keys(searchParams.data)) {
         const value = searchParams.data[key as keyof typeof searchParams.data];
         table.getColumn(key)?.setFilterValue(value);
       }
-
       const currentFiltersToReset = currentEnabledFilters.filter((filter) => {
         return !(filter.id in searchParams.data);
       });
-
       for (const filter of currentFiltersToReset) {
         table.getColumn(filter.id)?.setFilterValue(undefined);
-      }
-
-      if (open) return;
-
-      console.log(open);
-
-      if (typeof searchParams.data === "object") {
-        const search: Record<string, unknown> = {};
-        const values = { ...commandDisabledFilterKeys, ...searchParams.data };
-        Object.entries(values).map(([key, value]) => {
-          const field = _filterFields?.find((field) => field.value === key);
-          if (Array.isArray(value)) {
-            search[key] = value;
-          } else {
-            search[key] = getFieldValueByType({ field, value });
-          }
-        });
-        console.log(search);
-        setSearch(search);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

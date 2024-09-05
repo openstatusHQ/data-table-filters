@@ -8,8 +8,6 @@ import { Search } from "lucide-react";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "./search-params";
 
 type DataTableFilterCheckboxProps<TData> =
   DataTableCheckboxFilterField<TData> & {
@@ -22,12 +20,11 @@ export function DataTableFilterCheckbox<TData>({
   options,
   component,
 }: DataTableFilterCheckboxProps<TData>) {
-  const value = _value as keyof typeof searchParamsParser;
+  const value = _value as string;
   const [inputValue, setInputValue] = useState("");
   const column = table.getColumn(value);
   const facetedValue = column?.getFacetedUniqueValues();
   const filterValue = column?.getFilterValue();
-  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   if (!options?.length) return null;
 
@@ -39,8 +36,6 @@ export function DataTableFilterCheckbox<TData>({
       inputValue === "" ||
       option.label.toLowerCase().includes(inputValue.toLowerCase())
   );
-
-  // const searchValue = search[value]; // can be anything currently
 
   // CHECK: it could be filterValue or searchValue
   const filters = filterValue
@@ -82,7 +77,6 @@ export function DataTableFilterCheckbox<TData>({
                   column?.setFilterValue(
                     newValue?.length ? newValue : undefined
                   );
-                  setSearch({ ...search, [value]: newValue });
                 }}
               />
               <Label
@@ -99,10 +93,7 @@ export function DataTableFilterCheckbox<TData>({
                 </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    column?.setFilterValue(option.value);
-                    setSearch({ ...search, [value]: option.value });
-                  }}
+                  onClick={() => column?.setFilterValue([option.value])}
                   className="absolute inset-y-0 right-0 hidden font-normal text-muted-foreground backdrop-blur-sm hover:text-foreground group-hover:block"
                 >
                   <span className="px-2">only</span>

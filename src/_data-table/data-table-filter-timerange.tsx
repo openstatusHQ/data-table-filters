@@ -6,7 +6,6 @@ import type { DataTableTimerangeFilterField } from "./types";
 import { isArrayOfDates } from "./utils";
 import { DatePickerWithRange } from "./date-picker-with-range";
 import type { DateRange } from "react-day-picker";
-import { useQueryState, useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 
 type DataTableFilterTimerangeProps<TData> =
@@ -24,8 +23,6 @@ export function DataTableFilterTimerange<TData>({
   const value = _value as keyof typeof searchParamsParser;
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
-  // MAYBE USE ONLY useQueryState
-  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   const date: DateRange | undefined = useMemo(
     () =>
@@ -40,15 +37,10 @@ export function DataTableFilterTimerange<TData>({
   const setDate = (date: DateRange | undefined) => {
     if (!date) return; // TODO: remove from search params if columnFilter is removed
     if (date.from && !date.to) {
-      column?.setFilterValue(date.from);
-      setSearch({ ...search, [value]: [date.from.getTime()] });
+      column?.setFilterValue([date.from]);
     }
     if (date.to && date.from) {
       column?.setFilterValue([date.from, date.to]);
-      setSearch({
-        ...search,
-        [value]: [date.from.getTime(), date.to.getTime()],
-      });
     }
   };
 

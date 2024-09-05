@@ -38,17 +38,12 @@ export const columnSchema = z.object({
 
 export type ColumnSchema = z.infer<typeof columnSchema>;
 
-// or could rename to `urlParamsSchema`
 export const columnFilterSchema = z.object({
   url: z.string().optional(),
-  p95: z.coerce
-    .number()
-    .or(
-      z
-        .string()
-        .transform((val) => val.split(SLIDER_DELIMITER))
-        .pipe(z.coerce.number().array().length(2))
-    )
+  p95: z
+    .string()
+    .transform((val) => val.split(SLIDER_DELIMITER))
+    .pipe(z.coerce.number().array().length(2))
     .optional(), // TBD: we could transform to `{ min: x, max: y}`
   public: z
     .string()
@@ -61,34 +56,20 @@ export const columnFilterSchema = z.object({
     .pipe(stringToBoolean.array())
     .optional(),
   regions: z
-    .enum(REGIONS)
-    .or(
-      z
-        .string()
-        .transform((val) => val.split(ARRAY_DELIMITER))
-        .pipe(z.enum(REGIONS).array())
-    )
+    .string()
+    .transform((val) => val.split(ARRAY_DELIMITER))
+    .pipe(z.enum(REGIONS).array())
     .optional(),
   tags: z
-    .enum(TAGS)
-    .or(
-      z
-        .string()
-        .transform((val) => val.split(ARRAY_DELIMITER))
-        .pipe(z.enum(TAGS).array())
-    )
+    .string()
+    .transform((val) => val.split(ARRAY_DELIMITER))
+    .pipe(z.enum(TAGS).array())
     .optional(),
-  date: z.coerce
-    .number()
-    .pipe(z.coerce.date())
-    .or(
-      z
-        .string()
-        .transform((val) => val.split(RANGE_DELIMITER).map(Number))
-        .pipe(z.coerce.date().array())
-    )
+  date: z
+    .string()
+    .transform((val) => val.split(RANGE_DELIMITER).map(Number))
+    .pipe(z.coerce.date().array())
     .optional(),
-  // .default([subDays(new Date(), -7), new Date()]),
 });
 
 export type ColumnFilterSchema = z.infer<typeof columnFilterSchema>;
