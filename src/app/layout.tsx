@@ -8,10 +8,25 @@ const fontSans = FontSans({
   variable: "--font-sans",
 });
 
+const TITLE = "OpenStatus | Data Table";
+const DESCRIPTION =
+  "Powered by tanstack table and shadcn ui with controls and cmdk using search params as state.";
+
 export const metadata: Metadata = {
-  title: "OpenStatus | Data Table",
-  description:
-    "A demo of filtering data in a tanstack-table with controls and cmdk using search params as state.",
+  title: TITLE,
+  description: DESCRIPTION,
+  twitter: {
+    images: ["/assets/data-table.png"],
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  openGraph: {
+    type: "website",
+    images: ["/assets/data-table.png"],
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({
