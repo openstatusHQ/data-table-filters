@@ -11,11 +11,9 @@ export default function Page({
 }) {
   const search = searchParamsCache.parse(searchParams);
 
-  console.log("page", search);
-
   return (
     <main className="container mx-auto flex min-h-screen flex-col gap-4 px-2 py-4 md:px-4 md:py-8">
-      <div className="relative flex flex-1 flex-col rounded-lg border border-border/50 bg-background/50 p-4 backdrop-blur-[2px] sm:p-8">
+      <div className="relative min-h-full h-full rounded-lg border border-border/50 bg-background/50 p-4 backdrop-blur-[2px] sm:p-8">
         <DataTable
           columns={columns}
           data={data}
@@ -34,6 +32,25 @@ export default function Page({
           Work in progress
         </Badge>
       </div>
+      <p className="text-muted-foreground text-center">
+        An{" "}
+        <a
+          href="https://github.com/openstatusHQ/data-table-filters"
+          target="_blank"
+          className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
+        >
+          open-source
+        </a>{" "}
+        data-table created by{" "}
+        <a
+          href="https://openstatus.dev"
+          target="_blank"
+          className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
+        >
+          OpenStatus
+        </a>
+        .
+      </p>
     </main>
   );
 }

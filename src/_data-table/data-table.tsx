@@ -27,7 +27,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/custom/table";
 import { DataTableFilterControls } from "./data-table-filter-controls";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableFilterCommand } from "./data-table-filter-command";
@@ -57,7 +57,7 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 20,
+    pageSize: 10,
   });
   const [columnVisibility, setColumnVisibility] =
     useLocalStorage<VisibilityState>("data-table-visibility", {});
@@ -117,14 +117,14 @@ export function DataTable<TData, TValue>({
   }, [columnFilters]);
 
   return (
-    <div className="flex w-full flex-col gap-3 sm:flex-row">
+    <div className="flex w-full h-full flex-col gap-3 sm:flex-row">
       <div
         className={cn(
-          "w-full p-1 sm:sticky sm:top-0 sm:h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64 lg:min-w-72 lg:max-w-72",
+          "w-full p-1 sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64 lg:min-w-72 lg:max-w-72",
           !controlsOpen && "hidden"
         )}
       >
-        <div className="-m-1 h-full p-1 sm:overflow-x-hidden sm:overflow-y-scroll">
+        <div className="-m-1 h-full p-1">
           <DataTableFilterControls
             table={table}
             columns={columns}
