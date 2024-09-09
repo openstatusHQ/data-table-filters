@@ -120,7 +120,7 @@ export function DataTable<TData, TValue>({
     <div className="flex w-full h-full flex-col gap-3 sm:flex-row">
       <div
         className={cn(
-          "w-full p-1 sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64 lg:min-w-72 lg:max-w-72",
+          "w-full p-1 sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
           !controlsOpen && "hidden"
         )}
       >
