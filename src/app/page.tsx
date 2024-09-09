@@ -5,6 +5,7 @@ import { searchParamsCache } from "@/_data-table/search-params";
 import { ModeToggle } from "@/components/theme/toggle-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Github, Globe, Twitter } from "lucide-react";
 
 export default function Page({
@@ -39,7 +40,57 @@ export default function Page({
           </Button>
         </div>
       </div>
-      <div className="w-full max-w-7xl mx-auto relative min-h-full h-full rounded-lg border border-border/50 bg-background/50 p-4 backdrop-blur-[2px] sm:p-8">
+      <div className="flex flex-col gap-4 sm:gap-8 w-full max-w-7xl mx-auto relative min-h-full h-full rounded-lg border border-border/50 bg-background/50 p-4 backdrop-blur-[2px] sm:p-8">
+        <div className="grid gap-1">
+          <h1 className="text-3xl font-semibold text-foreground">
+            Data-Table Filters
+          </h1>
+          <p className="text-muted-foreground">
+            Powered by{" "}
+            <a
+              href="https://tanstack.com/table"
+              target="_blank"
+              className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
+            >
+              tanstack table
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://ui.shadcn.com"
+              target="_blank"
+              className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
+            >
+              shadcn ui
+            </a>{" "}
+            with controls and{" "}
+            <a
+              href="http://cmdk.paco.me/"
+              target="_blank"
+              className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
+            >
+              cmdk
+            </a>{" "}
+            using search params via{" "}
+            <a
+              href="https://nuqs.47ng.com"
+              target="_blank"
+              className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
+            >
+              nuqs
+            </a>
+            . <br />
+            Code available on{" "}
+            <a
+              href="https://github.com/openstatusHQ/data-table-filters"
+              className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
+            >
+              GitHub
+            </a>
+            .
+          </p>
+        </div>
+        <Separator />
+        {/* ------------------- */}
         <DataTable
           columns={columns}
           data={data}
@@ -51,6 +102,7 @@ export default function Page({
             }))
             .filter(({ value }) => value ?? undefined)}
         />
+        {/* ------------------- */}
         <Badge
           variant="outline"
           className="absolute -top-2.5 left-4 bg-background sm:left-8"
@@ -59,15 +111,7 @@ export default function Page({
         </Badge>
       </div>
       <p className="text-muted-foreground text-center">
-        An{" "}
-        <a
-          href="https://github.com/openstatusHQ/data-table-filters"
-          target="_blank"
-          className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
-        >
-          open-source
-        </a>{" "}
-        data-table created by{" "}
+        Powered by{" "}
         <a
           href="https://openstatus.dev"
           target="_blank"
@@ -75,7 +119,6 @@ export default function Page({
         >
           OpenStatus
         </a>
-        .
       </p>
     </main>
   );
