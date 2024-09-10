@@ -39,7 +39,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 
-interface DataTableProps<TData, TValue> {
+export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;

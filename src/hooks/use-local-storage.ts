@@ -3,9 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 
 function getItemFromLocalStorage(key: string) {
-  // FIXME: !!!!!!!!!
-  // if (typeof window === "undefined") return null;
-
   const item = window?.localStorage.getItem(key);
   if (item) return JSON.parse(item);
 
@@ -16,14 +13,14 @@ export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const [storedValue, setStoredValue] = useState(
-    getItemFromLocalStorage(key) ?? initialValue
-  );
+  const [storedValue, setStoredValue] = useState(initialValue);
 
   useEffect(() => {
-    // Retrieve from localStorage
-    const item = getItemFromLocalStorage(key);
-    if (item) setStoredValue(item);
+    // initialize
+    if (typeof window !== "undefined") {
+      const stored = getItemFromLocalStorage(key);
+      setStoredValue(stored);
+    }
   }, [key]);
 
   const setValue: React.Dispatch<React.SetStateAction<T>> = useCallback(

@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Github, Globe, Twitter } from "lucide-react";
+import { Skeleton } from "./skeleton";
+
+import * as React from "react";
 
 export default function Page({
   searchParams,
@@ -91,17 +94,19 @@ export default function Page({
         </div>
         <Separator />
         {/* ------------------- */}
-        <DataTable
-          columns={columns}
-          data={data}
-          filterFields={filterFields}
-          defaultColumnFilters={Object.entries(search)
-            .map(([key, value]) => ({
-              id: key,
-              value,
-            }))
-            .filter(({ value }) => value ?? undefined)}
-        />
+        <React.Suspense fallback={<Skeleton />}>
+          <DataTable
+            columns={columns}
+            data={data}
+            filterFields={filterFields}
+            defaultColumnFilters={Object.entries(search)
+              .map(([key, value]) => ({
+                id: key,
+                value,
+              }))
+              .filter(({ value }) => value ?? undefined)}
+          />
+        </React.Suspense>
         {/* ------------------- */}
         <Badge
           variant="outline"

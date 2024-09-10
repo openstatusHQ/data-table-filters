@@ -14,6 +14,7 @@ const DESCRIPTION =
   "Powered by tanstack table and shadcn ui with controls and cmdk using search params as state.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://data-table.openstatus.dev"),
   title: TITLE,
   description: DESCRIPTION,
   twitter: {
