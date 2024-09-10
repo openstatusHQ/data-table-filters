@@ -43,7 +43,7 @@ export const columnFilterSchema = z.object({
   p95: z
     .string()
     .transform((val) => val.split(SLIDER_DELIMITER))
-    .pipe(z.coerce.number().array().length(2))
+    .pipe(z.coerce.number().array().max(2))
     .optional(), // TBD: we could transform to `{ min: x, max: y}`
   public: z
     .string()

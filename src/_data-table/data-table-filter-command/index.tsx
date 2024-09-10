@@ -30,6 +30,8 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
+// FIXME: there is an issue on cmdk if I wanna only set a single slider value...
+
 interface DataTableFilterCommandProps<TData, TSchema extends z.AnyZodObject> {
   table: Table<TData>;
   schema: TSchema;

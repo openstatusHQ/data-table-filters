@@ -133,7 +133,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("date");
       return (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground" suppressHydrationWarning>
           {format(new Date(`${value}`), "LLL dd, y HH:mm")}
         </div>
       );
