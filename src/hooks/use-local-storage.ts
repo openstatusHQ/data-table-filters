@@ -19,7 +19,7 @@ export function useLocalStorage<T>(
     // initialize
     if (typeof window !== "undefined") {
       const stored = getItemFromLocalStorage(key);
-      if (stored) setStoredValue(stored);
+      if (stored !== null) setStoredValue(stored);
     }
   }, [key]);
 
