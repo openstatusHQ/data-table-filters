@@ -1,23 +1,12 @@
-import { columns } from "@/_data-table/columns";
-import { data, filterFields } from "@/_data-table/constants";
-import { DataTable } from "@/_data-table/data-table";
-import { searchParamsCache } from "@/_data-table/search-params";
 import { ModeToggle } from "@/components/theme/toggle-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Github, Globe, Twitter } from "lucide-react";
-import { Skeleton } from "./skeleton";
 
 import * as React from "react";
 
-export default function Page({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
-  const search = searchParamsCache.parse(searchParams);
-
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <main className="container mx-auto flex min-h-screen flex-col gap-4 p-4 sm:p-16">
       <div className="sm:sticky top-0 flex w-full max-w-7xl mx-auto">
@@ -94,19 +83,7 @@ export default function Page({
         </div>
         <Separator />
         {/* ------------------- */}
-        <React.Suspense fallback={<Skeleton />}>
-          <DataTable
-            columns={columns}
-            data={data}
-            filterFields={filterFields}
-            defaultColumnFilters={Object.entries(search)
-              .map(([key, value]) => ({
-                id: key,
-                value,
-              }))
-              .filter(({ value }) => value ?? undefined)}
-          />
-        </React.Suspense>
+        {children}
         {/* ------------------- */}
         <Badge
           variant="outline"
