@@ -18,6 +18,8 @@ import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 import { X } from "lucide-react";
 
+// FIXME: use @container (especially for the slider element) to restructure elements
+
 // TODO: only pass the columns to generate the filters!
 // https://tanstack.com/table/v8/docs/framework/react/examples/filters
 interface DataTableFilterControlsProps<TData, TValue> {
@@ -72,7 +74,8 @@ export function DataTableFilterControls<TData, TValue>({
                   <DataTableFilterResetButton table={table} {...field} />
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="-m-4 p-4">
+              {/* REMINDER: avoid the focus state to be cut due to overflow-hidden */}
+              <AccordionContent className="p-1">
                 {(() => {
                   switch (field.type) {
                     case "checkbox": {

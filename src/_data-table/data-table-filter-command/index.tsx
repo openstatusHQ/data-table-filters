@@ -11,7 +11,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Search, X } from "lucide-react";
+import { LoaderCircle, Search, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -36,12 +36,14 @@ interface DataTableFilterCommandProps<TData, TSchema extends z.AnyZodObject> {
   table: Table<TData>;
   schema: TSchema;
   filterFields?: DataTableFilterField<TData>[];
+  isLoading?: boolean;
 }
 
 export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
   schema,
   table,
   filterFields: _filterFields,
+  isLoading,
 }: DataTableFilterCommandProps<TData, TSchema>) {
   const columnFilters = table.getState().columnFilters;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +138,11 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
         )}
         onClick={() => setOpen(true)}
       >
-        <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
+        {isLoading ? (
+          <LoaderCircle className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground animate-spin" />
+        ) : (
+          <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
+        )}
         <span className="h-11 w-full max-w-sm truncate py-3 text-left text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50 md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
           {inputValue.trim() ? (
             <span className="text-foreground">{inputValue}</span>

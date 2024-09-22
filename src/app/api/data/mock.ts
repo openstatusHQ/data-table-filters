@@ -1,6 +1,8 @@
 import { ColumnSchema } from "@/_data-table/schema";
 import { subDays, subHours, subMinutes } from "date-fns";
 
+// TODO: make a createMockData()
+
 export const mock = [
   {
     name: "Edge Api",
@@ -173,8 +175,8 @@ export const mock = [
     date: subHours(new Date(), 8),
   },
   {
-    name: "Notification Service",
-    url: "notifications.acme.com",
+    name: "Notify Service",
+    url: "notify.acme.com",
     p95: 345,
     public: false,
     active: true,
@@ -203,7 +205,7 @@ export const mock = [
     date: subDays(new Date(), 2),
   },
   {
-    name: "Authentication Service",
+    name: "Auth Service",
     url: "auth.acme.com",
     p95: 542,
     public: false,

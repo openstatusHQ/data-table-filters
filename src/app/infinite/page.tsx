@@ -2,17 +2,16 @@ import * as React from "react";
 import { searchParamsCache } from "@/_data-table/search-params";
 import { getQueryClient } from "@/providers/get-query-client";
 import { dataOptions } from "./query-options";
-import { InfiniteTable } from "./infinite-table";
+import { Client } from "./client";
 
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const search = searchParamsCache.parse(searchParams);
+  searchParamsCache.parse(searchParams);
   const queryClient = getQueryClient();
+  await queryClient.prefetchInfiniteQuery(dataOptions);
 
-  void queryClient.prefetchInfiniteQuery(dataOptions);
-
-  return <InfiniteTable />;
+  return <Client />;
 }

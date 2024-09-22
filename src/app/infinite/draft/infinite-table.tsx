@@ -2,14 +2,14 @@
 
 import React from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { dataOptions } from "./query-options";
-import { DataTable } from "@/_data-table/data-table";
-import { columns } from "@/_data-table/columns";
-import { filterFields } from "@/_data-table/constants";
+import { dataOptions } from "../query-options";
 import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "@/_data-table/search-params";
+import { LoaderCircle } from "lucide-react";
 
 const BOTTOM_REACHED_THRESHOLD = 10;
+
+// SIMPLE EXAMPLE OF A TABLE WITH INFINITE SCROLL
 
 export function InfiniteTable() {
   const [search] = useQueryStates(searchParamsParser);
@@ -50,7 +50,6 @@ export function InfiniteTable() {
 
   return (
     <div>
-      <p>Hello</p>
       <div
         ref={tableContainerRef}
         onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)}
@@ -63,18 +62,8 @@ export function InfiniteTable() {
         {flatData?.map((row, i) => (
           <div key={i}>{row.name}</div>
         ))}
-        <DataTable
-          columns={columns}
-          data={flatData}
-          filterFields={filterFields}
-          defaultColumnFilters={Object.entries(search)
-            .map(([key, value]) => ({
-              id: key,
-              value,
-            }))
-            .filter(({ value }) => value ?? undefined)}
-        />
       </div>
+      {isFetching ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
     </div>
   );
 }
