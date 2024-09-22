@@ -11,8 +11,9 @@ import { dataOptions } from "./query-options";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
-  const { data, isFetching, isLoading, fetchNextPage } =
-    useInfiniteQuery(dataOptions);
+  const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
+    dataOptions({ sort: search.sort })
+  );
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
@@ -22,18 +23,22 @@ export function Client() {
   const totalDBRowCount = data?.pages?.[0]?.meta?.totalRowCount;
   const totalFetched = flatData?.length;
 
+  const { sort, ...filter } = search;
+
   return (
     <DataTableInfinite
       columns={columns}
-      data={flatData}
+      // REMINDER: we cannot use `flatData` due to memoization?!?!?
+      data={data?.pages?.flatMap((page) => page.data ?? []) ?? []}
       totalRows={totalDBRowCount}
       totalRowsFetched={totalFetched}
-      defaultColumnFilters={Object.entries(search)
+      defaultColumnFilters={Object.entries(filter)
         .map(([key, value]) => ({
           id: key,
           value,
         }))
         .filter(({ value }) => value ?? undefined)}
+      defaultColumnSorting={sort ? [sort] : undefined}
       filterFields={filterFields}
       isFetching={isFetching}
       isLoading={isLoading}

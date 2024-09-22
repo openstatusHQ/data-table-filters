@@ -2,6 +2,7 @@ import { ColumnSchema } from "@/_data-table/schema";
 import { subDays, subHours, subMinutes } from "date-fns";
 
 // TODO: make a createMockData()
+// export function createMockData(size: 10) {}
 
 export const mock = [
   {

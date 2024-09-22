@@ -13,7 +13,6 @@ import {
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -44,6 +43,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;
+  defaultColumnSorting?: SortingState;
   filterFields?: DataTableFilterField<TData>[];
   totalRows?: number;
   totalRowsFetched?: number;
@@ -56,6 +56,7 @@ export function DataTableInfinite<TData, TValue>({
   columns,
   data,
   defaultColumnFilters = [],
+  defaultColumnSorting = [],
   filterFields = [],
   isFetching,
   isLoading,
@@ -65,7 +66,8 @@ export function DataTableInfinite<TData, TValue>({
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] =
+    React.useState<SortingState>(defaultColumnSorting);
   const [columnVisibility, setColumnVisibility] =
     useLocalStorage<VisibilityState>("data-table-visibility", {});
   const [controlsOpen, setControlsOpen] = useLocalStorage(
@@ -74,7 +76,7 @@ export function DataTableInfinite<TData, TValue>({
   );
   const topBarRef = React.useRef<HTMLDivElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
-  const [_, setSearch] = useQueryStates(searchParamsParser);
+  const [search, setSearch] = useQueryStates(searchParamsParser);
 
   React.useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -119,7 +121,6 @@ export function DataTableInfinite<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
       const map = getFacetedUniqueValues<TData>()(table, columnId)();
       // TODO: it would be great to do it dynamically, if we recognize the row to be Array.isArray
@@ -155,6 +156,15 @@ export function DataTableInfinite<TData, TValue>({
     setSearch(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnFilters]);
+
+  React.useEffect(() => {
+    if (sorting.length) {
+      setSearch({ sort: sorting[0] });
+    } else {
+      setSearch({ sort: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sorting]);
 
   return (
     <div className="flex w-full min-h-screen h-full flex-col sm:flex-row">
@@ -216,8 +226,8 @@ export function DataTableInfinite<TData, TValue>({
             </TableHeader>
             <TableBody>
               {/* FIXME: should be getRowModel() as filtering */}
-              {table.getCoreRowModel().rows?.length ? (
-                table.getCoreRowModel().rows.map((row) => (
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}

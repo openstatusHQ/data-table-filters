@@ -14,8 +14,9 @@ const BOTTOM_REACHED_THRESHOLD = 10;
 export function InfiniteTable() {
   const [search] = useQueryStates(searchParamsParser);
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
-  const { data, isFetching, isLoading, fetchNextPage } =
-    useInfiniteQuery(dataOptions);
+  const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
+    dataOptions({})
+  );
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],

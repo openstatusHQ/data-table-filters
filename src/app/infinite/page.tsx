@@ -9,9 +9,9 @@ export default async function Page({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  searchParamsCache.parse(searchParams);
+  const search = searchParamsCache.parse(searchParams);
   const queryClient = getQueryClient();
-  await queryClient.prefetchInfiniteQuery(dataOptions);
+  await queryClient.prefetchInfiniteQuery(dataOptions({ sort: search.sort }));
 
   return <Client />;
 }
