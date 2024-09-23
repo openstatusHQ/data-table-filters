@@ -199,6 +199,7 @@ export function DataTableInfinite<TData, TValue>({
             table={table}
             controlsOpen={controlsOpen}
             setControlsOpen={setControlsOpen}
+            isLoading={isFetching || isLoading}
           />
         </div>
         <div className="z-0">

@@ -10,7 +10,7 @@ export const dataOptions = ({
   sort?: { id: string; desc: boolean } | null;
 }) => {
   const serializedSort = sort ? parseAsSort.serialize(sort) : "";
-  // TODO: we can serialize the sort object within here!
+  // TODO: we can serialize the sort object within here! - OR EVEN THE ENTIRE SEARCH OBJECT
   return infiniteQueryOptions({
     queryKey: ["data-table", sort],
     queryFn: async ({ pageParam = 0 }) => {

@@ -29,6 +29,7 @@ export const parseAsSort = createParser({
 });
 
 export const searchParamsParser = {
+  // FILTERS
   url: parseAsString,
   p95: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   public: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
@@ -36,8 +37,10 @@ export const searchParamsParser = {
   regions: parseAsArrayOf(parseAsStringLiteral(REGIONS), ARRAY_DELIMITER),
   tags: parseAsArrayOf(parseAsStringLiteral(TAGS), ARRAY_DELIMITER),
   date: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER),
-  // REMINDER: custom parser for sorting
+  // SORTING & PAGINATION
   sort: parseAsSort,
+  size: parseAsInteger.withDefault(10),
+  start: parseAsInteger.withDefault(0),
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParser);

@@ -1,18 +1,16 @@
 import { NextRequest } from "next/server";
 import { mock } from "./mock";
-import { parseAsSort } from "@/_data-table/search-params";
+import { searchParamsCache } from "@/_data-table/search-params";
 
 export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
-  const size = searchParams.get("size");
-  const start = searchParams.get("start");
-  const _sort = searchParams.get("sort");
-  // REMINDER: keep the filter on client side ?
-  const filter = searchParams.get("filter");
+  const _search: Map<string, string> = new Map();
 
+  req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
+
+  const search = searchParamsCache.parse(Object.fromEntries(_search));
+
+  const { size, start, sort, ...filters } = search;
   const data = [...mock];
-
-  const sort = _sort ? parseAsSort.parse(_sort) : null;
 
   if (sort) {
     data.sort((a, b) => {

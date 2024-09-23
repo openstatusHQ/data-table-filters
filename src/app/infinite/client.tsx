@@ -11,6 +11,7 @@ import { dataOptions } from "./query-options";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
+  // TODO: pass the `search` object to the `dataOptions` function
   const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
     dataOptions({ sort: search.sort })
   );
@@ -23,7 +24,7 @@ export function Client() {
   const totalDBRowCount = data?.pages?.[0]?.meta?.totalRowCount;
   const totalFetched = flatData?.length;
 
-  const { sort, ...filter } = search;
+  const { sort, start, size, ...filter } = search;
 
   return (
     <DataTableInfinite

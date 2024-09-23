@@ -13,13 +13,15 @@ export default function Page({
 }) {
   const search = searchParamsCache.parse(searchParams);
 
+  const { sort, start, size, ...filters } = search;
+
   return (
     <React.Suspense fallback={<Skeleton />}>
       <DataTable
         columns={columns}
         data={data}
         filterFields={filterFields}
-        defaultColumnFilters={Object.entries(search)
+        defaultColumnFilters={Object.entries(filters)
           .map(([key, value]) => ({
             id: key,
             value,
