@@ -25,7 +25,9 @@ export function DataTableFilterSlider<TData>({
     typeof filterValue === "number"
       ? [filterValue, filterValue]
       : Array.isArray(filterValue) && isArrayOfNumbers(filterValue)
-      ? filterValue
+      ? filterValue.length === 1
+        ? [filterValue[0], filterValue[0]]
+        : filterValue
       : undefined;
 
   return (

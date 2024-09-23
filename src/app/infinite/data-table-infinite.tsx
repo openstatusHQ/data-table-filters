@@ -28,13 +28,13 @@ import {
 } from "@/components/custom/table";
 import { DataTableFilterControls } from "@/_data-table/data-table-filter-controls";
 import { DataTableFilterCommand } from "@/_data-table/data-table-filter-command";
-import { columnFilterSchema } from "@/_data-table/schema";
+import { columnFilterSchema } from "./schema";
 import type { DataTableFilterField } from "@/_data-table/types";
 import { DataTableToolbar } from "@/_data-table/data-table-toolbar"; // TODO: check where to put this
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "@/_data-table/search-params";
+import { searchParamsParser } from "./search-params";
 import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -124,7 +124,7 @@ export function DataTableInfinite<TData, TValue>({
     getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
       const map = getFacetedUniqueValues<TData>()(table, columnId)();
       // TODO: it would be great to do it dynamically, if we recognize the row to be Array.isArray
-      if (["regions", "tags"].includes(columnId)) {
+      if (["regions"].includes(columnId)) {
         const rowValues = table
           .getGlobalFacetedRowModel()
           .flatRows.map((row) => row.getValue(columnId) as string[]);
@@ -152,6 +152,8 @@ export function DataTableInfinite<TData, TValue>({
       prev[curr.id as string] = curr.value;
       return prev;
     }, {} as Record<string, unknown>);
+
+    console.log({ columnFiltersWithNullable, columnFilters, search });
 
     setSearch(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps

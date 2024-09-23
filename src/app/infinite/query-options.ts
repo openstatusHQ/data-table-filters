@@ -1,12 +1,14 @@
-import { ColumnSchema } from "@/_data-table/schema";
-import { parseAsSort } from "@/_data-table/search-params";
+import type { MakeArray } from "@/types";
+import { ColumnSchema } from "./schema";
+import { parseAsSort } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 
-const FETCH_SIZE = 10;
+const FETCH_SIZE = 20;
 
 export const dataOptions = ({
   sort,
 }: {
+  // TODO: pass `search` object here!
   sort?: { id: string; desc: boolean } | null;
 }) => {
   const serializedSort = sort ? parseAsSort.serialize(sort) : "";
@@ -16,11 +18,14 @@ export const dataOptions = ({
     queryFn: async ({ pageParam = 0 }) => {
       const start = (pageParam as number) * FETCH_SIZE;
       const response = await fetch(
-        `/api/data?start=${start}&size=${FETCH_SIZE}&sort=${serializedSort}`
+        `/infinite/api?start=${start}&size=${FETCH_SIZE}&sort=${serializedSort}`
       );
       return response.json() as Promise<{
         data: ColumnSchema[];
-        meta: { totalRowCount: number };
+        meta: {
+          totalRowCount: number;
+          currentFilters: MakeArray<ColumnSchema>;
+        };
       }>;
     },
     initialPageParam: 0,

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { searchParamsCache } from "@/_data-table/search-params";
+import { searchParamsCache } from "./search-params";
 import { getQueryClient } from "@/providers/get-query-client";
 import { dataOptions } from "./query-options";
 import { Client } from "./client";

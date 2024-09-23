@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import { DataTableInfinite } from "./data-table-infinite";
-import { columns } from "@/_data-table/columns";
-import { filterFields } from "@/_data-table/constants";
+import { columns } from "./columns";
+import { filterFields } from "./constants";
 import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "@/_data-table/search-params";
+import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
 
@@ -22,14 +22,33 @@ export function Client() {
   );
 
   const totalDBRowCount = data?.pages?.[0]?.meta?.totalRowCount;
+  const currentFilters = data?.pages?.[0]?.meta?.currentFilters;
   const totalFetched = flatData?.length;
 
   const { sort, start, size, ...filter } = search;
+
+  console.log(search);
+
+  const _filterFields = React.useMemo(
+    () =>
+      filterFields.map((field) => {
+        if (field.value === "latency" || field.value === "status") {
+          field.options =
+            currentFilters?.[field.value].map((value) => ({
+              label: `${value}`,
+              value,
+            })) ?? field.options;
+        }
+        return field;
+      }),
+    [currentFilters]
+  );
 
   return (
     <DataTableInfinite
       columns={columns}
       // REMINDER: we cannot use `flatData` due to memoization?!?!?
+      //   MAYBE: this will be resolved if we add queryKey(search) as the search is unique and will trigger a change of data
       data={data?.pages?.flatMap((page) => page.data ?? []) ?? []}
       totalRows={totalDBRowCount}
       totalRowsFetched={totalFetched}
@@ -40,7 +59,7 @@ export function Client() {
         }))
         .filter(({ value }) => value ?? undefined)}
       defaultColumnSorting={sort ? [sort] : undefined}
-      filterFields={filterFields}
+      filterFields={_filterFields}
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}

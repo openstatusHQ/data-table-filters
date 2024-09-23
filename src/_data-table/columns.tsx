@@ -87,8 +87,12 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       const rowValue = row.getValue(id) as number;
       if (typeof value === "number") return value === Number(rowValue);
       if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        const sorted = value.sort((a, b) => a - b);
-        return sorted[0] <= rowValue && rowValue <= sorted[1];
+        if (value.length === 1) {
+          return value[0] === rowValue;
+        } else {
+          const sorted = value.sort((a, b) => a - b);
+          return sorted[0] <= rowValue && rowValue <= sorted[1];
+        }
       }
       return false;
     },

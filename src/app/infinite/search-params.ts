@@ -4,9 +4,9 @@ import {
   parseAsArrayOf,
   parseAsBoolean,
   parseAsInteger,
-  parseAsString,
   parseAsStringLiteral,
   parseAsTimestamp,
+  type inferParserType,
 } from "nuqs/server";
 // Note: import from 'nuqs/server' to avoid the "use client" directive
 import {
@@ -14,7 +14,6 @@ import {
   RANGE_DELIMITER,
   REGIONS,
   SLIDER_DELIMITER,
-  TAGS,
 } from "./schema";
 
 export const parseAsSort = createParser({
@@ -30,13 +29,17 @@ export const parseAsSort = createParser({
 
 export const searchParamsParser = {
   // FILTERS
-  url: parseAsString,
-  p95: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
-  public: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
-  active: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
+  succcess: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
+  latency: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
+  status: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   regions: parseAsArrayOf(parseAsStringLiteral(REGIONS), ARRAY_DELIMITER),
-  tags: parseAsArrayOf(parseAsStringLiteral(TAGS), ARRAY_DELIMITER),
   date: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER),
+  // SORTING & PAGINATION
+  sort: parseAsSort,
+  size: parseAsInteger.withDefault(10),
+  start: parseAsInteger.withDefault(0),
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParser);
+
+export type SearchParamsType = inferParserType<typeof searchParamsParser>;
