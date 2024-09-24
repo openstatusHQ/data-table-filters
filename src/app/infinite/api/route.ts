@@ -1,41 +1,31 @@
 import { NextRequest } from "next/server";
 import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
+import { filterData, sortData } from "./helpers";
 
 export async function GET(req: NextRequest) {
   const _search: Map<string, string> = new Map();
 
+  // TODO: we could use a POST request to avoid this
   req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
-
   const search = searchParamsCache.parse(Object.fromEntries(_search));
-
-  const { size, start, sort, ...filters } = search;
-  const data = [...mock];
-
-  if (sort) {
-    data.sort((a, b) => {
-      if (sort.desc) {
-        // @ts-ignore
-        return a?.[sort.id] < b[sort.id] ? 1 : -1;
-      } else {
-        // @ts-ignore
-        return a[sort.id] > b[sort.id] ? 1 : -1;
-      }
-    });
-  }
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const slicedData = data.slice(Number(start), Number(start) + Number(size));
+  const totalData = mock;
+  const filteredData = filterData(totalData, search);
+  const sortedData = sortData(filteredData, search.sort);
 
   // FIXME: this is fugly
-  const slicedFilters = slicedData.reduce((prev, curr) => {
+  const totalFilters = totalData.reduce((prev, curr) => {
     for (const key in curr) {
       const value = curr[key as keyof typeof curr];
       const prevValue = prev[key as keyof typeof prev] || [];
       if (Array.isArray(value)) {
-        // @ts-ignore
-        prev[key as keyof typeof prev] = [...new Set([...prevValue, ...value])];
+        prev[key as keyof typeof prev] = [
+          // @ts-ignore
+          ...new Set([...prevValue, ...value]),
+        ];
       } else {
         // @ts-ignore
         prev[key as keyof typeof prev] = [...new Set([...prevValue, value])];
@@ -45,10 +35,11 @@ export async function GET(req: NextRequest) {
   }, {} as Record<string, (number | string | boolean | Date)[]>);
 
   return Response.json({
-    data: slicedData,
+    data: sortedData.slice(search.start, search.start + search.size),
     meta: {
-      totalRowCount: data.length,
-      currentFilters: slicedFilters,
+      totalRowCount: totalData.length,
+      filterRowCount: filteredData.length,
+      totalFilters,
     },
   });
 }

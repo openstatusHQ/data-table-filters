@@ -75,6 +75,7 @@ export function DataTableToolbar<TData>({
         <p className="text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} of{" "}
           {table.getCoreRowModel().rows.length} row(s) filtered
+          {/* TODO: add "(total X rows)" */}
         </p>
         {isLoading ? (
           <LoaderCircle className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />

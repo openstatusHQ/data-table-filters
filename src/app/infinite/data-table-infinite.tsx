@@ -46,6 +46,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   defaultColumnSorting?: SortingState;
   filterFields?: DataTableFilterField<TData>[];
   totalRows?: number;
+  filterRows?: number;
   totalRowsFetched?: number;
   isFetching?: boolean;
   isLoading?: boolean;
@@ -62,6 +63,7 @@ export function DataTableInfinite<TData, TValue>({
   isLoading,
   fetchNextPage,
   totalRows = 0,
+  filterRows = 0,
   totalRowsFetched = 0,
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
@@ -76,7 +78,7 @@ export function DataTableInfinite<TData, TValue>({
   );
   const topBarRef = React.useRef<HTMLDivElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
-  const [search, setSearch] = useQueryStates(searchParamsParser);
+  const [_, setSearch] = useQueryStates(searchParamsParser);
 
   React.useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -101,14 +103,14 @@ export function DataTableInfinite<TData, TValue>({
       const onPageBottom =
         window.innerHeight + Math.round(window.scrollY) >=
         document.body.offsetHeight;
-      if (onPageBottom && !isFetching && totalRowsFetched < totalRows) {
+      if (onPageBottom && !isFetching && totalRowsFetched < filterRows) {
         fetchNextPage();
       }
     }
 
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [fetchNextPage, isFetching, totalRows, totalRowsFetched]);
+  }, [fetchNextPage, isFetching, filterRows, totalRowsFetched]);
 
   const table = useReactTable({
     data,
@@ -257,7 +259,7 @@ export function DataTableInfinite<TData, TValue>({
               )}
               <TableRow className="hover:bg-transparent data-[state=selected]:bg-transparent">
                 <TableCell colSpan={columns.length} className="text-center">
-                  {totalRowsFetched !== totalRows ||
+                  {totalRowsFetched < filterRows ||
                   !table.getCoreRowModel().rows?.length ? (
                     <Button
                       disabled={isFetching || isLoading}

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { DataTableInfinite } from "./data-table-infinite";
 import { columns } from "./columns";
-import { filterFields } from "./constants";
+import { filterFields as defaultFilterFields } from "./constants";
 import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -11,46 +11,48 @@ import { dataOptions } from "./query-options";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
-  // TODO: pass the `search` object to the `dataOptions` function
   const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
-    dataOptions({ sort: search.sort })
+    dataOptions(search)
   );
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
-    [data]
+    [data?.pages]
   );
 
-  const totalDBRowCount = data?.pages?.[0]?.meta?.totalRowCount;
-  const currentFilters = data?.pages?.[0]?.meta?.currentFilters;
+  const lastPage = data?.pages?.[data?.pages.length - 1];
+  const totalDBRowCount = lastPage?.meta?.totalRowCount;
+  const filterDBRowCount = lastPage?.meta?.filterRowCount;
+  const totalFilters = lastPage?.meta?.totalFilters;
   const totalFetched = flatData?.length;
 
   const { sort, start, size, ...filter } = search;
 
-  console.log(search);
-
-  const _filterFields = React.useMemo(
+  const filterFields = React.useMemo(
     () =>
-      filterFields.map((field) => {
+      defaultFilterFields.map((field) => {
         if (field.value === "latency" || field.value === "status") {
           field.options =
-            currentFilters?.[field.value].map((value) => ({
+            totalFilters?.[field.value].map((value) => ({
               label: `${value}`,
               value,
             })) ?? field.options;
         }
         return field;
       }),
-    [currentFilters]
+    [totalFilters]
   );
+
+  console.log(lastPage?.meta);
 
   return (
     <DataTableInfinite
       columns={columns}
       // REMINDER: we cannot use `flatData` due to memoization?!?!?
       //   MAYBE: this will be resolved if we add queryKey(search) as the search is unique and will trigger a change of data
-      data={data?.pages?.flatMap((page) => page.data ?? []) ?? []}
+      data={flatData}
       totalRows={totalDBRowCount}
+      filterRows={filterDBRowCount}
       totalRowsFetched={totalFetched}
       defaultColumnFilters={Object.entries(filter)
         .map(([key, value]) => ({
@@ -59,7 +61,7 @@ export function Client() {
         }))
         .filter(({ value }) => value ?? undefined)}
       defaultColumnSorting={sort ? [sort] : undefined}
-      filterFields={_filterFields}
+      filterFields={filterFields}
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}

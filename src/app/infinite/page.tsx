@@ -11,7 +11,7 @@ export default async function Page({
 }) {
   const search = searchParamsCache.parse(searchParams);
   const queryClient = getQueryClient();
-  await queryClient.prefetchInfiniteQuery(dataOptions({ sort: search.sort }));
+  await queryClient.prefetchInfiniteQuery(dataOptions(search));
 
   return <Client />;
 }

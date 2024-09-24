@@ -1,31 +1,24 @@
 import type { MakeArray } from "@/types";
 import { ColumnSchema } from "./schema";
-import { parseAsSort } from "./search-params";
+import { SearchParamsType, searchParamsSerializer } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 
-const FETCH_SIZE = 20;
+export type InfiniteQueryMeta = {
+  totalRowCount: number;
+  filterRowCount: number;
+  totalFilters: MakeArray<ColumnSchema>;
+};
 
-export const dataOptions = ({
-  sort,
-}: {
-  // TODO: pass `search` object here!
-  sort?: { id: string; desc: boolean } | null;
-}) => {
-  const serializedSort = sort ? parseAsSort.serialize(sort) : "";
-  // TODO: we can serialize the sort object within here! - OR EVEN THE ENTIRE SEARCH OBJECT
+export const dataOptions = (search: SearchParamsType) => {
   return infiniteQueryOptions({
-    queryKey: ["data-table", sort],
+    queryKey: ["data-table", searchParamsSerializer(search)],
     queryFn: async ({ pageParam = 0 }) => {
-      const start = (pageParam as number) * FETCH_SIZE;
-      const response = await fetch(
-        `/infinite/api?start=${start}&size=${FETCH_SIZE}&sort=${serializedSort}`
-      );
+      const start = (pageParam as number) * search.size;
+      const serialize = searchParamsSerializer({ ...search, start });
+      const response = await fetch(`/infinite/api${serialize}`);
       return response.json() as Promise<{
         data: ColumnSchema[];
-        meta: {
-          totalRowCount: number;
-          currentFilters: MakeArray<ColumnSchema>;
-        };
+        meta: InfiniteQueryMeta;
       }>;
     },
     initialPageParam: 0,

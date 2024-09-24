@@ -1,6 +1,7 @@
 import {
   createParser,
   createSearchParamsCache,
+  createSerializer,
   parseAsArrayOf,
   parseAsBoolean,
   parseAsInteger,
@@ -28,18 +29,20 @@ export const parseAsSort = createParser({
 });
 
 export const searchParamsParser = {
-  // FILTERS
+  // CUSTOM FILTERS
   succcess: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
   latency: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   status: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   regions: parseAsArrayOf(parseAsStringLiteral(REGIONS), ARRAY_DELIMITER),
   date: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER),
-  // SORTING & PAGINATION
+  // REQUIRED FOR SORTING & PAGINATION
   sort: parseAsSort,
-  size: parseAsInteger.withDefault(10),
+  size: parseAsInteger.withDefault(20),
   start: parseAsInteger.withDefault(0),
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParser);
+
+export const searchParamsSerializer = createSerializer(searchParamsParser);
 
 export type SearchParamsType = inferParserType<typeof searchParamsParser>;
