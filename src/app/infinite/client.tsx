@@ -14,9 +14,8 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
-import { SheetDetails } from "./sheet-details";
+import { SheetList } from "./sheet-list";
 
 export function Client() {
   const [search, setSearch] = useQueryStates(searchParamsParser);
@@ -85,11 +84,11 @@ export function Client() {
       >
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Log</SheetTitle>
+            <SheetTitle>Response Log</SheetTitle>
             <SheetDescription>
               Response details for the selected request.
             </SheetDescription>
-            <SheetDetails data={selected} />
+            <SheetList data={selected} />
           </SheetHeader>
         </SheetContent>
       </Sheet>
