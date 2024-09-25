@@ -28,15 +28,15 @@ export function getStatusColor(
       };
     case "4":
       return {
-        text: "text-red-500",
-        bg: "bg-red-100",
-        border: "border-red-200",
+        text: "text-orange-500",
+        bg: "bg-orange-100",
+        border: "border-orange-200",
       };
     case "5":
       return {
-        text: "text-purple-500",
-        bg: "bg-purple-100",
-        border: "border-purple-200",
+        text: "text-red-500",
+        bg: "bg-red-100",
+        border: "border-red-200",
       };
     default:
       return {

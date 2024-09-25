@@ -60,11 +60,3 @@ export function serializeColumFilters<TData>(
     return `${prev}${curr.id}:${curr.value} `;
   }, "");
 }
-
-export function isArrayOfNumbers(arr: any[]): arr is number[] {
-  return arr.every((item) => typeof item === "number");
-}
-
-export function isArrayOfDates(arr: any[]): arr is Date[] {
-  return arr.every((item) => item instanceof Date);
-}

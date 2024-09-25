@@ -5,7 +5,7 @@ function getRandomValue() {
   const rand = Math.random();
   if (rand < 0.9) {
     return 200;
-  } else if (rand < 0.95) {
+  } else if (rand < 0.96) {
     return 400;
   } else {
     return 500;
@@ -29,59 +29,69 @@ export function createMockData({
 }): ColumnSchema[] {
   const date = subMinutes(new Date(), minutes);
   const random = Math.random();
+
+  const statusCode = {
+    ams: getRandomValue(),
+    iad: getRandomValue(),
+    gru: getRandomValue(),
+    syd: getRandomValue(),
+    fra: getRandomValue(),
+    hkg: getRandomValue(),
+  };
+
   return [
     {
-      success: true,
+      success: 200 === statusCode.ams,
       latency: Math.round(
         1000 * (random * (1 - multiplier.ams) + multiplier.ams)
       ),
       regions: ["ams"],
-      status: getRandomValue(),
+      status: statusCode.ams,
       date,
     },
     {
-      success: true,
+      success: 200 === statusCode.iad,
       latency: Math.round(
         1000 * (random * (1 - multiplier.iad) + multiplier.iad)
       ),
       regions: ["iad"],
-      status: getRandomValue(),
+      status: statusCode.iad,
       date,
     },
     {
-      success: true,
+      success: 200 === statusCode.gru,
       latency: Math.round(
         1000 * (random * (1 - multiplier.ams) + multiplier.gru)
       ),
       regions: ["gru"],
-      status: getRandomValue(),
+      status: statusCode.gru,
       date,
     },
     {
-      success: true,
+      success: 200 === statusCode.syd,
       latency: Math.round(
         1000 * (random * (1 - multiplier.syd) + multiplier.syd)
       ),
       regions: ["syd"],
-      status: getRandomValue(),
+      status: statusCode.syd,
       date,
     },
     {
-      success: true,
+      success: 200 === statusCode.fra,
       latency: Math.round(
         1000 * (random * (1 - multiplier.fra) + multiplier.fra)
       ),
       regions: ["fra"],
-      status: getRandomValue(),
+      status: statusCode.fra,
       date,
     },
     {
-      success: true,
+      success: 200 === statusCode.hkg,
       latency: Math.round(
         1000 * (random * (1 - multiplier.hkg) + multiplier.hkg)
       ),
       regions: ["hkg"],
-      status: getRandomValue(),
+      status: statusCode.hkg,
       date,
     },
   ];

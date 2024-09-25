@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus } from "lucide-react";
 import type { ColumnSchema } from "./schema";
-import { isArrayOfDates, isArrayOfNumbers } from "@/_data-table/utils";
+import { isArrayOfDates, isArrayOfNumbers } from "@/lib/helpers";
 import { DataTableColumnHeader } from "@/_data-table/data-table-column-header";
 import { format, isSameDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { regions } from "@/constants/region";
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
     accessorKey: "success",
-    header: "Success",
+    header: "",
     cell: ({ row }) => {
       const value = row.getValue("success");
       if (value) return <Check className="h-4 w-4" />;
@@ -35,7 +35,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("date");
       return (
-        <div className="text-xs text-muted-foreground" suppressHydrationWarning>
+        <div className="font-mono" suppressHydrationWarning>
           {format(new Date(`${value}`), "LLL dd, y HH:mm")}
         </div>
       );
@@ -93,13 +93,16 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Latency" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("latency");
+      const value = row.getValue("latency") as number;
       if (typeof value === "undefined") {
         return <Minus className="h-4 w-4 text-muted-foreground/50" />;
       }
       return (
-        <div>
-          <span className="font-mono">{`${value}`}</span> ms
+        <div className="font-mono">
+          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
+            value
+          )}
+          <span className="text-muted-foreground">ms</span>
         </div>
       );
     },

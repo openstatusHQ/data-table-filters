@@ -155,18 +155,14 @@ export function DataTableInfinite<TData, TValue>({
       return prev;
     }, {} as Record<string, unknown>);
 
-    console.log({ columnFiltersWithNullable, columnFilters, search });
+    console.log({ search });
 
     setSearch(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnFilters]);
 
   React.useEffect(() => {
-    if (sorting.length) {
-      setSearch({ sort: sorting[0] });
-    } else {
-      setSearch({ sort: null });
-    }
+    setSearch({ sort: sorting?.[0] || null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sorting]);
 

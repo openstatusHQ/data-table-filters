@@ -43,8 +43,6 @@ export function Client() {
     [totalFilters]
   );
 
-  console.log(lastPage?.meta);
-
   return (
     <DataTableInfinite
       columns={columns}

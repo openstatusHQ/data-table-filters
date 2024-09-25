@@ -30,7 +30,7 @@ export const parseAsSort = createParser({
 
 export const searchParamsParser = {
   // CUSTOM FILTERS
-  succcess: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
+  success: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
   latency: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   status: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   regions: parseAsArrayOf(parseAsStringLiteral(REGIONS), ARRAY_DELIMITER),
