@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
   const search = searchParamsCache.parse(Object.fromEntries(_search));
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const totalData = mock;
   const filteredData = filterData(totalData, search);
