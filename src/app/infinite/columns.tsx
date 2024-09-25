@@ -1,14 +1,21 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Minus } from "lucide-react";
-import type { ColumnSchema } from "./schema";
+import { Check, Minus, X } from "lucide-react";
+import type { ColumnSchema, TimingSchema } from "./schema";
 import { isArrayOfDates, isArrayOfNumbers } from "@/lib/helpers";
 import { DataTableColumnHeader } from "@/_data-table/data-table-column-header";
 import { format, isSameDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/constants/status-code";
 import { regions } from "@/constants/region";
+import { getTimingColor } from "@/constants/timing";
+import { cn } from "@/lib/utils";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
@@ -16,8 +23,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "",
     cell: ({ row }) => {
       const value = row.getValue("success");
-      if (value) return <Check className="h-4 w-4" />;
-      return <Minus className="h-4 w-4 text-muted-foreground/50" />;
+      if (value) return <Check className="h-4 w-4 text-muted-foreground/50" />;
+      return <X className="h-4 w-4 text-destructive" />;
     },
     filterFn: (row, id, value) => {
       const rowValue = row.getValue(id);
@@ -150,6 +157,61 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       // up to the user to define either `.some` or `.every`
       if (Array.isArray(value)) return value.some((i) => array.includes(i));
       return false;
+    },
+  },
+  {
+    accessorKey: "timing",
+    header: "Timing Phases",
+    cell: ({ row }) => {
+      const timing = row.getValue("timing") as TimingSchema;
+      const latency = row.getValue("latency") as number;
+      return (
+        <HoverCard>
+          <HoverCardTrigger
+            className="opacity-70 data-[state=open]:opacity-100 hover:opacity-100"
+            asChild
+          >
+            <div className="flex">
+              {Object.entries(timing).map(([key, value]) => (
+                <div
+                  key={key}
+                  className={cn(
+                    getTimingColor(key as keyof typeof timing),
+                    "h-4"
+                  )}
+                  style={{ width: `${(value / latency) * 100}%` }}
+                />
+              ))}
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent side="bottom" className="p-2 w-auto">
+            <div className="flex flex-col gap-1">
+              {Object.entries(timing).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="flex items-center justify-between gap-4 text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={cn(
+                        getTimingColor(key as keyof typeof timing),
+                        "h-2 w-2 rounded-full"
+                      )}
+                    />
+                    <div className="uppercase">{key}</div>
+                  </div>
+                  <div className="font-mono">
+                    {new Intl.NumberFormat("en-US", {
+                      maximumFractionDigits: 3,
+                    }).format(value)}
+                    <span className="text-muted-foreground">ms</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+      );
     },
   },
 ];

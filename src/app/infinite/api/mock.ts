@@ -1,6 +1,25 @@
 import { ColumnSchema, REGIONS } from "../schema";
 import { subMinutes } from "date-fns";
 
+function getRandomTiming(latency: number) {
+  // Generate random percentages within the specified ranges
+  const dns = Math.random() * (0.15 - 0.05) + 0.05; // 5% to 15%
+  const connection = Math.random() * (0.3 - 0.1) + 0.1; // 10% to 30%
+  const tls = Math.random() * (0.1 - 0.05) + 0.05; // 5% to 10%
+  const transfer = Math.random() * (0.2 - 0.1) + 0.1; // 10% to 20%
+
+  // Ensure the sum of dns, connection, tls, and transfer is subtracted from 100% for ttfb
+  const remaining = 1 - (dns + connection + tls + transfer); // Calculate remaining for ttfb
+
+  return {
+    dns: Math.round(latency * dns),
+    connection: Math.round(latency * connection),
+    tls: Math.round(latency * tls),
+    ttfb: Math.round(latency * remaining), // Use the remaining percentage for ttfb
+    transfer: Math.round(latency * transfer),
+  };
+}
+
 function getRandomValue() {
   const rand = Math.random();
   if (rand < 0.9) {
@@ -39,60 +58,63 @@ export function createMockData({
     hkg: getRandomValue(),
   };
 
+  const latency = {
+    ams: Math.round(1000 * (random * (1 - multiplier.ams) + multiplier.ams)),
+    iad: Math.round(1000 * (random * (1 - multiplier.iad) + multiplier.iad)),
+    gru: Math.round(1000 * (random * (1 - multiplier.gru) + multiplier.gru)),
+    syd: Math.round(1000 * (random * (1 - multiplier.syd) + multiplier.syd)),
+    fra: Math.round(1000 * (random * (1 - multiplier.fra) + multiplier.fra)),
+    hkg: Math.round(1000 * (random * (1 - multiplier.hkg) + multiplier.hkg)),
+  };
+
   return [
     {
       success: 200 === statusCode.ams,
-      latency: Math.round(
-        1000 * (random * (1 - multiplier.ams) + multiplier.ams)
-      ),
+      latency: latency.ams,
       regions: ["ams"],
       status: statusCode.ams,
       date,
+      timing: getRandomTiming(latency.ams),
     },
     {
       success: 200 === statusCode.iad,
-      latency: Math.round(
-        1000 * (random * (1 - multiplier.iad) + multiplier.iad)
-      ),
+      latency: latency.iad,
       regions: ["iad"],
       status: statusCode.iad,
       date,
+      timing: getRandomTiming(latency.iad),
     },
     {
       success: 200 === statusCode.gru,
-      latency: Math.round(
-        1000 * (random * (1 - multiplier.ams) + multiplier.gru)
-      ),
+      latency: latency.gru,
       regions: ["gru"],
       status: statusCode.gru,
       date,
+      timing: getRandomTiming(latency.gru),
     },
     {
       success: 200 === statusCode.syd,
-      latency: Math.round(
-        1000 * (random * (1 - multiplier.syd) + multiplier.syd)
-      ),
+      latency: latency.syd,
       regions: ["syd"],
       status: statusCode.syd,
       date,
+      timing: getRandomTiming(latency.syd),
     },
     {
       success: 200 === statusCode.fra,
-      latency: Math.round(
-        1000 * (random * (1 - multiplier.fra) + multiplier.fra)
-      ),
+      latency: latency.fra,
       regions: ["fra"],
       status: statusCode.fra,
       date,
+      timing: getRandomTiming(latency.fra),
     },
     {
       success: 200 === statusCode.hkg,
-      latency: Math.round(
-        1000 * (random * (1 - multiplier.hkg) + multiplier.hkg)
-      ),
+      latency: latency.hkg,
       regions: ["hkg"],
       status: statusCode.hkg,
       date,
+      timing: getRandomTiming(latency.hkg),
     },
   ];
 }

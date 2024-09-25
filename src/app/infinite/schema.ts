@@ -23,15 +23,25 @@ const stringToBoolean = z
   })
   .pipe(z.boolean().optional());
 
+export const timingSchema = z.object({
+  dns: z.number(),
+  connection: z.number(),
+  tls: z.number(),
+  ttfb: z.number(),
+  transfer: z.number(),
+});
+
 export const columnSchema = z.object({
   success: z.boolean(),
   latency: z.number(),
   status: z.number(),
   regions: z.enum(REGIONS).array(),
   date: z.date(),
+  timing: timingSchema,
 });
 
 export type ColumnSchema = z.infer<typeof columnSchema>;
+export type TimingSchema = z.infer<typeof timingSchema>;
 
 export const columnFilterSchema = z.object({
   success: z

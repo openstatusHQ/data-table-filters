@@ -205,7 +205,7 @@ export function DataTableInfinite<TData, TValue>({
         <div className="z-0">
           <Table containerClassName="overflow-clip">
             <TableHeader
-              className="sticky bg-muted"
+              className="sticky bg-muted z-10"
               style={{ top: `${topBarHeight}px` }}
             >
               {table.getHeaderGroups().map((headerGroup) => (
