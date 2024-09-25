@@ -69,6 +69,7 @@ export function createMockData({
 
   return [
     {
+      uuid: crypto.randomUUID(),
       success: 200 === statusCode.ams,
       latency: latency.ams,
       regions: ["ams"],
@@ -77,6 +78,7 @@ export function createMockData({
       timing: getRandomTiming(latency.ams),
     },
     {
+      uuid: crypto.randomUUID(),
       success: 200 === statusCode.iad,
       latency: latency.iad,
       regions: ["iad"],
@@ -85,6 +87,7 @@ export function createMockData({
       timing: getRandomTiming(latency.iad),
     },
     {
+      uuid: crypto.randomUUID(),
       success: 200 === statusCode.gru,
       latency: latency.gru,
       regions: ["gru"],
@@ -93,6 +96,7 @@ export function createMockData({
       timing: getRandomTiming(latency.gru),
     },
     {
+      uuid: crypto.randomUUID(),
       success: 200 === statusCode.syd,
       latency: latency.syd,
       regions: ["syd"],
@@ -101,6 +105,7 @@ export function createMockData({
       timing: getRandomTiming(latency.syd),
     },
     {
+      uuid: crypto.randomUUID(),
       success: 200 === statusCode.fra,
       latency: latency.fra,
       regions: ["fra"],
@@ -109,6 +114,7 @@ export function createMockData({
       timing: getRandomTiming(latency.fra),
     },
     {
+      uuid: crypto.randomUUID(),
       success: 200 === statusCode.hkg,
       latency: latency.hkg,
       regions: ["hkg"],

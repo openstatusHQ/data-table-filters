@@ -5,6 +5,7 @@ import {
   parseAsArrayOf,
   parseAsBoolean,
   parseAsInteger,
+  parseAsString,
   parseAsStringLiteral,
   parseAsTimestamp,
   type inferParserType,
@@ -39,6 +40,8 @@ export const searchParamsParser = {
   sort: parseAsSort,
   size: parseAsInteger.withDefault(20),
   start: parseAsInteger.withDefault(0),
+  // REQUIRED FOR SELECTION
+  uuid: parseAsString,
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParser);

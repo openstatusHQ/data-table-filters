@@ -32,6 +32,7 @@ export const timingSchema = z.object({
 });
 
 export const columnSchema = z.object({
+  uuid: z.string(),
   success: z.boolean(),
   latency: z.number(),
   status: z.number(),

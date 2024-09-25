@@ -19,11 +19,20 @@ import {
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
+    id: "uuid",
+    accessorKey: "uuid",
+    enableHiding: false,
+    cell: ({ row }) => {
+      const value = row.getValue("uuid") as string;
+      return <div className="font-mono max-w-[85px] truncate">{value}</div>;
+    },
+  },
+  {
     accessorKey: "success",
     header: "",
     cell: ({ row }) => {
       const value = row.getValue("success");
-      if (value) return <Check className="h-4 w-4 text-muted-foreground/50" />;
+      if (value) return <Check className="h-4 w-4 text-green-500/50" />;
       return <X className="h-4 w-4 text-destructive" />;
     },
     filterFn: (row, id, value) => {
@@ -198,7 +207,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
                         "h-2 w-2 rounded-full"
                       )}
                     />
-                    <div className="uppercase">{key}</div>
+                    <div className="uppercase text-accent-foreground">
+                      {key}
+                    </div>
                   </div>
                   <div className="font-mono">
                     {new Intl.NumberFormat("en-US", {

@@ -71,7 +71,9 @@ export function DataTableInfinite<TData, TValue>({
   const [sorting, setSorting] =
     React.useState<SortingState>(defaultColumnSorting);
   const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>("data-table-visibility", {});
+    useLocalStorage<VisibilityState>("data-table-visibility", {
+      uuid: false,
+    });
   const [controlsOpen, setControlsOpen] = useLocalStorage(
     "data-table-controls",
     true
@@ -232,6 +234,7 @@ export function DataTableInfinite<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
+                    onClick={() => setSearch({ uuid: row.getValue("uuid") })}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
