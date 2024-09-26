@@ -11,7 +11,7 @@ export type InfiniteQueryMeta = {
 
 export const dataOptions = (search: SearchParamsType) => {
   return infiniteQueryOptions({
-    queryKey: ["data-table", searchParamsSerializer(search)],
+    queryKey: ["data-table", searchParamsSerializer({ ...search, uuid: null })], // remove uuid as it would otherwise retrigger a fetch
     queryFn: async ({ pageParam = 0 }) => {
       const start = (pageParam as number) * search.size;
       const serialize = searchParamsSerializer({ ...search, start });

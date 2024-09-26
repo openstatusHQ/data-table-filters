@@ -5,18 +5,20 @@ import { formatDate, formatMilliseconds } from "@/lib/format";
 import { regions } from "@/constants/region";
 import { getTimingColor } from "@/constants/timing";
 import { Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export function SheetList({ data }: { data?: ColumnSchema }) {
   if (!data) return null;
+  const statusColor = getStatusColor(data.status);
   return (
     <dl>
-      <div className="flex gap-2 py-2 border-t text-sm sm:justify-between sm:items-center">
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
         <dt className="text-muted-foreground">ID</dt>
-        <dd className="font-mono max-w-[150px] truncate">{data.uuid}</dd>
+        <dd className="font-mono truncate">{data.uuid}</dd>
       </div>
-      <div className="flex gap-2 py-2 border-t text-sm sm:justify-between sm:items-center">
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
         <dt className="text-muted-foreground">Success</dt>
-        <dd className="font-mono max-w-[150px] truncate">
+        <dd>
           {data.success ? (
             <Check className="h-4 w-4 text-green-500" />
           ) : (
@@ -24,35 +26,40 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
           )}
         </dd>
       </div>
-      <div className="flex gap-2 py-2 border-t text-sm sm:justify-between sm:items-center">
-        <dt className="text-muted-foreground">Timestamp</dt>
-        <dd className="font-mono">{formatDate(data.date)}</dd>
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+        <dt className="text-muted-foreground">Date</dt>
+        <dd className="font-mono text-right">{formatDate(data.date)}</dd>
       </div>
-      <div className="flex gap-2 py-2 border-t text-sm sm:justify-between sm:items-center">
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
         <dt className="text-muted-foreground">Region</dt>
-        <dd className="font-mono">
+        <dd className="font-mono text-right">
           <span className="text-muted-foreground text-xs">
             {regions[data.regions[0]]}
           </span>{" "}
           {data.regions[0]}
         </dd>
       </div>
-      <div className="flex gap-2 py-2 border-t text-sm sm:justify-between sm:items-center">
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
         <dt className="text-muted-foreground">Status Code</dt>
-        <dd className={cn(getStatusColor(data.status).text, "font-mono")}>
-          {data.status}
+        <dd>
+          <Badge
+            variant="outline"
+            className={`${statusColor.bg} ${statusColor.border} ${statusColor.text} font-mono`}
+          >
+            {data.status}
+          </Badge>
         </dd>
       </div>
-      <div className="flex gap-2 py-2 border-t text-sm sm:justify-between sm:items-center">
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
         <dt className="text-muted-foreground">Latency</dt>
         <dd className="font-mono">{formatMilliseconds(data.latency)} ms</dd>
       </div>
-      <div className="flex flex-col gap-2 py-2 border-t text-sm">
+      <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
         <dt className="text-muted-foreground">Timing Phases</dt>
         {Object.entries(data.timing).map(([key, value]) => (
           <div
             key={key}
-            className="flex gap-2 text-xs sm:justify-between sm:items-center"
+            className="flex gap-2 text-xs justify-between items-center"
           >
             <div className="text-muted-foreground uppercase">{key}</div>
             <div className="flex flex-1 gap-2 items-center sm:justify-end">

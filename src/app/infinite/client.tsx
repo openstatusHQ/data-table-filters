@@ -82,7 +82,7 @@ export function Client() {
         open={!!search.uuid && !!selected}
         onOpenChange={() => setSearch({ uuid: null })}
       >
-        <SheetContent>
+        <SheetContent className="sm:max-w-md">
           <SheetHeader>
             <SheetTitle>Response Log</SheetTitle>
             <SheetDescription>

@@ -86,9 +86,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         return (
           <Badge
             variant="outline"
-            className={`${colors.bg} ${colors.border} ${colors.text}`}
+            className={`${colors.bg} ${colors.border} ${colors.text} font-mono`}
           >
-            <span className="font-mono">{`${value}`}</span>
+            {value}
           </Badge>
         );
       }
