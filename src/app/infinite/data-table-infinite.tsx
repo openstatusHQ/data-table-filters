@@ -73,6 +73,11 @@ export function DataTableInfinite<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     useLocalStorage<VisibilityState>("data-table-visibility", {
       uuid: false,
+      dns: false,
+      connection: false,
+      tls: false,
+      ttfb: false,
+      transfer: false,
     });
   const [controlsOpen, setControlsOpen] = useLocalStorage(
     "data-table-controls",

@@ -225,4 +225,94 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       );
     },
   },
+  {
+    id: "dns",
+    accessorFn: (row) => row.timing.dns,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="DNS" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("dns") as number;
+      return (
+        <div className="font-mono">
+          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
+            value
+          )}
+          <span className="text-muted-foreground">ms</span>
+        </div>
+      );
+    },
+  },
+  {
+    id: "connection",
+    accessorFn: (row) => row.timing.connection,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Connection" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("connection") as number;
+      return (
+        <div className="font-mono">
+          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
+            value
+          )}
+          <span className="text-muted-foreground">ms</span>
+        </div>
+      );
+    },
+  },
+  {
+    id: "tls",
+    accessorFn: (row) => row.timing.tls,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="TLS" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("tls") as number;
+      return (
+        <div className="font-mono">
+          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
+            value
+          )}
+          <span className="text-muted-foreground">ms</span>
+        </div>
+      );
+    },
+  },
+  {
+    id: "ttfb",
+    accessorFn: (row) => row.timing.ttfb,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="TTFB" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("ttfb") as number;
+      return (
+        <div className="font-mono">
+          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
+            value
+          )}
+          <span className="text-muted-foreground">ms</span>
+        </div>
+      );
+    },
+  },
+  {
+    id: "transfer",
+    accessorFn: (row) => row.timing.transfer,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Transfer" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("transfer") as number;
+      return (
+        <div className="font-mono">
+          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
+            value
+          )}
+          <span className="text-muted-foreground">ms</span>
+        </div>
+      );
+    },
+  },
 ];
