@@ -1,17 +1,24 @@
 "use client";
 
-import { Settings2 } from "lucide-react";
+import { Check, Settings2 } from "lucide-react";
 import type { Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface DataTableViewOptionsProps<TData> {
   table: Table<TData>;
@@ -20,42 +27,61 @@ interface DataTableViewOptionsProps<TData> {
 export function DataTableViewOptions<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="h-9 w-9">
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          role="combobox"
+          aria-expanded={open}
+          className="h-9 w-9"
+        >
           <Settings2 className="h-4 w-4" />
           <span className="sr-only">View</span>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[150px]">
-        <DropdownMenuLabel>Display properties</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {table
-          .getAllColumns()
-          .filter(
-            (column) =>
-              typeof column.accessorFn !== "undefined" && column.getCanHide()
-          )
-          .map((column) => {
-            return (
-              <DropdownMenuCheckboxItem
-                key={column.id}
-                // TODO: better extract the name into a separate config (to be used here and the data-table header)
-                className={
-                  ["tls", "ttfb", "dns"].includes(column.id)
-                    ? "uppercase"
-                    : "capitalize"
-                }
-                onSelect={(e) => e.preventDefault()}
-                checked={column.getIsVisible()}
-                onCheckedChange={(value) => column.toggleVisibility(!!value)}
-              >
-                {column.id}
-              </DropdownMenuCheckboxItem>
-            );
-          })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0">
+        <Command>
+          <CommandInput placeholder="Search options..." />
+          <CommandList>
+            <CommandEmpty>No option found.</CommandEmpty>
+            <CommandGroup>
+              {table
+                .getAllColumns()
+                .filter(
+                  (column) =>
+                    typeof column.accessorFn !== "undefined" &&
+                    column.getCanHide()
+                )
+                .map((column) => (
+                  <CommandItem
+                    key={column.id}
+                    value={column.id}
+                    onSelect={() =>
+                      column.toggleVisibility(!column.getIsVisible())
+                    }
+                    className={
+                      ["tls", "ttfb", "dns"].includes(column.id)
+                        ? "uppercase"
+                        : "capitalize"
+                    }
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        column.getIsVisible() ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {column.id}
+                  </CommandItem>
+                ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
