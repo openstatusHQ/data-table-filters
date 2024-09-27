@@ -162,8 +162,6 @@ export function DataTableInfinite<TData, TValue>({
       return prev;
     }, {} as Record<string, unknown>);
 
-    console.log({ search });
-
     setSearch(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnFilters]);

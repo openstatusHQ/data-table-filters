@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { REGIONS, type ColumnSchema } from "./schema";
+import { METHODS, REGIONS, type ColumnSchema } from "./schema";
 import type { DataTableFilterField, Option } from "@/_data-table/types";
 import { getStatusColor } from "@/constants/status-code";
 
@@ -29,6 +29,18 @@ export const filterFields = [
     defaultOpen: true,
   },
   {
+    label: "Host",
+    value: "host",
+    type: "input",
+    options: [{ label: "", value: "" }], // REMINDER: this is a placeholder to set the type in the client.tsx
+  },
+  {
+    label: "Pathname",
+    value: "pathname",
+    type: "input",
+    options: [{ label: "", value: "" }], // REMINDER: this is a placeholder to set the type in the client.tsx
+  },
+  {
     label: "Status Code",
     value: "status",
     type: "checkbox",
@@ -47,6 +59,16 @@ export const filterFields = [
           {props.value}
         </span>
       );
+    },
+  },
+  {
+    label: "Methods",
+    value: "method",
+    type: "checkbox",
+    options: METHODS.map((region) => ({ label: region, value: region })),
+    defaultOpen: true,
+    component: (props: Option) => {
+      return <span className="font-mono">{props.value}</span>;
     },
   },
   {

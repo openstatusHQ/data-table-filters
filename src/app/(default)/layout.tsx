@@ -2,7 +2,14 @@ import { ModeToggle } from "@/components/theme/toggle-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Github, Globe, LoaderCircle, Twitter } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronRight,
+  Github,
+  Globe,
+  LoaderCircle,
+  Twitter,
+} from "lucide-react";
 import Link from "next/link";
 
 import * as React from "react";
@@ -16,13 +23,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="max-w-7xl mx-auto px-4 sm:px-8">
             <p className="flex items-center justify-center gap-2">
               <Link href="/infinite">
-                New Example:{" "}
+                <span>New Example: </span>
                 <span className="underline underline-offset-4 decoration-dashed">
                   Infinite Scroll
                 </span>{" "}
-                Now Available, Inspired by Vercel
+                <span className="mr-1">Now Available, Inspired by Vercel</span>
+                <ArrowRight className="relative mb-[1px] inline h-4 w-0 transition-all group-hover:w-4" />
+                <ChevronRight className="relative mb-[1px] inline h-4 w-4 transition-all group-hover:w-0" />
               </Link>
-              <LoaderCircle className="h-4 w-4 shrink-0 group-hover:animate-spin" />
             </p>
           </div>
         </div>

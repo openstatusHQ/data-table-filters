@@ -46,6 +46,13 @@ export function Client() {
               value,
             })) ?? field.options;
         }
+        if (field.value === "host" || field.value === "pathname") {
+          field.options =
+            totalFilters?.[field.value].map((value) => ({
+              label: `${value}`,
+              value,
+            })) ?? field.options;
+        }
         return field;
       }),
     [totalFilters]
@@ -82,7 +89,7 @@ export function Client() {
         open={!!search.uuid && !!selected}
         onOpenChange={() => setSearch({ uuid: null })}
       >
-        <SheetContent className="sm:max-w-md">
+        <SheetContent className="sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Response Log</SheetTitle>
             <SheetDescription>

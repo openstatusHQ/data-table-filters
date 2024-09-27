@@ -31,15 +31,6 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
         <dd className="font-mono text-right">{formatDate(data.date)}</dd>
       </div>
       <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
-        <dt className="text-muted-foreground">Region</dt>
-        <dd className="font-mono text-right">
-          <span className="text-muted-foreground text-xs">
-            {regions[data.regions[0]]}
-          </span>{" "}
-          {data.regions[0]}
-        </dd>
-      </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
         <dt className="text-muted-foreground">Status Code</dt>
         <dd>
           <Badge
@@ -48,6 +39,23 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
           >
             {data.status}
           </Badge>
+        </dd>
+      </div>
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+        <dt className="text-muted-foreground">Host</dt>
+        <dd className="font-mono truncate">{data.host}</dd>
+      </div>
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+        <dt className="text-muted-foreground">Pathname</dt>
+        <dd className="font-mono truncate">{data.pathname}</dd>
+      </div>
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+        <dt className="text-muted-foreground">Region</dt>
+        <dd className="font-mono text-right">
+          <span className="text-muted-foreground text-xs">
+            {regions[data.regions[0]]}
+          </span>{" "}
+          {data.regions[0]}
         </dd>
       </div>
       <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
@@ -78,6 +86,14 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
             />
           </div>
         ))}
+      </div>
+      <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
+        <dt className="text-muted-foreground">Headers</dt>
+        <div className="rounded-md bg-muted/50 border p-2 overflow-hidden">
+          <pre className="overflow-x-auto">
+            {JSON.stringify(data.headers, null, 2)}
+          </pre>
+        </div>
       </div>
     </dl>
   );

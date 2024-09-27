@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus, X } from "lucide-react";
-import type { ColumnSchema, TimingSchema } from "./schema";
+import type { ColumnSchema, METHODS, TimingSchema } from "./schema";
 import { isArrayOfDates, isArrayOfNumbers } from "@/lib/helpers";
 import { DataTableColumnHeader } from "@/_data-table/data-table-column-header";
 import { format, isSameDay } from "date-fns";
@@ -104,7 +104,39 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     },
   },
   {
+    // TODO: make it a type of MethodSchema!
+    accessorKey: "method",
+    header: "Method",
+    cell: ({ row }) => {
+      const value = row.getValue("method") as string;
+      return <div className="font-mono">{value}</div>;
+    },
+    filterFn: (row, id, value) => {
+      const rowValue = row.getValue(id) as keyof typeof METHODS;
+      if (typeof value === "string") return value === rowValue;
+      if (Array.isArray(value)) return value.includes(rowValue);
+      return false;
+    },
+  },
+  {
+    accessorKey: "host",
+    header: "Host",
+    cell: ({ row }) => {
+      const value = row.getValue("host") as string;
+      return <div className="font-mono max-w-[120px] truncate">{value}</div>;
+    },
+  },
+  {
+    accessorKey: "pathname",
+    header: "Pathname",
+    cell: ({ row }) => {
+      const value = row.getValue("pathname") as string;
+      return <div className="font-mono max-w-[120px] truncate">{value}</div>;
+    },
+  },
+  {
     accessorKey: "latency",
+    // TODO: check if we can right align the table header/cell (makes is easier to read)
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Latency" />
     ),

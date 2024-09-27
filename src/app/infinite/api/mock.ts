@@ -1,4 +1,4 @@
-import { ColumnSchema, REGIONS } from "../schema";
+import { ColumnSchema, METHODS, REGIONS } from "../schema";
 import { subMinutes } from "date-fns";
 
 function getRandomTiming(latency: number) {
@@ -20,7 +20,7 @@ function getRandomTiming(latency: number) {
   };
 }
 
-function getRandomValue() {
+function getRandomStatusCode() {
   const rand = Math.random();
   if (rand < 0.9) {
     return 200;
@@ -29,6 +29,37 @@ function getRandomValue() {
   } else {
     return 500;
   }
+}
+
+const pathnames = ["/bikes/gravel", "/bikes/racing", "/bikes/mountain"];
+
+function getRandomRequestObject(): {
+  method: (typeof METHODS)[number];
+  host: string;
+  pathname: string;
+} {
+  const rand = Math.random();
+  if (rand < 0.5) {
+    return {
+      method: "POST",
+      host: "api.acme-shop.com",
+      pathname: "/v1/products",
+    };
+  } else {
+    return {
+      method: "GET",
+      host: "acme-shop.com",
+      pathname: pathnames[Math.floor(Math.random() * pathnames.length)],
+    };
+  }
+}
+
+function getHeaders() {
+  return {
+    Age: "0",
+    "Cache-Control": "private, no-cache, no-store, max-age=0, must-revalidate",
+    Server: "Cloudflare",
+  };
 }
 
 const multiplier: Record<(typeof REGIONS)[number], number> = {
@@ -50,12 +81,12 @@ export function createMockData({
   const random = Math.random();
 
   const statusCode = {
-    ams: getRandomValue(),
-    iad: getRandomValue(),
-    gru: getRandomValue(),
-    syd: getRandomValue(),
-    fra: getRandomValue(),
-    hkg: getRandomValue(),
+    ams: getRandomStatusCode(),
+    iad: getRandomStatusCode(),
+    gru: getRandomStatusCode(),
+    syd: getRandomStatusCode(),
+    fra: getRandomStatusCode(),
+    hkg: getRandomStatusCode(),
   };
 
   const latency = {
@@ -67,6 +98,9 @@ export function createMockData({
     hkg: Math.round(1000 * (random * (1 - multiplier.hkg) + multiplier.hkg)),
   };
 
+  const requestObject = getRandomRequestObject();
+  const headers = getHeaders();
+
   return [
     {
       uuid: crypto.randomUUID(),
@@ -76,6 +110,8 @@ export function createMockData({
       status: statusCode.ams,
       date,
       timing: getRandomTiming(latency.ams),
+      headers,
+      ...requestObject,
     },
     {
       uuid: crypto.randomUUID(),
@@ -85,6 +121,8 @@ export function createMockData({
       status: statusCode.iad,
       date,
       timing: getRandomTiming(latency.iad),
+      headers,
+      ...requestObject,
     },
     {
       uuid: crypto.randomUUID(),
@@ -94,6 +132,8 @@ export function createMockData({
       status: statusCode.gru,
       date,
       timing: getRandomTiming(latency.gru),
+      headers,
+      ...requestObject,
     },
     {
       uuid: crypto.randomUUID(),
@@ -103,6 +143,8 @@ export function createMockData({
       status: statusCode.syd,
       date,
       timing: getRandomTiming(latency.syd),
+      headers,
+      ...requestObject,
     },
     {
       uuid: crypto.randomUUID(),
@@ -112,6 +154,8 @@ export function createMockData({
       status: statusCode.fra,
       date,
       timing: getRandomTiming(latency.fra),
+      headers,
+      ...requestObject,
     },
     {
       uuid: crypto.randomUUID(),
@@ -121,6 +165,8 @@ export function createMockData({
       status: statusCode.hkg,
       date,
       timing: getRandomTiming(latency.hkg),
+      headers,
+      ...requestObject,
     },
   ];
 }

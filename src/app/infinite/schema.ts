@@ -7,6 +7,7 @@ export const SPACE_DELIMITER = "_";
 export const RANGE_DELIMITER = "-";
 
 export const REGIONS = ["ams", "gru", "syd", "hkg", "fra", "iad"] as const;
+export const METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
 export const TAGS = ["web", "api", "enterprise", "app"] as const;
 
 // https://github.com/colinhacks/zod/issues/2985#issue-2008642190
@@ -33,12 +34,16 @@ export const timingSchema = z.object({
 
 export const columnSchema = z.object({
   uuid: z.string(),
+  method: z.enum(METHODS),
+  host: z.string(),
+  pathname: z.string(),
   success: z.boolean(),
   latency: z.number(),
   status: z.number(),
   regions: z.enum(REGIONS).array(),
   date: z.date(),
   timing: timingSchema,
+  headers: z.record(z.string()),
 });
 
 export type ColumnSchema = z.infer<typeof columnSchema>;
@@ -50,6 +55,13 @@ export const columnFilterSchema = z.object({
     .transform((val) => val.split(ARRAY_DELIMITER))
     .pipe(stringToBoolean.array())
     .optional(),
+  method: z
+    .string()
+    .transform((val) => val.split(ARRAY_DELIMITER))
+    .pipe(z.enum(METHODS).array())
+    .optional(),
+  host: z.string().optional(),
+  pathname: z.string().optional(),
   latency: z
     .string()
     .transform((val) => val.split(SLIDER_DELIMITER))
