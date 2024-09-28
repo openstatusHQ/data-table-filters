@@ -2,6 +2,8 @@
 
 This is a standalone data-table demo that we will be using within the [OpenStatus](https://openstatus.dev) dashboard.
 
+![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
+
 To make it not only more accessible for you to use, but also work on PoC/MVP with data-tables, we have started this repository. We will maintain it and add new examples over time.
 
 It currently includes:
@@ -36,4 +38,4 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Want more?
 
-If you are looking for specific use-cases or like what we are building and want to get in touch, feel free to write to [ping@openstatus.dev](mailto:ping@openstatus.dev) or book a call via [cal.com](https://cal.com/team/openstatus/30min).
+If you are looking for specific use-cases or like what we are building and want to hire us, feel free write us to [hire@openstatus.dev](mailto:hire@openstatus.dev) or book a call via [cal.com](https://cal.com/team/openstatus/30min).
