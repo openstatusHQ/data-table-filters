@@ -9,7 +9,7 @@ import { format, isSameDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/constants/status-code";
 import { regions } from "@/constants/region";
-import { getTimingColor } from "@/constants/timing";
+import { getTimingColor, getTimingPercentage } from "@/constants/timing";
 import { cn } from "@/lib/utils";
 import {
   HoverCard,
@@ -51,7 +51,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("date");
       return (
-        <div className="font-mono" suppressHydrationWarning>
+        <div className="font-mono whitespace-nowrap" suppressHydrationWarning>
           {format(new Date(`${value}`), "LLL dd, y HH:mm")}
         </div>
       );
@@ -176,7 +176,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
           );
         } else {
           return (
-            <div>
+            <div className="whitespace-nowrap">
               <span className="font-mono">{value}</span>{" "}
               <span className="text-muted-foreground">
                 - {`${regions[value[0]]}`}
@@ -202,10 +202,11 @@ export const columns: ColumnDef<ColumnSchema>[] = [
   },
   {
     accessorKey: "timing",
-    header: "Timing Phases",
+    header: () => <div className="whitespace-nowrap">Timing Phases</div>,
     cell: ({ row }) => {
       const timing = row.getValue("timing") as TimingSchema;
       const latency = row.getValue("latency") as number;
+      const percentage = getTimingPercentage(timing, latency);
       return (
         <HoverCard>
           <HoverCardTrigger
@@ -227,30 +228,32 @@ export const columns: ColumnDef<ColumnSchema>[] = [
           </HoverCardTrigger>
           <HoverCardContent side="bottom" className="p-2 w-auto">
             <div className="flex flex-col gap-1">
-              {Object.entries(timing).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between gap-4 text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={cn(
-                        getTimingColor(key as keyof typeof timing),
-                        "h-2 w-2 rounded-full"
-                      )}
-                    />
-                    <div className="uppercase text-accent-foreground">
-                      {key}
+              {Object.entries(timing).map(([key, value]) => {
+                const color = getTimingColor(key as keyof typeof timing);
+                const percentageValue =
+                  percentage[key as keyof typeof percentage];
+                return (
+                  <div key={key} className="grid grid-cols-2 gap-4 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className={cn(color, "h-2 w-2 rounded-full")} />
+                      <div className="uppercase text-accent-foreground">
+                        {key}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="font-mono text-muted-foreground">
+                        {percentageValue}
+                      </div>
+                      <div className="font-mono">
+                        {new Intl.NumberFormat("en-US", {
+                          maximumFractionDigits: 3,
+                        }).format(value)}
+                        <span className="text-muted-foreground">ms</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="font-mono">
-                    {new Intl.NumberFormat("en-US", {
-                      maximumFractionDigits: 3,
-                    }).format(value)}
-                    <span className="text-muted-foreground">ms</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </HoverCardContent>
         </HoverCard>

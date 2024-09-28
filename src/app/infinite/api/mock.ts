@@ -6,7 +6,7 @@ function getRandomTiming(latency: number) {
   const dns = Math.random() * (0.15 - 0.05) + 0.05; // 5% to 15%
   const connection = Math.random() * (0.3 - 0.1) + 0.1; // 10% to 30%
   const tls = Math.random() * (0.1 - 0.05) + 0.05; // 5% to 10%
-  const transfer = Math.random() * (0.2 - 0.1) + 0.1; // 10% to 20%
+  const transfer = Math.random() * (0.004 - 0) + 0.004; // 0% to 0.4%
 
   // Ensure the sum of dns, connection, tls, and transfer is subtracted from 100% for ttfb
   const remaining = 1 - (dns + connection + tls + transfer); // Calculate remaining for ttfb
@@ -29,6 +29,10 @@ function getRandomStatusCode() {
   } else {
     return 500;
   }
+}
+
+function getMessage() {
+  return 'ERR_INTERNAL_DISASTER: "The server spilled coffee on itself."';
 }
 
 const pathnames = ["/bikes/gravel", "/bikes/racing", "/bikes/mountain"];
@@ -111,6 +115,7 @@ export function createMockData({
       date,
       timing: getRandomTiming(latency.ams),
       headers,
+      message: 500 === statusCode.ams ? getMessage() : undefined,
       ...requestObject,
     },
     {
@@ -122,6 +127,7 @@ export function createMockData({
       date,
       timing: getRandomTiming(latency.iad),
       headers,
+      message: 500 === statusCode.iad ? getMessage() : undefined,
       ...requestObject,
     },
     {
@@ -133,6 +139,7 @@ export function createMockData({
       date,
       timing: getRandomTiming(latency.gru),
       headers,
+      message: 500 === statusCode.gru ? getMessage() : undefined,
       ...requestObject,
     },
     {
@@ -144,6 +151,7 @@ export function createMockData({
       date,
       timing: getRandomTiming(latency.syd),
       headers,
+      message: 500 === statusCode.syd ? getMessage() : undefined,
       ...requestObject,
     },
     {
@@ -155,6 +163,7 @@ export function createMockData({
       date,
       timing: getRandomTiming(latency.fra),
       headers,
+      message: 500 === statusCode.fra ? getMessage() : undefined,
       ...requestObject,
     },
     {
@@ -166,6 +175,7 @@ export function createMockData({
       date,
       timing: getRandomTiming(latency.hkg),
       headers,
+      message: 500 === statusCode.hkg ? getMessage() : undefined,
       ...requestObject,
     },
   ];

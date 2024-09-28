@@ -49,19 +49,22 @@ export function DataTableToolbar<TData>({
                 size="sm"
                 variant="ghost"
                 onClick={() => setControlsOpen((prev) => !prev)}
+                className="flex gap-2"
               >
                 {controlsOpen ? (
                   <>
-                    <PanelLeftClose className="mr-2 h-4 w-4" /> Hide Controls
+                    <PanelLeftClose className="h-4 w-4" />
+                    <span className="hidden sm:block">Hide Controls</span>
                   </>
                 ) : (
                   <>
-                    <PanelLeftOpen className="mr-2 h-4 w-4" /> Show Controls
+                    <PanelLeftOpen className="h-4 w-4" />
+                    <span className="hidden sm:block">Show Controls</span>
                   </>
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent side="right">
               <p>
                 Toggle controls with{" "}
                 <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">

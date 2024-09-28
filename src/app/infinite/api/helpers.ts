@@ -1,6 +1,11 @@
 import { isSameDay } from "date-fns";
 import { type ColumnSchema, REGIONS } from "../schema";
 import type { SearchParamsType } from "../search-params";
+import {
+  isArrayOfBooleans,
+  isArrayOfDates,
+  isArrayOfNumbers,
+} from "@/lib/helpers";
 
 export function filterData(
   data: ColumnSchema[],
@@ -11,21 +16,20 @@ export function filterData(
     for (const key in filters) {
       const filter = filters[key as keyof typeof filters];
       if (filter === undefined || filter === null) continue;
-      if (key === "latency" && Array.isArray(filter)) {
-        if (filter.length === 1 && row[key as keyof typeof row] !== filter[0]) {
+      if (key === "latency" && isArrayOfNumbers(filter)) {
+        if (filter.length === 1 && row[key as "latency"] !== filter[0]) {
           return false;
         } else if (
           filter.length === 2 &&
-          (row[key as keyof typeof row] < filter[0] ||
-            row[key as keyof typeof row] > filter[1])
+          (row[key as "latency"] < filter[0] ||
+            row[key as "latency"] > filter[1])
         ) {
           return false;
         }
         return true;
       }
-      if (key === "status" && Array.isArray(filter)) {
-        const typedFilter = filter as number[];
-        if (!typedFilter.includes(row[key as "status"])) {
+      if (key === "status" && isArrayOfNumbers(filter)) {
+        if (!filter.includes(row[key as "status"])) {
           return false;
         }
       }
@@ -35,24 +39,19 @@ export function filterData(
           return false;
         }
       }
-      if (key === "date" && Array.isArray(filter)) {
-        const typedFilter = filter as Date[];
-        if (
-          typedFilter.length === 1 &&
-          !isSameDay(row[key as "date"], typedFilter[0])
-        ) {
+      if (key === "date" && isArrayOfDates(filter)) {
+        if (filter.length === 1 && !isSameDay(row[key as "date"], filter[0])) {
           return false;
         } else if (
-          typedFilter.length === 2 &&
-          (row[key as "date"].getTime() < typedFilter[0].getTime() ||
-            row[key as "date"].getTime() > typedFilter[1].getTime())
+          filter.length === 2 &&
+          (row[key as "date"].getTime() < filter[0].getTime() ||
+            row[key as "date"].getTime() > filter[1].getTime())
         ) {
           return false;
         }
       }
-      if (key === "success" && Array.isArray(filter)) {
-        const typedFilter = filter as boolean[];
-        if (!typedFilter.includes(row[key as "success"])) {
+      if (key === "success" && isArrayOfBooleans(filter)) {
+        if (!filter.includes(row[key as "success"])) {
           return false;
         }
       }

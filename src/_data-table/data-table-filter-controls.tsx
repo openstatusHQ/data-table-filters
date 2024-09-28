@@ -38,7 +38,7 @@ export function DataTableFilterControls<TData, TValue>({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex h-[46px] items-center justify-between gap-3">
-        <p className="font-medium text-foreground">Filters</p>
+        <p className="font-medium text-foreground px-2">Filters</p>
         <div>
           {filters.length ? (
             <Button

@@ -44,6 +44,7 @@ export const columnSchema = z.object({
   date: z.date(),
   timing: timingSchema,
   headers: z.record(z.string()),
+  message: z.string().optional(),
 });
 
 export type ColumnSchema = z.infer<typeof columnSchema>;
