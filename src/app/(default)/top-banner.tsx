@@ -3,12 +3,12 @@ import Link from "next/link";
 
 export function TopBanner() {
   return (
-    <div className="group bg-foreground text-background">
+    <div className="group bg-muted/50 text-foreground border-b">
       <div className="container mx-auto px-4 py-2 sm:px-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <p className="flex items-center justify-center gap-2">
             <Link href="/i">
-              <span>New Example: </span>
+              <span className="font-semibold">New Example: </span>
               <span className="underline underline-offset-4 decoration-dashed">
                 Infinite Scroll
               </span>{" "}
