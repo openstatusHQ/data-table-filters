@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             target="_blank"
             rel="noreferrer"
           >
-            <span className="mr-1">GitHub</span>
+            <span className="mr-1">View GitHub Repo</span>
             <ArrowRight className="relative mb-[1px] inline h-4 w-0 transition-all group-hover:w-4" />
             <ChevronRight className="relative mb-[1px] inline h-4 w-4 transition-all group-hover:w-0" />
           </a>
