@@ -178,7 +178,7 @@ export function DataTableInfinite<TData, TValue>({
       <div
         className={cn(
           "w-full sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72",
-          "sm:sticky sm:top-0 h-full max-h-screen overflow-y-scroll",
+          "sm:sticky sm:top-0 h-full max-h-screen sm:overflow-y-scroll",
           !controlsOpen && "hidden"
         )}
       >

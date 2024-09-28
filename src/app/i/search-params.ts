@@ -42,7 +42,7 @@ export const searchParamsParser = {
   date: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER),
   // REQUIRED FOR SORTING & PAGINATION
   sort: parseAsSort,
-  size: parseAsInteger.withDefault(20),
+  size: parseAsInteger.withDefault(30),
   start: parseAsInteger.withDefault(0),
   // REQUIRED FOR SELECTION
   uuid: parseAsString,
