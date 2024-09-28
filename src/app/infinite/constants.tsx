@@ -75,7 +75,6 @@ export const filterFields = [
     value: "regions",
     type: "checkbox",
     options: REGIONS.map((region) => ({ label: region, value: region })),
-    defaultOpen: true,
     component: (props: Option) => {
       return <span className="font-mono">{props.value}</span>;
     },
