@@ -8,8 +8,8 @@ To make it not only more accessible for you to use, but also work on PoC/MVP wit
 
 It currently includes:
 
-- data-table with simple pagination (see [/](https://data-table.openstatus.dev))
-- data-table with infinite scroll and click details (see [/infinite](https://data-table.openstatus.dev/infinite))
+- [data-table with simple pagination](https://data-table.openstatus.dev)
+- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/i)
 
 The examples are heavily inspired by datadog and vercel log tables.
 
@@ -28,7 +28,7 @@ We will consider making an example with [vitejs](https://vitejs.dev) for all our
 
 ## Getting Started
 
-First, run the development server:
+No environment variable required. Run the development server:
 
 ```bash
 npm run dev
