@@ -2,40 +2,15 @@ import { ModeToggle } from "@/components/theme/toggle-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  ArrowRight,
-  ChevronRight,
-  Github,
-  Globe,
-  LoaderCircle,
-  Twitter,
-} from "lucide-react";
-import Link from "next/link";
+import { Github, Globe, Twitter } from "lucide-react";
 
 import * as React from "react";
+import { TopBanner } from "./top-banner";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* START TOP BANNER */}
-      <div className="group bg-foreground text-background">
-        <div className="container mx-auto px-4 py-2 sm:px-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8">
-            <p className="flex items-center justify-center gap-2">
-              <Link href="/i">
-                <span>New Example: </span>
-                <span className="underline underline-offset-4 decoration-dashed">
-                  Infinite Scroll
-                </span>{" "}
-                <span className="mr-1">Now Available, Inspired by Vercel</span>
-                <ArrowRight className="relative mb-[1px] inline h-4 w-0 transition-all group-hover:w-4" />
-                <ChevronRight className="relative mb-[1px] inline h-4 w-4 transition-all group-hover:w-0" />
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-      {/* END TOP BANNER */}
+      <TopBanner />
       <main className="container mx-auto flex min-h-screen flex-col gap-4 p-4 sm:p-16">
         <div className="sm:sticky top-0 flex w-full max-w-7xl mx-auto">
           <div className="sm:absolute sm:top-2 sm:-right-12 gap-2 p-1 flex-1 flex sm:flex-col justify-center items-center">
