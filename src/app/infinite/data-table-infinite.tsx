@@ -38,6 +38,8 @@ import { searchParamsParser } from "./search-params";
 import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarFooter } from "./sidebar-footer";
+import { Separator } from "@/components/ui/separator";
 
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -175,16 +177,22 @@ export function DataTableInfinite<TData, TValue>({
     <div className="flex w-full min-h-screen h-full flex-col sm:flex-row">
       <div
         className={cn(
-          "w-full sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 p-2",
+          "w-full sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72",
           "sm:sticky sm:top-0 h-full max-h-screen overflow-y-scroll",
           !controlsOpen && "hidden"
         )}
       >
-        <DataTableFilterControls
-          table={table}
-          columns={columns}
-          filterFields={filterFields}
-        />
+        <div className="p-2 flex-1">
+          <DataTableFilterControls
+            table={table}
+            columns={columns}
+            filterFields={filterFields}
+          />
+        </div>
+        <Separator className="my-2" />
+        <div className="p-2">
+          <SidebarFooter />
+        </div>
       </div>
       <div className="flex max-w-full flex-1 flex-col sm:border-l border-border overflow-clip">
         <div
