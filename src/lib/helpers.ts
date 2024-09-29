@@ -28,6 +28,10 @@ type FlattenedObject<T extends object> = {
   [K in keyof Flatten<T> as K extends string ? K : never]: Flatten<T>[K];
 };
 
+function isPlainObject(obj: any): boolean {
+  return Object.prototype.toString.call(obj) === "[object Object]";
+}
+
 export function flattenObject<T extends object>(
   obj: T,
   parentKey = "",
@@ -38,11 +42,7 @@ export function flattenObject<T extends object>(
       const newKey = parentKey ? `${parentKey}.${key}` : key;
 
       // If the value is an object, recursively flatten it
-      if (
-        typeof obj[key] === "object" &&
-        obj[key] !== null &&
-        !Array.isArray(obj[key])
-      ) {
+      if (isPlainObject(obj[key])) {
         flattenObject<object>(obj[key] as object, newKey, result);
       } else {
         result[newKey] = obj[key];
