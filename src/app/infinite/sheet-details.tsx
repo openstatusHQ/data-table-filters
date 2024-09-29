@@ -1,25 +1,158 @@
 "use client";
-
 import { ColumnSchema } from "./schema";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  FunctionSquare,
+  Info,
+  X,
+} from "lucide-react";
+import * as React from "react";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/custom/sheet";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
 import { cn } from "@/lib/utils";
-import { getStatusColor } from "@/constants/status-code";
-import { formatDate, formatMilliseconds } from "@/lib/format";
-import { regions } from "@/constants/region";
 import { getTimingColor, getTimingPercentage } from "@/constants/timing";
-import { Check, FunctionSquare, Info, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { formatDate, formatMilliseconds } from "@/lib/format";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
+import { Badge } from "@/components/ui/badge";
+import { getStatusColor } from "@/constants/status-code";
+import type { Table } from "@tanstack/react-table";
+import { regions } from "@/constants/region";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function SheetList({ data }: { data?: ColumnSchema }) {
-  if (!data) return null;
+export interface DataTableToolbarProps<TData> {
+  table: Table<TData>;
+}
+
+export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
+  const [selected, setSelected] = React.useState<ColumnSchema | undefined>();
+
+  const selectedRowKey =
+    Object.keys(table.getState().rowSelection)?.[0] || undefined;
+
+  const index = table
+    .getCoreRowModel()
+    .flatRows.findIndex((row) => row.id === selectedRowKey);
+
+  const nextId = React.useMemo(
+    () => table.getCoreRowModel().flatRows[index + 1]?.id,
+    [index, table]
+  );
+
+  const prevId = React.useMemo(
+    () => table.getCoreRowModel().flatRows[index - 1]?.id,
+    [index, table]
+  );
+
+  const onPrev = React.useCallback(() => {
+    if (prevId) table.setRowSelection({ [prevId]: true });
+  }, [prevId, table]);
+
+  const onNext = React.useCallback(() => {
+    if (nextId) table.setRowSelection({ [nextId]: true });
+  }, [nextId, table]);
+
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (!selected) return;
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        onPrev();
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        onNext();
+      }
+    };
+
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [selected, onNext, onPrev]);
+
+  const selectedRows = table.getSelectedRowModel().rows;
+
+  React.useEffect(() => {
+    // FIXME: this is `ColumnSchema` and not `TData` specific - we need to find a way to make it generic
+    setSelected(
+      selectedRows.map((row) => row.original)?.[0] as unknown as
+        | ColumnSchema
+        | undefined
+    );
+  }, [selectedRows]);
+
+  return (
+    <Sheet
+      open={!!selected}
+      onOpenChange={() => table.toggleAllRowsSelected(false)}
+    >
+      <SheetContent className="sm:max-w-md overflow-y-auto" hideClose>
+        <SheetHeader>
+          <div className="flex items-center justify-between gap-2">
+            <SheetTitle className="text-left font-mono truncate">
+              {selected?.pathname}
+            </SheetTitle>
+            <div className="flex items-center gap-1 h-7">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                disabled={!prevId}
+                onClick={onPrev}
+              >
+                <ChevronUp className="h-5 w-5" />
+                <span className="sr-only">Previous</span>
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                disabled={!nextId}
+                onClick={onNext}
+              >
+                <ChevronDown className="h-5 w-5" />
+                <span className="sr-only">Next</span>
+              </Button>
+              <Separator orientation="vertical" className="mx-1" />
+              <SheetClose autoFocus={true} asChild>
+                <Button size="icon" variant="ghost" className="h-7 w-7">
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </SheetClose>
+            </div>
+          </div>
+          <SheetDescription className="text-left">
+            Response details for the selected request.
+          </SheetDescription>
+          <SheetDetailsContent data={selected} />
+        </SheetHeader>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function SheetDetailsContent({ data }: { data?: ColumnSchema }) {
+  if (!data) return <SheetDetailsContentSkeleton />;
+
   const statusColor = getStatusColor(data.status);
   const timingPercentage = getTimingPercentage(data.timing, data.latency);
+
   return (
     <dl>
       <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
@@ -140,6 +273,38 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
           {JSON.stringify(data.headers, null, 2)}
         </CopyToClipboardContainer>
       </div>
+    </dl>
+  );
+}
+
+const skeleton = {
+  ID: "h-5 w-52",
+  Success: "h-5 w-5",
+  Date: "h-5 w-36",
+  "Status Code": "h-5 w-12",
+  Host: "h-5 w-24",
+  Pathname: "h-5 w-56",
+  Region: "h-5 w-12",
+  Latency: "h-5 w-16",
+  Percentile: "h-5 w-12",
+  "Timing Phases": "h-5 w-52",
+  Message: "h-5 w-52",
+};
+
+export function SheetDetailsContentSkeleton() {
+  return (
+    <dl>
+      {Object.entries(skeleton).map(([key, size]) => (
+        <div
+          key={key}
+          className="flex gap-4 py-2 border-t text-sm justify-between items-center"
+        >
+          <dt className="text-muted-foreground">{key}</dt>
+          <dd>
+            <Skeleton className={size} />
+          </dd>
+        </div>
+      ))}
     </dl>
   );
 }
