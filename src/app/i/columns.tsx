@@ -32,8 +32,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "",
     cell: ({ row }) => {
       const value = row.getValue("success");
-      if (value) return <Check className="h-4 w-4 text-green-500/50" />;
-      return <X className="h-4 w-4 text-destructive" />;
+      if (value) return <Check className="h-4 w-4 text-green-500/60" />;
+      return <X className="h-4 w-4 text-red-500" />;
     },
     filterFn: (row, id, value) => {
       const rowValue = row.getValue(id);

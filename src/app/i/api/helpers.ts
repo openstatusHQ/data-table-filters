@@ -6,10 +6,14 @@ import {
   isArrayOfDates,
   isArrayOfNumbers,
 } from "@/lib/helpers";
+import {
+  calculatePercentile,
+  calculateSpecificPercentile,
+} from "@/lib/percentile";
 
 export function filterData(
   data: ColumnSchema[],
-  search: SearchParamsType
+  search: Partial<SearchParamsType>
 ): ColumnSchema[] {
   const { start, size, sort, ...filters } = search;
   return data.filter((row) => {
@@ -60,7 +64,7 @@ export function filterData(
   });
 }
 
-// TODO: we should include `timing.dns.desc` as a filter so
+// FIXME: we should include `timing.dns.desc` as a filter so
 // { id: "timing.dns", desc: true }
 
 export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
@@ -74,4 +78,26 @@ export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
       return a[sort.id] > b[sort.id] ? 1 : -1;
     }
   });
+}
+
+// TODO: later on, we could hover over the percentile to get a concrete value for the p50, p75, p90, p95, p99
+// for better comparability
+export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
+  const latencies = data.map((row) => row.latency);
+  return data.map((row) => ({
+    ...row,
+    percentile: calculatePercentile(latencies, row.latency),
+  }));
+}
+
+export function getPercentileFromData(data: ColumnSchema[]) {
+  const latencies = data.map((row) => row.latency);
+
+  const p50 = calculateSpecificPercentile(latencies, 50);
+  const p75 = calculateSpecificPercentile(latencies, 75);
+  const p90 = calculateSpecificPercentile(latencies, 90);
+  const p95 = calculateSpecificPercentile(latencies, 95);
+  const p99 = calculateSpecificPercentile(latencies, 99);
+
+  return { p50, p75, p90, p95, p99 };
 }

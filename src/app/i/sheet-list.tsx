@@ -4,8 +4,14 @@ import { getStatusColor } from "@/constants/status-code";
 import { formatDate, formatMilliseconds } from "@/lib/format";
 import { regions } from "@/constants/region";
 import { getTimingColor, getTimingPercentage } from "@/constants/timing";
-import { Check, X } from "lucide-react";
+import { Check, FunctionSquare, Info, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function SheetList({ data }: { data?: ColumnSchema }) {
   if (!data) return null;
@@ -23,7 +29,7 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
           {data.success ? (
             <Check className="h-4 w-4 text-green-500" />
           ) : (
-            <X className="h-4 w-4 text-destructive" />
+            <X className="h-4 w-4 text-red-500" />
           )}
         </dd>
       </div>
@@ -61,7 +67,29 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
       </div>
       <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
         <dt className="text-muted-foreground">Latency</dt>
-        <dd className="font-mono">{formatMilliseconds(data.latency)} ms</dd>
+        <dd className="font-mono">
+          {formatMilliseconds(data.latency)}
+          <span className="text-muted-foreground">ms</span>
+        </dd>
+      </div>
+      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+        <dt className="flex items-center gap-1 text-muted-foreground">
+          Percentile
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-3 w-3" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Value based on total of filtered amount</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </dt>
+        <dd className="font-mono flex items-center gap-1">
+          <FunctionSquare className="h-4 w-4 text-muted-foreground" />
+          {!data.percentile ? "N/A" : Math.round(data.percentile)}
+        </dd>
       </div>
       <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
         <dt className="text-muted-foreground">Timing Phases</dt>
@@ -70,7 +98,9 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
             key={key}
             className="grid grid-cols-3 gap-2 text-xs justify-between items-center"
           >
-            <div className="text-muted-foreground uppercase">{key}</div>
+            <div className="text-muted-foreground uppercase truncate">
+              {key}
+            </div>
             <div className="flex gap-2 col-span-2">
               <div className="font-mono text-muted-foreground mr-8">
                 {timingPercentage[key as keyof typeof data.timing]}

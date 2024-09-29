@@ -45,6 +45,7 @@ export const columnSchema = z.object({
   timing: timingSchema,
   headers: z.record(z.string()),
   message: z.string().optional(),
+  percentile: z.number().optional(),
 });
 
 export type ColumnSchema = z.infer<typeof columnSchema>;

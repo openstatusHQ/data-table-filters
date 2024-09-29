@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
-import { filterData, sortData } from "./helpers";
+import { filterData, percentileData, sortData } from "./helpers";
 
 export async function GET(req: NextRequest) {
   const _search: Map<string, string> = new Map();
@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
   const totalData = mock;
   const filteredData = filterData(totalData, search);
   const sortedData = sortData(filteredData, search.sort);
+  const withPercentileData = percentileData(sortedData);
 
   // FIXME: this is fugly
   const totalFilters = totalData.reduce((prev, curr) => {
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
   }, {} as Record<string, (number | string | boolean | Date)[]>);
 
   return Response.json({
-    data: sortedData.slice(search.start, search.start + search.size),
+    data: withPercentileData.slice(search.start, search.start + search.size),
     meta: {
       totalRowCount: totalData.length,
       filterRowCount: filteredData.length,
