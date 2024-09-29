@@ -6,6 +6,11 @@ const nextConfig = {
 				source: "/i",
 				destination: "/infinite",
 				permanent: true
+			},
+			{
+				source: "/vercel",
+				destination: "/infinite",
+				permanent: true
 			}
 		]
 	}
