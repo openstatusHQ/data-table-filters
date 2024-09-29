@@ -15,7 +15,7 @@ export const dataOptions = (search: SearchParamsType) => {
     queryFn: async ({ pageParam = 0 }) => {
       const start = (pageParam as number) * search.size;
       const serialize = searchParamsSerializer({ ...search, start });
-      const response = await fetch(`/i/api${serialize}`);
+      const response = await fetch(`/infinite/api${serialize}`);
       return response.json() as Promise<{
         data: ColumnSchema[];
         meta: InfiniteQueryMeta;

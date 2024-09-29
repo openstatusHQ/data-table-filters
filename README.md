@@ -9,7 +9,7 @@ To make it not only more accessible for you to use, but also work on PoC/MVP wit
 It currently includes:
 
 - [data-table with simple pagination](https://data-table.openstatus.dev)
-- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/i)
+- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite)
 
 The examples are heavily inspired by datadog and vercel log tables.
 
