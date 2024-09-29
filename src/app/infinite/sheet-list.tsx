@@ -1,3 +1,5 @@
+"use client";
+
 import { ColumnSchema } from "./schema";
 import { cn } from "@/lib/utils";
 import { getStatusColor } from "@/constants/status-code";
@@ -12,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
 
 export function SheetList({ data }: { data?: ColumnSchema }) {
   if (!data) return null;
@@ -81,7 +84,7 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
                 <Info className="h-3 w-3" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Value based on total of filtered amount</p>
+                <p>Calculated from current filters</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -126,16 +129,16 @@ export function SheetList({ data }: { data?: ColumnSchema }) {
       {data.message ? (
         <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
           <dt className="text-muted-foreground">Message</dt>
-          <div className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono">
+          <CopyToClipboardContainer className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono">
             {JSON.stringify(data.message, null, 2)}
-          </div>
+          </CopyToClipboardContainer>
         </div>
       ) : null}
       <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
         <dt className="text-muted-foreground">Headers</dt>
-        <div className="rounded-md bg-muted/50 border p-2 whitespace-pre-wrap break-all font-mono">
+        <CopyToClipboardContainer className="rounded-md bg-muted/50 border p-2 whitespace-pre-wrap break-all font-mono">
           {JSON.stringify(data.headers, null, 2)}
-        </div>
+        </CopyToClipboardContainer>
       </div>
     </dl>
   );

@@ -43,7 +43,7 @@ export function DataTableViewOptions<TData>({
           <span className="sr-only">View</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent side="bottom" align="end" className="w-[200px] p-0">
         <Command>
           <CommandInput placeholder="Search options..." />
           <CommandList>
@@ -63,11 +63,7 @@ export function DataTableViewOptions<TData>({
                     onSelect={() =>
                       column.toggleVisibility(!column.getIsVisible())
                     }
-                    className={
-                      ["tls", "ttfb", "dns"].includes(column.id)
-                        ? "uppercase"
-                        : "capitalize"
-                    }
+                    className={"capitalize"}
                   >
                     <Check
                       className={cn(
@@ -75,7 +71,7 @@ export function DataTableViewOptions<TData>({
                         column.getIsVisible() ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {column.id}
+                    {column.columnDef.meta?.label || column.id}
                   </CommandItem>
                 ))}
             </CommandGroup>

@@ -259,15 +259,18 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </HoverCard>
       );
     },
+    meta: {
+      label: "Timing Phases",
+    },
   },
   {
-    id: "dns",
+    id: "timing.dns",
     accessorFn: (row) => row.timing.dns,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="DNS" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("dns") as number;
+      const value = row.getValue("timing.dns") as number;
       return (
         <div className="font-mono">
           {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
@@ -277,15 +280,18 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    meta: {
+      label: "DNS",
+    },
   },
   {
-    id: "connection",
+    id: "timing.connection",
     accessorFn: (row) => row.timing.connection,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Connection" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("connection") as number;
+      const value = row.getValue("timing.connection") as number;
       return (
         <div className="font-mono">
           {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
@@ -295,15 +301,18 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    meta: {
+      label: "Connection",
+    },
   },
   {
-    id: "tls",
+    id: "timing.tls",
     accessorFn: (row) => row.timing.tls,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="TLS" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("tls") as number;
+      const value = row.getValue("timing.tls") as number;
       return (
         <div className="font-mono">
           {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
@@ -313,15 +322,18 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    meta: {
+      label: "TLS",
+    },
   },
   {
-    id: "ttfb",
+    id: "timing.ttfb",
     accessorFn: (row) => row.timing.ttfb,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="TTFB" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("ttfb") as number;
+      const value = row.getValue("timing.ttfb") as number;
       return (
         <div className="font-mono">
           {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
@@ -331,15 +343,18 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    meta: {
+      label: "TTFB",
+    },
   },
   {
-    id: "transfer",
+    id: "timing.transfer",
     accessorFn: (row) => row.timing.transfer,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Transfer" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("transfer") as number;
+      const value = row.getValue("timing.transfer") as number;
       return (
         <div className="font-mono">
           {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
@@ -348,6 +363,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
           <span className="text-muted-foreground">ms</span>
         </div>
       );
+    },
+    meta: {
+      label: "Transfer",
     },
   },
 ];

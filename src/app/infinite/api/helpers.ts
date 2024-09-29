@@ -2,6 +2,7 @@ import { isSameDay } from "date-fns";
 import { type ColumnSchema, REGIONS } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
+  flattenObject,
   isArrayOfBooleans,
   isArrayOfDates,
   isArrayOfNumbers,
@@ -70,12 +71,14 @@ export function filterData(
 export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
   if (!sort) return data;
   return data.sort((a, b) => {
+    const flattenA = flattenObject(a);
+    const flattenB = flattenObject(b);
     if (sort.desc) {
       // @ts-ignore
-      return a?.[sort.id] < b[sort.id] ? 1 : -1;
+      return flattenA?.[sort.id] < flattenB?.[sort.id] ? 1 : -1;
     } else {
       // @ts-ignore
-      return a[sort.id] > b[sort.id] ? 1 : -1;
+      return flattenA?.[sort.id] > flattenB?.[sort.id] ? 1 : -1;
     }
   });
 }

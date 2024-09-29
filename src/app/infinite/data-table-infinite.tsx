@@ -224,7 +224,12 @@ export function DataTableInfinite<TData, TValue>({
                 <TableRow key={headerGroup.id} className="hover:bg-transparent">
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead
+                        key={header.id}
+                        className={
+                          header.column.columnDef.meta?.headerClassName
+                        }
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -247,7 +252,10 @@ export function DataTableInfinite<TData, TValue>({
                     onClick={() => setSearch({ uuid: row.getValue("uuid") })}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell
+                        key={cell.id}
+                        className={cell.column.columnDef.meta?.headerClassName}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
