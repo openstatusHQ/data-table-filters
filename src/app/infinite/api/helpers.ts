@@ -65,12 +65,10 @@ export function filterData(
   });
 }
 
-// FIXME: we should include `timing.dns.desc` as a filter so
-// { id: "timing.dns", desc: true }
-
 export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
   if (!sort) return data;
   return data.sort((a, b) => {
+    // Flattening allows use to sort via id: "timing.dns"
     const flattenA = flattenObject(a);
     const flattenB = flattenObject(b);
     if (sort.desc) {
