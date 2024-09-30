@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
 import { filterData, percentileData, sortData } from "./helpers";
+import { calculateSpecificPercentile } from "@/lib/percentile";
 
 export async function GET(req: NextRequest) {
   const _search: Map<string, string> = new Map();
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
   const search = searchParamsCache.parse(Object.fromEntries(_search));
 
   // Simulate a database query
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  // await new Promise((resolve) => setTimeout(resolve, 500));
 
   const totalData = mock;
   const filteredData = filterData(totalData, search);
@@ -36,12 +37,23 @@ export async function GET(req: NextRequest) {
     return prev;
   }, {} as Record<string, (number | string | boolean | Date)[]>);
 
+  const latencies = withPercentileData.map(({ latency }) => latency);
+
+  const currentPercentiles = {
+    50: calculateSpecificPercentile(latencies, 50),
+    75: calculateSpecificPercentile(latencies, 75),
+    90: calculateSpecificPercentile(latencies, 90),
+    95: calculateSpecificPercentile(latencies, 95),
+    99: calculateSpecificPercentile(latencies, 99),
+  };
+
   return Response.json({
     data: withPercentileData.slice(search.start, search.start + search.size),
     meta: {
       totalRowCount: totalData.length,
       filterRowCount: filteredData.length,
       totalFilters,
+      currentPercentiles,
     },
   });
 }

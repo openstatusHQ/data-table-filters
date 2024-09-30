@@ -33,18 +33,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/constants/status-code";
 import type { Table } from "@tanstack/react-table";
 import { regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Kbd } from "@/components/custom/kbd";
+import { Percentile, getPercentileColor } from "@/lib/percentile";
 
 export interface DataTableToolbarProps<TData> {
   table: Table<TData>;
+  percentiles?: Record<Percentile, number>;
 }
 
-export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
+export function SheetDetails<TData>({
+  table,
+  percentiles,
+}: DataTableToolbarProps<TData>) {
   // FIXME: this is `ColumnSchema` and not `TData` specific - we need to find a way to make it generic
   // and be able to pass a `renderComponent` prop to render the details
   const [selected, setSelected] = React.useState<ColumnSchema | undefined>();
@@ -165,7 +175,11 @@ export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
             </div>
           </div>
         </SheetHeader>
-        <SheetDetailsContent data={selected} className="p-4" />
+        <SheetDetailsContent
+          data={selected}
+          percentiles={percentiles}
+          className="p-4"
+        />
       </SheetContent>
     </Sheet>
   );
@@ -174,10 +188,12 @@ export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
 interface SheetDetailsContentProps
   extends React.HTMLAttributes<HTMLDListElement> {
   data?: ColumnSchema;
+  percentiles?: Record<Percentile, number>;
 }
 
 export function SheetDetailsContent({
   data,
+  percentiles,
   className,
   ...props
 }: SheetDetailsContentProps) {
@@ -185,6 +201,18 @@ export function SheetDetailsContent({
 
   const statusColor = getStatusColor(data.status);
   const timingPercentage = getTimingPercentage(data, data.latency);
+
+  let percentileArray = percentiles
+    ? Object.entries(percentiles).map(([percentile, latency]) => [
+        parseInt(percentile),
+        latency,
+      ])
+    : [];
+
+  data.percentile
+    ? percentileArray.push([data.percentile, data.latency])
+    : null;
+  percentileArray.sort((a, b) => a[0] - b[0]);
 
   return (
     <dl className={cn(className)} {...props}>
@@ -244,20 +272,56 @@ export function SheetDetailsContent({
       <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="flex items-center gap-1 text-muted-foreground">
           Percentile
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Info className="h-3 w-3" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Calculated from current filters</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </dt>
-        <dd className="font-mono flex items-center gap-1">
-          <FunctionSquare className="h-4 w-4 text-muted-foreground" />
-          {!data.percentile ? "N/A" : Math.round(data.percentile)}
+        <dd>
+          <HoverCard>
+            <HoverCardTrigger className="font-mono flex items-center gap-1">
+              <FunctionSquare
+                className={cn(
+                  "h-4 w-4",
+                  data.percentile
+                    ? getPercentileColor(data.percentile).text
+                    : "text-muted-foreground"
+                )}
+              />
+              {!data.percentile ? "N/A" : `P${Math.round(data.percentile)}`}
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto flex flex-col p-2">
+              <p>Calculated from current filters</p>
+              <div className="flex flex-col gap-0.5 text-xs">
+                {percentileArray.map(([key, value]) => {
+                  const active =
+                    data.percentile &&
+                    data.percentile === key &&
+                    value === data.latency;
+                  return (
+                    <div
+                      key={`${key}-${value}`}
+                      className={cn(
+                        "flex items-center justify-between px-1 py-0.5 rounded-md",
+                        active && data.percentile
+                          ? `border ${
+                              getPercentileColor(data.percentile).border
+                            }`
+                          : null
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "font-mono",
+                          !active && "text-muted-foreground"
+                        )}
+                      >{`P${Math.round(key)}`}</div>
+                      <div className="font-mono">
+                        {formatMilliseconds(Math.round(value))}
+                        <span className="text-muted-foreground">ms</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </dd>
       </div>
       <div className="flex flex-col gap-2 py-2 border-b text-sm text-left">

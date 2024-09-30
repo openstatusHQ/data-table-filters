@@ -2,11 +2,13 @@ import type { MakeArray } from "@/types";
 import { ColumnSchema } from "./schema";
 import { SearchParamsType, searchParamsSerializer } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
+import { Percentile } from "@/lib/percentile";
 
 export type InfiniteQueryMeta = {
   totalRowCount: number;
   filterRowCount: number;
   totalFilters: MakeArray<ColumnSchema>;
+  currentPercentiles: Record<Percentile, number>;
 };
 
 export const dataOptions = (search: SearchParamsType) => {

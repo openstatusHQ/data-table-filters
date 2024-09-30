@@ -42,6 +42,7 @@ import { Button } from "@/components/ui/button";
 import { SidebarFooter } from "./sidebar-footer";
 import { Separator } from "@/components/ui/separator";
 import { SheetDetails } from "./sheet-details";
+import { Percentile } from "@/lib/percentile";
 
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -53,6 +54,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   totalRows?: number;
   filterRows?: number;
   totalRowsFetched?: number;
+  currentPercentiles?: Record<Percentile, number>;
   isFetching?: boolean;
   isLoading?: boolean;
   fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
@@ -71,6 +73,7 @@ export function DataTableInfinite<TData, TValue>({
   totalRows = 0,
   filterRows = 0,
   totalRowsFetched = 0,
+  currentPercentiles,
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -323,7 +326,7 @@ export function DataTableInfinite<TData, TValue>({
           </div>
         </div>
       </div>
-      <SheetDetails table={table} />
+      <SheetDetails table={table} percentiles={currentPercentiles} />
     </>
   );
 }

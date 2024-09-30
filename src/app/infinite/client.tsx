@@ -24,6 +24,7 @@ export function Client() {
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
   const filterDBRowCount = lastPage?.meta?.filterRowCount;
   const totalFilters = lastPage?.meta?.totalFilters;
+  const currentPercentiles = lastPage?.meta?.currentPercentiles;
   const totalFetched = flatData?.length;
 
   const { sort, start, size, uuid, ...filter } = search;
@@ -67,6 +68,7 @@ export function Client() {
       totalRows={totalDBRowCount}
       filterRows={filterDBRowCount}
       totalRowsFetched={totalFetched}
+      currentPercentiles={currentPercentiles}
       defaultColumnFilters={Object.entries(filter)
         .map(([key, value]) => ({
           id: key,
