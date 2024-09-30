@@ -326,7 +326,11 @@ export function DataTableInfinite<TData, TValue>({
           </div>
         </div>
       </div>
-      <SheetDetails table={table} percentiles={currentPercentiles} />
+      <SheetDetails
+        table={table}
+        percentiles={currentPercentiles}
+        filterRows={filterRows}
+      />
     </>
   );
 }

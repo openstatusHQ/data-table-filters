@@ -49,11 +49,13 @@ import { Percentile, getPercentileColor } from "@/lib/percentile";
 export interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   percentiles?: Record<Percentile, number>;
+  filterRows: number;
 }
 
 export function SheetDetails<TData>({
   table,
   percentiles,
+  filterRows,
 }: DataTableToolbarProps<TData>) {
   // FIXME: this is `ColumnSchema` and not `TData` specific - we need to find a way to make it generic
   // and be able to pass a `renderComponent` prop to render the details
@@ -178,6 +180,7 @@ export function SheetDetails<TData>({
         <SheetDetailsContent
           data={selected}
           percentiles={percentiles}
+          filterRows={filterRows}
           className="p-4"
         />
       </SheetContent>
@@ -189,14 +192,18 @@ interface SheetDetailsContentProps
   extends React.HTMLAttributes<HTMLDListElement> {
   data?: ColumnSchema;
   percentiles?: Record<Percentile, number>;
+  filterRows: number;
 }
 
 export function SheetDetailsContent({
   data,
   percentiles,
+  filterRows,
   className,
   ...props
 }: SheetDetailsContentProps) {
+  const [open, setOpen] = React.useState(false);
+
   if (!data) return <SheetDetailsContentSkeleton />;
 
   const statusColor = getStatusColor(data.status);
@@ -274,8 +281,11 @@ export function SheetDetailsContent({
           Percentile
         </dt>
         <dd>
-          <HoverCard>
-            <HoverCardTrigger className="font-mono flex items-center gap-1">
+          <HoverCard open={open} onOpenChange={setOpen}>
+            <HoverCardTrigger
+              onClick={() => setOpen((prev) => !prev)}
+              className="font-mono flex items-center gap-1"
+            >
               <FunctionSquare
                 className={cn(
                   "h-4 w-4",
@@ -286,9 +296,12 @@ export function SheetDetailsContent({
               />
               {!data.percentile ? "N/A" : `P${Math.round(data.percentile)}`}
             </HoverCardTrigger>
-            <HoverCardContent className="w-auto flex flex-col p-2">
-              <p>Calculated from current filters</p>
-              <div className="flex flex-col gap-0.5 text-xs">
+            <HoverCardContent className="w-52 flex flex-col gap-2 p-2 text-xs">
+              <p>
+                Calculated from current filters out of{" "}
+                <span className="font-medium">{filterRows} rows</span>.
+              </p>
+              <div className="flex flex-col gap-0.5">
                 {percentileArray.map(([key, value]) => {
                   const active =
                     data.percentile &&
