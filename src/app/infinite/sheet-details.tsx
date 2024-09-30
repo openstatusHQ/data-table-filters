@@ -13,7 +13,6 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/custom/sheet";
@@ -34,14 +33,18 @@ import { getStatusColor } from "@/constants/status-code";
 import type { Table } from "@tanstack/react-table";
 import { regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Kbd } from "@/components/custom/kbd";
 
 export interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
 export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
+  // FIXME: this is `ColumnSchema` and not `TData` specific - we need to find a way to make it generic
+  // and be able to pass a `renderComponent` prop to render the details
   const [selected, setSelected] = React.useState<ColumnSchema | undefined>();
 
+  const selectedRows = table.getSelectedRowModel().rows;
   const selectedRowKey =
     Object.keys(table.getState().rowSelection)?.[0] || undefined;
 
@@ -85,10 +88,7 @@ export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
     return () => document.removeEventListener("keydown", down);
   }, [selected, onNext, onPrev]);
 
-  const selectedRows = table.getSelectedRowModel().rows;
-
   React.useEffect(() => {
-    // FIXME: this is `ColumnSchema` and not `TData` specific - we need to find a way to make it generic
     setSelected(
       selectedRows.map((row) => row.original)?.[0] as unknown as
         | ColumnSchema
@@ -101,33 +101,55 @@ export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
       open={!!selected}
       onOpenChange={() => table.toggleAllRowsSelected(false)}
     >
-      <SheetContent className="sm:max-w-md overflow-y-auto" hideClose>
-        <SheetHeader>
+      <SheetContent className="sm:max-w-md overflow-y-auto p-0" hideClose>
+        <SheetHeader className="sticky top-0 border-b bg-background p-4">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className="text-left font-mono truncate">
               {selected?.pathname}
             </SheetTitle>
             <div className="flex items-center gap-1 h-7">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7"
-                disabled={!prevId}
-                onClick={onPrev}
-              >
-                <ChevronUp className="h-5 w-5" />
-                <span className="sr-only">Previous</span>
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7"
-                disabled={!nextId}
-                onClick={onNext}
-              >
-                <ChevronDown className="h-5 w-5" />
-                <span className="sr-only">Next</span>
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      disabled={!prevId}
+                      onClick={onPrev}
+                    >
+                      <ChevronUp className="h-5 w-5" />
+                      <span className="sr-only">Previous</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      Navigate <Kbd variant="outline">↑</Kbd>
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      disabled={!nextId}
+                      onClick={onNext}
+                    >
+                      <ChevronDown className="h-5 w-5" />
+                      <span className="sr-only">Next</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      Navigate <Kbd variant="outline">↓</Kbd>
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Separator orientation="vertical" className="mx-1" />
               <SheetClose autoFocus={true} asChild>
                 <Button size="icon" variant="ghost" className="h-7 w-7">
@@ -137,29 +159,35 @@ export function SheetDetails<TData>({ table }: DataTableToolbarProps<TData>) {
               </SheetClose>
             </div>
           </div>
-          <SheetDescription className="text-left">
-            Response details for the selected request.
-          </SheetDescription>
-          <SheetDetailsContent data={selected} />
         </SheetHeader>
+        <SheetDetailsContent data={selected} className="p-4" />
       </SheetContent>
     </Sheet>
   );
 }
 
-export function SheetDetailsContent({ data }: { data?: ColumnSchema }) {
+interface SheetDetailsContentProps
+  extends React.HTMLAttributes<HTMLDListElement> {
+  data?: ColumnSchema;
+}
+
+export function SheetDetailsContent({
+  data,
+  className,
+  ...props
+}: SheetDetailsContentProps) {
   if (!data) return <SheetDetailsContentSkeleton />;
 
   const statusColor = getStatusColor(data.status);
   const timingPercentage = getTimingPercentage(data.timing, data.latency);
 
   return (
-    <dl>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+    <dl className={cn(className)} {...props}>
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">ID</dt>
         <dd className="font-mono truncate">{data.uuid}</dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Success</dt>
         <dd>
           {data.success ? (
@@ -169,11 +197,11 @@ export function SheetDetailsContent({ data }: { data?: ColumnSchema }) {
           )}
         </dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Date</dt>
         <dd className="font-mono text-right">{formatDate(data.date)}</dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Status Code</dt>
         <dd>
           <Badge
@@ -184,15 +212,15 @@ export function SheetDetailsContent({ data }: { data?: ColumnSchema }) {
           </Badge>
         </dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Host</dt>
         <dd className="font-mono truncate">{data.host}</dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Pathname</dt>
         <dd className="font-mono truncate">{data.pathname}</dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Region</dt>
         <dd className="font-mono text-right">
           <span className="text-muted-foreground text-xs">
@@ -201,14 +229,14 @@ export function SheetDetailsContent({ data }: { data?: ColumnSchema }) {
           {data.regions[0]}
         </dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Latency</dt>
         <dd className="font-mono">
           {formatMilliseconds(data.latency)}
           <span className="text-muted-foreground">ms</span>
         </dd>
       </div>
-      <div className="flex gap-4 py-2 border-t text-sm justify-between items-center">
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="flex items-center gap-1 text-muted-foreground">
           Percentile
           <TooltipProvider>
@@ -227,7 +255,7 @@ export function SheetDetailsContent({ data }: { data?: ColumnSchema }) {
           {!data.percentile ? "N/A" : Math.round(data.percentile)}
         </dd>
       </div>
-      <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
+      <div className="flex flex-col gap-2 py-2 border-b text-sm text-left">
         <dt className="text-muted-foreground">Timing Phases</dt>
         {Object.entries(data.timing).map(([key, value]) => (
           <div
@@ -260,14 +288,14 @@ export function SheetDetailsContent({ data }: { data?: ColumnSchema }) {
         ))}
       </div>
       {data.message ? (
-        <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
+        <div className="flex flex-col gap-2 py-2 border-b text-sm text-left">
           <dt className="text-muted-foreground">Message</dt>
           <CopyToClipboardContainer className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono">
             {JSON.stringify(data.message, null, 2)}
           </CopyToClipboardContainer>
         </div>
       ) : null}
-      <div className="flex flex-col gap-2 py-2 border-t text-sm text-left">
+      <div className="flex flex-col gap-2 py-2 text-sm text-left">
         <dt className="text-muted-foreground">Headers</dt>
         <CopyToClipboardContainer className="rounded-md bg-muted/50 border p-2 whitespace-pre-wrap break-all font-mono">
           {JSON.stringify(data.headers, null, 2)}
@@ -297,7 +325,7 @@ export function SheetDetailsContentSkeleton() {
       {Object.entries(skeleton).map(([key, size]) => (
         <div
           key={key}
-          className="flex gap-4 py-2 border-t text-sm justify-between items-center"
+          className="flex gap-4 py-2 border-b text-sm justify-between items-center"
         >
           <dt className="text-muted-foreground">{key}</dt>
           <dd>

@@ -344,21 +344,21 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
             >
               <div className="flex flex-wrap gap-3">
                 <span>
-                  Use <Kbd className="bg-background">↑</Kbd>{" "}
-                  <Kbd className="bg-background">↓</Kbd> to navigate
+                  Use <Kbd variant="outline">↑</Kbd>{" "}
+                  <Kbd variant="outline">↓</Kbd> to navigate
                 </span>
                 <span>
-                  <Kbd className="bg-background">Enter</Kbd> to query
+                  <Kbd variant="outline">Enter</Kbd> to query
                 </span>
                 <span>
-                  <Kbd className="bg-background">Esc</Kbd> to close
+                  <Kbd variant="outline">Esc</Kbd> to close
                 </span>
                 <Separator orientation="vertical" className="my-auto h-3" />
                 <span>
-                  Union: <Kbd className="bg-background">regions:a,b</Kbd>
+                  Union: <Kbd variant="outline">regions:a,b</Kbd>
                 </span>
                 <span>
-                  Range: <Kbd className="bg-background">p95:59-340</Kbd>
+                  Range: <Kbd variant="outline">p95:59-340</Kbd>
                 </span>
               </div>
               {lastSearches.length ? (
