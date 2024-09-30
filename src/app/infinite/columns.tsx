@@ -9,7 +9,12 @@ import { format, isSameDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/constants/status-code";
 import { regions } from "@/constants/region";
-import { getTimingColor, getTimingPercentage } from "@/constants/timing";
+import {
+  getTimingColor,
+  getTimingLabel,
+  getTimingPercentage,
+  timingPhases,
+} from "@/constants/timing";
 import { cn } from "@/lib/utils";
 import {
   HoverCard,
@@ -234,16 +239,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
           </HoverCardTrigger>
           <HoverCardContent side="bottom" className="p-2 w-auto">
             <div className="flex flex-col gap-1">
-              {Object.entries(timing).map(([key, value]) => {
-                const color = getTimingColor(key as keyof typeof timing);
-                const percentageValue =
-                  percentage[key as keyof typeof percentage];
+              {timingPhases.map((phase) => {
+                const color = getTimingColor(phase);
+                const percentageValue = percentage[phase];
                 return (
-                  <div key={key} className="grid grid-cols-2 gap-4 text-xs">
+                  <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
                     <div className="flex items-center gap-2">
                       <div className={cn(color, "h-2 w-2 rounded-full")} />
                       <div className="uppercase text-accent-foreground">
-                        {key}
+                        {getTimingLabel(phase)}
                       </div>
                     </div>
                     <div className="flex items-center justify-between gap-4">
@@ -253,7 +257,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
                       <div className="font-mono">
                         {new Intl.NumberFormat("en-US", {
                           maximumFractionDigits: 3,
-                        }).format(value)}
+                        }).format(timing[phase])}
                         <span className="text-muted-foreground">ms</span>
                       </div>
                     </div>

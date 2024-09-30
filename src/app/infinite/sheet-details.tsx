@@ -22,6 +22,7 @@ import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-cont
 import { cn } from "@/lib/utils";
 import {
   getTimingColor,
+  getTimingLabel,
   getTimingPercentage,
   timingPhases,
 } from "@/constants/timing";
@@ -261,27 +262,27 @@ export function SheetDetailsContent({
       </div>
       <div className="flex flex-col gap-2 py-2 border-b text-sm text-left">
         <dt className="text-muted-foreground">Timing Phases</dt>
-        {timingPhases.map((timing) => (
+        {timingPhases.map((phase) => (
           <div
-            key={timing}
+            key={phase}
             className="grid grid-cols-3 gap-2 text-xs justify-between items-center"
           >
             <div className="text-muted-foreground uppercase truncate">
-              {timing}
+              {getTimingLabel(phase)}
             </div>
             <div className="flex gap-2 col-span-2">
               <div className="font-mono text-muted-foreground mr-8">
-                {timingPercentage[timing]}
+                {timingPercentage[phase]}
               </div>
               <div className="flex flex-1 gap-2 items-center justify-end">
                 <div className="font-mono">
-                  {formatMilliseconds(data[timing])}
+                  {formatMilliseconds(data[phase])}
                   <span className="text-muted-foreground">ms</span>
                 </div>
               </div>
               <div
-                className={cn(getTimingColor(timing), "h-4")}
-                style={{ width: `${(data[timing] / data.latency) * 100}%` }}
+                className={cn(getTimingColor(phase), "h-4")}
+                style={{ width: `${(data[phase] / data.latency) * 100}%` }}
               />
             </div>
           </div>

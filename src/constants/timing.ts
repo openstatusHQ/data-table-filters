@@ -25,6 +25,23 @@ export function getTimingColor(timing: TimingPhase) {
   }
 }
 
+export function getTimingLabel(timing: TimingPhase) {
+  switch (timing) {
+    case "timing.dns":
+      return "DNS";
+    case "timing.connection":
+      return "Connection";
+    case "timing.tls":
+      return "TLS";
+    case "timing.ttfb":
+      return "TTFB";
+    case "timing.transfer":
+      return "Transfer";
+    default:
+      return "Unknown";
+  }
+}
+
 export function getTimingPercentage(
   timing: Record<TimingPhase, number>,
   latency: number
