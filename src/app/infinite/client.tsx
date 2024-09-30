@@ -10,7 +10,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
 
 export function Client() {
-  const [search, setSearch] = useQueryStates(searchParamsParser);
+  const [search] = useQueryStates(searchParamsParser);
   const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
     dataOptions(search)
   );
@@ -31,7 +31,15 @@ export function Client() {
   const filterFields = React.useMemo(
     () =>
       defaultFilterFields.map((field) => {
-        if (field.value === "latency" || field.value === "status") {
+        if (
+          field.value === "latency" ||
+          field.value === "timing.dns" ||
+          field.value === "timing.connection" ||
+          field.value === "timing.tls" ||
+          field.value === "timing.ttfb" ||
+          field.value === "timing.transfer" ||
+          field.value === "status"
+        ) {
           field.options =
             totalFilters?.[field.value].map((value) => ({
               label: `${value}`,

@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus, X } from "lucide-react";
-import type { ColumnSchema, METHODS, TimingSchema } from "./schema";
+import type { ColumnSchema, METHODS } from "./schema";
 import { isArrayOfDates, isArrayOfNumbers } from "@/lib/helpers";
 import { DataTableColumnHeader } from "@/_data-table/data-table-column-header";
 import { format, isSameDay } from "date-fns";
@@ -204,7 +204,13 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "timing",
     header: () => <div className="whitespace-nowrap">Timing Phases</div>,
     cell: ({ row }) => {
-      const timing = row.getValue("timing") as TimingSchema;
+      const timing = {
+        "timing.dns": row.getValue("timing.dns") as number,
+        "timing.connection": row.getValue("timing.connection") as number,
+        "timing.tls": row.getValue("timing.tls") as number,
+        "timing.ttfb": row.getValue("timing.ttfb") as number,
+        "timing.transfer": row.getValue("timing.transfer") as number,
+      };
       const latency = row.getValue("latency") as number;
       const percentage = getTimingPercentage(timing, latency);
       return (
@@ -265,7 +271,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
   },
   {
     id: "timing.dns",
-    accessorFn: (row) => row.timing.dns,
+    accessorFn: (row) => row["timing.dns"],
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="DNS" />
     ),
@@ -280,13 +286,22 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    filterFn: (row, id, value) => {
+      const rowValue = row.getValue(id) as number;
+      if (typeof value === "number") return value === Number(rowValue);
+      if (Array.isArray(value) && isArrayOfNumbers(value)) {
+        const sorted = value.sort((a, b) => a - b);
+        return sorted[0] <= rowValue && rowValue <= sorted[1];
+      }
+      return false;
+    },
     meta: {
       label: "DNS",
     },
   },
   {
     id: "timing.connection",
-    accessorFn: (row) => row.timing.connection,
+    accessorFn: (row) => row["timing.connection"],
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Connection" />
     ),
@@ -301,13 +316,22 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    filterFn: (row, id, value) => {
+      const rowValue = row.getValue(id) as number;
+      if (typeof value === "number") return value === Number(rowValue);
+      if (Array.isArray(value) && isArrayOfNumbers(value)) {
+        const sorted = value.sort((a, b) => a - b);
+        return sorted[0] <= rowValue && rowValue <= sorted[1];
+      }
+      return false;
+    },
     meta: {
       label: "Connection",
     },
   },
   {
     id: "timing.tls",
-    accessorFn: (row) => row.timing.tls,
+    accessorFn: (row) => row["timing.tls"],
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="TLS" />
     ),
@@ -322,13 +346,22 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    filterFn: (row, id, value) => {
+      const rowValue = row.getValue(id) as number;
+      if (typeof value === "number") return value === Number(rowValue);
+      if (Array.isArray(value) && isArrayOfNumbers(value)) {
+        const sorted = value.sort((a, b) => a - b);
+        return sorted[0] <= rowValue && rowValue <= sorted[1];
+      }
+      return false;
+    },
     meta: {
       label: "TLS",
     },
   },
   {
     id: "timing.ttfb",
-    accessorFn: (row) => row.timing.ttfb,
+    accessorFn: (row) => row["timing.ttfb"],
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="TTFB" />
     ),
@@ -343,13 +376,22 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
+    filterFn: (row, id, value) => {
+      const rowValue = row.getValue(id) as number;
+      if (typeof value === "number") return value === Number(rowValue);
+      if (Array.isArray(value) && isArrayOfNumbers(value)) {
+        const sorted = value.sort((a, b) => a - b);
+        return sorted[0] <= rowValue && rowValue <= sorted[1];
+      }
+      return false;
+    },
     meta: {
       label: "TTFB",
     },
   },
   {
     id: "timing.transfer",
-    accessorFn: (row) => row.timing.transfer,
+    accessorFn: (row) => row["timing.transfer"],
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Transfer" />
     ),
@@ -363,6 +405,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
           <span className="text-muted-foreground">ms</span>
         </div>
       );
+    },
+    filterFn: (row, id, value) => {
+      const rowValue = row.getValue(id) as number;
+      if (typeof value === "number") return value === Number(rowValue);
+      if (Array.isArray(value) && isArrayOfNumbers(value)) {
+        const sorted = value.sort((a, b) => a - b);
+        return sorted[0] <= rowValue && rowValue <= sorted[1];
+      }
+      return false;
     },
     meta: {
       label: "Transfer",

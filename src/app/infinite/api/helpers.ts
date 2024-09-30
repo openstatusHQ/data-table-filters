@@ -2,7 +2,6 @@ import { isSameDay } from "date-fns";
 import { type ColumnSchema, REGIONS } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
-  flattenObject,
   isArrayOfBooleans,
   isArrayOfDates,
   isArrayOfNumbers,
@@ -21,42 +20,49 @@ export function filterData(
     for (const key in filters) {
       const filter = filters[key as keyof typeof filters];
       if (filter === undefined || filter === null) continue;
-      if (key === "latency" && isArrayOfNumbers(filter)) {
-        if (filter.length === 1 && row[key as "latency"] !== filter[0]) {
+      if (
+        (key === "latency" ||
+          key === "timing.dns" ||
+          key === "timing.connection" ||
+          key === "timing.tls" ||
+          key === "timing.ttfb" ||
+          key === "timing.transfer") &&
+        isArrayOfNumbers(filter)
+      ) {
+        if (filter.length === 1 && row[key] !== filter[0]) {
           return false;
         } else if (
           filter.length === 2 &&
-          (row[key as "latency"] < filter[0] ||
-            row[key as "latency"] > filter[1])
+          (row[key] < filter[0] || row[key] > filter[1])
         ) {
           return false;
         }
         return true;
       }
       if (key === "status" && isArrayOfNumbers(filter)) {
-        if (!filter.includes(row[key as "status"])) {
+        if (!filter.includes(row[key])) {
           return false;
         }
       }
       if (key === "regions" && Array.isArray(filter)) {
         const typedFilter = filter as unknown as typeof REGIONS;
-        if (!typedFilter.includes(row[key as "regions"]?.[0])) {
+        if (!typedFilter.includes(row[key]?.[0])) {
           return false;
         }
       }
       if (key === "date" && isArrayOfDates(filter)) {
-        if (filter.length === 1 && !isSameDay(row[key as "date"], filter[0])) {
+        if (filter.length === 1 && !isSameDay(row[key], filter[0])) {
           return false;
         } else if (
           filter.length === 2 &&
-          (row[key as "date"].getTime() < filter[0].getTime() ||
-            row[key as "date"].getTime() > filter[1].getTime())
+          (row[key].getTime() < filter[0].getTime() ||
+            row[key].getTime() > filter[1].getTime())
         ) {
           return false;
         }
       }
       if (key === "success" && isArrayOfBooleans(filter)) {
-        if (!filter.includes(row[key as "success"])) {
+        if (!filter.includes(row[key])) {
           return false;
         }
       }
@@ -68,15 +74,12 @@ export function filterData(
 export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
   if (!sort) return data;
   return data.sort((a, b) => {
-    // Flattening allows use to sort via id: "timing.dns"
-    const flattenA = flattenObject(a);
-    const flattenB = flattenObject(b);
     if (sort.desc) {
       // @ts-ignore
-      return flattenA?.[sort.id] < flattenB?.[sort.id] ? 1 : -1;
+      return a?.[sort.id] < b?.[sort.id] ? 1 : -1;
     } else {
       // @ts-ignore
-      return flattenA?.[sort.id] > flattenB?.[sort.id] ? 1 : -1;
+      return a?.[sort.id] > b?.[sort.id] ? 1 : -1;
     }
   });
 }

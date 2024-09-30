@@ -20,15 +20,6 @@ export const filterFields = [
     options: [true, false].map((bool) => ({ label: `${bool}`, value: bool })),
   },
   {
-    label: "Latency",
-    value: "latency",
-    type: "slider",
-    min: 0,
-    max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
-    defaultOpen: true,
-  },
-  {
     label: "Host",
     value: "host",
     type: "input",
@@ -62,7 +53,7 @@ export const filterFields = [
     },
   },
   {
-    label: "Methods",
+    label: "Method",
     value: "method",
     type: "checkbox",
     options: METHODS.map((region) => ({ label: region, value: region })),
@@ -78,5 +69,53 @@ export const filterFields = [
     component: (props: Option) => {
       return <span className="font-mono">{props.value}</span>;
     },
+  },
+  {
+    label: "Latency",
+    value: "latency",
+    type: "slider",
+    min: 0,
+    max: 5000,
+    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
+  },
+  {
+    label: "DNS",
+    value: "timing.dns",
+    type: "slider",
+    min: 0,
+    max: 5000,
+    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
+  },
+  {
+    label: "Connection",
+    value: "timing.connection",
+    type: "slider",
+    min: 0,
+    max: 5000,
+    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
+  },
+  {
+    label: "TLS",
+    value: "timing.tls",
+    type: "slider",
+    min: 0,
+    max: 5000,
+    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
+  },
+  {
+    label: "TTFB",
+    value: "timing.ttfb",
+    type: "slider",
+    min: 0,
+    max: 5000,
+    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
+  },
+  {
+    label: "Transfer",
+    value: "timing.transfer",
+    type: "slider",
+    min: 0,
+    max: 5000,
+    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
 ] satisfies DataTableFilterField<ColumnSchema>[];

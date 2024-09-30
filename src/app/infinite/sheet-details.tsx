@@ -20,7 +20,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
 import { cn } from "@/lib/utils";
-import { getTimingColor, getTimingPercentage } from "@/constants/timing";
+import {
+  getTimingColor,
+  getTimingPercentage,
+  timingPhases,
+} from "@/constants/timing";
 import { formatDate, formatMilliseconds } from "@/lib/format";
 import {
   Tooltip,
@@ -179,7 +183,7 @@ export function SheetDetailsContent({
   if (!data) return <SheetDetailsContentSkeleton />;
 
   const statusColor = getStatusColor(data.status);
-  const timingPercentage = getTimingPercentage(data.timing, data.latency);
+  const timingPercentage = getTimingPercentage(data, data.latency);
 
   return (
     <dl className={cn(className)} {...props}>
@@ -257,31 +261,27 @@ export function SheetDetailsContent({
       </div>
       <div className="flex flex-col gap-2 py-2 border-b text-sm text-left">
         <dt className="text-muted-foreground">Timing Phases</dt>
-        {Object.entries(data.timing).map(([key, value]) => (
+        {timingPhases.map((timing) => (
           <div
-            key={key}
+            key={timing}
             className="grid grid-cols-3 gap-2 text-xs justify-between items-center"
           >
             <div className="text-muted-foreground uppercase truncate">
-              {key}
+              {timing}
             </div>
             <div className="flex gap-2 col-span-2">
               <div className="font-mono text-muted-foreground mr-8">
-                {timingPercentage[key as keyof typeof data.timing]}
+                {timingPercentage[timing]}
               </div>
               <div className="flex flex-1 gap-2 items-center justify-end">
                 <div className="font-mono">
-                  {formatMilliseconds(value)}
+                  {formatMilliseconds(data[timing])}
                   <span className="text-muted-foreground">ms</span>
                 </div>
               </div>
               <div
-                key={key}
-                className={cn(
-                  getTimingColor(key as keyof typeof data.timing),
-                  "h-4"
-                )}
-                style={{ width: `${(value / data.latency) * 100}%` }}
+                className={cn(getTimingColor(timing), "h-4")}
+                style={{ width: `${(data[timing] / data.latency) * 100}%` }}
               />
             </div>
           </div>

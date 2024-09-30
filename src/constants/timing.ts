@@ -1,16 +1,24 @@
-type TimingPhase = "dns" | "connection" | "tls" | "ttfb" | "transfer";
+export const timingPhases = [
+  "timing.dns",
+  "timing.connection",
+  "timing.tls",
+  "timing.ttfb",
+  "timing.transfer",
+] as const;
+
+type TimingPhase = (typeof timingPhases)[number];
 
 export function getTimingColor(timing: TimingPhase) {
   switch (timing) {
-    case "dns":
+    case "timing.dns":
       return "bg-emerald-500";
-    case "connection":
+    case "timing.connection":
       return "bg-cyan-500";
-    case "tls":
+    case "timing.tls":
       return "bg-blue-500";
-    case "ttfb":
+    case "timing.ttfb":
       return "bg-violet-500";
-    case "transfer":
+    case "timing.transfer":
       return "bg-purple-500";
     default:
       return "bg-gray-500";

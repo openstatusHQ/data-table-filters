@@ -12,11 +12,11 @@ function getRandomTiming(latency: number) {
   const remaining = 1 - (dns + connection + tls + transfer); // Calculate remaining for ttfb
 
   return {
-    dns: Math.round(latency * dns),
-    connection: Math.round(latency * connection),
-    tls: Math.round(latency * tls),
-    ttfb: Math.round(latency * remaining), // Use the remaining percentage for ttfb
-    transfer: Math.round(latency * transfer),
+    "timing.dns": Math.round(latency * dns),
+    "timing.connection": Math.round(latency * connection),
+    "timing.tls": Math.round(latency * tls),
+    "timing.ttfb": Math.round(latency * remaining), // Use the remaining percentage for ttfb
+    "timing.transfer": Math.round(latency * transfer),
   };
 }
 
@@ -113,9 +113,9 @@ export function createMockData({
       regions: ["ams"],
       status: statusCode.ams,
       date,
-      timing: getRandomTiming(latency.ams),
       headers,
       message: 500 === statusCode.ams ? getMessage() : undefined,
+      ...getRandomTiming(latency.ams),
       ...requestObject,
     },
     {
@@ -125,9 +125,9 @@ export function createMockData({
       regions: ["iad"],
       status: statusCode.iad,
       date,
-      timing: getRandomTiming(latency.iad),
       headers,
       message: 500 === statusCode.iad ? getMessage() : undefined,
+      ...getRandomTiming(latency.iad),
       ...requestObject,
     },
     {
@@ -137,9 +137,9 @@ export function createMockData({
       regions: ["gru"],
       status: statusCode.gru,
       date,
-      timing: getRandomTiming(latency.gru),
       headers,
       message: 500 === statusCode.gru ? getMessage() : undefined,
+      ...getRandomTiming(latency.gru),
       ...requestObject,
     },
     {
@@ -149,9 +149,9 @@ export function createMockData({
       regions: ["syd"],
       status: statusCode.syd,
       date,
-      timing: getRandomTiming(latency.syd),
       headers,
       message: 500 === statusCode.syd ? getMessage() : undefined,
+      ...getRandomTiming(latency.syd),
       ...requestObject,
     },
     {
@@ -161,9 +161,9 @@ export function createMockData({
       regions: ["fra"],
       status: statusCode.fra,
       date,
-      timing: getRandomTiming(latency.fra),
       headers,
       message: 500 === statusCode.fra ? getMessage() : undefined,
+      ...getRandomTiming(latency.fra),
       ...requestObject,
     },
     {
@@ -173,9 +173,9 @@ export function createMockData({
       regions: ["hkg"],
       status: statusCode.hkg,
       date,
-      timing: getRandomTiming(latency.hkg),
       headers,
       message: 500 === statusCode.hkg ? getMessage() : undefined,
+      ...getRandomTiming(latency.hkg),
       ...requestObject,
     },
   ];

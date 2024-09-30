@@ -25,28 +25,34 @@ const stringToBoolean = z
   .pipe(z.boolean().optional());
 
 export const timingSchema = z.object({
-  dns: z.number(),
-  connection: z.number(),
-  tls: z.number(),
-  ttfb: z.number(),
-  transfer: z.number(),
+  "timing.dns": z.number(),
+  "timing.connection": z.number(),
+  "timing.tls": z.number(),
+  "timing.ttfb": z.number(),
+  "timing.transfer": z.number(),
 });
 
-export const columnSchema = z.object({
-  uuid: z.string(),
-  method: z.enum(METHODS),
-  host: z.string(),
-  pathname: z.string(),
-  success: z.boolean(),
-  latency: z.number(),
-  status: z.number(),
-  regions: z.enum(REGIONS).array(),
-  date: z.date(),
-  timing: timingSchema,
-  headers: z.record(z.string()),
-  message: z.string().optional(),
-  percentile: z.number().optional(),
-});
+export const columnSchema = z
+  .object({
+    uuid: z.string(),
+    method: z.enum(METHODS),
+    host: z.string(),
+    pathname: z.string(),
+    success: z.boolean(),
+    latency: z.number(),
+    "timing.dns": z.number(),
+    "timing.connection": z.number(),
+    "timing.tls": z.number(),
+    "timing.ttfb": z.number(),
+    "timing.transfer": z.number(),
+    status: z.number(),
+    regions: z.enum(REGIONS).array(),
+    date: z.date(),
+    headers: z.record(z.string()),
+    message: z.string().optional(),
+    percentile: z.number().optional(),
+  })
+  .merge(timingSchema);
 
 export type ColumnSchema = z.infer<typeof columnSchema>;
 export type TimingSchema = z.infer<typeof timingSchema>;
@@ -65,6 +71,31 @@ export const columnFilterSchema = z.object({
   host: z.string().optional(),
   pathname: z.string().optional(),
   latency: z
+    .string()
+    .transform((val) => val.split(SLIDER_DELIMITER))
+    .pipe(z.coerce.number().array().max(2))
+    .optional(),
+  "timing.dns": z
+    .string()
+    .transform((val) => val.split(SLIDER_DELIMITER))
+    .pipe(z.coerce.number().array().max(2))
+    .optional(),
+  "timing.connection": z
+    .string()
+    .transform((val) => val.split(SLIDER_DELIMITER))
+    .pipe(z.coerce.number().array().max(2))
+    .optional(),
+  "timing.tls": z
+    .string()
+    .transform((val) => val.split(SLIDER_DELIMITER))
+    .pipe(z.coerce.number().array().max(2))
+    .optional(),
+  "timing.ttfb": z
+    .string()
+    .transform((val) => val.split(SLIDER_DELIMITER))
+    .pipe(z.coerce.number().array().max(2))
+    .optional(),
+  "timing.transfer": z
     .string()
     .transform((val) => val.split(SLIDER_DELIMITER))
     .pipe(z.coerce.number().array().max(2))

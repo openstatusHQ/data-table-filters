@@ -60,17 +60,22 @@ export function DataTableFilterControls<TData, TValue>({
           ?.map(({ value }) => value as string)}
       >
         {filterFields?.map((field) => {
+          const value = field.value as string;
           return (
-            <AccordionItem
-              key={field.value as string}
-              value={field.value as string}
-              className="border-none"
-            >
-              <AccordionTrigger className="p-2 hover:no-underline">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground">
-                    {field.label}
-                  </p>
+            <AccordionItem key={value} value={value} className="border-none">
+              <AccordionTrigger className="p-2 hover:no-underline w-full">
+                <div className="w-full flex items-center justify-between gap-2 truncate pr-2">
+                  <div className="flex gap-2 items-center truncate">
+                    <p className="text-sm font-medium text-foreground">
+                      {field.label}
+                    </p>
+                    {value !== field.label.toLowerCase() &&
+                    !field.commandDisabled ? (
+                      <p className="text-muted-foreground text-[10px] font-mono mt-px truncate">
+                        {value}
+                      </p>
+                    ) : null}
+                  </div>
                   <DataTableFilterResetButton table={table} {...field} />
                 </div>
               </AccordionTrigger>
