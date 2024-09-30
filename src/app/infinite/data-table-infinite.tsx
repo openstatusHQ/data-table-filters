@@ -323,7 +323,7 @@ export function DataTableInfinite<TData, TValue>({
           </div>
         </div>
       </div>
-      {/* <SheetDetails table={table} /> */}
+      <SheetDetails table={table} />
     </>
   );
 }
