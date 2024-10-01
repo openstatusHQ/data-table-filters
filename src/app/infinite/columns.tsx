@@ -24,15 +24,6 @@ import {
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
-    id: "uuid",
-    accessorKey: "uuid",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const value = row.getValue("uuid") as string;
-      return <div className="font-mono max-w-[85px] truncate">{value}</div>;
-    },
-  },
-  {
     accessorKey: "success",
     header: "",
     cell: ({ row }) => {
@@ -46,6 +37,19 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       if (typeof value === "boolean") return value === rowValue;
       if (Array.isArray(value)) return value.includes(rowValue);
       return false;
+    },
+  },
+  {
+    id: "uuid",
+    accessorKey: "uuid",
+    // enableHiding: false,
+    header: "UUID",
+    cell: ({ row }) => {
+      const value = row.getValue("uuid") as string;
+      return <div className="font-mono max-w-[85px] truncate">{value}</div>;
+    },
+    meta: {
+      label: "UUID",
     },
   },
   {
