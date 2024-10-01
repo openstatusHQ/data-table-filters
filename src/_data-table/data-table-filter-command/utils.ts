@@ -1,6 +1,6 @@
 import { ARRAY_DELIMITER, RANGE_DELIMITER, SLIDER_DELIMITER } from "../schema";
 import type { DataTableFilterField } from "../types";
-import { isArrayOfDates } from "../utils";
+import { isArrayOfDates } from "@/lib/helpers";
 
 /**
  * Extracts the word from the given string at the specified caret position.

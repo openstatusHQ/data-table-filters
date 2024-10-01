@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Table } from "@tanstack/react-table";
-import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { LoaderCircle, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { useEffect } from "react";
 import { Kbd } from "@/components/custom/kbd";
@@ -17,12 +17,14 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   controlsOpen: boolean;
   setControlsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isLoading?: boolean;
 }
 
 export function DataTableToolbar<TData>({
   table,
   controlsOpen,
   setControlsOpen,
+  isLoading,
 }: DataTableToolbarProps<TData>) {
   const filters = table.getState().columnFilters;
 
@@ -47,19 +49,22 @@ export function DataTableToolbar<TData>({
                 size="sm"
                 variant="ghost"
                 onClick={() => setControlsOpen((prev) => !prev)}
+                className="flex gap-2"
               >
                 {controlsOpen ? (
                   <>
-                    <PanelLeftClose className="mr-2 h-4 w-4" /> Hide Controls
+                    <PanelLeftClose className="h-4 w-4" />
+                    <span className="hidden sm:block">Hide Controls</span>
                   </>
                 ) : (
                   <>
-                    <PanelLeftOpen className="mr-2 h-4 w-4" /> Show Controls
+                    <PanelLeftOpen className="h-4 w-4" />
+                    <span className="hidden sm:block">Show Controls</span>
                   </>
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent side="right">
               <p>
                 Toggle controls with{" "}
                 <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">
@@ -73,7 +78,11 @@ export function DataTableToolbar<TData>({
         <p className="text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} of{" "}
           {table.getCoreRowModel().rows.length} row(s) filtered
+          {/* TODO: add "(total X rows)" */}
         </p>
+        {isLoading ? (
+          <LoaderCircle className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />
+        ) : null}
       </div>
       <div className="flex items-center gap-2">
         {filters.length ? (

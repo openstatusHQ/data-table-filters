@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import PlausibleProvider from "next-plausible";
+import { ReactQueryProvider } from "@/providers/react-query";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -40,16 +41,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <PlausibleProvider domain="data-table.openstatus.dev">
-        <body
-          className={cn(
-            "min-h-screen bg-background font-sans antialiased",
-            fontSans.variable
-          )}
-        >
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-          </ThemeProvider>
-        </body>
+        <ReactQueryProvider>
+          <body
+            className={cn(
+              "min-h-screen bg-background font-sans antialiased",
+              fontSans.variable
+            )}
+          >
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              {children}
+            </ThemeProvider>
+          </body>
+        </ReactQueryProvider>
       </PlausibleProvider>
     </html>
   );

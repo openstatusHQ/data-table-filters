@@ -5,7 +5,7 @@ import type { DataTableSliderFilterField } from "./types";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/custom/slider";
-import { isArrayOfNumbers } from "./utils";
+import { isArrayOfNumbers } from "@/lib/helpers";
 
 type DataTableFilterSliderProps<TData> = DataTableSliderFilterField<TData> & {
   table: Table<TData>;
@@ -25,7 +25,9 @@ export function DataTableFilterSlider<TData>({
     typeof filterValue === "number"
       ? [filterValue, filterValue]
       : Array.isArray(filterValue) && isArrayOfNumbers(filterValue)
-      ? filterValue
+      ? filterValue.length === 1
+        ? [filterValue[0], filterValue[0]]
+        : filterValue
       : undefined;
 
   return (

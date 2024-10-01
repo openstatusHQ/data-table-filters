@@ -1,4 +1,5 @@
 import {
+  createParser,
   createSearchParamsCache,
   parseAsArrayOf,
   parseAsBoolean,
@@ -16,7 +17,19 @@ import {
   TAGS,
 } from "./schema";
 
+export const parseAsSort = createParser({
+  parse(queryValue) {
+    const [id, desc] = queryValue.split(".");
+    if (!id && !desc) return null;
+    return { id, desc: desc === "desc" };
+  },
+  serialize(value) {
+    return `${value.id}.${value.desc ? "desc" : "asc"}`;
+  },
+});
+
 export const searchParamsParser = {
+  // FILTERS
   url: parseAsString,
   p95: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   public: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),

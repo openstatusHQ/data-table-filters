@@ -3,7 +3,7 @@
 import type { Table } from "@tanstack/react-table";
 import { useMemo } from "react";
 import type { DataTableTimerangeFilterField } from "./types";
-import { isArrayOfDates } from "./utils";
+import { isArrayOfDates } from "@/lib/helpers";
 import { DatePickerWithRange } from "./date-picker-with-range";
 import type { DateRange } from "react-day-picker";
 import { searchParamsParser } from "./search-params";

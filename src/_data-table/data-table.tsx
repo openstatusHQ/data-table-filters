@@ -43,6 +43,7 @@ export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;
+  // TODO: add sortingColumnFilters
   filterFields?: DataTableFilterField<TData>[];
 }
 
@@ -111,6 +112,8 @@ export function DataTable<TData, TValue>({
       prev[curr.id as string] = curr.value;
       return prev;
     }, {} as Record<string, unknown>);
+
+    console.log({ search });
 
     setSearch(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps

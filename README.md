@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## About The Project
+
+This is a standalone data-table demo that we will be using within the [OpenStatus](https://openstatus.dev) dashboard.
+
+![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
+
+To make it not only more accessible for you to use, but also work on PoC/MVP with data-tables, we have started this repository. We will maintain it and add new examples over time.
+
+It currently includes:
+
+- [data-table with simple pagination](https://data-table.openstatus.dev)
+- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite)
+
+The examples are heavily inspired by datadog and vercel log tables.
+
+## Built With
+
+Our stack is:
+
+- [nextjs](https://nextjs.org)
+- [tanstack query](https://tanstack.com/query/latest)
+- [tanstack table](https://tanstack.com/table/latest)
+- [shadcn ui](https://ui.shadcn.com)
+- [cmdk](http://cmdk.paco.me)
+- [nuqs](http://nuqs.47ng.com)
+
+We will consider making an example with [vitejs](https://vitejs.dev) for all our raw react lovers. **Contributions are welcome!**
 
 ## Getting Started
 
-First, run the development server:
+No environment variable required. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Want more?
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+If you are looking for specific use-cases or like what we are building and want to hire us, feel free write us to [hire@openstatus.dev](mailto:hire@openstatus.dev) or book a call via [cal.com](https://cal.com/team/openstatus/30min).

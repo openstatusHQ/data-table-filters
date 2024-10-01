@@ -11,7 +11,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Search, X } from "lucide-react";
+import { LoaderCircle, Search, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -36,12 +36,14 @@ interface DataTableFilterCommandProps<TData, TSchema extends z.AnyZodObject> {
   table: Table<TData>;
   schema: TSchema;
   filterFields?: DataTableFilterField<TData>[];
+  isLoading?: boolean;
 }
 
 export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
   schema,
   table,
   filterFields: _filterFields,
+  isLoading,
 }: DataTableFilterCommandProps<TData, TSchema>) {
   const columnFilters = table.getState().columnFilters;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,6 +68,8 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
     if (currentWord !== "" && open) return;
     // reset
     if (currentWord !== "" && !open) setCurrentWord("");
+    // avoid recursion
+    if (inputValue.trim() === "" && !open) return;
 
     // FIXME: that stuff is BAD!
     const searchParams = deserialize(schema)(inputValue);
@@ -136,7 +140,11 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
         )}
         onClick={() => setOpen(true)}
       >
-        <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
+        {isLoading ? (
+          <LoaderCircle className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground animate-spin" />
+        ) : (
+          <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
+        )}
         <span className="h-11 w-full max-w-sm truncate py-3 text-left text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50 md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
           {inputValue.trim() ? (
             <span className="text-foreground">{inputValue}</span>
@@ -338,21 +346,21 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
             >
               <div className="flex flex-wrap gap-3">
                 <span>
-                  Use <Kbd className="bg-background">↑</Kbd>{" "}
-                  <Kbd className="bg-background">↓</Kbd> to navigate
+                  Use <Kbd variant="outline">↑</Kbd>{" "}
+                  <Kbd variant="outline">↓</Kbd> to navigate
                 </span>
                 <span>
-                  <Kbd className="bg-background">Enter</Kbd> to query
+                  <Kbd variant="outline">Enter</Kbd> to query
                 </span>
                 <span>
-                  <Kbd className="bg-background">Esc</Kbd> to close
+                  <Kbd variant="outline">Esc</Kbd> to close
                 </span>
                 <Separator orientation="vertical" className="my-auto h-3" />
                 <span>
-                  Union: <Kbd className="bg-background">regions:a,b</Kbd>
+                  Union: <Kbd variant="outline">regions:a,b</Kbd>
                 </span>
                 <span>
-                  Range: <Kbd className="bg-background">p95:59-340</Kbd>
+                  Range: <Kbd variant="outline">p95:59-340</Kbd>
                 </span>
               </div>
               {lastSearches.length ? (

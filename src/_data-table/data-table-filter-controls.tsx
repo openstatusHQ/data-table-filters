@@ -18,6 +18,8 @@ import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 import { X } from "lucide-react";
 
+// FIXME: use @container (especially for the slider element) to restructure elements
+
 // TODO: only pass the columns to generate the filters!
 // https://tanstack.com/table/v8/docs/framework/react/examples/filters
 interface DataTableFilterControlsProps<TData, TValue> {
@@ -36,7 +38,7 @@ export function DataTableFilterControls<TData, TValue>({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex h-[46px] items-center justify-between gap-3">
-        <p className="font-medium text-foreground">Filters</p>
+        <p className="font-medium text-foreground px-2">Filters</p>
         <div>
           {filters.length ? (
             <Button
@@ -58,21 +60,27 @@ export function DataTableFilterControls<TData, TValue>({
           ?.map(({ value }) => value as string)}
       >
         {filterFields?.map((field) => {
+          const value = field.value as string;
           return (
-            <AccordionItem
-              key={field.value as string}
-              value={field.value as string}
-              className="border-none"
-            >
-              <AccordionTrigger className="p-2 hover:no-underline">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground">
-                    {field.label}
-                  </p>
+            <AccordionItem key={value} value={value} className="border-none">
+              <AccordionTrigger className="p-2 hover:no-underline w-full">
+                <div className="w-full flex items-center justify-between gap-2 truncate pr-2">
+                  <div className="flex gap-2 items-center truncate">
+                    <p className="text-sm font-medium text-foreground">
+                      {field.label}
+                    </p>
+                    {value !== field.label.toLowerCase() &&
+                    !field.commandDisabled ? (
+                      <p className="text-muted-foreground text-[10px] font-mono mt-px truncate">
+                        {value}
+                      </p>
+                    ) : null}
+                  </div>
                   <DataTableFilterResetButton table={table} {...field} />
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="-m-4 p-4">
+              {/* REMINDER: avoid the focus state to be cut due to overflow-hidden */}
+              <AccordionContent className="p-1">
                 {(() => {
                   switch (field.type) {
                     case "checkbox": {
