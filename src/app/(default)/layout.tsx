@@ -10,7 +10,7 @@ import { TopBanner } from "./top-banner";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* <TopBanner /> */}
+      <TopBanner />
       <main className="container mx-auto flex min-h-screen flex-col gap-4 p-4 sm:p-16">
         <div className="sm:sticky top-0 flex w-full max-w-7xl mx-auto">
           <div className="sm:absolute sm:top-2 sm:-right-12 gap-2 p-1 flex-1 flex sm:flex-col justify-center items-center">
