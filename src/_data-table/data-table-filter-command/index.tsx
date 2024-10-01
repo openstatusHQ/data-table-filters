@@ -68,6 +68,8 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
     if (currentWord !== "" && open) return;
     // reset
     if (currentWord !== "" && !open) setCurrentWord("");
+    // avoid recursion
+    if (inputValue.trim() === "" && !open) return;
 
     // FIXME: that stuff is BAD!
     const searchParams = deserialize(schema)(inputValue);
