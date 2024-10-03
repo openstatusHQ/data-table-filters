@@ -43,6 +43,7 @@ import { SidebarFooter } from "./sidebar-footer";
 import { Separator } from "@/components/ui/separator";
 import { SheetDetails } from "./sheet-details";
 import { Percentile } from "@/lib/percentile";
+import { formatCompactNumber } from "@/lib/format";
 
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -316,7 +317,10 @@ export function DataTableInfinite<TData, TValue>({
                     ) : (
                       <p className="text-muted-foreground text-sm">
                         No more data to load (total:{" "}
-                        <span className="font-medium">{totalRows} rows</span>)
+                        <span className="font-medium font-mono">
+                          {formatCompactNumber(totalRows)}
+                        </span>{" "}
+                        rows)
                       </p>
                     )}
                   </TableCell>

@@ -26,7 +26,11 @@ import {
   getTimingPercentage,
   timingPhases,
 } from "@/constants/timing";
-import { formatDate, formatMilliseconds } from "@/lib/format";
+import {
+  formatCompactNumber,
+  formatDate,
+  formatMilliseconds,
+} from "@/lib/format";
 import {
   Tooltip,
   TooltipContent,
@@ -296,10 +300,13 @@ export function SheetDetailsContent({
               />
               {!data.percentile ? "N/A" : `P${Math.round(data.percentile)}`}
             </HoverCardTrigger>
-            <HoverCardContent className="w-52 flex flex-col gap-2 p-2 text-xs">
+            <HoverCardContent className="w-40 flex flex-col gap-2 p-2 text-xs">
               <p>
-                Calculated from current filters out of{" "}
-                <span className="font-medium">{filterRows} rows</span>.
+                Calculated from filtered result of{" "}
+                <span className="font-medium font-mono">
+                  {formatCompactNumber(filterRows)}
+                </span>{" "}
+                rows.
               </p>
               <div className="flex flex-col gap-0.5">
                 {percentileArray.map(([key, value]) => {
