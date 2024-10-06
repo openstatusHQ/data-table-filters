@@ -40,11 +40,6 @@ export const columnSchema = z
     pathname: z.string(),
     success: z.boolean(),
     latency: z.number(),
-    "timing.dns": z.number(),
-    "timing.connection": z.number(),
-    "timing.tls": z.number(),
-    "timing.ttfb": z.number(),
-    "timing.transfer": z.number(),
     status: z.number(),
     regions: z.enum(REGIONS).array(),
     date: z.date(),
@@ -57,6 +52,7 @@ export const columnSchema = z
 export type ColumnSchema = z.infer<typeof columnSchema>;
 export type TimingSchema = z.infer<typeof timingSchema>;
 
+// TODO: can we get rid of this in favor of nuqs search-params?
 export const columnFilterSchema = z.object({
   success: z
     .string()
