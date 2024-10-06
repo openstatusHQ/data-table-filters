@@ -6,4 +6,8 @@ declare module "@tanstack/react-table" {
     cellClassName?: string;
     label?: string;
   }
+  interface FilterFns {
+    inDateRange: FilterFn<any>;
+    arrSome: FilterFn<any>;
+  }
 }

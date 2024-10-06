@@ -44,6 +44,7 @@ import { Separator } from "@/components/ui/separator";
 import { SheetDetails } from "./sheet-details";
 import { Percentile } from "@/lib/percentile";
 import { formatCompactNumber } from "@/lib/format";
+import { inDateRange, arrSome } from "@/lib/table/filterfns";
 
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -162,6 +163,7 @@ export function DataTableInfinite<TData, TValue>({
       }
       return map;
     },
+    filterFns: { inDateRange, arrSome },
   });
 
   React.useEffect(() => {

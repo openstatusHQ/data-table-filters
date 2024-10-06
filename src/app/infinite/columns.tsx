@@ -2,10 +2,9 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus, X } from "lucide-react";
-import type { ColumnSchema, METHODS } from "./schema";
-import { isArrayOfDates, isArrayOfNumbers } from "@/lib/helpers";
+import type { ColumnSchema } from "./schema";
 import { DataTableColumnHeader } from "@/_data-table/data-table-column-header";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/constants/status-code";
 import { regions } from "@/constants/region";
@@ -31,13 +30,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       if (value) return <Check className="h-4 w-4 text-green-500/60" />;
       return <X className="h-4 w-4 text-red-500" />;
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id);
-      if (typeof value === "string") return value === String(rowValue);
-      if (typeof value === "boolean") return value === rowValue;
-      if (Array.isArray(value)) return value.includes(rowValue);
-      return false;
-    },
+    filterFn: "arrSome",
   },
   {
     id: "uuid",
@@ -58,29 +51,13 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Date" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("date");
       return (
-        <div className="font-mono whitespace-nowrap" suppressHydrationWarning>
-          {format(new Date(`${value}`), "LLL dd, y HH:mm")}
+        <div className="font-mono whitespace-nowrap">
+          {format(new Date(row.getValue("date")), "LLL dd, y HH:mm")}
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const rowValue = new Date(row.getValue(id));
-      if (!(rowValue instanceof Date)) return false;
-      if (value instanceof Date) return isSameDay(value, rowValue);
-      if (Array.isArray(value) && isArrayOfDates(value)) {
-        if (value.length === 1) return isSameDay(value[0], rowValue);
-        else {
-          const sorted = value.sort((a, b) => a.getTime() - b.getTime());
-          return (
-            sorted[0]?.getTime() <= rowValue.getTime() &&
-            rowValue.getTime() <= sorted[1]?.getTime()
-          );
-        }
-      }
-      return false;
-    },
+    filterFn: "inDateRange",
   },
   {
     accessorKey: "status",
@@ -103,14 +80,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       }
       return <div className="text-muted-foreground">{`${value}`}</div>;
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as number;
-      if (typeof value === "number") return value === Number(rowValue);
-      if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        return value.includes(rowValue);
-      }
-      return false;
-    },
+    filterFn: "arrSome",
   },
   {
     // TODO: make it a type of MethodSchema!
@@ -120,12 +90,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       const value = row.getValue("method") as string;
       return <div className="font-mono">{value}</div>;
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as keyof typeof METHODS;
-      if (typeof value === "string") return value === rowValue;
-      if (Array.isArray(value)) return value.includes(rowValue);
-      return false;
-    },
+    filterFn: "arrIncludesSome",
   },
   {
     accessorKey: "host",
@@ -163,15 +128,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as number;
-      if (typeof value === "number") return value === Number(rowValue);
-      if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        const sorted = value.sort((a, b) => a - b);
-        return sorted[0] <= rowValue && rowValue <= sorted[1];
-      }
-      return false;
-    },
+    filterFn: "inNumberRange",
   },
   {
     accessorKey: "regions",
@@ -201,13 +158,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       }
       return <Minus className="h-4 w-4 text-muted-foreground/50" />;
     },
-    filterFn: (row, id, value) => {
-      const array = row.getValue(id) as string[];
-      if (typeof value === "string") return array.includes(value);
-      // up to the user to define either `.some` or `.every`
-      if (Array.isArray(value)) return value.some((i) => array.includes(i));
-      return false;
-    },
+    filterFn: "arrIncludesSome",
   },
   {
     accessorKey: "timing",
@@ -294,15 +245,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as number;
-      if (typeof value === "number") return value === Number(rowValue);
-      if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        const sorted = value.sort((a, b) => a - b);
-        return sorted[0] <= rowValue && rowValue <= sorted[1];
-      }
-      return false;
-    },
+    filterFn: "inNumberRange",
     meta: {
       label: "DNS",
     },
@@ -324,15 +267,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as number;
-      if (typeof value === "number") return value === Number(rowValue);
-      if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        const sorted = value.sort((a, b) => a - b);
-        return sorted[0] <= rowValue && rowValue <= sorted[1];
-      }
-      return false;
-    },
+    filterFn: "inNumberRange",
     meta: {
       label: "Connection",
     },
@@ -354,15 +289,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as number;
-      if (typeof value === "number") return value === Number(rowValue);
-      if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        const sorted = value.sort((a, b) => a - b);
-        return sorted[0] <= rowValue && rowValue <= sorted[1];
-      }
-      return false;
-    },
+    filterFn: "inNumberRange",
     meta: {
       label: "TLS",
     },
@@ -384,15 +311,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as number;
-      if (typeof value === "number") return value === Number(rowValue);
-      if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        const sorted = value.sort((a, b) => a - b);
-        return sorted[0] <= rowValue && rowValue <= sorted[1];
-      }
-      return false;
-    },
+    filterFn: "inNumberRange",
     meta: {
       label: "TTFB",
     },
@@ -414,15 +333,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const rowValue = row.getValue(id) as number;
-      if (typeof value === "number") return value === Number(rowValue);
-      if (Array.isArray(value) && isArrayOfNumbers(value)) {
-        const sorted = value.sort((a, b) => a - b);
-        return sorted[0] <= rowValue && rowValue <= sorted[1];
-      }
-      return false;
-    },
+    filterFn: "inNumberRange",
     meta: {
       label: "Transfer",
     },
