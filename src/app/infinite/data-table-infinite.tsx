@@ -83,6 +83,10 @@ export function DataTableInfinite<TData, TValue>({
     React.useState<SortingState>(defaultColumnSorting);
   const [rowSelection, setRowSelection] =
     React.useState<RowSelectionState>(defaultRowSelection);
+  const [columnOrder, setColumnOrder] = useLocalStorage<string[]>(
+    "data-table-column-order",
+    []
+  );
   const [columnVisibility, setColumnVisibility] =
     useLocalStorage<VisibilityState>("data-table-visibility", {
       uuid: false,
@@ -135,7 +139,13 @@ export function DataTableInfinite<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    state: { columnFilters, sorting, columnVisibility, rowSelection },
+    state: {
+      columnFilters,
+      sorting,
+      columnVisibility,
+      rowSelection,
+      columnOrder,
+    },
     enableMultiRowSelection: false,
     // @ts-ignore FIXME: because it is not in the types
     getRowId: (row, index) => `${row?.uuid}` || `${index}`,
@@ -143,6 +153,7 @@ export function DataTableInfinite<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onColumnOrderChange: setColumnOrder,
     getSortedRowModel: getSortedRowModel(),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -234,6 +245,7 @@ export function DataTableInfinite<TData, TValue>({
               controlsOpen={controlsOpen}
               setControlsOpen={setControlsOpen}
               isLoading={isFetching || isLoading}
+              enableColumnOrdering={true}
             />
           </div>
           <div className="z-0">
