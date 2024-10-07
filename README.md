@@ -18,11 +18,12 @@ The examples are heavily inspired by datadog and vercel log tables.
 Our stack is:
 
 - [nextjs](https://nextjs.org)
-- [tanstack query](https://tanstack.com/query/latest)
-- [tanstack table](https://tanstack.com/table/latest)
-- [shadcn ui](https://ui.shadcn.com)
+- [tanstack-query](https://tanstack.com/query/latest)
+- [tanstack-table](https://tanstack.com/table/latest)
+- [shadcn/ui](https://ui.shadcn.com)
 - [cmdk](http://cmdk.paco.me)
 - [nuqs](http://nuqs.47ng.com)
+- [dnd-kit](https://dndkit.com)
 
 We will consider making an example with [vitejs](https://vitejs.dev) for all our raw react lovers. **Contributions are welcome!**
 
@@ -39,3 +40,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## Want more?
 
 If you are looking for specific use-cases or like what we are building and want to hire us, feel free write us to [hire@openstatus.dev](mailto:hire@openstatus.dev) or book a call via [cal.com](https://cal.com/team/openstatus/30min).
+
+## Credits
+
+- [sadmann17](https://x.com/sadmann17) for is dope `<Sortable />` component around `@dnd-kit` (see [sortable.sadmn.com](https://sortable.sadmn.com))

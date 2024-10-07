@@ -18,6 +18,7 @@ interface DataTableToolbarProps<TData> {
   controlsOpen: boolean;
   setControlsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isLoading?: boolean;
+  enableColumnOrdering?: boolean;
 }
 
 export function DataTableToolbar<TData>({
@@ -25,6 +26,7 @@ export function DataTableToolbar<TData>({
   controlsOpen,
   setControlsOpen,
   isLoading,
+  enableColumnOrdering,
 }: DataTableToolbarProps<TData>) {
   const filters = table.getState().columnFilters;
 
@@ -95,7 +97,10 @@ export function DataTableToolbar<TData>({
             Reset
           </Button>
         ) : null}
-        <DataTableViewOptions table={table} />
+        <DataTableViewOptions
+          table={table}
+          enableOrdering={enableColumnOrdering}
+        />
       </div>
     </div>
   );

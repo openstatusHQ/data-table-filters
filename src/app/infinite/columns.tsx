@@ -35,7 +35,6 @@ export const columns: ColumnDef<ColumnSchema>[] = [
   {
     id: "uuid",
     accessorKey: "uuid",
-    // enableHiding: false,
     header: "UUID",
     cell: ({ row }) => {
       const value = row.getValue("uuid") as string;
@@ -104,8 +103,11 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "pathname",
     header: "Pathname",
     cell: ({ row }) => {
-      const value = row.getValue("pathname") as string;
-      return <div className="font-mono max-w-[120px] truncate">{value}</div>;
+      return (
+        <div className="font-mono max-w-[120px] truncate">
+          {row.getValue("pathname")}
+        </div>
+      );
     },
   },
   {
@@ -115,7 +117,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Latency" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("latency") as number;
+      const value = row.getValue("latency") as number | undefined;
       if (typeof value === "undefined") {
         return <Minus className="h-4 w-4 text-muted-foreground/50" />;
       }
