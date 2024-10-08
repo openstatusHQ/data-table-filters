@@ -6,7 +6,6 @@ import type { DataTableTimerangeFilterField } from "./types";
 import { isArrayOfDates } from "@/lib/helpers";
 import { DatePickerWithRange } from "./date-picker-with-range";
 import type { DateRange } from "react-day-picker";
-import { searchParamsParser } from "./search-params";
 
 type DataTableFilterTimerangeProps<TData> =
   DataTableTimerangeFilterField<TData> & {
@@ -20,7 +19,7 @@ export function DataTableFilterTimerange<TData>({
   table,
   value: _value,
 }: DataTableFilterTimerangeProps<TData>) {
-  const value = _value as keyof typeof searchParamsParser;
+  const value = _value as string;
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
 

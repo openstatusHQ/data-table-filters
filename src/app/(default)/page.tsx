@@ -1,7 +1,7 @@
-import { columns } from "@/_data-table/columns";
-import { data, filterFields } from "@/_data-table/constants";
-import { DataTable } from "@/_data-table/data-table";
-import { searchParamsCache } from "@/_data-table/search-params";
+import { columns } from "@/app/(default)/columns";
+import { data, filterFields } from "@/app/(default)/constants";
+import { DataTable } from "@/app/(default)/data-table";
+import { searchParamsCache } from "@/app/(default)/search-params";
 import { Skeleton } from "./skeleton";
 
 import * as React from "react";

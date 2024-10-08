@@ -2,7 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { METHODS, REGIONS, type ColumnSchema } from "./schema";
-import type { DataTableFilterField, Option } from "@/_data-table/types";
+import type {
+  DataTableFilterField,
+  Option,
+} from "@/components/data-table/types";
 import { getStatusColor } from "@/constants/status-code";
 
 export const filterFields = [

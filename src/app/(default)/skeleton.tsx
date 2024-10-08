@@ -1,4 +1,4 @@
-import { DataTableSkeleton } from "@/_data-table/data-table-skeleton";
+import { DataTableSkeleton } from "@/components/data-table/data-table-skeleton";
 import { Skeleton as DefaultSkeleton } from "@/components/ui/skeleton";
 
 export function Skeleton() {

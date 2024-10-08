@@ -3,7 +3,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus, X } from "lucide-react";
 import type { ColumnSchema } from "./schema";
-import { DataTableColumnHeader } from "@/_data-table/data-table-column-header";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/constants/status-code";
@@ -20,6 +19,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {

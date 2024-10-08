@@ -19,6 +19,8 @@ import {
   SLIDER_DELIMITER,
 } from "./schema";
 
+// https://logs.run/i?sort=latency.desc
+
 export const parseAsSort = createParser({
   parse(queryValue) {
     const [id, desc] = queryValue.split(".");
