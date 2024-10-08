@@ -2,6 +2,13 @@ export type SearchParams = {
   [key: string]: string | string[] | undefined;
 };
 
+export type DatePreset = {
+  label: string;
+  from: Date;
+  to: Date;
+  shortcut: string;
+};
+
 export type Option = {
   label: string;
   value: string | boolean | number | undefined;
@@ -29,6 +36,7 @@ export type Slider = {
 export type Timerange = {
   type: "timerange";
   options?: Option[]; // required for TS
+  presets?: DatePreset[];
 };
 
 export type Base<TData> = {
