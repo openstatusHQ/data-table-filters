@@ -1,13 +1,11 @@
+import {
+  ARRAY_DELIMITER,
+  RANGE_DELIMITER,
+  SLIDER_DELIMITER,
+} from "@/components/data-table/delimiters";
+import { REGIONS } from "@/constants/region";
+import { TAGS } from "@/constants/tag";
 import { z } from "zod";
-
-/** Strings used to separate the URL params */
-export const ARRAY_DELIMITER = ",";
-export const SLIDER_DELIMITER = "-";
-export const SPACE_DELIMITER = "_";
-export const RANGE_DELIMITER = "-";
-
-export const REGIONS = ["ams", "gru", "syd", "hkg", "fra", "iad"] as const;
-export const TAGS = ["web", "api", "enterprise", "app"] as const;
 
 // https://github.com/colinhacks/zod/issues/2985#issue-2008642190
 const stringToBoolean = z
@@ -26,9 +24,7 @@ const stringToBoolean = z
 export const columnSchema = z.object({
   name: z.string(),
   url: z.string(),
-  // p75
   p95: z.number().optional(),
-  // p99
   public: z.boolean(),
   active: z.boolean(),
   regions: z.enum(REGIONS).array(),
@@ -44,7 +40,7 @@ export const columnFilterSchema = z.object({
     .string()
     .transform((val) => val.split(SLIDER_DELIMITER))
     .pipe(z.coerce.number().array().max(2))
-    .optional(), // TBD: we could transform to `{ min: x, max: y}`
+    .optional(),
   public: z
     .string()
     .transform((val) => val.split(ARRAY_DELIMITER))

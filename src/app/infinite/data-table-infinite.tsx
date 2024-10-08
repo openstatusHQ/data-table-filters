@@ -39,12 +39,12 @@ import { searchParamsParser } from "./search-params";
 import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SidebarFooter } from "./sidebar-footer";
 import { Separator } from "@/components/ui/separator";
 import { SheetDetails } from "./sheet-details";
-import { Percentile } from "@/lib/percentile";
+import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
+import { SocialsFooter } from "@/components/layout/socials-footer";
 
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -223,7 +223,7 @@ export function DataTableInfinite<TData, TValue>({
           </div>
           <Separator className="my-2" />
           <div className="p-2">
-            <SidebarFooter />
+            <SocialsFooter />
           </div>
         </div>
         <div className="flex max-w-full flex-1 flex-col sm:border-l border-border overflow-clip">

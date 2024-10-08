@@ -5,14 +5,14 @@ import { Check, Minus, X } from "lucide-react";
 import type { ColumnSchema } from "./schema";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { getStatusColor } from "@/constants/status-code";
+import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
 import {
   getTimingColor,
   getTimingLabel,
   getTimingPercentage,
   timingPhases,
-} from "@/constants/timing";
+} from "@/lib/request/timing";
 import { cn } from "@/lib/utils";
 import {
   HoverCard,

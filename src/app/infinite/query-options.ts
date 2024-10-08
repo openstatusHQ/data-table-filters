@@ -2,7 +2,7 @@ import type { MakeArray } from "@/types";
 import { ColumnSchema } from "./schema";
 import { SearchParamsType, searchParamsSerializer } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
-import { Percentile } from "@/lib/percentile";
+import { Percentile } from "@/lib/request/percentile";
 
 export type InfiniteQueryMeta = {
   totalRowCount: number;

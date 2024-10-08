@@ -1,15 +1,16 @@
 import { isSameDay } from "date-fns";
-import { type ColumnSchema, REGIONS } from "../schema";
+import { type ColumnSchema } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
   isArrayOfBooleans,
   isArrayOfDates,
   isArrayOfNumbers,
-} from "@/lib/helpers";
+} from "@/lib/is-array";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
-} from "@/lib/percentile";
+} from "@/lib/request/percentile";
+import { REGIONS } from "@/constants/region";
 
 export function filterData(
   data: ColumnSchema[],

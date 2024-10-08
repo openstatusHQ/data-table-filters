@@ -13,11 +13,11 @@ import {
 // Note: import from 'nuqs/server' to avoid the "use client" directive
 import {
   ARRAY_DELIMITER,
-  METHODS,
   RANGE_DELIMITER,
-  REGIONS,
   SLIDER_DELIMITER,
-} from "./schema";
+} from "@/components/data-table/delimiters";
+import { REGIONS } from "@/constants/region";
+import { METHODS } from "@/constants/method";
 
 // https://logs.run/i?sort=latency.desc
 

@@ -25,7 +25,7 @@ import {
   getTimingLabel,
   getTimingPercentage,
   timingPhases,
-} from "@/constants/timing";
+} from "@/lib/request/timing";
 import {
   formatCompactNumber,
   formatDate,
@@ -43,12 +43,12 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
-import { getStatusColor } from "@/constants/status-code";
+import { getStatusColor } from "@/lib/request/status-code";
 import type { Table } from "@tanstack/react-table";
 import { regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Kbd } from "@/components/custom/kbd";
-import { Percentile, getPercentileColor } from "@/lib/percentile";
+import { Percentile, getPercentileColor } from "@/lib/request/percentile";
 
 export interface DataTableToolbarProps<TData> {
   table: Table<TData>;

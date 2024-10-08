@@ -62,8 +62,6 @@ export function Client() {
   return (
     <DataTableInfinite
       columns={columns}
-      // REMINDER: we cannot use `flatData` due to memoization?!?!?
-      //   MAYBE: this will be resolved if we add queryKey(search) as the search is unique and will trigger a change of data
       data={flatData}
       totalRows={totalDBRowCount}
       filterRows={filterDBRowCount}

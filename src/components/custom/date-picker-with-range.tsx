@@ -18,7 +18,7 @@ import { kbdVariants } from "@/components/custom/kbd";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
-import { presets as defaultPresets } from "@/constants/date-presets";
+import { presets as defaultPresets } from "@/constants/date-preset";
 import type { DatePreset } from "@/components/data-table/types";
 
 interface DatePickerWithRangeProps

@@ -1,12 +1,14 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { METHODS, REGIONS, type ColumnSchema } from "./schema";
+import { type ColumnSchema } from "./schema";
 import type {
   DataTableFilterField,
   Option,
 } from "@/components/data-table/types";
-import { getStatusColor } from "@/constants/status-code";
+import { getStatusColor } from "@/lib/request/status-code";
+import { METHODS } from "@/constants/method";
+import { REGIONS } from "@/constants/region";
 
 export const filterFields = [
   {

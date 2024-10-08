@@ -33,7 +33,7 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
 import { columnFilterSchema } from "./schema";
 import type { DataTableFilterField } from "@/components/data-table/types";
-import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryStates } from "nuqs";

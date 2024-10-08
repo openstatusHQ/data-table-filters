@@ -1,5 +1,7 @@
-import { ColumnSchema, METHODS, REGIONS } from "../schema";
+import { METHODS } from "@/constants/method";
+import { ColumnSchema } from "../schema";
 import { subMinutes } from "date-fns";
+import { REGIONS } from "@/constants/region";
 
 function getRandomTiming(latency: number) {
   // Generate random percentages within the specified ranges

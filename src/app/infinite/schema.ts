@@ -1,14 +1,11 @@
+import {
+  ARRAY_DELIMITER,
+  RANGE_DELIMITER,
+  SLIDER_DELIMITER,
+} from "@/components/data-table/delimiters";
+import { METHODS } from "@/constants/method";
+import { REGIONS } from "@/constants/region";
 import { z } from "zod";
-
-/** Strings used to separate the URL params */
-export const ARRAY_DELIMITER = ",";
-export const SLIDER_DELIMITER = "-";
-export const SPACE_DELIMITER = "_";
-export const RANGE_DELIMITER = "-";
-
-export const REGIONS = ["ams", "gru", "syd", "hkg", "fra", "iad"] as const;
-export const METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
-export const TAGS = ["web", "api", "enterprise", "app"] as const;
 
 // https://github.com/colinhacks/zod/issues/2985#issue-2008642190
 const stringToBoolean = z
