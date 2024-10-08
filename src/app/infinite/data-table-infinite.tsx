@@ -29,7 +29,7 @@ import {
 } from "@/components/custom/table";
 import { DataTableFilterControls } from "@/components/data-table/data-table-filter-controls";
 import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
-import { columnFilterSchema } from "./schema";
+import { ColumnSchema, columnFilterSchema } from "./schema";
 import type { DataTableFilterField } from "@/components/data-table/types";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
 import { cn } from "@/lib/utils";
@@ -40,11 +40,12 @@ import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { SheetDetails } from "./sheet-details";
+import { SheetDetailsContent } from "./sheet-details-content";
 import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
 import { SocialsFooter } from "@/components/layout/socials-footer";
+import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
 
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -200,10 +201,23 @@ export function DataTableInfinite<TData, TValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sorting]);
 
+  const selectedRow = React.useMemo(() => {
+    const selectedRowKey = Object.keys(rowSelection)?.[0];
+    return table
+      .getCoreRowModel()
+      .flatRows.find((row) => row.id === selectedRowKey);
+  }, [rowSelection, table]);
+
   React.useEffect(() => {
-    setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
+    if (selectedRow) {
+      setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
+      // if it seems like we have a row selection but cannot find it in the table
+    } else if (Object.keys(rowSelection).length) {
+      setSearch({ uuid: null });
+      setRowSelection({});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowSelection]);
+  }, [rowSelection, selectedRow]);
 
   return (
     <>
@@ -344,11 +358,17 @@ export function DataTableInfinite<TData, TValue>({
           </div>
         </div>
       </div>
-      <SheetDetails
+      <DataTableSheetDetails
+        // TODO: make it dynamic via renderSheetDetailsContent
+        title={(selectedRow?.original as ColumnSchema | undefined)?.pathname}
         table={table}
-        percentiles={currentPercentiles}
-        filterRows={filterRows}
-      />
+      >
+        <SheetDetailsContent
+          data={selectedRow?.original as ColumnSchema}
+          percentiles={currentPercentiles}
+          filterRows={filterRows}
+        />
+      </DataTableSheetDetails>
     </>
   );
 }
