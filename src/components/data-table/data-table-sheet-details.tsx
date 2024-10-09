@@ -6,6 +6,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/custom/sheet";
@@ -19,16 +20,19 @@ import {
 } from "@/components/ui/tooltip";
 import type { Table } from "@tanstack/react-table";
 import { Kbd } from "@/components/custom/kbd";
+import { cn } from "@/lib/utils";
 
 export interface DataTableSheetDetailsProps<TData> {
   table: Table<TData>;
   title?: string;
+  titleClassName?: string;
   children?: React.ReactNode;
 }
 
 export function DataTableSheetDetails<TData>({
   table,
   title,
+  titleClassName,
   children,
 }: DataTableSheetDetailsProps<TData>) {
   const selectedRowKey =
@@ -82,7 +86,7 @@ export function DataTableSheetDetails<TData>({
       <SheetContent className="sm:max-w-md overflow-y-auto p-0" hideClose>
         <SheetHeader className="sticky top-0 border-b bg-background p-4">
           <div className="flex items-center justify-between gap-2">
-            <SheetTitle className="text-left font-mono truncate">
+            <SheetTitle className={cn(titleClassName, "text-left truncate")}>
               {title}
             </SheetTitle>
             <div className="flex items-center gap-1 h-7">
@@ -138,7 +142,10 @@ export function DataTableSheetDetails<TData>({
             </div>
           </div>
         </SheetHeader>
-        {children}
+        <SheetDescription className="sr-only">
+          Selected row details
+        </SheetDescription>
+        <div className="p-4">{children}</div>
       </SheetContent>
     </Sheet>
   );

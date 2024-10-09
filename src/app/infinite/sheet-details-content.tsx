@@ -37,7 +37,6 @@ export function SheetDetailsContent({
   data,
   percentiles,
   filterRows,
-  className,
   ...props
 }: SheetDetailsContentProps) {
   const [open, setOpen] = React.useState(false);
@@ -60,7 +59,7 @@ export function SheetDetailsContent({
   percentileArray.sort((a, b) => a[0] - b[0]);
 
   return (
-    <dl className={cn("p-4", className)} {...props}>
+    <dl {...props}>
       <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">ID</dt>
         <dd className="font-mono truncate">{data.uuid}</dd>

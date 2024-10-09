@@ -27,7 +27,7 @@ export function DataTableColumnHeader<TData, TValue>({
       onClick={() => {
         column.toggleSorting(undefined);
       }}
-      className={className}
+      className={cn("-ml-3", className)}
       {...props}
     >
       <span>{title}</span>
@@ -35,17 +35,17 @@ export function DataTableColumnHeader<TData, TValue>({
         <ChevronUp
           className={cn(
             "-mb-0.5 h-3 w-3",
-            column.getIsSorted() === "asc" || !column.getIsSorted()
+            column.getIsSorted() === "asc"
               ? "text-accent-foreground"
-              : "text-muted-foreground/70"
+              : "text-muted-foreground"
           )}
         />
         <ChevronDown
           className={cn(
             "-mt-0.5 h-3 w-3",
-            column.getIsSorted() === "desc" || !column.getIsSorted()
+            column.getIsSorted() === "desc"
               ? "text-accent-foreground"
-              : "text-muted-foreground/70"
+              : "text-muted-foreground"
           )}
         />
       </span>

@@ -208,13 +208,13 @@ export function DataTableInfinite<TData, TValue>({
       .flatRows.find((row) => row.id === selectedRowKey);
   }, [rowSelection, table]);
 
+  // FIXME: cannot share a uuid with the sheet details
   React.useEffect(() => {
-    if (selectedRow) {
-      setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
-      // if it seems like we have a row selection but cannot find it in the table
-    } else if (Object.keys(rowSelection).length) {
+    if (Object.keys(rowSelection)?.length && !selectedRow) {
       setSearch({ uuid: null });
       setRowSelection({});
+    } else {
+      setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowSelection, selectedRow]);
@@ -361,6 +361,7 @@ export function DataTableInfinite<TData, TValue>({
       <DataTableSheetDetails
         // TODO: make it dynamic via renderSheetDetailsContent
         title={(selectedRow?.original as ColumnSchema | undefined)?.pathname}
+        titleClassName="font-mono"
         table={table}
       >
         <SheetDetailsContent

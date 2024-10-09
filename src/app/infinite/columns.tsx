@@ -20,6 +20,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import TextWithTooltip from "@/components/custom/text-with-tooltip";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
@@ -38,7 +39,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "UUID",
     cell: ({ row }) => {
       const value = row.getValue("uuid") as string;
-      return <div className="font-mono max-w-[85px] truncate">{value}</div>;
+      return (
+        <TextWithTooltip className="font-mono max-w-[85px]" text={value} />
+      );
     },
     meta: {
       label: "UUID",
@@ -96,17 +99,18 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "Host",
     cell: ({ row }) => {
       const value = row.getValue("host") as string;
-      return <div className="font-mono max-w-[120px] truncate">{value}</div>;
+      return (
+        <TextWithTooltip className="font-mono max-w-[120px]" text={value} />
+      );
     },
   },
   {
     accessorKey: "pathname",
     header: "Pathname",
     cell: ({ row }) => {
+      const value = row.getValue("pathname") as string;
       return (
-        <div className="font-mono max-w-[120px] truncate">
-          {row.getValue("pathname")}
-        </div>
+        <TextWithTooltip className="font-mono max-w-[120px]" text={value} />
       );
     },
   },
@@ -117,18 +121,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Latency" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("latency") as number | undefined;
-      if (typeof value === "undefined") {
-        return <Minus className="h-4 w-4 text-muted-foreground/50" />;
-      }
-      return (
-        <div className="font-mono">
-          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-            value
-          )}
-          <span className="text-muted-foreground">ms</span>
-        </div>
-      );
+      const value = row.getValue("latency") as number;
+      return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
   },
@@ -175,6 +169,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       };
       const latency = row.getValue("latency") as number;
       const percentage = getTimingPercentage(timing, latency);
+      // create a separate component for this
       return (
         <HoverCard>
           <HoverCardTrigger
@@ -238,14 +233,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     ),
     cell: ({ row }) => {
       const value = row.getValue("timing.dns") as number;
-      return (
-        <div className="font-mono">
-          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-            value
-          )}
-          <span className="text-muted-foreground">ms</span>
-        </div>
-      );
+      return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
     meta: {
@@ -260,14 +248,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     ),
     cell: ({ row }) => {
       const value = row.getValue("timing.connection") as number;
-      return (
-        <div className="font-mono">
-          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-            value
-          )}
-          <span className="text-muted-foreground">ms</span>
-        </div>
-      );
+      return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
     meta: {
@@ -282,14 +263,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     ),
     cell: ({ row }) => {
       const value = row.getValue("timing.tls") as number;
-      return (
-        <div className="font-mono">
-          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-            value
-          )}
-          <span className="text-muted-foreground">ms</span>
-        </div>
-      );
+      return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
     meta: {
@@ -304,14 +278,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     ),
     cell: ({ row }) => {
       const value = row.getValue("timing.ttfb") as number;
-      return (
-        <div className="font-mono">
-          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-            value
-          )}
-          <span className="text-muted-foreground">ms</span>
-        </div>
-      );
+      return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
     meta: {
@@ -326,14 +293,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     ),
     cell: ({ row }) => {
       const value = row.getValue("timing.transfer") as number;
-      return (
-        <div className="font-mono">
-          {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-            value
-          )}
-          <span className="text-muted-foreground">ms</span>
-        </div>
-      );
+      return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
     meta: {
@@ -341,3 +301,14 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     },
   },
 ];
+
+function LatencyDisplay({ value }: { value: number }) {
+  return (
+    <div className="font-mono">
+      {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
+        value
+      )}
+      <span className="text-muted-foreground">ms</span>
+    </div>
+  );
+}
