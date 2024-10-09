@@ -5,8 +5,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus } from "lucide-react";
 import { tagsColor } from "./constants";
 import type { ColumnSchema } from "./schema";
-import { isArrayOfDates, isArrayOfNumbers } from "@/lib/helpers";
-import { DataTableColumnHeader } from "./data-table-column-header";
+import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { format, isSameDay } from "date-fns";
 
 export const columns: ColumnDef<ColumnSchema>[] = [

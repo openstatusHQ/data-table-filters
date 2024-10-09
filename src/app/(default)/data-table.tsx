@@ -28,12 +28,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/custom/table";
-import { DataTableFilterControls } from "./data-table-filter-controls";
-import { DataTablePagination } from "./data-table-pagination";
-import { DataTableFilterCommand } from "./data-table-filter-command";
+import { DataTableFilterControls } from "@/components/data-table/data-table-filter-controls";
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
 import { columnFilterSchema } from "./schema";
-import type { DataTableFilterField } from "./types";
-import { DataTableToolbar } from "./data-table-toolbar"; // TODO: check where to put this
+import type { DataTableFilterField } from "@/components/data-table/types";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryStates } from "nuqs";

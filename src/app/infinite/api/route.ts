@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
 import { filterData, percentileData, sortData } from "./helpers";
-import { calculateSpecificPercentile } from "@/lib/percentile";
+import { calculateSpecificPercentile } from "@/lib/request/percentile";
 
 export async function GET(req: NextRequest) {
   const _search: Map<string, string> = new Map();

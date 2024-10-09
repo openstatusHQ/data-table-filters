@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { addDays, addHours, endOfDay, format, startOfDay } from "date-fns";
+import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
@@ -18,18 +18,21 @@ import { kbdVariants } from "@/components/custom/kbd";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
+import { presets as defaultPresets } from "@/constants/date-preset";
+import type { DatePreset } from "@/components/data-table/types";
 
 interface DatePickerWithRangeProps
   extends React.HTMLAttributes<HTMLDivElement> {
   date: DateRange | undefined;
   setDate: (date: DateRange | undefined) => void;
+  presets?: DatePreset[];
 }
 
-// AND presets
 export function DatePickerWithRange({
   className,
   date,
   setDate,
+  presets = defaultPresets,
 }: DatePickerWithRangeProps) {
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -41,7 +44,7 @@ export function DatePickerWithRange({
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [setDate]);
+  }, [setDate, presets]);
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -73,7 +76,7 @@ export function DatePickerWithRange({
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <div className="flex justify-between">
-            <DatePresets onSelect={setDate} selected={date} />
+            <DatePresets onSelect={setDate} selected={date} presets={presets} />
             <Separator orientation="vertical" className="h-auto w-[px]" />
             <Calendar
               initialFocus
@@ -92,52 +95,14 @@ export function DatePickerWithRange({
   );
 }
 
-// TODO: probably move to `constants` file
-const presets = [
-  {
-    label: "Today",
-    from: startOfDay(new Date()),
-    to: endOfDay(new Date()),
-    shortcut: "d", // day
-  },
-  {
-    label: "Yesterday",
-    from: startOfDay(addDays(new Date(), -1)),
-    to: endOfDay(addDays(new Date(), -1)),
-    shortcut: "y",
-  },
-  {
-    label: "Last hour",
-    from: addHours(new Date(), -1),
-    to: new Date(),
-    shortcut: "h",
-  },
-  {
-    label: "Last 7 days",
-    from: startOfDay(addDays(new Date(), -7)),
-    to: endOfDay(new Date()),
-    shortcut: "w",
-  },
-  {
-    label: "Last 14 days",
-    from: startOfDay(addDays(new Date(), -14)),
-    to: endOfDay(new Date()),
-    shortcut: "b", // bi-weekly
-  },
-  {
-    label: "Last 30 days",
-    from: startOfDay(addDays(new Date(), -30)),
-    to: endOfDay(new Date()),
-    shortcut: "m",
-  },
-];
-
 function DatePresets({
   selected,
   onSelect,
+  presets,
 }: {
   selected: DateRange | undefined;
   onSelect: (date: DateRange | undefined) => void;
+  presets: DatePreset[];
 }) {
   return (
     <div className="flex flex-col gap-2 p-3">

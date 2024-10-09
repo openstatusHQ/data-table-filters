@@ -27,11 +27,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/custom/table";
-import { DataTableFilterControls } from "@/_data-table/data-table-filter-controls";
-import { DataTableFilterCommand } from "@/_data-table/data-table-filter-command";
-import { columnFilterSchema } from "./schema";
-import type { DataTableFilterField } from "@/_data-table/types";
-import { DataTableToolbar } from "@/_data-table/data-table-toolbar"; // TODO: check where to put this
+import { DataTableFilterControls } from "@/components/data-table/data-table-filter-controls";
+import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
+import { ColumnSchema, columnFilterSchema } from "./schema";
+import type { DataTableFilterField } from "@/components/data-table/types";
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryStates } from "nuqs";
@@ -39,12 +39,13 @@ import { searchParamsParser } from "./search-params";
 import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SidebarFooter } from "./sidebar-footer";
 import { Separator } from "@/components/ui/separator";
-import { SheetDetails } from "./sheet-details";
-import { Percentile } from "@/lib/percentile";
+import { SheetDetailsContent } from "./sheet-details-content";
+import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
+import { SocialsFooter } from "@/components/layout/socials-footer";
+import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
 
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -200,10 +201,23 @@ export function DataTableInfinite<TData, TValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sorting]);
 
+  const selectedRow = React.useMemo(() => {
+    const selectedRowKey = Object.keys(rowSelection)?.[0];
+    return table
+      .getCoreRowModel()
+      .flatRows.find((row) => row.id === selectedRowKey);
+  }, [rowSelection, table]);
+
+  // FIXME: cannot share a uuid with the sheet details
   React.useEffect(() => {
-    setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
+    if (Object.keys(rowSelection)?.length && !selectedRow) {
+      setSearch({ uuid: null });
+      setRowSelection({});
+    } else {
+      setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowSelection]);
+  }, [rowSelection, selectedRow]);
 
   return (
     <>
@@ -223,7 +237,7 @@ export function DataTableInfinite<TData, TValue>({
           </div>
           <Separator className="my-2" />
           <div className="p-2">
-            <SidebarFooter />
+            <SocialsFooter />
           </div>
         </div>
         <div className="flex max-w-full flex-1 flex-col sm:border-l border-border overflow-clip">
@@ -344,11 +358,18 @@ export function DataTableInfinite<TData, TValue>({
           </div>
         </div>
       </div>
-      <SheetDetails
+      <DataTableSheetDetails
+        // TODO: make it dynamic via renderSheetDetailsContent
+        title={(selectedRow?.original as ColumnSchema | undefined)?.pathname}
+        titleClassName="font-mono"
         table={table}
-        percentiles={currentPercentiles}
-        filterRows={filterRows}
-      />
+      >
+        <SheetDetailsContent
+          data={selectedRow?.original as ColumnSchema}
+          percentiles={currentPercentiles}
+          filterRows={filterRows}
+        />
+      </DataTableSheetDetails>
     </>
   );
 }

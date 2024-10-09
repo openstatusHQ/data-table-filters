@@ -2,7 +2,7 @@ import { ModeToggle } from "@/components/theme/toggle-mode";
 import { Button } from "@/components/ui/button";
 import { Github, Globe, Twitter } from "lucide-react";
 
-export function SidebarFooter() {
+export function SocialsFooter() {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex justify-center items-center gap-2 p-1">

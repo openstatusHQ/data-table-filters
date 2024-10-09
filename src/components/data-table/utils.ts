@@ -2,7 +2,11 @@
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import { z } from "zod";
 import type { DataTableFilterField } from "./types";
-import { ARRAY_DELIMITER, RANGE_DELIMITER, SLIDER_DELIMITER } from "./schema";
+import {
+  ARRAY_DELIMITER,
+  RANGE_DELIMITER,
+  SLIDER_DELIMITER,
+} from "./delimiters";
 
 export function deserialize<T extends z.AnyZodObject>(schema: T) {
   const castToSchema = z.preprocess((val) => {

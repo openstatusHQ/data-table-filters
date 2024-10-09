@@ -3,10 +3,9 @@
 import type { Table } from "@tanstack/react-table";
 import { useMemo } from "react";
 import type { DataTableTimerangeFilterField } from "./types";
-import { isArrayOfDates } from "@/lib/helpers";
-import { DatePickerWithRange } from "./date-picker-with-range";
+import { isArrayOfDates } from "@/lib/is-array";
+import { DatePickerWithRange } from "@/components/custom/date-picker-with-range";
 import type { DateRange } from "react-day-picker";
-import { searchParamsParser } from "./search-params";
 
 type DataTableFilterTimerangeProps<TData> =
   DataTableTimerangeFilterField<TData> & {
@@ -19,8 +18,9 @@ type DataTableFilterTimerangeProps<TData> =
 export function DataTableFilterTimerange<TData>({
   table,
   value: _value,
+  presets,
 }: DataTableFilterTimerangeProps<TData>) {
-  const value = _value as keyof typeof searchParamsParser;
+  const value = _value as string;
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
 
@@ -44,5 +44,5 @@ export function DataTableFilterTimerange<TData>({
     }
   };
 
-  return <DatePickerWithRange {...{ date, setDate }} />;
+  return <DatePickerWithRange {...{ date, setDate, presets }} />;
 }

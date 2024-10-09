@@ -12,10 +12,10 @@ import {
 import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
-  REGIONS,
   SLIDER_DELIMITER,
-  TAGS,
-} from "./schema";
+} from "@/components/data-table/delimiters";
+import { REGIONS } from "@/constants/region";
+import { TAGS } from "@/constants/tag";
 
 export const parseAsSort = createParser({
   parse(queryValue) {
