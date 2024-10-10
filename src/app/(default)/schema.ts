@@ -2,7 +2,7 @@ import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
-} from "@/components/data-table/delimiters";
+} from "@/lib/delimiters";
 import { REGIONS } from "@/constants/region";
 import { TAGS } from "@/constants/tag";
 import { z } from "zod";

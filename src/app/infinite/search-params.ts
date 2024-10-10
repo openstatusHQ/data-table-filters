@@ -15,7 +15,8 @@ import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
-} from "@/components/data-table/delimiters";
+  SORT_DELIMITER,
+} from "@/lib/delimiters";
 import { REGIONS } from "@/constants/region";
 import { METHODS } from "@/constants/method";
 
@@ -23,7 +24,7 @@ import { METHODS } from "@/constants/method";
 
 export const parseAsSort = createParser({
   parse(queryValue) {
-    const [id, desc] = queryValue.split(".");
+    const [id, desc] = queryValue.split(SORT_DELIMITER);
     if (!id && !desc) return null;
     return { id, desc: desc === "desc" };
   },

@@ -2,7 +2,7 @@ import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
-} from "../delimiters";
+} from "@/lib/delimiters";
 import type { DataTableFilterField } from "../types";
 import { isArrayOfDates } from "@/lib/is-array";
 
