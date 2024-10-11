@@ -46,7 +46,7 @@ import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
-import { Component } from "./charts";
+import { Charts } from "./charts";
 
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue> {
@@ -266,7 +266,7 @@ export function DataTableInfinite<TData, TValue>({
               isLoading={isFetching || isLoading}
               enableColumnOrdering={true}
             />
-            <Component data={graphData} />
+            <Charts data={graphData} className="-mb-2" />
           </div>
           <div className="z-0">
             <Table containerClassName="overflow-clip">

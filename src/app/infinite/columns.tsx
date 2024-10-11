@@ -71,14 +71,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       }
       if (typeof value === "number") {
         const colors = getStatusColor(value);
-        return (
-          <Badge
-            variant="outline"
-            className={`${colors.bg} ${colors.border} ${colors.text} font-mono`}
-          >
-            {value}
-          </Badge>
-        );
+        return <div className={`${colors.text} font-mono`}>{value}</div>;
       }
       return <div className="text-muted-foreground">{`${value}`}</div>;
     },

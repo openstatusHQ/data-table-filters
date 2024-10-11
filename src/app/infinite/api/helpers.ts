@@ -1,4 +1,10 @@
-import { addMilliseconds, differenceInMinutes, isSameDay } from "date-fns";
+import {
+  addMilliseconds,
+  differenceInMinutes,
+  format,
+  isSameDay,
+  roundToNearestMinutes,
+} from "date-fns";
 import { type ColumnSchema } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
@@ -164,7 +170,11 @@ function evaluateInterval(data: ColumnSchema[]): number {
 function groupDataByInterval(
   data: ColumnSchema[],
   interval: number
-): { timestamp: number; [key: string]: number }[] {
+): {
+  timestamp: number;
+  // causes the issue that we cannot `date: string;`
+  [key: string]: number;
+}[] {
   const first = data[data.length - 1];
   const last = data[0];
 
@@ -173,8 +183,10 @@ function groupDataByInterval(
 
   const timestamps: { date: Date }[] = [];
 
+  // TODO: instead of 12h35, start at 12h30 to keep the intervals consistent - same for the seconds or hours
   // Generate the timestamps
   for (let i = 0; i < steps; i++) {
+    // const roundToNearestMinutes(first.date, { nearestTo: 15, roundingMethod: "ceil" });
     const newTimestamp = addMilliseconds(first.date, i * interval);
     timestamps.push({ date: newTimestamp });
   }
