@@ -1,7 +1,12 @@
 import { NextRequest } from "next/server";
 import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
-import { filterData, percentileData, sortData } from "./helpers";
+import {
+  filterData,
+  groupGraphData,
+  percentileData,
+  sortData,
+} from "./helpers";
 import { calculateSpecificPercentile } from "@/lib/request/percentile";
 
 export async function GET(req: NextRequest) {
@@ -15,8 +20,11 @@ export async function GET(req: NextRequest) {
   // await new Promise((resolve) => setTimeout(resolve, 500));
 
   const totalData = mock;
-  const filteredData = filterData(totalData, search);
+
+  const rangedData = filterData(totalData, { date: search.date });
+  const filteredData = filterData(rangedData, { ...search, date: null });
   const sortedData = sortData(filteredData, search.sort);
+  const graphedData = groupGraphData(sortedData); // TODO: rangedData or filterData
   const withPercentileData = percentileData(sortedData);
 
   // FIXME: this is fugly
@@ -47,6 +55,8 @@ export async function GET(req: NextRequest) {
     99: calculateSpecificPercentile(latencies, 99),
   };
 
+  console.log(graphedData);
+
   return Response.json({
     data: withPercentileData.slice(search.start, search.start + search.size),
     meta: {
@@ -54,6 +64,7 @@ export async function GET(req: NextRequest) {
       filterRowCount: filteredData.length,
       totalFilters,
       currentPercentiles,
+      graphData: graphedData,
     },
   });
 }

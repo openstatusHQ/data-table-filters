@@ -46,7 +46,9 @@ import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
+import { Component } from "./charts";
 
+// TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -58,6 +60,8 @@ export interface DataTableInfiniteProps<TData, TValue> {
   filterRows?: number;
   totalRowsFetched?: number;
   currentPercentiles?: Record<Percentile, number>;
+  // FIXME: rename to chartData
+  graphData?: { timestamp: number; [key: string]: number }[];
   isFetching?: boolean;
   isLoading?: boolean;
   fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
@@ -77,6 +81,7 @@ export function DataTableInfinite<TData, TValue>({
   filterRows = 0,
   totalRowsFetched = 0,
   currentPercentiles,
+  graphData = [],
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -261,6 +266,7 @@ export function DataTableInfinite<TData, TValue>({
               isLoading={isFetching || isLoading}
               enableColumnOrdering={true}
             />
+            <Component data={graphData} />
           </div>
           <div className="z-0">
             <Table containerClassName="overflow-clip">

@@ -25,6 +25,7 @@ export function Client() {
   const filterDBRowCount = lastPage?.meta?.filterRowCount;
   const totalFilters = lastPage?.meta?.totalFilters;
   const currentPercentiles = lastPage?.meta?.currentPercentiles;
+  const graphData = lastPage?.meta?.graphData;
   const totalFetched = flatData?.length;
 
   const { sort, start, size, uuid, ...filter } = search;
@@ -79,6 +80,7 @@ export function Client() {
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
+      graphData={graphData}
     />
   );
 }
