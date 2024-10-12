@@ -43,7 +43,7 @@ export function Charts({
   className?: string;
 }) {
   // TODO: check why timestamp cannot be a number
-  //   FIXME: move to server
+  // FIXME: move to server
   const chart = useMemo(
     () =>
       data.map((item) => ({
@@ -61,7 +61,11 @@ export function Charts({
   return (
     <ChartContainer
       config={chartConfig}
-      className={cn("aspect-auto h-[60px] w-full", className)}
+      className={cn(
+        "aspect-auto h-[60px] w-full",
+        "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted/50", // otherwise same color as 200
+        className
+      )}
     >
       <BarChart
         accessibilityLayer
@@ -84,10 +88,8 @@ export function Charts({
             }
             return format(new Date(value), "LLL dd, y");
           }}
+          interval="preserveStartEnd"
         />
-        <Bar dataKey="500" stackId="a" fill="var(--color-500)" />
-        <Bar dataKey="400" stackId="a" fill="var(--color-400)" />
-        <Bar dataKey="200" stackId="a" fill="var(--color-200)" />
         <ChartTooltip
           content={
             <ChartTooltipContent
@@ -99,8 +101,10 @@ export function Charts({
               }}
             />
           }
-          cursor={false}
         />
+        <Bar dataKey="500" stackId="a" fill="var(--color-500)" />
+        <Bar dataKey="400" stackId="a" fill="var(--color-400)" />
+        <Bar dataKey="200" stackId="a" fill="var(--color-200)" />
       </BarChart>
     </ChartContainer>
   );
