@@ -266,7 +266,11 @@ export function DataTableInfinite<TData, TValue>({
               isLoading={isFetching || isLoading}
               enableColumnOrdering={true}
             />
-            <Charts data={graphData} className="-mb-2" />
+            <Charts
+              data={graphData}
+              className="-mb-2"
+              handleFilter={table.getColumn("date")?.setFilterValue}
+            />
           </div>
           <div className="z-0">
             <Table containerClassName="overflow-clip">

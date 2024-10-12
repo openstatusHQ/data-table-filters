@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ReferenceArea, XAxis } from "recharts";
 
 import {
   ChartConfig,
@@ -8,9 +8,11 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
+import { ColumnFiltersColumn } from "@tanstack/react-table";
 
 export const description = "A stacked bar chart with a legend";
 
@@ -38,10 +40,17 @@ const chartConfig = {
 export function Charts({
   data,
   className,
+  handleFilter,
 }: {
   data: { timestamp: number; [key: string]: number }[];
   className?: string;
+  // FIXME: check how to make it more versatile - pass `table` instead?
+  handleFilter?: ColumnFiltersColumn<unknown>["setFilterValue"];
 }) {
+  const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
+  const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+
   // TODO: check why timestamp cannot be a number
   // FIXME: move to server
   const chart = useMemo(
@@ -58,6 +67,31 @@ export function Charts({
     return Math.abs(data[0].timestamp - data[data.length - 1].timestamp);
   }, [data]);
 
+  const handleMouseDown: CategoricalChartFunc = (e) => {
+    if (e.activeLabel) {
+      setRefAreaLeft(e.activeLabel);
+      setIsSelecting(true);
+    }
+  };
+
+  const handleMouseMove: CategoricalChartFunc = (e) => {
+    if (isSelecting && e.activeLabel) {
+      setRefAreaRight(e.activeLabel);
+    }
+  };
+
+  const handleMouseUp: CategoricalChartFunc = (e) => {
+    if (refAreaLeft && refAreaRight) {
+      const [left, right] = [refAreaLeft, refAreaRight].sort(
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+      );
+      handleFilter?.([new Date(left), new Date(right)]);
+    }
+    setRefAreaLeft(null);
+    setRefAreaRight(null);
+    setIsSelecting(false);
+  };
+
   return (
     <ChartContainer
       config={chartConfig}
@@ -71,6 +105,11 @@ export function Charts({
         accessibilityLayer
         data={chart}
         margin={{ top: 0, left: 0, right: 0, bottom: 0 }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{ cursor: "crosshair" }}
       >
         <CartesianGrid vertical={false} />
         <XAxis
@@ -105,6 +144,15 @@ export function Charts({
         <Bar dataKey="500" stackId="a" fill="var(--color-500)" />
         <Bar dataKey="400" stackId="a" fill="var(--color-400)" />
         <Bar dataKey="200" stackId="a" fill="var(--color-200)" />
+        {refAreaLeft && refAreaRight && (
+          <ReferenceArea
+            x1={refAreaLeft}
+            x2={refAreaRight}
+            strokeOpacity={0.3}
+            fill="hsl(var(--foreground))"
+            fillOpacity={0.08}
+          />
+        )}
       </BarChart>
     </ChartContainer>
   );
