@@ -118,26 +118,56 @@ export function getPercentileFromData(data: ColumnSchema[]) {
 // If range is short, consider use more minutes, if range is long, consider use more hours
 // You can use date-fns to format
 export function groupGraphData(
-  data: ColumnSchema[]
+  data: ColumnSchema[],
+  dates: Date[] | null
 ): { timestamp: number; [key: string]: number }[] {
-  if (data?.length === 0) return [];
-  const interval = evaluateInterval(data);
-  console.log(interval, data.length);
-  return groupDataByInterval(data, interval);
-}
+  // TODO: if no data, still try to return an empty array with the timestamps
+  if (data?.length === 0 && !dates) return [];
 
-function evaluateInterval(data: ColumnSchema[]): number {
-  if (data.length === 0) {
-    return 0;
+  const between = dates || [data[data.length - 1].date, data[0].date];
+
+  if (!between.length) return [];
+  const interval = evaluateInterval(between);
+
+  const duration = Math.abs(
+    between[0].getTime() - between[between.length - 1].getTime()
+  );
+  const steps = Math.floor(duration / interval);
+
+  const timestamps: { date: Date }[] = [];
+
+  // TODO: instead of 12h36 or something, start at 12h30 to keep the intervals consistent - same for the seconds or hours
+  // Generate the timestamps
+  for (let i = 0; i < steps; i++) {
+    // const roundToNearestMinutes(first.date, { nearestTo: 15, roundingMethod: "ceil" });
+    const newTimestamp = addMilliseconds(between[0], i * interval);
+    timestamps.push({ date: newTimestamp });
   }
 
-  const first = data[0];
-  const last = data[data.length - 1];
+  // TODO: make it dynamic to avoid havin 200, 400, 500 hardcoded
+  // TODO: make it more efficient
+  // e.g. make the "status" prop we use as T generic
+  return timestamps.map((timestamp, i) => {
+    const filteredData = data.filter((row) => {
+      const diff = row.date.getTime() - timestamp.date.getTime();
+      return diff < interval && diff >= 0;
+    });
+
+    return {
+      timestamp: timestamp.date.getTime(), // TODO: use date-fns and interval to determine the format
+      200: filteredData.filter((row) => row.status === 200).length,
+      400: filteredData.filter((row) => row.status === 400).length,
+      500: filteredData.filter((row) => row.status === 500).length,
+    };
+  });
+}
+
+function evaluateInterval(dates: Date[] | null): number {
+  if (!dates) return 0;
+  if (dates.length < 1 || dates.length > 3) return 0;
 
   // Calculate the time difference in minutes
-  const timeDiffInMinutes = Math.abs(
-    differenceInMinutes(first.date, last.date)
-  );
+  const timeDiffInMinutes = Math.abs(differenceInMinutes(dates[0], dates[1]));
 
   // Define thresholds and their respective intervals in milliseconds
   const intervals = [
@@ -165,46 +195,4 @@ function evaluateInterval(data: ColumnSchema[]): number {
 
   // Default to the largest interval if no match found
   return 46080000; // 768 minutes
-}
-
-function groupDataByInterval(
-  data: ColumnSchema[],
-  interval: number
-): {
-  timestamp: number;
-  // causes the issue that we cannot `date: string;`
-  [key: string]: number;
-}[] {
-  const first = data[data.length - 1];
-  const last = data[0];
-
-  const duration = Math.abs(first.date.getTime() - last.date.getTime());
-  const steps = Math.floor(duration / interval);
-
-  const timestamps: { date: Date }[] = [];
-
-  // TODO: instead of 12h35, start at 12h30 to keep the intervals consistent - same for the seconds or hours
-  // Generate the timestamps
-  for (let i = 0; i < steps; i++) {
-    // const roundToNearestMinutes(first.date, { nearestTo: 15, roundingMethod: "ceil" });
-    const newTimestamp = addMilliseconds(first.date, i * interval);
-    timestamps.push({ date: newTimestamp });
-  }
-
-  // TODO: make it dynamic to avoid havin 200, 400, 500 hardcoded
-  // TODO: make it more efficient
-  // e.g. make the "status" prop we use as T generic
-  return timestamps.map((timestamp, i) => {
-    const filteredData = data.filter((row) => {
-      const diff = Math.abs(row.date.getTime() - timestamp.date.getTime());
-      return diff < interval;
-    });
-
-    return {
-      timestamp: timestamp.date.getTime(), // TODO: use date-fns and interval to determine the format
-      200: filteredData.filter((row) => row.status === 200).length,
-      400: filteredData.filter((row) => row.status === 400).length,
-      500: filteredData.filter((row) => row.status === 500).length,
-    };
-  });
 }

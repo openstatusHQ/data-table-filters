@@ -4,7 +4,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus, X } from "lucide-react";
 import type { ColumnSchema } from "./schema";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
 import {
@@ -21,6 +20,9 @@ import {
 } from "@/components/ui/hover-card";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import TextWithTooltip from "@/components/custom/text-with-tooltip";
+import { UTCDate } from "@date-fns/utc";
+
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
@@ -32,6 +34,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <X className="h-4 w-4 text-red-500" />;
     },
     filterFn: "arrSome",
+    meta: { headerClassName: "w-4" },
   },
   {
     id: "uuid",
@@ -53,13 +56,41 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Date" />
     ),
     cell: ({ row }) => {
+      const date = new Date(row.getValue("date"));
       return (
-        <div className="font-mono whitespace-nowrap">
-          {format(new Date(row.getValue("date")), "LLL dd, y HH:mm")}
-        </div>
+        <HoverCard openDelay={0} closeDelay={0}>
+          <HoverCardTrigger asChild>
+            <div className="font-mono whitespace-nowrap">
+              {format(date, "LLL dd, y HH:mm:ss")}
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent side="right" className="p-2 w-auto z-10">
+            <dl className="flex flex-col gap-1">
+              <div className="flex gap-4 text-sm justify-between items-center">
+                <dt className="text-muted-foreground">Timestamp</dt>
+                <dd className="font-mono truncate">{date.getTime()}</dd>
+              </div>
+              <div className="flex gap-4 text-sm justify-between items-center">
+                <dt className="text-muted-foreground">UTC</dt>
+                <dd className="font-mono truncate">
+                  {format(new UTCDate(date), "LLL dd, y HH:mm:ss")}
+                </dd>
+              </div>
+              <div className="flex gap-4 text-sm justify-between items-center">
+                <dt className="text-muted-foreground">{timezone}</dt>
+                <dd className="font-mono truncate">
+                  {format(date, "LLL dd, y HH:mm:ss")}
+                </dd>
+              </div>
+            </dl>
+          </HoverCardContent>
+        </HoverCard>
       );
     },
     filterFn: "inDateRange",
+    meta: {
+      // headerClassName: "w-[182px]",
+    },
   },
   {
     accessorKey: "status",
@@ -164,7 +195,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       const percentage = getTimingPercentage(timing, latency);
       // create a separate component for this
       return (
-        <HoverCard>
+        <HoverCard openDelay={50} closeDelay={50}>
           <HoverCardTrigger
             className="opacity-70 data-[state=open]:opacity-100 hover:opacity-100"
             asChild
@@ -182,7 +213,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
               ))}
             </div>
           </HoverCardTrigger>
-          <HoverCardContent side="bottom" className="p-2 w-auto">
+          <HoverCardContent side="bottom" className="p-2 w-auto z-10">
             <div className="flex flex-col gap-1">
               {timingPhases.map((phase) => {
                 const color = getTimingColor(phase);

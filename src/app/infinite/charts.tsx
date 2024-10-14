@@ -118,7 +118,7 @@ export function Charts({
           minTickGap={32}
           axisLine={false}
           tickFormatter={(value) => {
-            if (interval <= 1000 * 60) {
+            if (interval <= 1000 * 60 * 10) {
               return format(new Date(value), "HH:mm:ss");
             } else if (interval <= 1000 * 60 * 60 * 24) {
               return format(new Date(value), "HH:mm");
@@ -133,8 +133,8 @@ export function Charts({
           content={
             <ChartTooltipContent
               labelFormatter={(value) => {
-                if (interval <= 1000 * 60) {
-                  return format(new Date(value), "HH:mm:ss");
+                if (interval <= 1000 * 60 * 10) {
+                  return format(new Date(value), "LLL dd, HH:mm:ss");
                 }
                 return format(new Date(value), "LLL dd, y HH:mm");
               }}

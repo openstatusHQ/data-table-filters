@@ -10,21 +10,18 @@ import {
 import { calculateSpecificPercentile } from "@/lib/request/percentile";
 
 export async function GET(req: NextRequest) {
-  const _search: Map<string, string> = new Map();
-
   // TODO: we could use a POST request to avoid this
+  const _search: Map<string, string> = new Map();
   req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
-  const search = searchParamsCache.parse(Object.fromEntries(_search));
 
-  // Simulate a database query
-  // await new Promise((resolve) => setTimeout(resolve, 500));
+  const search = searchParamsCache.parse(Object.fromEntries(_search));
 
   const totalData = mock;
 
   const rangedData = filterData(totalData, { date: search.date });
   const filteredData = filterData(rangedData, { ...search, date: null });
   const sortedData = sortData(filteredData, search.sort);
-  const graphedData = groupGraphData(sortedData); // TODO: rangedData or filterData
+  const graphedData = groupGraphData(sortedData, search.date); // TODO: rangedData or filterData
   const withPercentileData = percentileData(sortedData);
 
   // FIXME: this is fugly
@@ -54,8 +51,6 @@ export async function GET(req: NextRequest) {
     95: calculateSpecificPercentile(latencies, 95),
     99: calculateSpecificPercentile(latencies, 99),
   };
-
-  console.log(graphedData);
 
   return Response.json({
     data: withPercentileData.slice(search.start, search.start + search.size),
