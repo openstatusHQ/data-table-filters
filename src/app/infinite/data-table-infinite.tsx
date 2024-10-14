@@ -60,7 +60,6 @@ export interface DataTableInfiniteProps<TData, TValue> {
   filterRows?: number;
   totalRowsFetched?: number;
   currentPercentiles?: Record<Percentile, number>;
-  // FIXME: rename to chartData
   chartData?: { timestamp: number; [key: string]: number }[];
   isFetching?: boolean;
   isLoading?: boolean;

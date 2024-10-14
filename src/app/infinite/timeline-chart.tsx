@@ -19,24 +19,20 @@ export const description = "A stacked bar chart with a legend";
 const chartConfig = {
   200: {
     label: <span className="font-mono">200</span>,
-    // color: "hsl(var(--chart-1))",
     // color: "hsl(142.1 70.6% 45.3%)", // bg-green-500
     // color: "hsla(142.1, 70.6%, 45.3%, 0.3)", // bg-green-500/30
     color: "hsl(var(--muted))", // bg-foreground/10
   },
   400: {
     label: <span className="font-mono">400</span>,
-    // color: "hsl(var(--chart-2))",
     color: "hsl(24.6 95% 53.1%)", // bg-orange-500
   },
   500: {
     label: <span className="font-mono">500</span>,
-    // color: "hsl(var(--chart-3))",
     color: "hsl(0 84.2% 60.2%)", // bg-red-500
   },
 } satisfies ChartConfig;
 
-// TODO: create some sort of Skeleton
 export function TimelineChart({
   data,
   className,

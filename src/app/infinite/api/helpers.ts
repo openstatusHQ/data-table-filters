@@ -1,10 +1,4 @@
-import {
-  addMilliseconds,
-  differenceInMinutes,
-  format,
-  isSameDay,
-  roundToNearestMinutes,
-} from "date-fns";
+import { addMilliseconds, differenceInMinutes, isSameDay } from "date-fns";
 import { type ColumnSchema } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
@@ -91,8 +85,6 @@ export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
   });
 }
 
-// TODO: later on, we could hover over the percentile to get a concrete value for the p50, p75, p90, p95, p99
-// for better comparability
 export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
   const latencies = data.map((row) => row.latency);
   return data.map((row) => ({
@@ -113,18 +105,14 @@ export function getPercentileFromData(data: ColumnSchema[]) {
   return { p50, p75, p90, p95, p99 };
 }
 
-// function that returns the objects for the chart
-// { timestamp: number, [key: string]: number }[] // mainly for {200: number, 400: number, 500: number}
-// If range is short, consider use more minutes, if range is long, consider use more hours
-// You can use date-fns to format
 export function groupChartData(
   data: ColumnSchema[],
   dates: Date[] | null
 ): { timestamp: number; [key: string]: number }[] {
-  // TODO: if no data, still try to return an empty array with the timestamps
   if (data?.length === 0 && !dates) return [];
 
-  const between = dates || [data[data.length - 1].date, data[0].date];
+  const between =
+    dates || (data?.length ? [data[data.length - 1].date, data[0].date] : []);
 
   if (!between.length) return [];
   const interval = evaluateInterval(between);
@@ -136,10 +124,7 @@ export function groupChartData(
 
   const timestamps: { date: Date }[] = [];
 
-  // TODO: instead of 12h36 or something, start at 12h30 to keep the intervals consistent - same for the seconds or hours
-  // Generate the timestamps
   for (let i = 0; i < steps; i++) {
-    // const roundToNearestMinutes(first.date, { nearestTo: 15, roundingMethod: "ceil" });
     const newTimestamp = addMilliseconds(between[0], i * interval);
     timestamps.push({ date: newTimestamp });
   }
