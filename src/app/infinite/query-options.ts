@@ -9,7 +9,7 @@ export type InfiniteQueryMeta = {
   filterRowCount: number;
   totalFilters: MakeArray<ColumnSchema>;
   currentPercentiles: Record<Percentile, number>;
-  graphData: { timestamp: number; [key: string]: number }[];
+  chartData: { timestamp: number; [key: string]: number }[];
 };
 
 export const dataOptions = (search: SearchParamsType) => {

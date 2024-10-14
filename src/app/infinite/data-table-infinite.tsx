@@ -46,7 +46,7 @@ import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
-import { Charts } from "./charts";
+import { TimelineChart } from "./timeline-chart";
 
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue> {
@@ -61,7 +61,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   totalRowsFetched?: number;
   currentPercentiles?: Record<Percentile, number>;
   // FIXME: rename to chartData
-  graphData?: { timestamp: number; [key: string]: number }[];
+  chartData?: { timestamp: number; [key: string]: number }[];
   isFetching?: boolean;
   isLoading?: boolean;
   fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
@@ -81,7 +81,7 @@ export function DataTableInfinite<TData, TValue>({
   filterRows = 0,
   totalRowsFetched = 0,
   currentPercentiles,
-  graphData = [],
+  chartData = [],
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -266,8 +266,8 @@ export function DataTableInfinite<TData, TValue>({
               isLoading={isFetching || isLoading}
               enableColumnOrdering={true}
             />
-            <Charts
-              data={graphData}
+            <TimelineChart
+              data={chartData}
               className="-mb-2"
               handleFilter={table.getColumn("date")?.setFilterValue}
             />

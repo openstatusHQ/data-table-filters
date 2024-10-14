@@ -3,7 +3,7 @@ import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
 import {
   filterData,
-  groupGraphData,
+  groupChartData,
   percentileData,
   sortData,
 } from "./helpers";
@@ -21,9 +21,10 @@ export async function GET(req: NextRequest) {
   const rangedData = filterData(totalData, { date: search.date });
   const filteredData = filterData(rangedData, { ...search, date: null });
   const sortedData = sortData(filteredData, search.sort);
-  const graphedData = groupGraphData(sortedData, search.date); // TODO: rangedData or filterData
+  const graphedData = groupChartData(sortedData, search.date); // TODO: rangedData or filterData
   const withPercentileData = percentileData(sortedData);
 
+  // TODO: extract into helper
   // FIXME: this is fugly
   const totalFilters = totalData.reduce((prev, curr) => {
     for (const key in curr) {
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
       filterRowCount: filteredData.length,
       totalFilters,
       currentPercentiles,
-      graphData: graphedData,
+      chartData: graphedData,
     },
   });
 }

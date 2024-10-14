@@ -37,7 +37,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 // TODO: create some sort of Skeleton
-export function Charts({
+export function TimelineChart({
   data,
   className,
   handleFilter,

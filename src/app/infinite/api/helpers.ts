@@ -117,7 +117,7 @@ export function getPercentileFromData(data: ColumnSchema[]) {
 // { timestamp: number, [key: string]: number }[] // mainly for {200: number, 400: number, 500: number}
 // If range is short, consider use more minutes, if range is long, consider use more hours
 // You can use date-fns to format
-export function groupGraphData(
+export function groupChartData(
   data: ColumnSchema[],
   dates: Date[] | null
 ): { timestamp: number; [key: string]: number }[] {
