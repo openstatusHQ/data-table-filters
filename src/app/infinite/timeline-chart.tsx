@@ -94,6 +94,7 @@ export function TimelineChart({
       className={cn(
         "aspect-auto h-[60px] w-full",
         "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted/50", // otherwise same color as 200
+        "select-none", // disable text selection
         className
       )}
     >
