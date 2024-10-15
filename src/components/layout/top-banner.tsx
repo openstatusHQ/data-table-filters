@@ -9,7 +9,7 @@ export function TopBanner() {
           <p className="flex items-center justify-center gap-2">
             <Link href="/infinite">
               <span className="font-semibold">New Example: </span>
-              <span className="underline underline-offset-4 decoration-dashed">
+              <span className="underline underline-offset-4 decoration-muted-foreground group-hover:decoration-foreground">
                 Infinite Scroll
               </span>{" "}
               <span className="mr-1">Now Available, Inspired by Vercel</span>
