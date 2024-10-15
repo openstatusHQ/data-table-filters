@@ -1,4 +1,9 @@
-import { addMilliseconds, differenceInMinutes, isSameDay } from "date-fns";
+import {
+  addDays,
+  addMilliseconds,
+  differenceInMinutes,
+  isSameDay,
+} from "date-fns";
 import { type ColumnSchema } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
@@ -111,8 +116,11 @@ export function groupChartData(
 ): { timestamp: number; [key: string]: number }[] {
   if (data?.length === 0 && !dates) return [];
 
+  // If we only have one date, we need to add a day to it
+  const _dates = dates?.length === 1 ? [dates[0], addDays(dates[0], 1)] : dates;
+
   const between =
-    dates || (data?.length ? [data[data.length - 1].date, data[0].date] : []);
+    _dates || (data?.length ? [data[data.length - 1].date, data[0].date] : []);
 
   if (!between.length) return [];
   const interval = evaluateInterval(between);
