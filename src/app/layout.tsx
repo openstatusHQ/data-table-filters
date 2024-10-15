@@ -20,14 +20,14 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   twitter: {
-    images: ["/assets/data-table.png"],
+    images: ["/assets/data-table-infinite.png"],
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
   },
   openGraph: {
     type: "website",
-    images: ["/assets/data-table.png"],
+    images: ["/assets/data-table-infinite.png"],
     title: TITLE,
     description: DESCRIPTION,
   },

@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <h1 className="text-3xl font-semibold text-foreground">
               Data-Table Filters
             </h1>
-            <p className="text-muted-foreground">
+            <h2 className="text-lg text-muted-foreground">
               Powered by{" "}
               <a
                 href="https://tanstack.com/table"
@@ -47,7 +47,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 nuqs
               </a>
-              . <br />
+              .
+            </h2>
+            <p className="text-muted-foreground">
               Code available on{" "}
               <a
                 href="https://github.com/openstatusHQ/data-table-filters"

@@ -64,7 +64,12 @@ export const columns: ColumnDef<ColumnSchema>[] = [
               {format(date, "LLL dd, y HH:mm:ss")}
             </div>
           </HoverCardTrigger>
-          <HoverCardContent side="right" className="p-2 w-auto z-10">
+          <HoverCardContent
+            side="right"
+            align="start"
+            alignOffset={-8}
+            className="p-2 w-auto z-10"
+          >
             <dl className="flex flex-col gap-1">
               <div className="flex gap-4 text-sm justify-between items-center">
                 <dt className="text-muted-foreground">Timestamp</dt>
