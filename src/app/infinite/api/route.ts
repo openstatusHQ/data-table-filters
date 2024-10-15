@@ -8,6 +8,7 @@ import {
   sortData,
 } from "./helpers";
 import { calculateSpecificPercentile } from "@/lib/request/percentile";
+import { addDays } from "date-fns";
 
 export async function GET(req: NextRequest) {
   // TODO: we could use a POST request to avoid this
@@ -18,10 +19,15 @@ export async function GET(req: NextRequest) {
 
   const totalData = mock;
 
-  const rangedData = filterData(totalData, { date: search.date });
+  const _date =
+    search.date?.length === 1
+      ? [search.date[0], addDays(search.date[0], 1)]
+      : search.date;
+
+  const rangedData = filterData(totalData, { date: _date });
   const filteredData = filterData(rangedData, { ...search, date: null });
   const sortedData = sortData(filteredData, search.sort);
-  const graphedData = groupChartData(sortedData, search.date); // TODO: rangedData or filterData
+  const graphedData = groupChartData(sortedData, _date); // TODO: rangedData or filterData
   const withPercentileData = percentileData(sortedData);
 
   // TODO: extract into helper
