@@ -1,5 +1,5 @@
 import { ArrowRight, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/components/custom/link";
 
 export function TopBanner() {
   return (
@@ -7,7 +7,7 @@ export function TopBanner() {
       <div className="container mx-auto px-4 py-2 sm:px-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <p className="flex items-center justify-center gap-2">
-            <Link href="/infinite">
+            <Link href="/infinite" className="no-underline">
               <span className="font-semibold">New Example: </span>
               <span className="underline underline-offset-4 decoration-muted-foreground group-hover:decoration-foreground">
                 Infinite Scroll

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { TopBanner } from "@/components/layout/top-banner";
 import { SocialsFooter } from "@/components/layout/socials-footer";
+import { Link } from "@/components/custom/link";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,47 +17,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </h1>
             <h2 className="text-lg text-muted-foreground">
               Powered by{" "}
-              <a
-                href="https://tanstack.com/table"
-                target="_blank"
-                className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
-              >
-                tanstack table
-              </a>{" "}
-              and{" "}
-              <a
-                href="https://ui.shadcn.com"
-                target="_blank"
-                className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
-              >
-                shadcn ui
-              </a>{" "}
-              with controls and{" "}
-              <a
-                href="http://cmdk.paco.me/"
-                target="_blank"
-                className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
-              >
-                cmdk
-              </a>{" "}
-              using search params via{" "}
-              <a
-                href="https://nuqs.47ng.com"
-                target="_blank"
-                className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
-              >
-                nuqs
-              </a>
-              .
+              <Link href="https://tanstack.com/table">tanstack table</Link> and{" "}
+              <Link href="https://ui.shadcn.com">shadcn ui</Link> with controls
+              and <Link href="http://cmdk.paco.me/">cmdk</Link> using search
+              params via <Link href="https://nuqs.47ng.com">nuqs</Link>.
             </h2>
             <p className="text-muted-foreground">
               Code available on{" "}
-              <a
-                href="https://github.com/openstatusHQ/data-table-filters"
-                className="text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground"
-              >
+              <Link href="https://github.com/openstatusHQ/data-table-filters">
                 GitHub
-              </a>
+              </Link>
               .
             </p>
           </div>
