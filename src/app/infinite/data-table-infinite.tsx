@@ -244,7 +244,14 @@ export function DataTableInfinite<TData, TValue>({
             <SocialsFooter />
           </div>
         </div>
-        <div className="flex max-w-full flex-1 flex-col sm:border-l border-border overflow-clip">
+        <div
+          className={cn(
+            "flex max-w-full flex-1 flex-col sm:border-l border-border overflow-clip",
+            // Chrome issue
+            controlsOpen &&
+              "sm:max-w-[calc(100vw_-_208px)] md:max-w-[calc(100vw_-_288px)]"
+          )}
+        >
           <div
             ref={topBarRef}
             className={cn(

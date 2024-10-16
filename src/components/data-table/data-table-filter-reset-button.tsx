@@ -34,10 +34,16 @@ export function DataTableFilterResetButton<TData>({
         e.stopPropagation();
         column?.setFilterValue(undefined);
       }}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.code === "Enter") {
+          column?.setFilterValue(undefined);
+        }
+      }}
       asChild
     >
       {/* REMINDER: `AccordionTrigger` is also a button(!) and we get Hydration error when rendering button within button */}
-      <div role="button">
+      <div role="button" tabIndex={0}>
         <span>{filters.length}</span>
         <X className="ml-1 h-2.5 w-2.5 text-muted-foreground" />
       </div>

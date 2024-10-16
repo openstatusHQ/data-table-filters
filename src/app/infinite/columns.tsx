@@ -67,7 +67,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
           <HoverCardContent
             side="right"
             align="start"
-            alignOffset={-8}
+            alignOffset={-4}
             className="p-2 w-auto z-10"
           >
             <dl className="flex flex-col gap-1">

@@ -7,7 +7,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/custom/accordion";
 import type React from "react";
 import type { DataTableFilterField } from "./types";
 import { DataTableFilterResetButton } from "./data-table-filter-reset-button";
@@ -63,8 +63,8 @@ export function DataTableFilterControls<TData, TValue>({
           const value = field.value as string;
           return (
             <AccordionItem key={value} value={value} className="border-none">
-              <AccordionTrigger className="p-2 hover:no-underline w-full">
-                <div className="w-full flex items-center justify-between gap-2 truncate pr-2">
+              <AccordionTrigger className="px-2 py-0 hover:no-underline w-full">
+                <div className="w-full flex items-center justify-between gap-2 truncate pr-2 py-2">
                   <div className="flex gap-2 items-center truncate">
                     <p className="text-sm font-medium text-foreground">
                       {field.label}
