@@ -7,9 +7,9 @@ import { Client } from "./client";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const search = searchParamsCache.parse(searchParams);
+  const search = searchParamsCache.parse(await searchParams);
   const queryClient = getQueryClient();
   await queryClient.prefetchInfiniteQuery(dataOptions(search));
 
