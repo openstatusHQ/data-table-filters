@@ -25,6 +25,7 @@ import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Percentile, getPercentileColor } from "@/lib/request/percentile";
+import { HoverCardTimestamp } from "./hover-card-timestamp";
 
 interface SheetDetailsContentProps
   extends React.HTMLAttributes<HTMLDListElement> {
@@ -76,7 +77,9 @@ export function SheetDetailsContent({
       </div>
       <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Date</dt>
-        <dd className="font-mono text-right">{formatDate(data.date)}</dd>
+        <dd className="font-mono text-right">
+          <HoverCardTimestamp date={new Date(data.date)} side="bottom" />
+        </dd>
       </div>
       <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
         <dt className="text-muted-foreground">Status Code</dt>

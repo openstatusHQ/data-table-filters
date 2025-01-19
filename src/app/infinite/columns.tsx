@@ -3,7 +3,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Minus, X } from "lucide-react";
 import type { ColumnSchema } from "./schema";
-import { format } from "date-fns";
 import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
 import {
@@ -20,9 +19,7 @@ import {
 } from "@/components/ui/hover-card";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import TextWithTooltip from "@/components/custom/text-with-tooltip";
-import { UTCDate } from "@date-fns/utc";
-
-const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+import { HoverCardTimestamp } from "./hover-card-timestamp";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
@@ -57,40 +54,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     ),
     cell: ({ row }) => {
       const date = new Date(row.getValue("date"));
-      return (
-        <HoverCard openDelay={0} closeDelay={0}>
-          <HoverCardTrigger asChild>
-            <div className="font-mono whitespace-nowrap">
-              {format(date, "LLL dd, y HH:mm:ss")}
-            </div>
-          </HoverCardTrigger>
-          <HoverCardContent
-            side="right"
-            align="start"
-            alignOffset={-4}
-            className="p-2 w-auto z-10"
-          >
-            <dl className="flex flex-col gap-1">
-              <div className="flex gap-4 text-sm justify-between items-center">
-                <dt className="text-muted-foreground">Timestamp</dt>
-                <dd className="font-mono truncate">{date.getTime()}</dd>
-              </div>
-              <div className="flex gap-4 text-sm justify-between items-center">
-                <dt className="text-muted-foreground">UTC</dt>
-                <dd className="font-mono truncate">
-                  {format(new UTCDate(date), "LLL dd, y HH:mm:ss")}
-                </dd>
-              </div>
-              <div className="flex gap-4 text-sm justify-between items-center">
-                <dt className="text-muted-foreground">{timezone}</dt>
-                <dd className="font-mono truncate">
-                  {format(date, "LLL dd, y HH:mm:ss")}
-                </dd>
-              </div>
-            </dl>
-          </HoverCardContent>
-        </HoverCard>
-      );
+      return <HoverCardTimestamp date={date} />;
     },
     filterFn: "inDateRange",
     meta: {
@@ -117,11 +81,10 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     // TODO: make it a type of MethodSchema!
     accessorKey: "method",
     header: "Method",
-    cell: ({ row }) => {
-      const value = row.getValue("method") as string;
-      return <div className="font-mono">{value}</div>;
-    },
     filterFn: "arrIncludesSome",
+    meta: {
+      cellClassName: "font-mono",
+    },
   },
   {
     accessorKey: "host",

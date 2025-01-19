@@ -321,9 +321,7 @@ export function DataTableInfinite<TData, TValue>({
                       {row.getVisibleCells().map((cell) => (
                         <TableCell
                           key={cell.id}
-                          className={
-                            cell.column.columnDef.meta?.headerClassName
-                          }
+                          className={cell.column.columnDef.meta?.cellClassName}
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
