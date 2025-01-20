@@ -309,14 +309,29 @@ export function DataTableInfinite<TData, TValue>({
                   </TableRow>
                 ))}
               </TableHeader>
-              <TableBody>
+              <TableBody
+                id="content"
+                tabIndex={-1}
+                className="transition-colors focus-visible:-outline-offset-1 outline-primary"
+                style={{ scrollMarginTop: `calc(${topBarHeight}px + 40px)` }}
+              >
                 {/* FIXME: should be getRowModel() as filtering */}
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
+                    // REMINDER: if we want to add arrow navigation https://github.com/TanStack/table/discussions/2752#discussioncomment-192558
                     <TableRow
                       key={row.id}
+                      id={row.id}
+                      tabIndex={0}
                       data-state={row.getIsSelected() && "selected"}
                       onClick={() => row.toggleSelected()}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          row.toggleSelected();
+                        }
+                      }}
+                      className="focus-visible:-outline-offset-1 outline-primary focus-visible:bg-muted/50"
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell

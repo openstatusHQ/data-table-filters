@@ -87,10 +87,22 @@ export function DataTableSheetDetails<TData>({
   return (
     <Sheet
       open={!!selectedRowKey}
-      onOpenChange={() => table.toggleAllRowsSelected(false)}
+      onOpenChange={() => {
+        // REMINDER: focus back to the row that was selected
+        // We need to manually focus back due to missing Trigger component
+        const el = selectedRowKey
+          ? document.getElementById(selectedRowKey)
+          : null;
+        table.toggleAllRowsSelected(false);
+        el?.focus();
+      }}
     >
-      <SheetContent className="sm:max-w-md overflow-y-auto p-0" hideClose>
-        <SheetHeader className="sticky top-0 border-b bg-background p-4">
+      <SheetContent
+        // onCloseAutoFocus={(e) => e.preventDefault()}
+        className="sm:max-w-md overflow-y-auto p-0"
+        hideClose
+      >
+        <SheetHeader className="sticky top-0 border-b bg-background p-4 z-10">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className={cn(titleClassName, "text-left truncate")}>
               {title}
