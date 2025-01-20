@@ -1,6 +1,18 @@
 "use client";
 import { ColumnSchema } from "./schema";
-import { Check, FunctionSquare, X } from "lucide-react";
+import {
+  CalendarClock,
+  CalendarDays,
+  CalendarSearch,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Equal,
+  FunctionSquare,
+  Search,
+  X,
+} from "lucide-react";
 import * as React from "react";
 import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
 import { cn } from "@/lib/utils";
@@ -10,37 +22,46 @@ import {
   getTimingPercentage,
   timingPhases,
 } from "@/lib/request/timing";
-import {
-  formatCompactNumber,
-  formatDate,
-  formatMilliseconds,
-} from "@/lib/format";
+import { formatCompactNumber, formatMilliseconds } from "@/lib/format";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Percentile, getPercentileColor } from "@/lib/request/percentile";
 import { HoverCardTimestamp } from "./hover-card-timestamp";
+import { filterFields } from "./constants";
+import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
+import { Table } from "@tanstack/react-table";
+import { endOfDay, endOfHour, startOfDay, startOfHour } from "date-fns";
 
-interface SheetDetailsContentProps
+interface SheetDetailsContentProps<TData>
   extends React.HTMLAttributes<HTMLDListElement> {
   data?: ColumnSchema;
   percentiles?: Record<Percentile, number>;
   filterRows: number;
+  table: Table<TData>;
 }
 
-export function SheetDetailsContent({
+export function SheetDetailsContent<TData>({
   data,
   percentiles,
   filterRows,
+  table,
   ...props
-}: SheetDetailsContentProps) {
-  const [open, setOpen] = React.useState(false);
+}: SheetDetailsContentProps<TData>) {
+  const [open, setOpen] = React.useState(false); // improve naming as it only opens when hovering/clicking over the percentile
 
   if (!data) return <SheetDetailsContentSkeleton />;
 
@@ -75,13 +96,23 @@ export function SheetDetailsContent({
           )}
         </dd>
       </div>
-      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
+      <RowAction
+        fieldValue="date"
+        value={new Date(data.date).toISOString()}
+        table={table}
+        className="flex gap-4 py-2 border-b text-sm justify-between items-center w-full"
+      >
         <dt className="text-muted-foreground">Date</dt>
         <dd className="font-mono text-right">
           <HoverCardTimestamp date={new Date(data.date)} side="bottom" />
         </dd>
-      </div>
-      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
+      </RowAction>
+      <RowAction
+        fieldValue="status"
+        value={data.status}
+        table={table}
+        className="flex gap-4 py-2 border-b text-sm justify-between items-center w-full"
+      >
         <dt className="text-muted-foreground">Status Code</dt>
         <dd>
           <Badge
@@ -91,16 +122,31 @@ export function SheetDetailsContent({
             {data.status}
           </Badge>
         </dd>
-      </div>
-      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
+      </RowAction>
+      <RowAction
+        fieldValue="host"
+        value={data.host}
+        table={table}
+        className="flex gap-4 py-2 border-b text-sm justify-between items-center w-full"
+      >
         <dt className="text-muted-foreground">Host</dt>
         <dd className="font-mono truncate">{data.host}</dd>
-      </div>
-      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
+      </RowAction>
+      <RowAction
+        fieldValue="pathname"
+        value={data.pathname}
+        table={table}
+        className="flex gap-4 py-2 border-b text-sm justify-between items-center w-full"
+      >
         <dt className="text-muted-foreground">Pathname</dt>
         <dd className="font-mono truncate">{data.pathname}</dd>
-      </div>
-      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
+      </RowAction>
+      <RowAction
+        fieldValue="regions"
+        value={data.regions[0]}
+        table={table}
+        className="flex gap-4 py-2 border-b text-sm justify-between items-center w-full"
+      >
         <dt className="text-muted-foreground">Region</dt>
         <dd className="font-mono text-right">
           <span className="text-muted-foreground text-xs">
@@ -108,15 +154,20 @@ export function SheetDetailsContent({
           </span>{" "}
           {data.regions[0]}
         </dd>
-      </div>
-      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
+      </RowAction>
+      <RowAction
+        fieldValue="latency"
+        value={data.latency}
+        table={table}
+        className="flex gap-4 py-2 border-b text-sm justify-between items-center w-full"
+      >
         <dt className="text-muted-foreground">Latency</dt>
         <dd className="font-mono">
           {formatMilliseconds(data.latency)}
           <span className="text-muted-foreground">ms</span>
         </dd>
-      </div>
-      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center">
+      </RowAction>
+      <div className="flex gap-4 py-2 border-b text-sm justify-between items-center w-full">
         <dt className="flex items-center gap-1 text-muted-foreground">
           Percentile
         </dt>
@@ -255,5 +306,152 @@ export function SheetDetailsContentSkeleton() {
         </div>
       ))}
     </dl>
+  );
+}
+
+/** ------------------------------- */
+
+interface RowActionProps<TData>
+  extends React.ComponentPropsWithRef<typeof DropdownMenuTrigger> {
+  fieldValue: (typeof filterFields)[number]["value"];
+  value: string | number;
+  table: Table<TData>;
+}
+
+// FIXME: this is a temporary component
+// TODO: use options based on the type of the field
+// DataTableSheetRowAction in the @/components/data-table folder?
+function RowAction<TData>({
+  fieldValue,
+  value,
+  children,
+  className,
+  table,
+  onKeyDown,
+  ...props
+}: RowActionProps<TData>) {
+  const field = filterFields.find((field) => field.value === fieldValue);
+  const column = table.getColumn(fieldValue);
+
+  if (!field || !column) return null;
+
+  function renderOptions() {
+    if (!field) return null;
+    switch (field.type) {
+      case "checkbox":
+        return (
+          <DropdownMenuItem
+            onClick={() => {
+              // FIXME:
+              const filterValue = column?.getFilterValue() as
+                | undefined
+                | Array<unknown>;
+              const newValue = filterValue?.includes(value)
+                ? filterValue
+                : [...(filterValue || []), value];
+
+              column?.setFilterValue(newValue);
+            }}
+          >
+            <Search />
+            Include
+          </DropdownMenuItem>
+        );
+      case "input":
+        return (
+          <DropdownMenuItem onClick={() => column?.setFilterValue(value)}>
+            <Search />
+            Include
+          </DropdownMenuItem>
+        );
+      case "slider":
+        return (
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              onClick={() => column?.setFilterValue([0, value])}
+            >
+              {/* FIXME: change icon as it is not clear */}
+              <ChevronLeft />
+              Less or equal than
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => column?.setFilterValue([value, 5000])}
+            >
+              {/* FIXME: change icon as it is not clear */}
+              <ChevronRight />
+              Greater or equal than
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => column?.setFilterValue([value])}>
+              <Equal />
+              Equal to
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        );
+      case "timerange":
+        const date = new Date(value);
+        return (
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => column?.setFilterValue([date])}>
+              <CalendarSearch />
+              Exact timestamp
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                const start = startOfHour(date);
+                const end = endOfHour(date);
+                column?.setFilterValue([start, end]);
+              }}
+            >
+              <CalendarClock />
+              Same hour
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                const start = startOfDay(date);
+                const end = endOfDay(date);
+                column?.setFilterValue([start, end]);
+              }}
+            >
+              <CalendarDays />
+              Same day
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        );
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          className
+        )}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") {
+            // REMINDER: default behavior is to open the dropdown menu
+            // But because we use it to navigate between rows, we need to prevent it
+            // and only use "Enter" to select the option
+            e.preventDefault();
+          }
+          onKeyDown?.(e);
+        }}
+        {...props}
+      >
+        {children}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" side="left">
+        {renderOptions()}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => navigator.clipboard.writeText(String(value))}
+        >
+          <Copy />
+          Copy value
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

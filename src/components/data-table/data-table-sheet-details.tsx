@@ -64,6 +64,12 @@ export function DataTableSheetDetails<TData>({
     const down = (e: KeyboardEvent) => {
       if (!selectedRowKey) return;
 
+      // REMINDER: prevent dropdown navigation inside of sheet to change row selection
+      const activeElement = document.activeElement;
+      const isMenuActive = activeElement?.closest('[role="menu"]');
+
+      if (isMenuActive) return;
+
       if (e.key === "ArrowUp") {
         e.preventDefault();
         onPrev();

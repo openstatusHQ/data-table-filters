@@ -10,6 +10,8 @@ import { getStatusColor } from "@/lib/request/status-code";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
 
+// instead of filterFields, maybe just 'fieds' with a filterDisabled prop?
+// that way, we could have 'message' or 'headers' field with label and value as well as type!
 export const filterFields = [
   {
     label: "Time Range",

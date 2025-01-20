@@ -379,6 +379,7 @@ export function DataTableInfinite<TData, TValue>({
         table={table}
       >
         <SheetDetailsContent
+          table={table}
           data={selectedRow?.original as ColumnSchema}
           percentiles={currentPercentiles}
           filterRows={filterRows}

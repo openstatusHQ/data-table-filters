@@ -33,8 +33,6 @@ export function HoverCardTimestamp({
 }: HoverCardTimestampProps) {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  console.log({ date });
-
   return (
     <HoverCard openDelay={0} closeDelay={0}>
       <HoverCardTrigger asChild>
