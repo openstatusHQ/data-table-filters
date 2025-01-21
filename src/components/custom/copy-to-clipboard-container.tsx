@@ -1,9 +1,11 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CopyToClipboardContainer({
   children,
+  className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   const [copied, setCopied] = React.useState(false);
@@ -31,17 +33,17 @@ export default function CopyToClipboardContainer({
 
   return (
     <div className="relative group">
+      <div ref={ref} className={cn("peer", className)} {...props}>
+        {children}
+      </div>
       <Button
         variant="outline"
         size="icon"
-        className="absolute top-2 right-2 w-6 h-6 hidden group-hover:flex"
+        className="absolute top-2 right-2 w-6 h-6 opacity-0 group-hover:opacity-100 peer-focus:opacity-100 focus:opacity-100"
         onClick={onClick}
       >
         {!copied ? <Copy className="h-3 w-3" /> : <Check className="h-3 w-3" />}
       </Button>
-      <div ref={ref} {...props}>
-        {children}
-      </div>
     </div>
   );
 }

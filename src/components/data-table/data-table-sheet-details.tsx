@@ -93,8 +93,10 @@ export function DataTableSheetDetails<TData>({
         const el = selectedRowKey
           ? document.getElementById(selectedRowKey)
           : null;
-        table.toggleAllRowsSelected(false);
-        el?.focus();
+        table.resetRowSelection();
+        // REMINDER: for some reasons, the focus works only with setTimeout
+        // whenever we tab throught the sheet details and close it afterwards
+        setTimeout(() => el?.focus(), 0);
       }}
     >
       <SheetContent

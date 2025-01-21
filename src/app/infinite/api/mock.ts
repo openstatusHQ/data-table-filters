@@ -22,6 +22,20 @@ function getRandomTiming(latency: number) {
   };
 }
 
+// REMINDER: for later
+function getRandomMetadata(): Record<string, string> {
+  const rand = Math.random();
+  if (rand < 0.5) {
+    return {
+      env: "production",
+    };
+  } else {
+    return {
+      env: "staging",
+    };
+  }
+}
+
 function getRandomStatusCode() {
   const rand = Math.random();
   if (rand < 0.9) {

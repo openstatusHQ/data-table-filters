@@ -12,6 +12,7 @@ import { LoaderCircle, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { useEffect } from "react";
 import { Kbd } from "@/components/custom/kbd";
+import { DataTableResetButton } from "./data-table-reset-button";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -87,16 +88,7 @@ export function DataTableToolbar<TData>({
         ) : null}
       </div>
       <div className="flex items-center gap-2">
-        {filters.length ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => table.resetColumnFilters()}
-          >
-            <X className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
-        ) : null}
+        {filters.length ? <DataTableResetButton table={table} /> : null}
         <DataTableViewOptions
           table={table}
           enableOrdering={enableColumnOrdering}

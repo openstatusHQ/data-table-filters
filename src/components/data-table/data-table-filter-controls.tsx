@@ -17,6 +17,7 @@ import { DataTableFilterSlider } from "./data-table-filter-slider";
 import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 import { X } from "lucide-react";
+import { DataTableResetButton } from "./data-table-reset-button";
 
 // FIXME: use @container (especially for the slider element) to restructure elements
 
@@ -40,16 +41,7 @@ export function DataTableFilterControls<TData, TValue>({
       <div className="flex h-[46px] items-center justify-between gap-3">
         <p className="font-medium text-foreground px-2">Filters</p>
         <div>
-          {filters.length ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => table.resetColumnFilters()}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Reset
-            </Button>
-          ) : null}
+          {filters.length ? <DataTableResetButton table={table} /> : null}
         </div>
       </div>
       <Accordion

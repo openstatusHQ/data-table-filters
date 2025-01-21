@@ -1,6 +1,7 @@
 "use client";
 import { ColumnSchema } from "./schema";
 import {
+  Braces,
   CalendarClock,
   CalendarDays,
   CalendarSearch,
@@ -11,6 +12,7 @@ import {
   Equal,
   FunctionSquare,
   Search,
+  TableProperties,
   X,
 } from "lucide-react";
 import * as React from "react";
@@ -44,7 +46,9 @@ import { HoverCardTimestamp } from "./hover-card-timestamp";
 import { filterFields } from "./constants";
 import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
 import { Table } from "@tanstack/react-table";
-import { endOfDay, endOfHour, startOfDay, startOfHour } from "date-fns";
+import { endOfDay, endOfHour, format, startOfDay, startOfHour } from "date-fns";
+import { KeyValueTable } from "./key-value-table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface SheetDetailsContentProps<TData>
   extends React.HTMLAttributes<HTMLDListElement> {
@@ -104,7 +108,9 @@ export function SheetDetailsContent<TData>({
       >
         <dt className="text-muted-foreground">Date</dt>
         <dd className="font-mono text-right">
-          <HoverCardTimestamp date={new Date(data.date)} side="bottom" />
+          {/* TODO: we have an nested onclick issue even with stopPropagation */}
+          {/* <HoverCardTimestamp date={new Date(data.date)} side="bottom" /> */}
+          {format(new Date(data.date), "LLL dd, y HH:mm:ss")}
         </dd>
       </RowAction>
       <RowAction
@@ -238,7 +244,7 @@ export function SheetDetailsContent<TData>({
             key={phase}
             className="grid grid-cols-3 gap-2 text-xs justify-between items-center"
           >
-            <div className="text-muted-foreground uppercase truncate">
+            <div className="text-muted-foreground uppercase truncate font-mono">
               {getTimingLabel(phase)}
             </div>
             <div className="flex gap-2 col-span-2">
@@ -259,20 +265,17 @@ export function SheetDetailsContent<TData>({
           </div>
         ))}
       </div>
+      <div className="flex flex-col gap-2 py-2 border-b text-sm text-left">
+        <ObjectViewTabs title="Headers" data={data.headers} />
+      </div>
       {data.message ? (
         <div className="flex flex-col gap-2 py-2 border-b text-sm text-left">
           <dt className="text-muted-foreground">Message</dt>
-          <CopyToClipboardContainer className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono">
+          <CopyToClipboardContainer className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono text-sm">
             {JSON.stringify(data.message, null, 2)}
           </CopyToClipboardContainer>
         </div>
       ) : null}
-      <div className="flex flex-col gap-2 py-2 text-sm text-left">
-        <dt className="text-muted-foreground">Headers</dt>
-        <CopyToClipboardContainer className="rounded-md bg-muted/50 border p-2 whitespace-pre-wrap break-all font-mono">
-          {JSON.stringify(data.headers, null, 2)}
-        </CopyToClipboardContainer>
-      </div>
     </dl>
   );
 }
@@ -306,6 +309,39 @@ export function SheetDetailsContentSkeleton() {
         </div>
       ))}
     </dl>
+  );
+}
+
+/** ------------------------------- */
+
+interface ObjectViewTabsProps {
+  data: Record<string, string>;
+  title: string;
+}
+
+function ObjectViewTabs({ data, title }: ObjectViewTabsProps) {
+  return (
+    <Tabs defaultValue="table">
+      <div className="flex justify-between items-center">
+        <dt className="text-muted-foreground">{title}</dt>
+        <TabsList className="h-auto px-0 py-0 gap-1 bg-background">
+          <TabsTrigger value="table" className="py-0 px-0">
+            <TableProperties className="h-4 w-4" />
+          </TabsTrigger>
+          <TabsTrigger value="raw" className="py-0 px-0">
+            <Braces className="h-4 w-4" />
+          </TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="table" className="rounded-md">
+        <KeyValueTable data={data} />
+      </TabsContent>
+      <TabsContent value="raw" asChild>
+        <CopyToClipboardContainer className="rounded-md bg-muted/50 border p-2 whitespace-pre-wrap break-all font-mono text-sm">
+          {JSON.stringify(data, null, 2)}
+        </CopyToClipboardContainer>
+      </TabsContent>
+    </Tabs>
   );
 }
 

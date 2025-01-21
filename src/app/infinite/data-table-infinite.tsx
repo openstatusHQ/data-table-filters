@@ -287,7 +287,10 @@ export function DataTableInfinite<TData, TValue>({
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow
                     key={headerGroup.id}
-                    className="hover:bg-transparent"
+                    className={cn(
+                      "hover:bg-transparent"
+                      // "border-border [&>:not(:last-child)]:border-r"
+                    )}
                   >
                     {headerGroup.headers.map((header) => {
                       return (
@@ -331,7 +334,10 @@ export function DataTableInfinite<TData, TValue>({
                           row.toggleSelected();
                         }
                       }}
-                      className="focus-visible:-outline-offset-1 outline-primary focus-visible:bg-muted/50"
+                      className={cn(
+                        // "[&>:not(:last-child)]:border-r",
+                        "focus-visible:-outline-offset-1 outline-primary focus-visible:bg-muted/50"
+                      )}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell

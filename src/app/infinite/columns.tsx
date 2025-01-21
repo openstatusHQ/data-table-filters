@@ -31,7 +31,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <X className="h-4 w-4 text-red-500" />;
     },
     filterFn: "arrSome",
-    meta: { headerClassName: "w-4" },
+    meta: { headerClassName: "w-8" },
   },
   {
     id: "uuid",
@@ -190,7 +190,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
                   <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
                     <div className="flex items-center gap-2">
                       <div className={cn(color, "h-2 w-2 rounded-full")} />
-                      <div className="uppercase text-accent-foreground">
+                      <div className="uppercase font-mono text-accent-foreground">
                         {getTimingLabel(phase)}
                       </div>
                     </div>
