@@ -35,7 +35,7 @@ export function SocialsFooter() {
               <Command className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent>
+          <PopoverContent className="p-2 w-auto">
             <HotkeyOverview />
           </PopoverContent>
         </Popover>
@@ -50,10 +50,10 @@ export function SocialsFooter() {
 const hotkeys = [
   { key: "K", description: "Toggle command input" },
   { key: "B", description: "Toggle sidebar controls" },
-  { key: "Esc", description: "Reset all table filters" },
+  { key: "Esc", description: "Reset table filters" },
   {
     key: ".",
-    description: "Reset focused element and start from 'skip to content",
+    description: "Reset element focus to start",
   },
 ];
 
@@ -62,15 +62,15 @@ function HotkeyOverview() {
     <ul className="divide-y">
       {hotkeys.map((props) => {
         return (
-          <li key={props.key} className="grid grid-cols-4 py-0.5">
-            <span className="col-span-3 place-content-center text-muted-foreground text-xs">
-              {props.description}
-            </span>
-            <span className="col-span-1 text-right">
-              <Kbd variant="outline" className="ml-1">
+          <li key={props.key} className="grid grid-cols-4 gap-2 py-0.5">
+            <span className="col-span-1 text-left">
+              <Kbd className="ml-1">
                 <span className="mr-1">⌘</span>
                 <span>{props.key}</span>
               </Kbd>
+            </span>
+            <span className="col-span-3 place-content-center text-muted-foreground text-xs">
+              {props.description}
             </span>
           </li>
         );

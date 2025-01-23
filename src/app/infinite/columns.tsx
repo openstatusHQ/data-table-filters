@@ -83,7 +83,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "Method",
     filterFn: "arrIncludesSome",
     meta: {
-      cellClassName: "font-mono",
+      cellClassName: "font-mono text-muted-foreground",
     },
   },
   {

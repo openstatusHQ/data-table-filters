@@ -106,8 +106,22 @@ export function DataTableInfinite<TData, TValue>({
     true
   );
   const topBarRef = React.useRef<HTMLDivElement>(null);
+  const tableRef = React.useRef<HTMLTableElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
   const [_, setSearch] = useQueryStates(searchParamsParser);
+
+  const onScroll = React.useCallback(
+    (e: React.UIEvent<HTMLElement>) => {
+      const onPageBottom =
+        Math.ceil(e.currentTarget.scrollTop + e.currentTarget.clientHeight) >=
+        e.currentTarget.scrollHeight;
+
+      if (onPageBottom && !isFetching && totalRowsFetched < filterRows) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, isFetching, filterRows, totalRowsFetched]
+  );
 
   React.useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -123,23 +137,6 @@ export function DataTableInfinite<TData, TValue>({
     observer.observe(topBar);
     return () => observer.unobserve(topBar);
   }, [topBarRef]);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    function onScroll() {
-      // TODO: add a threshold for the "Load More" button
-      const onPageBottom =
-        window.innerHeight + Math.round(window.scrollY) >=
-        document.body.offsetHeight;
-      if (onPageBottom && !isFetching && totalRowsFetched < filterRows) {
-        fetchNextPage();
-      }
-    }
-
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [fetchNextPage, isFetching, filterRows, totalRowsFetched]);
 
   const table = useReactTable({
     data,
@@ -225,7 +222,12 @@ export function DataTableInfinite<TData, TValue>({
 
   return (
     <>
-      <div className="flex w-full min-h-screen h-full flex-col sm:flex-row">
+      <div
+        className="flex w-full min-h-screen h-full flex-col sm:flex-row"
+        style={
+          { "--top-bar-height": `${topBarHeight}px` } as React.CSSProperties
+        }
+      >
         <div
           className={cn(
             "w-ful h-full sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-scroll",
@@ -246,7 +248,7 @@ export function DataTableInfinite<TData, TValue>({
         </div>
         <div
           className={cn(
-            "flex max-w-full flex-1 flex-col sm:border-l border-border overflow-clip",
+            "flex max-w-full flex-1 flex-col sm:border-l border-border",
             // Chrome issue
             controlsOpen &&
               "sm:max-w-[calc(100vw_-_208px)] md:max-w-[calc(100vw_-_288px)]"
@@ -278,27 +280,31 @@ export function DataTableInfinite<TData, TValue>({
               handleFilter={table.getColumn("date")?.setFilterValue}
             />
           </div>
-          <div className="z-0">
-            <Table containerClassName="overflow-clip">
-              <TableHeader
-                className="sticky bg-muted z-20"
-                style={{ top: `${topBarHeight}px` }}
-              >
+          <div className="z-0 border-t border-border">
+            <Table
+              ref={tableRef}
+              onScroll={onScroll}
+              // REMINDER: https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
+              className="border-separate border-spacing-0"
+              containerClassName="max-h-[calc(100vh_-_var(--top-bar-height))]"
+            >
+              <TableHeader className={cn("sticky top-0 bg-background z-20")}>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow
                     key={headerGroup.id}
                     className={cn(
-                      "hover:bg-transparent"
-                      // "border-border [&>:not(:last-child)]:border-r"
+                      "bg-muted/50 hover:bg-muted/50",
+                      "border-border [&>:not(:last-child)]:border-r"
                     )}
                   >
                     {headerGroup.headers.map((header) => {
                       return (
                         <TableHead
                           key={header.id}
-                          className={
-                            header.column.columnDef.meta?.headerClassName
-                          }
+                          className={cn(
+                            header.column.columnDef.meta?.headerClassName,
+                            "border-b border-border"
+                          )}
                         >
                           {header.isPlaceholder
                             ? null
@@ -316,9 +322,9 @@ export function DataTableInfinite<TData, TValue>({
                 id="content"
                 tabIndex={-1}
                 className="transition-colors focus-visible:-outline-offset-1 outline-primary"
+                // REMINDER: avoids scroll (skipping the table header) when using skip to content
                 style={{ scrollMarginTop: `calc(${topBarHeight}px + 40px)` }}
               >
-                {/* FIXME: should be getRowModel() as filtering */}
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     // REMINDER: if we want to add arrow navigation https://github.com/TanStack/table/discussions/2752#discussioncomment-192558
@@ -335,14 +341,17 @@ export function DataTableInfinite<TData, TValue>({
                         }
                       }}
                       className={cn(
-                        // "[&>:not(:last-child)]:border-r",
+                        "[&>:not(:last-child)]:border-r",
                         "focus-visible:-outline-offset-1 outline-primary focus-visible:bg-muted/50"
                       )}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell
                           key={cell.id}
-                          className={cell.column.columnDef.meta?.cellClassName}
+                          className={cn(
+                            cell.column.columnDef.meta?.cellClassName,
+                            "border-b border-border"
+                          )}
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
