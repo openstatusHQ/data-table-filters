@@ -26,11 +26,6 @@ import {
 } from "@/lib/request/timing";
 import { formatCompactNumber, formatMilliseconds } from "@/lib/format";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -42,13 +37,17 @@ import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Percentile, getPercentileColor } from "@/lib/request/percentile";
-import { HoverCardTimestamp } from "./hover-card-timestamp";
 import { filterFields } from "./constants";
 import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
 import { Table } from "@tanstack/react-table";
 import { endOfDay, endOfHour, format, startOfDay, startOfHour } from "date-fns";
 import { KeyValueTable } from "./key-value-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface SheetDetailsContentProps<TData>
   extends React.HTMLAttributes<HTMLDListElement> {
@@ -66,8 +65,6 @@ export function SheetDetailsContent<TData>({
   className,
   ...props
 }: SheetDetailsContentProps<TData>) {
-  const [open, setOpen] = React.useState(false); // improve naming as it only opens when hovering/clicking over the percentile
-
   if (!data) return <SheetDetailsContentSkeleton />;
 
   const statusColor = getStatusColor(data.status);
@@ -191,11 +188,8 @@ export function SheetDetailsContent<TData>({
           Percentile
         </dt>
         <dd>
-          <HoverCard open={open} onOpenChange={setOpen}>
-            <HoverCardTrigger
-              onClick={() => setOpen((prev) => !prev)}
-              className="font-mono flex items-center gap-1"
-            >
+          <Popover>
+            <PopoverTrigger className="font-mono flex items-center gap-1 rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
               <FunctionSquare
                 className={cn(
                   "h-4 w-4",
@@ -205,8 +199,8 @@ export function SheetDetailsContent<TData>({
                 )}
               />
               {!data.percentile ? "N/A" : `P${Math.round(data.percentile)}`}
-            </HoverCardTrigger>
-            <HoverCardContent className="w-40 flex flex-col gap-2 p-2 text-xs">
+            </PopoverTrigger>
+            <PopoverContent className="w-40 flex flex-col gap-2 p-2 text-xs">
               <p>
                 Calculated from filtered result of{" "}
                 <span className="font-medium font-mono">
@@ -246,8 +240,8 @@ export function SheetDetailsContent<TData>({
                   );
                 })}
               </div>
-            </HoverCardContent>
-          </HoverCard>
+            </PopoverContent>
+          </Popover>
         </dd>
       </div>
       <div className="flex flex-col gap-2 py-2 text-sm text-left">
