@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import PlausibleProvider from "next-plausible";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Toaster } from "@/components/ui/sonner";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -56,6 +57,7 @@ export default function RootLayout({
                 enableSystem
               >
                 {children}
+                <Toaster richColors />
               </ThemeProvider>
             </body>
           </NuqsAdapter>

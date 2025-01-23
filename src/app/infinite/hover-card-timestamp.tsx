@@ -5,12 +5,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import { UTCDate } from "@date-fns/utc";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Copy } from "lucide-react";
 import { Check } from "lucide-react";
-import { useState, type ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 
 type HoverCardContentProps = ComponentPropsWithoutRef<typeof HoverCardContent>;
 
@@ -62,22 +63,20 @@ export function HoverCardTimestamp({
 }
 
 function Row({ value, label }: { value: string; label: string }) {
-  const [copied, setCopied] = useState(false);
+  const { copy, isCopied } = useCopyToClipboard();
 
   return (
     <div
       className="group flex gap-4 text-sm justify-between items-center"
       onClick={(e) => {
         e.stopPropagation();
-        navigator.clipboard.writeText(value);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        copy(value);
       }}
     >
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="font-mono truncate flex items-center gap-1">
         <span className="invisible group-hover:visible">
-          {!copied ? (
+          {!isCopied ? (
             <Copy className="h-3 w-3" />
           ) : (
             <Check className="h-3 w-3" />
