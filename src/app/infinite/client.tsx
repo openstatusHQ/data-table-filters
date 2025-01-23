@@ -8,12 +8,21 @@ import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
+import { useHotKey } from "@/hooks/use-hot-key";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
   const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
     dataOptions(search)
   );
+
+  useHotKey(() => {
+    // FIXME: some dedicated div[tabindex="0"] do not auto-unblur (e.g. the DataTableFilterResetButton)
+    // document.activeElement?.blur();
+    document.body.setAttribute("tabindex", "0");
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
+  }, ".");
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],

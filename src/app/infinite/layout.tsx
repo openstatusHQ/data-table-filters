@@ -9,7 +9,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className="fixed left-1.5 top-1.5 z-[100] transition-all focus-visible:translate-y-0 -translate-y-12"
         asChild
       >
-        <Link href="#content">Skip to content</Link>
+        <Link id="skip-to-content" href="#content">
+          Skip to content
+        </Link>
       </Button>
       {children}
       <div className="fixed right-4 bottom-4 z-50">

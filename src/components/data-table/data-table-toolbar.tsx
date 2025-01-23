@@ -13,6 +13,7 @@ import { DataTableViewOptions } from "./data-table-view-options";
 import { useEffect } from "react";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
+import { useHotKey } from "@/hooks/use-hot-key";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -30,17 +31,7 @@ export function DataTableToolbar<TData>({
   enableColumnOrdering,
 }: DataTableToolbarProps<TData>) {
   const filters = table.getState().columnFilters;
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "b" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setControlsOpen((prev) => !prev);
-      }
-    };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, [setControlsOpen]);
+  useHotKey(() => setControlsOpen((prev) => !prev), "b");
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">

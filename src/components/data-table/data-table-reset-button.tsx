@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/custom/kbd";
-import { useEffect } from "react";
+import { useHotKey } from "@/hooks/use-hot-key";
 
 interface DataTableResetButtonProps<TData> {
   table: Table<TData>;
@@ -17,16 +17,7 @@ interface DataTableResetButtonProps<TData> {
 export function DataTableResetButton<TData>({
   table,
 }: DataTableResetButtonProps<TData>) {
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        table.resetColumnFilters();
-      }
-    };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+  useHotKey(table.resetColumnFilters, "Escape");
 
   return (
     <TooltipProvider>

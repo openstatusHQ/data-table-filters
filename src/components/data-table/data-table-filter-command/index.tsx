@@ -29,6 +29,7 @@ import {
 } from "./utils";
 import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useHotKey } from "@/hooks/use-hot-key";
 
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
 
@@ -113,16 +114,7 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
     }
   }, [columnFilters, filterFields, open]);
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-    };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+  useHotKey(() => setOpen((open) => !open), "k");
 
   useEffect(() => {
     if (open) {
