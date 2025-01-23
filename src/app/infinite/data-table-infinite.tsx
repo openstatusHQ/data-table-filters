@@ -44,8 +44,8 @@ import { SheetDetailsContent } from "./sheet-details-content";
 import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
-import { SocialsFooter } from "@/components/layout/socials-footer";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
+import { SocialsFooter } from "./socials-footer";
 import { TimelineChart } from "./timeline-chart";
 
 // TODO: add a possible chartGroupBy

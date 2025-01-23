@@ -145,7 +145,7 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
           )}
         </span>
         <Kbd className="ml-auto text-muted-foreground group-hover:text-accent-foreground">
-          <span className="mr-0.5">⌘</span>
+          <span className="mr-1">⌘</span>
           <span>K</span>
         </Kbd>
       </button>

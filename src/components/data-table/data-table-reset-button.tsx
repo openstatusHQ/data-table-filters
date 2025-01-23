@@ -36,7 +36,7 @@ export function DataTableResetButton<TData>({
           <p>
             Reset filters with{" "}
             <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">
-              <span className="mr-0.5">⌘</span>
+              <span className="mr-1">⌘</span>
               <span>Esc</span>
             </Kbd>
           </p>
