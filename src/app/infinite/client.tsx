@@ -90,6 +90,10 @@ export function Client() {
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       chartData={chartData}
+      getRowClassName={(row) => {
+        if (row.original.success) return "";
+        return "bg-destructive/5 hover:bg-destructive/10 data-[state=selected]:bg-destructive/10 focus-visible:bg-destructive/10";
+      }}
     />
   );
 }

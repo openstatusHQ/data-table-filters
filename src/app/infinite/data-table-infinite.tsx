@@ -3,6 +3,7 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  Row,
   RowSelectionState,
   SortingState,
   Table as TTable,
@@ -51,6 +52,7 @@ import { TimelineChart } from "./timeline-chart";
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
+  getRowClassName?: (row: Row<TData>) => string;
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;
   defaultColumnSorting?: SortingState;
@@ -68,6 +70,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
 
 export function DataTableInfinite<TData, TValue>({
   columns,
+  getRowClassName,
   data,
   defaultColumnFilters = [],
   defaultColumnSorting = [],
@@ -177,6 +180,7 @@ export function DataTableInfinite<TData, TValue>({
       return map;
     },
     filterFns: { inDateRange, arrSome },
+    meta: { getRowClassName },
   });
 
   React.useEffect(() => {
@@ -302,8 +306,8 @@ export function DataTableInfinite<TData, TValue>({
                         <TableHead
                           key={header.id}
                           className={cn(
-                            header.column.columnDef.meta?.headerClassName,
-                            "border-b border-border"
+                            "border-b border-border",
+                            header.column.columnDef.meta?.headerClassName
                           )}
                         >
                           {header.isPlaceholder
@@ -342,15 +346,16 @@ export function DataTableInfinite<TData, TValue>({
                       }}
                       className={cn(
                         "[&>:not(:last-child)]:border-r",
-                        "focus-visible:-outline-offset-1 outline-primary focus-visible:bg-muted/50"
+                        "focus-visible:-outline-offset-1 outline-primary focus-visible:bg-muted/50",
+                        table.options.meta?.getRowClassName?.(row)
                       )}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell
                           key={cell.id}
                           className={cn(
-                            cell.column.columnDef.meta?.cellClassName,
-                            "border-b border-border"
+                            "border-b border-border",
+                            cell.column.columnDef.meta?.cellClassName
                           )}
                         >
                           {flexRender(

@@ -48,6 +48,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 
 interface SheetDetailsContentProps<TData>
   extends React.HTMLAttributes<HTMLDListElement> {
@@ -129,6 +130,17 @@ export function SheetDetailsContent<TData>({
               {data.status}
             </Badge>
           </dd>
+        </RowAction>
+      </div>
+      <div>
+        <RowAction
+          fieldValue="method"
+          value={data.method}
+          table={table}
+          className="flex gap-4 my-1 py-1 text-sm justify-between items-center w-full"
+        >
+          <dt className="text-muted-foreground">Method</dt>
+          <dd className="font-mono">{data.method}</dd>
         </RowAction>
       </div>
       <div>
@@ -380,6 +392,7 @@ function RowAction<TData>({
   onKeyDown,
   ...props
 }: RowActionProps<TData>) {
+  const { copy, isCopied } = useCopyToClipboard();
   const field = filterFields.find((field) => field.value === fieldValue);
   const column = table.getColumn(fieldValue);
 
@@ -477,6 +490,7 @@ function RowAction<TData>({
       <DropdownMenuTrigger
         className={cn(
           "rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "relative",
           className
         )}
         onKeyDown={(e) => {
@@ -491,12 +505,17 @@ function RowAction<TData>({
         {...props}
       >
         {children}
+        {isCopied ? (
+          <div className="absolute inset-0 bg-background/70 place-content-center">
+            Value copied
+          </div>
+        ) : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="left">
         {renderOptions()}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => navigator.clipboard.writeText(String(value))}
+          onClick={() => copy(String(value), { timeout: 1000 })}
         >
           <Copy />
           Copy value
