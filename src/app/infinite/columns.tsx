@@ -18,7 +18,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import TextWithTooltip from "@/components/custom/text-with-tooltip";
+import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
 import { HoverCardTimestamp } from "./hover-card-timestamp";
 import { RESULTS } from "@/constants/results";
 import { getResultColor } from "@/lib/request/result";
@@ -36,7 +36,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       );
     },
     filterFn: "arrSome",
-    meta: { headerClassName: "w-6" },
+    meta: { headerClassName: "w-[27px]" },
   },
   {
     id: "uuid",
