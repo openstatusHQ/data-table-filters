@@ -6,6 +6,7 @@ import type {
   Row,
   RowSelectionState,
   SortingState,
+  TableOptions,
   Table as TTable,
   VisibilityState,
 } from "@tanstack/react-table";
@@ -53,6 +54,8 @@ import { TimelineChart } from "./timeline-chart";
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   getRowClassName?: (row: Row<TData>) => string;
+  // REMINDER: make sure to pass the correct id to access the rows
+  getRowId: TableOptions<TData>["getRowId"];
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;
   defaultColumnSorting?: SortingState;
@@ -71,6 +74,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
 export function DataTableInfinite<TData, TValue>({
   columns,
   getRowClassName,
+  getRowId,
   data,
   defaultColumnFilters = [],
   defaultColumnSorting = [],
@@ -152,8 +156,7 @@ export function DataTableInfinite<TData, TValue>({
       columnOrder,
     },
     enableMultiRowSelection: false,
-    // @ts-ignore FIXME: because it is not in the types
-    getRowId: (row, index) => `${row?.uuid}` || `${index}`,
+    getRowId,
     onColumnVisibilityChange: setColumnVisibility,
     onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: setRowSelection,

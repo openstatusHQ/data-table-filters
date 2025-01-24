@@ -8,6 +8,10 @@ import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 
+function getFilter(filterValue: unknown) {
+  return typeof filterValue === "string" ? filterValue : "";
+}
+
 type DataTableFilterInputProps<TData> = DataTableInputFilterField<TData> & {
   table: Table<TData>;
 };
@@ -19,11 +23,10 @@ export function DataTableFilterInput<TData>({
   const value = _value as string;
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
-  const [input, setInput] = useState<string>(
-    typeof filterValue === "string" ? filterValue : ""
-  );
+  const filters = getFilter(filterValue);
+  const [input, setInput] = useState<string>(filters);
 
-  const debouncedInput = useDebounce(input, 1000);
+  const debouncedInput = useDebounce(input, 500);
 
   useEffect(() => {
     const newValue = debouncedInput.trim() === "" ? null : debouncedInput;
@@ -31,11 +34,10 @@ export function DataTableFilterInput<TData>({
   }, [debouncedInput]);
 
   useEffect(() => {
-    if (debouncedInput.trim() !== filterValue) {
-      const filters = typeof filterValue === "string" ? filterValue : "";
+    if (debouncedInput.trim() !== filters) {
       setInput(filters);
     }
-  }, [filterValue]);
+  }, [filters]);
 
   return (
     <div className="grid w-full gap-1.5">

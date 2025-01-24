@@ -94,6 +94,7 @@ export function Client() {
         if (row.original.result === "success") return "";
         return "bg-destructive/5 hover:bg-destructive/10 data-[state=selected]:bg-destructive/10 focus-visible:bg-destructive/10";
       }}
+      getRowId={(row) => row.uuid}
     />
   );
 }

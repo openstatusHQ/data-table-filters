@@ -66,7 +66,7 @@ export function DataTableFilterCheckbox<TData>({
               <div
                 key={String(option.value)}
                 className={cn(
-                  "group relative flex items-center space-x-2 px-2 py-2.5 hover:bg-accent",
+                  "group relative flex items-center space-x-2 px-2 py-2.5 hover:bg-accent/50",
                   index !== filterOptions.length - 1 ? "border-b" : undefined
                 )}
               >
