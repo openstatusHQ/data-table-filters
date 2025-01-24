@@ -94,9 +94,8 @@ export function DataTableSheetDetails<TData>({
           ? document.getElementById(selectedRowKey)
           : null;
         table.resetRowSelection();
-        // REMINDER: for some reasons, the focus works only with setTimeout
-        // whenever we tab throught the sheet details and close it afterwards
-        setTimeout(() => el?.focus(), 0);
+
+        el?.focus();
       }}
     >
       <SheetContent
