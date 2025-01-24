@@ -49,6 +49,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { getResultColor, getResultLabel } from "@/lib/request/result";
 
 interface SheetDetailsContentProps<TData>
   extends React.HTMLAttributes<HTMLDListElement> {
@@ -88,16 +89,6 @@ export function SheetDetailsContent<TData>({
       <div className="flex gap-4 py-2 text-sm justify-between items-center">
         <dt className="text-muted-foreground">ID</dt>
         <dd className="font-mono truncate">{data.uuid}</dd>
-      </div>
-      <div className="flex gap-4 py-2 text-sm justify-between items-center">
-        <dt className="text-muted-foreground">Success</dt>
-        <dd>
-          {data.success ? (
-            <Check className="h-4 w-4 text-green-500" />
-          ) : (
-            <X className="h-4 w-4 text-red-500" />
-          )}
-        </dd>
       </div>
       <div>
         <RowAction

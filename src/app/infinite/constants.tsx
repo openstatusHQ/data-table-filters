@@ -9,8 +9,10 @@ import type {
 import { getStatusColor } from "@/lib/request/status-code";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
+import { RESULTS } from "@/constants/results";
+import { getResultColor, getResultLabel } from "@/lib/request/result";
 
-// instead of filterFields, maybe just 'fieds' with a filterDisabled prop?
+// instead of filterFields, maybe just 'fields' with a filterDisabled prop?
 // that way, we could have 'message' or 'headers' field with label and value as well as type!
 export const filterFields = [
   {
@@ -21,10 +23,31 @@ export const filterFields = [
     commandDisabled: true,
   },
   {
-    label: "Success",
-    value: "success",
+    label: "Result",
+    value: "result",
     type: "checkbox",
-    options: [true, false].map((bool) => ({ label: `${bool}`, value: bool })),
+    defaultOpen: true,
+    options: RESULTS.map((result) => ({ label: result, value: result })),
+    component: (props: Option) => {
+      // TODO: type `Option` with `options` values via Generics
+      const value = props.value as (typeof RESULTS)[number];
+      return (
+        <div className="flex w-full items-center justify-between gap-2 max-w-28 font-mono">
+          <span className="capitalize text-foreground/70">{props.label}</span>
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "h-2.5 w-2.5 rounded-[2px]",
+                getResultColor(value).bg
+              )}
+            />
+            <span className="text-xs text-muted-foreground/70">
+              {getResultLabel(value)}
+            </span>
+          </div>
+        </div>
+      );
+    },
   },
   {
     label: "Host",
@@ -45,9 +68,9 @@ export const filterFields = [
     options: [
       { label: "200", value: 200 },
       { label: "400", value: 400 },
+      { label: "404", value: 404 },
       { label: "500", value: 500 },
     ], // REMINDER: this is a placeholder to set the type in the client.tsx
-    defaultOpen: true,
     component: (props: Option) => {
       if (typeof props.value === "boolean") return null;
       if (typeof props.value === "undefined") return null;

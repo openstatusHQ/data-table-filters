@@ -91,7 +91,7 @@ export function Client() {
       fetchNextPage={fetchNextPage}
       chartData={chartData}
       getRowClassName={(row) => {
-        if (row.original.success) return "";
+        if (row.original.result === "success") return "";
         return "bg-destructive/5 hover:bg-destructive/10 data-[state=selected]:bg-destructive/10 focus-visible:bg-destructive/10";
       }}
     />

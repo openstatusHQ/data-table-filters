@@ -16,10 +16,12 @@ export function DataTableFilterInput<TData>({
   table,
   value: _value,
 }: DataTableFilterInputProps<TData>) {
-  const [input, setInput] = useState("");
   const value = _value as string;
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
+  const [input, setInput] = useState<string>(
+    typeof filterValue === "string" ? filterValue : ""
+  );
 
   const debouncedInput = useDebounce(input, 1000);
 

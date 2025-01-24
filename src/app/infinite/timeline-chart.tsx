@@ -13,22 +13,24 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
 import { ColumnFiltersColumn } from "@tanstack/react-table";
+import { getResultLabel } from "@/lib/request/result";
+import { RESULTS } from "@/constants/results";
 
 export const description = "A stacked bar chart with a legend";
 
 const chartConfig = {
-  200: {
-    label: <span className="font-mono">200</span>,
+  success: {
+    label: <TooltipLabel result="success" />,
     // color: "hsl(142.1 70.6% 45.3%)", // bg-green-500
     // color: "hsla(142.1, 70.6%, 45.3%, 0.3)", // bg-green-500/30
     color: "hsl(var(--muted))", // bg-foreground/10
   },
-  400: {
-    label: <span className="font-mono">400</span>,
+  warning: {
+    label: <TooltipLabel result="warning" />,
     color: "hsl(24.6 95% 53.1%)", // bg-orange-500
   },
-  500: {
-    label: <span className="font-mono">500</span>,
+  error: {
+    label: <TooltipLabel result="error" />,
     color: "hsl(0 84.2% 60.2%)", // bg-red-500
   },
 } satisfies ChartConfig;
@@ -127,6 +129,7 @@ export function TimelineChart({
           interval="preserveStartEnd"
         />
         <ChartTooltip
+          // defaultIndex={10}
           content={
             <ChartTooltipContent
               labelFormatter={(value) => {
@@ -138,9 +141,9 @@ export function TimelineChart({
             />
           }
         />
-        <Bar dataKey="500" stackId="a" fill="var(--color-500)" />
-        <Bar dataKey="400" stackId="a" fill="var(--color-400)" />
-        <Bar dataKey="200" stackId="a" fill="var(--color-200)" />
+        <Bar dataKey="error" stackId="a" fill="var(--color-error)" />
+        <Bar dataKey="warning" stackId="a" fill="var(--color-warning)" />
+        <Bar dataKey="success" stackId="a" fill="var(--color-success)" />
         {refAreaLeft && refAreaRight && (
           <ReferenceArea
             x1={refAreaLeft}
@@ -152,5 +155,16 @@ export function TimelineChart({
         )}
       </BarChart>
     </ChartContainer>
+  );
+}
+
+function TooltipLabel({ result }: { result: (typeof RESULTS)[number] }) {
+  return (
+    <div className="font-mono flex w-20 justify-between items-center gap-2 mr-2">
+      <div className="capitalize text-foreground/70">{result}</div>
+      <div className="text-xs text-muted-foreground/70">
+        {getResultLabel(result)}
+      </div>
+    </div>
   );
 }

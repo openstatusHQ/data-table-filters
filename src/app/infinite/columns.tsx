@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Minus, X } from "lucide-react";
+import { Minus } from "lucide-react";
 import type { ColumnSchema } from "./schema";
 import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
@@ -20,18 +20,23 @@ import {
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import TextWithTooltip from "@/components/custom/text-with-tooltip";
 import { HoverCardTimestamp } from "./hover-card-timestamp";
+import { RESULTS } from "@/constants/results";
+import { getResultColor } from "@/lib/request/result";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
-    accessorKey: "success",
+    accessorKey: "result",
     header: "",
     cell: ({ row }) => {
-      const value = row.getValue("success");
-      if (value) return <Check className="h-4 w-4 text-green-500/60" />;
-      return <X className="h-4 w-4 text-red-500" />;
+      const value = row.getValue("result") as (typeof RESULTS)[number];
+      return (
+        <div
+          className={cn("h-2.5 w-2.5 rounded-[2px]", getResultColor(value).bg)}
+        />
+      );
     },
     filterFn: "arrSome",
-    meta: { headerClassName: "w-8" },
+    meta: { headerClassName: "w-6" },
   },
   {
     id: "uuid",

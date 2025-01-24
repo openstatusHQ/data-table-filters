@@ -11,6 +11,7 @@ export type DatePreset = {
   shortcut: string;
 };
 
+// TODO: we could type the value(!) especially when using enums
 export type Option = {
   label: string;
   value: string | boolean | number | undefined;
