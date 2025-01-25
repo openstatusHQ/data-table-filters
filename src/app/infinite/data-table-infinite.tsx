@@ -156,6 +156,7 @@ export function DataTableInfinite<TData, TValue>({
       columnOrder,
     },
     enableMultiRowSelection: false,
+    columnResizeMode: "onChange",
     getRowId,
     onColumnVisibilityChange: setColumnVisibility,
     onColumnFiltersChange: setColumnFilters,
@@ -227,12 +228,42 @@ export function DataTableInfinite<TData, TValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowSelection, selectedRow]);
 
+  /**
+   * https://tanstack.com/table/v8/docs/guide/column-sizing#advanced-column-resizing-performance
+   * Instead of calling `column.getSize()` on every render for every header
+   * and especially every data cell (very expensive),
+   * we will calculate all column sizes at once at the root table level in a useMemo
+   * and pass the column sizes down as CSS variables to the <table> element.
+   */
+  const columnSizeVars = React.useMemo(() => {
+    const headers = table.getFlatHeaders();
+    const colSizes: { [key: string]: string } = {};
+    for (let i = 0; i < headers.length; i++) {
+      const header = headers[i]!;
+      // REMINDER: replace "." with "-" to avoid invalid CSS variable name (e.g. "timing.dns" -> "timing-dns")
+      colSizes[
+        `--header-${header.id.replace(".", "-")}-size`
+      ] = `${header.getSize()}px`;
+      colSizes[
+        `--col-${header.column.id.replace(".", "-")}-size`
+      ] = `${header.column.getSize()}px`;
+    }
+    return colSizes;
+  }, [
+    table.getState().columnSizingInfo,
+    table.getState().columnSizing,
+    table.getState().columnVisibility,
+  ]);
+
   return (
     <>
       <div
         className="flex w-full min-h-screen h-full flex-col sm:flex-row"
         style={
-          { "--top-bar-height": `${topBarHeight}px` } as React.CSSProperties
+          {
+            "--top-bar-height": `${topBarHeight}px`,
+            ...columnSizeVars,
+          } as React.CSSProperties
         }
       >
         <div
@@ -287,7 +318,7 @@ export function DataTableInfinite<TData, TValue>({
               handleFilter={table.getColumn("date")?.setFilterValue}
             />
           </div>
-          <div className="z-0 border-t border-border">
+          <div className="z-0">
             <Table
               ref={tableRef}
               onScroll={onScroll}
@@ -301,7 +332,7 @@ export function DataTableInfinite<TData, TValue>({
                     key={headerGroup.id}
                     className={cn(
                       "bg-muted/50 hover:bg-muted/50",
-                      "border-border [&>:not(:last-child)]:border-r"
+                      "[&>*]:border-t [&>:not(:last-child)]:border-r"
                     )}
                   >
                     {headerGroup.headers.map((header) => {
@@ -309,9 +340,16 @@ export function DataTableInfinite<TData, TValue>({
                         <TableHead
                           key={header.id}
                           className={cn(
-                            "border-b border-border",
+                            "border-b border-border relative truncate select-none [&>.cursor-col-resize]:last:opacity-0",
                             header.column.columnDef.meta?.headerClassName
                           )}
+                          aria-sort={
+                            header.column.getIsSorted() === "asc"
+                              ? "ascending"
+                              : header.column.getIsSorted() === "desc"
+                              ? "descending"
+                              : "none"
+                          }
                         >
                           {header.isPlaceholder
                             ? null
@@ -319,6 +357,17 @@ export function DataTableInfinite<TData, TValue>({
                                 header.column.columnDef.header,
                                 header.getContext()
                               )}
+                          {header.column.getCanResize() && (
+                            <div
+                              {...{
+                                onDoubleClick: () => header.column.resetSize(),
+                                onMouseDown: header.getResizeHandler(),
+                                onTouchStart: header.getResizeHandler(),
+                                className:
+                                  "absolute top-0 h-full w-4 cursor-col-resize user-select-none touch-none -right-2 z-10 flex justify-center before:absolute before:w-px before:inset-y-0 before:bg-border before:translate-x-px",
+                              }}
+                            />
+                          )}
                         </TableHead>
                       );
                     })}
@@ -330,7 +379,9 @@ export function DataTableInfinite<TData, TValue>({
                 tabIndex={-1}
                 className="transition-colors focus-visible:outline outline-1 -outline-offset-1 outline-primary"
                 // REMINDER: avoids scroll (skipping the table header) when using skip to content
-                style={{ scrollMarginTop: `calc(${topBarHeight}px + 40px)` }}
+                style={{
+                  scrollMarginTop: "calc(var(--top-bar-height) + 40px)",
+                }}
               >
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
@@ -357,7 +408,7 @@ export function DataTableInfinite<TData, TValue>({
                         <TableCell
                           key={cell.id}
                           className={cn(
-                            "border-b border-border",
+                            "border-b border-border truncate",
                             cell.column.columnDef.meta?.cellClassName
                           )}
                         >

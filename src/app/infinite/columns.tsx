@@ -30,28 +30,21 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("result") as (typeof RESULTS)[number];
       return (
-        <div
-          className={cn("h-2.5 w-2.5 rounded-[2px]", getResultColor(value).bg)}
-        />
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "h-2.5 w-2.5 rounded-[2px]",
+              getResultColor(value).bg
+            )}
+          />
+        </div>
       );
     },
+    enableHiding: false,
+    enableResizing: false,
     filterFn: "arrSome",
     meta: {
-      headerClassName: "w-[27px]",
-    },
-  },
-  {
-    id: "uuid",
-    accessorKey: "uuid",
-    header: "UUID",
-    cell: ({ row }) => {
-      const value = row.getValue("uuid") as string;
-      return <TextWithTooltip text={value} />;
-    },
-    meta: {
-      label: "UUID",
-      headerClassName: "max-w-[120px]",
-      cellClassName: "font-mono max-w-[120px]",
+      headerClassName: "min-w-[27px] w-[27px]",
     },
   },
   {
@@ -64,8 +57,32 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <HoverCardTimestamp date={date} />;
     },
     filterFn: "inDateRange",
+    enableResizing: false,
+    size: 194,
+    minSize: 194,
     meta: {
-      headerClassName: "w-[194px]",
+      headerClassName:
+        "w-[--header-date-size] max-w-[--header-date-size] min-w-[--header-date-size]",
+      cellClassName:
+        "font-mono w-[--col-date-size] max-w-[--col-date-size] min-w-[--col-date-size]",
+    },
+  },
+  {
+    id: "uuid",
+    accessorKey: "uuid",
+    header: "UUID",
+    cell: ({ row }) => {
+      const value = row.getValue("uuid") as string;
+      return <TextWithTooltip text={value} />;
+    },
+    size: 130,
+    minSize: 130,
+    meta: {
+      label: "UUID",
+      cellClassName:
+        "font-mono w-[--col-uuid-size] max-w-[--col-uuid-size] min-w-[--col-uuid-size]",
+      headerClassName:
+        "min-w-[--header-uuid-size] w-[--header-uuid-size] max-w-[--header-uuid-size]",
     },
   },
   {
@@ -83,8 +100,14 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <div className="text-muted-foreground">{`${value}`}</div>;
     },
     filterFn: "arrSome",
+    enableResizing: false,
+    size: 60,
+    minSize: 60,
     meta: {
-      headerClassName: "w-[59px]",
+      headerClassName:
+        "w-[--header-status-size] max-w-[--header-status-size] min-w-[--header-status-size]",
+      cellClassName:
+        "font-mono w-[--col-status-size] max-w-[--col-status-size] min-w-[--col-status-size]",
     },
   },
   {
@@ -92,9 +115,14 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "method",
     header: "Method",
     filterFn: "arrIncludesSome",
+    enableResizing: false,
+    size: 69,
+    minSize: 69,
     meta: {
-      cellClassName: "font-mono text-muted-foreground",
-      headerClassName: "w-[68px]",
+      cellClassName:
+        "font-mono text-muted-foreground w-[--col-method-size] max-w-[--col-method-size] min-w-[--col-method-size]",
+      headerClassName:
+        "w-[--header-method-size] max-w-[--header-method-size] min-w-[--header-method-size]",
     },
   },
   {
@@ -104,8 +132,11 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       const value = row.getValue("host") as string;
       return <TextWithTooltip text={value} />;
     },
+    size: 130,
+    minSize: 130,
     meta: {
-      cellClassName: "font-mono min-w-[130px] max-w-[130px]",
+      cellClassName: "font-mono w-[--col-host-size] max-w-[--col-host-size]",
+      headerClassName: "min-w-[--header-host-size] w-[--header-host-size]",
     },
   },
   {
@@ -115,8 +146,13 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       const value = row.getValue("pathname") as string;
       return <TextWithTooltip text={value} />;
     },
+    size: 130,
+    minSize: 130,
     meta: {
-      cellClassName: "font-mono min-w-[130px] max-w-[130px]",
+      cellClassName:
+        "font-mono w-[--col-pathname-size] max-w-[--col-pathname-size]",
+      headerClassName:
+        "min-w-[--header-pathname-size] w-[--header-pathname-size]",
     },
   },
   {
@@ -130,8 +166,14 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
-      headerClassName: "w-[110px]",
+      headerClassName:
+        "w-[--header-latency-size] max-w-[--header-latency-size] min-w-[--header-latency-size]",
+      cellClassName:
+        "font-mono w-[--col-latency-size] max-w-[--col-latency-size] min-w-[--col-latency-size]",
     },
   },
   {
@@ -163,9 +205,14 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <Minus className="h-4 w-4 text-muted-foreground/50" />;
     },
     filterFn: "arrIncludesSome",
+    enableResizing: false,
+    size: 163,
+    minSize: 163,
     meta: {
-      headerClassName: "w-[163px]",
-      cellClassName: "font-mono",
+      headerClassName:
+        "w-[--header-regions-size] max-w-[--header-regions-size] min-w-[--header-regions-size]",
+      cellClassName:
+        "font-mono w-[--col-regions-size] max-w-[--col-regions-size] min-w-[--col-regions-size]",
     },
   },
   {
@@ -233,9 +280,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </HoverCard>
       );
     },
+    enableResizing: false,
+    size: 130,
+    minSize: 130,
     meta: {
       label: "Timing Phases",
-      headerClassName: "",
+      headerClassName:
+        "w-[--header-timing-size] max-w-[--header-timing-size] min-w-[--header-timing-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-size] max-w-[--col-timing-size] min-w-[--col-timing-size]",
     },
   },
   {
@@ -249,9 +302,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "DNS",
-      headerClassName: "w-[110px]",
+      headerClassName:
+        "w-[--header-timing-dns-size] max-w-[--header-timing-dns-size] min-w-[--header-timing-dns-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-dns-size] max-w-[--col-timing-dns-size] min-w-[--col-timing-dns-size]",
     },
   },
   {
@@ -265,9 +324,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "Connection",
-      headerClassName: "w-[110px]",
+      headerClassName:
+        "w-[--header-timing-connection-size] max-w-[--header-timing-connection-size] min-w-[--header-timing-connection-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-connection-size] max-w-[--col-timing-connection-size] min-w-[--col-timing-connection-size]",
     },
   },
   {
@@ -281,9 +346,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "TLS",
-      headerClassName: "w-[110px]",
+      headerClassName:
+        "w-[--header-timing-tls-size] max-w-[--header-timing-tls-size] min-w-[--header-timing-tls-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-tls-size] max-w-[--col-timing-tls-size] min-w-[--col-timing-tls-size]",
     },
   },
   {
@@ -297,9 +368,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "TTFB",
-      headerClassName: "w-[110px]",
+      headerClassName:
+        "w-[--header-timing-ttfb-size] max-w-[--header-timing-ttfb-size] min-w-[--header-timing-ttfb-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-ttfb-size] max-w-[--col-timing-ttfb-size] min-w-[--col-timing-ttfb-size]",
     },
   },
   {
@@ -313,9 +390,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "Transfer",
-      headerClassName: "w-[110px]",
+      headerClassName:
+        "w-[--header-timing-transfer-size] max-w-[--header-timing-transfer-size] min-w-[--header-timing-transfer-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-transfer-size] max-w-[--col-timing-transfer-size] min-w-[--col-timing-transfer-size]",
     },
   },
 ];

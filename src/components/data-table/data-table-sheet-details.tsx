@@ -95,7 +95,9 @@ export function DataTableSheetDetails<TData>({
           : null;
         table.resetRowSelection();
 
-        el?.focus();
+        // REMINDER: when navigating between tabs in the sheet and exit the sheet, the tab gets lost
+        // We need a minimal delay to allow the sheet to close before focusing back to the row
+        setTimeout(() => el?.focus(), 0);
       }}
     >
       <SheetContent
