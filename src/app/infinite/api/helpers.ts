@@ -124,8 +124,6 @@ export function groupChartData(
   const between =
     _dates || (data?.length ? [data[data.length - 1].date, data[0].date] : []);
 
-  console.log(between);
-
   if (!between.length) return [];
   const interval = evaluateInterval(between);
 
