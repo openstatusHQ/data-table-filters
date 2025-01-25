@@ -39,7 +39,7 @@ export function getResultRowClassName(value: (typeof RESULTS)[number]): string {
     case "warning":
       return cn(
         "bg-orange-500/5 hover:bg-orange-500/10 data-[state=selected]:bg-orange-500/20 focus-visible:bg-orange-500/10",
-        "dark:bg-orange-500/20 dark:hover:bg-orange-500/30 dark:data-[state=selected]:bg-orange-500/40 dark:focus-visible:bg-orange-500/30"
+        "dark:bg-orange-500/10 dark:hover:bg-orange-500/20 dark:data-[state=selected]:bg-orange-500/30 dark:focus-visible:bg-orange-500/20"
       );
     case "error":
       return cn(
