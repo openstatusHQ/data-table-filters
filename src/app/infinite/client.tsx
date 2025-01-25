@@ -9,7 +9,7 @@ import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
 import { useHotKey } from "@/hooks/use-hot-key";
-import { cn } from "@/lib/utils";
+import { getResultRowClassName } from "@/lib/request/result";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
@@ -92,13 +92,7 @@ export function Client() {
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       chartData={chartData}
-      getRowClassName={(row) => {
-        if (row.original.result === "success") return "";
-        return cn(
-          "bg-destructive/5 hover:bg-destructive/10 data-[state=selected]:bg-destructive/20 focus-visible:bg-destructive/10",
-          "dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:data-[state=selected]:bg-destructive/40 dark:focus-visible:bg-destructive/30"
-        );
-      }}
+      getRowClassName={(row) => getResultRowClassName(row.original.result)}
       getRowId={(row) => row.uuid}
     />
   );
