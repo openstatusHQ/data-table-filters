@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/lib/request/status-code";
-import { regions } from "@/constants/region";
+import { flags, regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Percentile, getPercentileColor } from "@/lib/request/percentile";
 import { filterFields } from "./constants";
@@ -49,7 +49,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { getResultColor, getResultLabel } from "@/lib/request/result";
 
 interface SheetDetailsContentProps<TData>
   extends React.HTMLAttributes<HTMLDListElement> {
@@ -166,7 +165,7 @@ export function SheetDetailsContent<TData>({
           <dt className="text-muted-foreground">Region</dt>
           <dd className="font-mono text-right">
             <span className="text-muted-foreground text-xs">
-              {regions[data.regions[0]]}
+              {flags[data.regions[0]]} {regions[data.regions[0]]}
             </span>{" "}
             {data.regions[0]}
           </dd>

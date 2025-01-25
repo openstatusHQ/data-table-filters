@@ -36,7 +36,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       );
     },
     filterFn: "arrSome",
-    meta: { headerClassName: "w-[27px]" },
+    meta: {
+      headerClassName: "w-[27px]",
+    },
   },
   {
     id: "uuid",
@@ -44,12 +46,12 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "UUID",
     cell: ({ row }) => {
       const value = row.getValue("uuid") as string;
-      return (
-        <TextWithTooltip className="font-mono max-w-[85px]" text={value} />
-      );
+      return <TextWithTooltip text={value} />;
     },
     meta: {
       label: "UUID",
+      headerClassName: "max-w-[120px]",
+      cellClassName: "font-mono max-w-[120px]",
     },
   },
   {
@@ -63,7 +65,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     },
     filterFn: "inDateRange",
     meta: {
-      // headerClassName: "w-[182px]",
+      headerClassName: "w-[194px]",
     },
   },
   {
@@ -81,6 +83,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <div className="text-muted-foreground">{`${value}`}</div>;
     },
     filterFn: "arrSome",
+    meta: {
+      headerClassName: "w-[59px]",
+    },
   },
   {
     // TODO: make it a type of MethodSchema!
@@ -89,6 +94,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     filterFn: "arrIncludesSome",
     meta: {
       cellClassName: "font-mono text-muted-foreground",
+      headerClassName: "w-[68px]",
     },
   },
   {
@@ -96,9 +102,10 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "Host",
     cell: ({ row }) => {
       const value = row.getValue("host") as string;
-      return (
-        <TextWithTooltip className="font-mono max-w-[120px]" text={value} />
-      );
+      return <TextWithTooltip text={value} />;
+    },
+    meta: {
+      cellClassName: "font-mono min-w-[130px] max-w-[130px]",
     },
   },
   {
@@ -106,9 +113,10 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "Pathname",
     cell: ({ row }) => {
       const value = row.getValue("pathname") as string;
-      return (
-        <TextWithTooltip className="font-mono max-w-[120px]" text={value} />
-      );
+      return <TextWithTooltip text={value} />;
+    },
+    meta: {
+      cellClassName: "font-mono min-w-[130px] max-w-[130px]",
     },
   },
   {
@@ -122,6 +130,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    meta: {
+      headerClassName: "w-[110px]",
+    },
   },
   {
     accessorKey: "regions",
@@ -136,9 +147,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         } else {
           return (
             <div className="whitespace-nowrap">
-              <span className="font-mono">{value}</span>{" "}
-              <span className="text-muted-foreground">
-                - {`${regions[value[0]]}`}
+              <span>{value}</span>{" "}
+              <span className="text-muted-foreground text-xs">
+                {`${regions[value[0]]}`}
               </span>
             </div>
           );
@@ -152,6 +163,10 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <Minus className="h-4 w-4 text-muted-foreground/50" />;
     },
     filterFn: "arrIncludesSome",
+    meta: {
+      headerClassName: "w-[163px]",
+      cellClassName: "font-mono",
+    },
   },
   {
     accessorKey: "timing",
@@ -220,6 +235,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     },
     meta: {
       label: "Timing Phases",
+      headerClassName: "",
     },
   },
   {
@@ -235,6 +251,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     filterFn: "inNumberRange",
     meta: {
       label: "DNS",
+      headerClassName: "w-[110px]",
     },
   },
   {
@@ -250,6 +267,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     filterFn: "inNumberRange",
     meta: {
       label: "Connection",
+      headerClassName: "w-[110px]",
     },
   },
   {
@@ -265,6 +283,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     filterFn: "inNumberRange",
     meta: {
       label: "TLS",
+      headerClassName: "w-[110px]",
     },
   },
   {
@@ -280,6 +299,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     filterFn: "inNumberRange",
     meta: {
       label: "TTFB",
+      headerClassName: "w-[110px]",
     },
   },
   {
@@ -295,6 +315,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     filterFn: "inNumberRange",
     meta: {
       label: "Transfer",
+      headerClassName: "w-[110px]",
     },
   },
 ];

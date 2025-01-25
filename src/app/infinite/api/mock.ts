@@ -62,7 +62,14 @@ function getMessage() {
   return 'ERR_INTERNAL_DISASTER: "The server spilled coffee on itself."';
 }
 
-const pathnames = ["/bikes/gravel", "/bikes/racing", "/bikes/mountain"];
+const shopPathnames = [
+  "/bikes/gravel/road",
+  "/bikes/racing/track",
+  "/bikes/mountain/trail",
+  "/bikes/city/cargo",
+];
+
+const apiPathnames = ["/v1/products", "/v1/orders", "/v1/customers"];
 
 function getRandomRequestObject(): {
   method: (typeof METHODS)[number];
@@ -74,13 +81,13 @@ function getRandomRequestObject(): {
     return {
       method: "POST",
       host: "api.acme-shop.com",
-      pathname: "/v1/products",
+      pathname: apiPathnames[Math.floor(Math.random() * apiPathnames.length)],
     };
   } else {
     return {
       method: "GET",
       host: "acme-shop.com",
-      pathname: pathnames[Math.floor(Math.random() * pathnames.length)],
+      pathname: shopPathnames[Math.floor(Math.random() * shopPathnames.length)],
     };
   }
 }

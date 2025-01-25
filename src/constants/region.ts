@@ -8,3 +8,12 @@ export const regions: Record<string, string> = {
   iad: "Washington D.C.",
   syd: "Sydney",
 };
+
+export const flags: Record<string, string> = {
+  ams: "🇳🇱",
+  fra: "🇩🇪",
+  gru: "🇧🇷",
+  hkg: "🇭🇰",
+  iad: "🇺🇸",
+  syd: "🇦🇺",
+};

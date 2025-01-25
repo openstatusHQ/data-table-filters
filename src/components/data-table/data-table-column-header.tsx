@@ -27,11 +27,14 @@ export function DataTableColumnHeader<TData, TValue>({
       onClick={() => {
         column.toggleSorting(undefined);
       }}
-      className={cn("-ml-1 py-0 px-1 h-8 hover:bg-transparent", className)}
+      className={cn(
+        "py-0 px-0 h-8 hover:bg-transparent flex gap-2 items-center justify-between w-full",
+        className
+      )}
       {...props}
     >
       <span>{title}</span>
-      <span className="ml-2 flex flex-col">
+      <span className="flex flex-col">
         <ChevronUp
           className={cn(
             "-mb-0.5 h-3 w-3",
