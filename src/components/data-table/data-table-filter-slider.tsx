@@ -19,7 +19,7 @@ function getFilter(
     ? filterValue.length === 1
       ? [filterValue[0], filterValue[0]]
       : filterValue
-    : [min, max];
+    : null;
 }
 
 type DataTableFilterSliderProps<TData> = DataTableSliderFilterField<TData> & {
@@ -36,18 +36,24 @@ export function DataTableFilterSlider<TData>({
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
   const filters = getFilter(filterValue, { min, max });
-  const [input, setInput] = useState<number[]>(filters);
+  const [input, setInput] = useState<number[] | null>(filters);
 
   const debouncedInput = useDebounce(input, 500);
 
   useEffect(() => {
-    if (debouncedInput.length === 2) {
+    if (debouncedInput?.length === 2) {
       column?.setFilterValue(debouncedInput);
     }
   }, [debouncedInput]);
 
   useEffect(() => {
-    if (debouncedInput[0] !== filters[0] || debouncedInput[1] !== filters[1]) {
+    if (debouncedInput?.length !== 2) {
+    } else if (!filters) {
+      setInput(null);
+    } else if (
+      debouncedInput[0] !== filters[0] ||
+      debouncedInput[1] !== filters[1]
+    ) {
       setInput(filters);
     }
   }, [filters]);
@@ -103,7 +109,7 @@ export function DataTableFilterSlider<TData>({
       <Slider
         min={min}
         max={max}
-        value={input || [min, max]}
+        value={input?.length === 2 ? input : [min, max]}
         onValueChange={(values) => setInput(values)}
       />
     </div>

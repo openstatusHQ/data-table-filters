@@ -12,11 +12,9 @@ import type React from "react";
 import type { DataTableFilterField } from "./types";
 import { DataTableFilterResetButton } from "./data-table-filter-reset-button";
 import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
-import { Button } from "@/components/ui/button";
 import { DataTableFilterSlider } from "./data-table-filter-slider";
 import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
-import { X } from "lucide-react";
 import { DataTableResetButton } from "./data-table-reset-button";
 
 // FIXME: use @container (especially for the slider element) to restructure elements

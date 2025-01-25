@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 
 function getFilter(filterValue: unknown) {
-  return typeof filterValue === "string" ? filterValue : "";
+  return typeof filterValue === "string" ? filterValue : null;
 }
 
 type DataTableFilterInputProps<TData> = DataTableInputFilterField<TData> & {
@@ -24,17 +24,19 @@ export function DataTableFilterInput<TData>({
   const column = table.getColumn(value);
   const filterValue = column?.getFilterValue();
   const filters = getFilter(filterValue);
-  const [input, setInput] = useState<string>(filters);
+  const [input, setInput] = useState<string | null>(filters);
 
   const debouncedInput = useDebounce(input, 500);
 
   useEffect(() => {
-    const newValue = debouncedInput.trim() === "" ? null : debouncedInput;
-    column?.setFilterValue(newValue);
+    const newValue = debouncedInput?.trim() === "" ? null : debouncedInput;
+    if (newValue) {
+      column?.setFilterValue(newValue);
+    }
   }, [debouncedInput]);
 
   useEffect(() => {
-    if (debouncedInput.trim() !== filters) {
+    if (debouncedInput?.trim() !== filters) {
       setInput(filters);
     }
   }, [filters]);
@@ -50,7 +52,7 @@ export function DataTableFilterInput<TData>({
         containerClassName="h-9 rounded-lg"
         name={value}
         id={value}
-        value={input}
+        value={input || ""}
         onChange={(e) => setInput(e.target.value)}
       />
     </div>
