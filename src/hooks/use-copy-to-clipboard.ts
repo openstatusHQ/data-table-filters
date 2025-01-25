@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-// TODO: use withToast property?
 
 export function useCopyToClipboard() {
   const [text, setText] = useState<string | null>(null);

@@ -19,7 +19,8 @@ export function Client() {
 
   useHotKey(() => {
     // FIXME: some dedicated div[tabindex="0"] do not auto-unblur (e.g. the DataTableFilterResetButton)
-    // document.activeElement?.blur();
+    // REMINDER: we cannot just document.activeElement?.blur(); as the next tab will focus the next element in line,
+    // which is not what we want. We want to reset entirely.
     document.body.setAttribute("tabindex", "0");
     document.body.focus();
     document.body.removeAttribute("tabindex");

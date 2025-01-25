@@ -43,8 +43,14 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     enableHiding: false,
     enableResizing: false,
     filterFn: "arrSome",
+    size: 27,
+    minSize: 27,
+    maxSize: 27,
     meta: {
-      headerClassName: "min-w-[27px] w-[27px]",
+      headerClassName:
+        "w-[--header-result-size] max-w-[--header-result-size] min-w-[--header-result-size]",
+      cellClassName:
+        "w-[--col-result-size] max-w-[--col-result-size] min-w-[--col-result-size]",
     },
   },
   {

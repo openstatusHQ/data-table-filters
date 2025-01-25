@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
 
   const rangedData = filterData(totalData, { date: _date });
   const filteredData = filterData(rangedData, { ...search, date: null });
+  const graphedData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
   const sortedData = sortData(filteredData, search.sort);
-  const graphedData = groupChartData(sortedData, _date); // TODO: rangedData or filterData
   const withPercentileData = percentileData(sortedData);
 
   // TODO: extract into helper

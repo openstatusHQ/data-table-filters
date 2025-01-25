@@ -78,10 +78,3 @@ function HotkeyOverview() {
     </ul>
   );
 }
-
-{
-  /* <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">
-<span className="mr-0.5">⌘</span>
-<span>Esc</span>
-</Kbd> */
-}
