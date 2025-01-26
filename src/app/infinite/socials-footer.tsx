@@ -35,7 +35,7 @@ export function SocialsFooter() {
               <Command className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="p-2 w-auto">
+          <PopoverContent className="px-2 py-1 w-auto">
             <HotkeyOverview />
           </PopoverContent>
         </Popover>
@@ -50,6 +50,10 @@ export function SocialsFooter() {
 const hotkeys = [
   { key: "K", description: "Toggle command input" },
   { key: "B", description: "Toggle sidebar controls" },
+  {
+    key: "U",
+    description: "Undo column state (order, visibility)",
+  },
   { key: "Esc", description: "Reset table filters" },
   {
     key: ".",

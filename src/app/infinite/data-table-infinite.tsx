@@ -49,6 +49,16 @@ import { inDateRange, arrSome } from "@/lib/table/filterfns";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
 import { SocialsFooter } from "./socials-footer";
 import { TimelineChart } from "./timeline-chart";
+import { useHotKey } from "@/hooks/use-hot-key";
+
+const defaultColumnVisibility = {
+  uuid: false,
+  "timing.dns": false,
+  "timing.connection": false,
+  "timing.tls": false,
+  "timing.ttfb": false,
+  "timing.transfer": false,
+};
 
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue> {
@@ -100,14 +110,10 @@ export function DataTableInfinite<TData, TValue>({
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>("data-table-visibility", {
-      uuid: false,
-      "timing.dns": false,
-      "timing.connection": false,
-      "timing.tls": false,
-      "timing.ttfb": false,
-      "timing.transfer": false,
-    });
+    useLocalStorage<VisibilityState>(
+      "data-table-visibility",
+      defaultColumnVisibility
+    );
   const [controlsOpen, setControlsOpen] = useLocalStorage(
     "data-table-controls",
     true
@@ -254,6 +260,11 @@ export function DataTableInfinite<TData, TValue>({
     table.getState().columnSizing,
     table.getState().columnVisibility,
   ]);
+
+  useHotKey(() => {
+    setColumnOrder([]);
+    setColumnVisibility(defaultColumnVisibility);
+  }, "u");
 
   return (
     <>
