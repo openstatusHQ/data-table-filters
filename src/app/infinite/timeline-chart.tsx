@@ -16,22 +16,20 @@ import { ColumnFiltersColumn } from "@tanstack/react-table";
 import { getResultLabel } from "@/lib/request/result";
 import { RESULTS } from "@/constants/results";
 
-export const description = "A stacked bar chart with a legend";
+export const description = "A stacked bar chart";
 
 const chartConfig = {
   success: {
     label: <TooltipLabel result="success" />,
-    // color: "hsl(142.1 70.6% 45.3%)", // bg-green-500
-    // color: "hsla(142.1, 70.6%, 45.3%, 0.3)", // bg-green-500/30
-    color: "hsl(var(--muted))", // bg-foreground/10
+    color: "hsl(var(--success))",
   },
   warning: {
     label: <TooltipLabel result="warning" />,
-    color: "hsl(24.6 95% 53.1%)", // bg-orange-500
+    color: "hsl(var(--warning))",
   },
   error: {
     label: <TooltipLabel result="error" />,
-    color: "hsl(0 84.2% 60.2%)", // bg-red-500
+    color: "hsl(var(--error))",
   },
 } satisfies ChartConfig;
 
@@ -49,7 +47,7 @@ export function TimelineChart({
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
 
-  // TODO: check why timestamp cannot be a number
+  // REMINDER: date has to be a string for tooltip label to work - don't ask me why
   // FIXME: move to server
   const chart = useMemo(
     () =>
@@ -126,7 +124,7 @@ export function TimelineChart({
             }
             return format(new Date(value), "LLL dd, y");
           }}
-          interval="preserveStartEnd"
+          // interval="preserveStartEnd"
         />
         <ChartTooltip
           // defaultIndex={10}

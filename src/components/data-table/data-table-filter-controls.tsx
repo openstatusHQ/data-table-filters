@@ -32,70 +32,56 @@ export function DataTableFilterControls<TData, TValue>({
   columns,
   filterFields,
 }: DataTableFilterControlsProps<TData, TValue>) {
-  const filters = table.getState().columnFilters;
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex h-[46px] items-center justify-between gap-3">
-        <p className="font-medium text-foreground px-2">Filters</p>
-        <div>
-          {filters.length ? <DataTableResetButton table={table} /> : null}
-        </div>
-      </div>
-      <Accordion
-        type="multiple"
-        // REMINDER: open all filters by default
-        defaultValue={filterFields
-          ?.filter(({ defaultOpen }) => defaultOpen)
-          ?.map(({ value }) => value as string)}
-      >
-        {filterFields?.map((field) => {
-          const value = field.value as string;
-          return (
-            <AccordionItem key={value} value={value} className="border-none">
-              <AccordionTrigger className="px-2 py-0 hover:no-underline w-full">
-                <div className="w-full flex items-center justify-between gap-2 truncate pr-2 py-2">
-                  <div className="flex gap-2 items-center truncate">
-                    <p className="text-sm font-medium text-foreground">
-                      {field.label}
+    <Accordion
+      type="multiple"
+      // REMINDER: open all filters by default
+      defaultValue={filterFields
+        ?.filter(({ defaultOpen }) => defaultOpen)
+        ?.map(({ value }) => value as string)}
+    >
+      {filterFields?.map((field) => {
+        const value = field.value as string;
+        return (
+          <AccordionItem key={value} value={value} className="border-none">
+            <AccordionTrigger className="px-2 py-0 hover:no-underline w-full data-[state=closed]:text-muted-foreground data-[state=open]:text-foreground hover:data-[state=closed]:text-foreground focus-within:data-[state=closed]:text-foreground">
+              <div className="w-full flex items-center justify-between gap-2 truncate pr-2 py-2">
+                <div className="flex gap-2 items-center truncate">
+                  <p className="text-sm font-medium">{field.label}</p>
+                  {value !== field.label.toLowerCase() &&
+                  !field.commandDisabled ? (
+                    <p className="text-muted-foreground text-[10px] font-mono mt-px truncate">
+                      {value}
                     </p>
-                    {value !== field.label.toLowerCase() &&
-                    !field.commandDisabled ? (
-                      <p className="text-muted-foreground text-[10px] font-mono mt-px truncate">
-                        {value}
-                      </p>
-                    ) : null}
-                  </div>
-                  <DataTableFilterResetButton table={table} {...field} />
+                  ) : null}
                 </div>
-              </AccordionTrigger>
-              {/* REMINDER: avoid the focus state to be cut due to overflow-hidden */}
-              <AccordionContent className="p-1">
-                {(() => {
-                  switch (field.type) {
-                    case "checkbox": {
-                      return (
-                        <DataTableFilterCheckbox table={table} {...field} />
-                      );
-                    }
-                    case "slider": {
-                      return <DataTableFilterSlider table={table} {...field} />;
-                    }
-                    case "input": {
-                      return <DataTableFilterInput table={table} {...field} />;
-                    }
-                    case "timerange": {
-                      return (
-                        <DataTableFilterTimerange table={table} {...field} />
-                      );
-                    }
+                <DataTableFilterResetButton table={table} {...field} />
+              </div>
+            </AccordionTrigger>
+            {/* REMINDER: avoid the focus state to be cut due to overflow-hidden */}
+            <AccordionContent className="p-1">
+              {(() => {
+                switch (field.type) {
+                  case "checkbox": {
+                    return <DataTableFilterCheckbox table={table} {...field} />;
                   }
-                })()}
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
-    </div>
+                  case "slider": {
+                    return <DataTableFilterSlider table={table} {...field} />;
+                  }
+                  case "input": {
+                    return <DataTableFilterInput table={table} {...field} />;
+                  }
+                  case "timerange": {
+                    return (
+                      <DataTableFilterTimerange table={table} {...field} />
+                    );
+                  }
+                }
+              })()}
+            </AccordionContent>
+          </AccordionItem>
+        );
+      })}
+    </Accordion>
   );
 }

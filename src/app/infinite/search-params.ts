@@ -3,7 +3,6 @@ import {
   createSearchParamsCache,
   createSerializer,
   parseAsArrayOf,
-  parseAsBoolean,
   parseAsInteger,
   parseAsString,
   parseAsStringLiteral,

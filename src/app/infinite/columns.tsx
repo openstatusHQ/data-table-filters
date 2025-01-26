@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/hover-card";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
-import { HoverCardTimestamp } from "./hover-card-timestamp";
+import { HoverCardTimestamp } from "./_components/hover-card-timestamp";
 import { RESULTS } from "@/constants/results";
 import { getResultColor } from "@/lib/request/result";
 
@@ -234,7 +234,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       };
       const latency = row.getValue("latency") as number;
       const percentage = getTimingPercentage(timing, latency);
-      // create a separate component for this
+      // TODO: create a separate component for this in _components
       return (
         <HoverCard openDelay={50} closeDelay={50}>
           <HoverCardTrigger

@@ -11,8 +11,8 @@ import { Kbd } from "@/components/custom/kbd";
 
 export function SocialsFooter() {
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex justify-center items-center gap-2 p-1">
+    <div className="flex flex-col gap-2">
+      <div className="w-full flex justify-center items-center gap-2 p-1">
         <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4" />
         <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
           <Link href="https://github.com/openstatusHQ/data-table-filters">
@@ -40,8 +40,18 @@ export function SocialsFooter() {
           </PopoverContent>
         </Popover>
       </div>
-      <p className="text-muted-foreground text-center text-sm">
+      <p className="text-muted-foreground text-xs text-center">
         Powered by <Link href="https://openstatus.dev">OpenStatus</Link>
+      </p>
+      <p className="text-muted-foreground text-[10px] text-center">
+        The data is mocked. It is in active development. For feedback, please{" "}
+        <Link
+          href="https://github.com/openstatusHQ/data-table-filters/issues/new"
+          className="text-muted-foreground"
+        >
+          open an issue
+        </Link>{" "}
+        on GitHub.
       </p>
     </div>
   );

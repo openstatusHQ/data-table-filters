@@ -55,7 +55,7 @@ export function DatePickerWithRange({
             variant="outline"
             size="sm"
             className={cn(
-              "max-w-full justify-start truncate text-left font-normal",
+              "max-w-full justify-start truncate text-left font-normal hover:bg-muted/50",
               !date && "text-muted-foreground"
             )}
           >

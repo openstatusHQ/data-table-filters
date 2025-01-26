@@ -84,7 +84,7 @@ export function DataTableFilterCheckbox<TData>({
                 />
                 <Label
                   htmlFor={`${value}-${option.value}`}
-                  className="flex w-full items-center justify-center gap-1 truncate text-muted-foreground group-hover:text-accent-foreground"
+                  className="flex w-full items-center justify-center gap-1 truncate text-foreground/70 group-hover:text-accent-foreground"
                 >
                   {Component ? (
                     <Component {...option} />

@@ -41,6 +41,7 @@ export function Client() {
 
   const { sort, start, size, uuid, ...filter } = search;
 
+  // TODO: auto search via API when the user changes the filter instead of hardcoded
   const filterFields = React.useMemo(
     () =>
       defaultFilterFields.map((field) => {

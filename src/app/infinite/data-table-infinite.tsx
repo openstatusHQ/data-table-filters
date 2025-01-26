@@ -47,9 +47,10 @@ import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
-import { SocialsFooter } from "./socials-footer";
+import { SocialsFooter } from "./_components/socials-footer";
 import { TimelineChart } from "./timeline-chart";
 import { useHotKey } from "@/hooks/use-hot-key";
+import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
 
 const defaultColumnVisibility = {
   uuid: false,
@@ -279,19 +280,28 @@ export function DataTableInfinite<TData, TValue>({
       >
         <div
           className={cn(
-            "w-ful h-full sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-scroll",
+            "w-full h-full flex flex-col md:min-h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 sm:sticky sm:top-0 sm:max-h-screen",
             !controlsOpen && "hidden"
           )}
         >
-          <div className="p-2 flex-1">
+          <div className="p-2 md:sticky md:top-0 border-b border-border bg-background">
+            <div className="flex h-[46px] items-center justify-between gap-3">
+              <p className="font-medium text-foreground px-2">Filters</p>
+              <div>
+                {table.getState().columnFilters.length ? (
+                  <DataTableResetButton table={table} />
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <div className="p-2 flex-1 sm:overflow-y-scroll">
             <DataTableFilterControls
               table={table}
               columns={columns}
               filterFields={filterFields}
             />
           </div>
-          <Separator className="my-2" />
-          <div className="p-2">
+          <div className="md:sticky md:bottom-0 p-4 border-t border-border bg-background">
             <SocialsFooter />
           </div>
         </div>

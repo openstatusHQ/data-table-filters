@@ -33,7 +33,9 @@ export const filterFields = [
       const value = props.value as (typeof RESULTS)[number];
       return (
         <div className="flex w-full items-center justify-between gap-2 max-w-28 font-mono">
-          <span className="capitalize text-foreground/70">{props.label}</span>
+          <span className="capitalize text-foreground/70 group-hover:text-accent-foreground">
+            {props.label}
+          </span>
           <div className="flex items-center gap-2">
             <div
               className={cn(

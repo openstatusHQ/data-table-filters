@@ -9,25 +9,25 @@ export function getResultColor(
       return {
         text: "text-muted",
         bg: "bg-muted",
-        border: "border-gray-200 dark:border-gray-800",
+        border: "border-muted",
       };
     case "warning":
       return {
-        text: "text-orange-500",
-        bg: "bg-orange-500",
-        border: "border-orange-200 dark:border-orange-800",
+        text: "text-warning",
+        bg: "bg-warning",
+        border: "border-warning",
       };
     case "error":
       return {
-        text: "text-red-500",
-        bg: "bg-red-500",
-        border: "border-red-200 dark:border-red-800",
+        text: "text-error",
+        bg: "bg-error",
+        border: "border-error",
       };
     default:
       return {
-        text: "text-gray-500",
-        bg: "bg-gray-500",
-        border: "border-gray-200 dark:border-gray-800",
+        text: "text-muted",
+        bg: "bg-muted",
+        border: "border-muted",
       };
   }
 }
@@ -38,13 +38,13 @@ export function getResultRowClassName(value: (typeof RESULTS)[number]): string {
       return "";
     case "warning":
       return cn(
-        "bg-orange-500/5 hover:bg-orange-500/10 data-[state=selected]:bg-orange-500/20 focus-visible:bg-orange-500/10",
-        "dark:bg-orange-500/10 dark:hover:bg-orange-500/20 dark:data-[state=selected]:bg-orange-500/30 dark:focus-visible:bg-orange-500/20"
+        "bg-warning/5 hover:bg-warning/10 data-[state=selected]:bg-warning/20 focus-visible:bg-warning/10",
+        "dark:bg-warning/10 dark:hover:bg-warning/20 dark:data-[state=selected]:bg-warning/30 dark:focus-visible:bg-warning/20"
       );
     case "error":
       return cn(
-        "bg-destructive/5 hover:bg-destructive/10 data-[state=selected]:bg-destructive/20 focus-visible:bg-destructive/10",
-        "dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:data-[state=selected]:bg-destructive/40 dark:focus-visible:bg-destructive/30"
+        "bg-error/5 hover:bg-error/10 data-[state=selected]:bg-error/20 focus-visible:bg-error/10",
+        "dark:bg-error/10 dark:hover:bg-error/20 dark:data-[state=selected]:bg-error/30 dark:focus-visible:bg-error/20"
       );
   }
 }

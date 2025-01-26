@@ -41,7 +41,7 @@ import { filterFields } from "./constants";
 import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
 import { Table } from "@tanstack/react-table";
 import { endOfDay, endOfHour, format, startOfDay, startOfHour } from "date-fns";
-import { KeyValueTable } from "./key-value-table";
+import { KeyValueTable } from "./_components/key-value-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Popover,
@@ -253,7 +253,7 @@ export function SheetDetailsContent<TData>({
             key={phase}
             className="grid grid-cols-3 gap-2 text-xs justify-between items-center"
           >
-            <div className="text-muted-foreground uppercase truncate font-mono">
+            <div className="text-foreground uppercase truncate font-mono">
               {getTimingLabel(phase)}
             </div>
             <div className="flex gap-2 col-span-2">
