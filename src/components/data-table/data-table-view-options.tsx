@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   Sortable,
@@ -39,6 +39,14 @@ export function DataTableViewOptions<TData>({
   const [search, setSearch] = useState("");
 
   const columnOrder = table.getState().columnOrder;
+
+  const sortedColumns = useMemo(
+    () =>
+      table.getAllColumns().sort((a, b) => {
+        return columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id);
+      }),
+    [columnOrder]
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -63,10 +71,9 @@ export function DataTableViewOptions<TData>({
           />
           <CommandList>
             <CommandEmpty>No option found.</CommandEmpty>
-            {/* TODO: add a "RESET REORDERING ROW" */}
             <CommandGroup>
               <Sortable
-                value={table.getAllColumns().map((c) => ({ id: c.id }))}
+                value={sortedColumns.map((c) => ({ id: c.id }))}
                 onValueChange={(items) =>
                   table.setColumnOrder(items.map((c) => c.id))
                 }
@@ -75,18 +82,12 @@ export function DataTableViewOptions<TData>({
                 onDragEnd={() => setDrag(false)}
                 onDragCancel={() => setDrag(false)}
               >
-                {table
-                  .getAllColumns()
+                {sortedColumns
                   .filter(
                     (column) =>
                       typeof column.accessorFn !== "undefined" &&
                       column.getCanHide()
                   )
-                  .sort((a, b) => {
-                    return (
-                      columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id)
-                    );
-                  })
                   .map((column) => (
                     <SortableItem key={column.id} value={column.id} asChild>
                       <CommandItem
