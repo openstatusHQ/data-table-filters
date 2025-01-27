@@ -7,6 +7,7 @@ import PlausibleProvider from "next-plausible";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
+import { ScanPerformance } from "@/components/layout/scan-performance";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -42,6 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <ScanPerformance />
       <PlausibleProvider domain="data-table.openstatus.dev">
         <ReactQueryProvider>
           <NuqsAdapter>

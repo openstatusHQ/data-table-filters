@@ -1,6 +1,7 @@
+"use client";
+
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
-import { Table } from "@tanstack/react-table";
 import {
   Tooltip,
   TooltipContent,
@@ -9,14 +10,10 @@ import {
 } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/custom/kbd";
 import { useHotKey } from "@/hooks/use-hot-key";
+import { useDataTable } from "@/providers/data-table";
 
-interface DataTableResetButtonProps<TData> {
-  table: Table<TData>;
-}
-
-export function DataTableResetButton<TData>({
-  table,
-}: DataTableResetButtonProps<TData>) {
+export function DataTableResetButton() {
+  const { table } = useDataTable();
   useHotKey(table.resetColumnFilters, "Escape");
 
   return (

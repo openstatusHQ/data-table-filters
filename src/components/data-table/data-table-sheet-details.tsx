@@ -21,22 +21,21 @@ import {
 import type { Table } from "@tanstack/react-table";
 import { Kbd } from "@/components/custom/kbd";
 import { cn } from "@/lib/utils";
+import { useDataTable } from "@/providers/data-table";
 
 export interface DataTableSheetDetailsProps<TData> {
-  table: Table<TData>;
   title?: string;
   titleClassName?: string;
   children?: React.ReactNode;
 }
 
 export function DataTableSheetDetails<TData>({
-  table,
   title,
   titleClassName,
   children,
 }: DataTableSheetDetailsProps<TData>) {
-  const selectedRowKey =
-    Object.keys(table.getState().rowSelection)?.[0] || undefined;
+  const { table, rowSelection } = useDataTable();
+  const selectedRowKey = Object.keys(rowSelection)?.[0];
 
   const index = table
     .getCoreRowModel()

@@ -8,11 +8,9 @@ import { Slider } from "@/components/custom/slider";
 import { isArrayOfNumbers } from "@/lib/is-array";
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useDataTable } from "@/providers/data-table";
 
-function getFilter(
-  filterValue: unknown,
-  { min, max }: { min: number; max: number }
-) {
+function getFilter(filterValue: unknown) {
   return typeof filterValue === "number"
     ? [filterValue, filterValue]
     : Array.isArray(filterValue) && isArrayOfNumbers(filterValue)
@@ -22,20 +20,16 @@ function getFilter(
     : null;
 }
 
-type DataTableFilterSliderProps<TData> = DataTableSliderFilterField<TData> & {
-  table: Table<TData>;
-};
-
 export function DataTableFilterSlider<TData>({
-  table,
   value: _value,
   min,
   max,
-}: DataTableFilterSliderProps<TData>) {
+}: DataTableSliderFilterField<TData>) {
   const value = _value as string;
+  const { table, columnFilters } = useDataTable();
   const column = table.getColumn(value);
-  const filterValue = column?.getFilterValue();
-  const filters = getFilter(filterValue, { min, max });
+  const filterValue = columnFilters.find((i) => i.id === value)?.value;
+  const filters = getFilter(filterValue);
   const [input, setInput] = useState<number[] | null>(filters);
 
   const debouncedInput = useDebounce(input, 500);

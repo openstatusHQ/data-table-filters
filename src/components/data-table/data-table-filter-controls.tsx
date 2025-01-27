@@ -1,7 +1,5 @@
 "use client";
 
-import type { ColumnDef, Table } from "@tanstack/react-table";
-
 import {
   Accordion,
   AccordionContent,
@@ -9,33 +7,23 @@ import {
   AccordionTrigger,
 } from "@/components/custom/accordion";
 import type React from "react";
-import type { DataTableFilterField } from "./types";
 import { DataTableFilterResetButton } from "./data-table-filter-reset-button";
 import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
 import { DataTableFilterSlider } from "./data-table-filter-slider";
 import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
-import { DataTableResetButton } from "./data-table-reset-button";
+import { useDataTable } from "@/providers/data-table";
 
 // FIXME: use @container (especially for the slider element) to restructure elements
 
 // TODO: only pass the columns to generate the filters!
 // https://tanstack.com/table/v8/docs/framework/react/examples/filters
-interface DataTableFilterControlsProps<TData, TValue> {
-  table: Table<TData>;
-  columns: ColumnDef<TData, TValue>[];
-  filterFields?: DataTableFilterField<TData>[];
-}
 
-export function DataTableFilterControls<TData, TValue>({
-  table,
-  columns,
-  filterFields,
-}: DataTableFilterControlsProps<TData, TValue>) {
+export function DataTableFilterControls() {
+  const { filterFields } = useDataTable();
   return (
     <Accordion
       type="multiple"
-      // REMINDER: open all filters by default
       defaultValue={filterFields
         ?.filter(({ defaultOpen }) => defaultOpen)
         ?.map(({ value }) => value as string)}
@@ -55,7 +43,7 @@ export function DataTableFilterControls<TData, TValue>({
                     </p>
                   ) : null}
                 </div>
-                <DataTableFilterResetButton table={table} {...field} />
+                <DataTableFilterResetButton {...field} />
               </div>
             </AccordionTrigger>
             {/* REMINDER: avoid the focus state to be cut due to overflow-hidden */}
@@ -63,18 +51,16 @@ export function DataTableFilterControls<TData, TValue>({
               {(() => {
                 switch (field.type) {
                   case "checkbox": {
-                    return <DataTableFilterCheckbox table={table} {...field} />;
+                    return <DataTableFilterCheckbox {...field} />;
                   }
                   case "slider": {
-                    return <DataTableFilterSlider table={table} {...field} />;
+                    return <DataTableFilterSlider {...field} />;
                   }
                   case "input": {
-                    return <DataTableFilterInput table={table} {...field} />;
+                    return <DataTableFilterInput {...field} />;
                   }
                   case "timerange": {
-                    return (
-                      <DataTableFilterTimerange table={table} {...field} />
-                    );
+                    return <DataTableFilterTimerange {...field} />;
                   }
                 }
               })()}

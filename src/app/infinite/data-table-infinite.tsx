@@ -41,7 +41,6 @@ import { searchParamsParser } from "./search-params";
 import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { SheetDetailsContent } from "./sheet-details-content";
 import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
@@ -51,6 +50,7 @@ import { SocialsFooter } from "./_components/socials-footer";
 import { TimelineChart } from "./timeline-chart";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
+import { DataTableProvider } from "@/providers/data-table";
 
 const defaultColumnVisibility = {
   uuid: false,
@@ -115,10 +115,6 @@ export function DataTableInfinite<TData, TValue>({
       "data-table-visibility",
       defaultColumnVisibility
     );
-  const [controlsOpen, setControlsOpen] = useLocalStorage(
-    "data-table-controls",
-    true
-  );
   const topBarRef = React.useRef<HTMLDivElement>(null);
   const tableRef = React.useRef<HTMLTableElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
@@ -268,7 +264,18 @@ export function DataTableInfinite<TData, TValue>({
   }, "u");
 
   return (
-    <>
+    <DataTableProvider
+      table={table}
+      columns={columns}
+      filterFields={filterFields}
+      columnFilters={columnFilters}
+      sorting={sorting}
+      rowSelection={rowSelection}
+      columnOrder={columnOrder}
+      columnVisibility={columnVisibility}
+      enableColumnOrdering={true}
+      isLoading={isFetching || isLoading}
+    >
       <div
         className="flex w-full min-h-screen h-full flex-col sm:flex-row"
         style={
@@ -281,7 +288,7 @@ export function DataTableInfinite<TData, TValue>({
         <div
           className={cn(
             "w-full h-full flex flex-col md:min-h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 sm:sticky sm:top-0 sm:max-h-screen",
-            !controlsOpen && "hidden"
+            "group-data-[expanded=false]/controls:hidden"
           )}
         >
           <div className="p-2 md:sticky md:top-0 border-b border-border bg-background">
@@ -289,17 +296,13 @@ export function DataTableInfinite<TData, TValue>({
               <p className="font-medium text-foreground px-2">Filters</p>
               <div>
                 {table.getState().columnFilters.length ? (
-                  <DataTableResetButton table={table} />
+                  <DataTableResetButton />
                 ) : null}
               </div>
             </div>
           </div>
           <div className="p-2 flex-1 sm:overflow-y-scroll">
-            <DataTableFilterControls
-              table={table}
-              columns={columns}
-              filterFields={filterFields}
-            />
+            <DataTableFilterControls />
           </div>
           <div className="md:sticky md:bottom-0 p-4 border-t border-border bg-background">
             <SocialsFooter />
@@ -309,8 +312,7 @@ export function DataTableInfinite<TData, TValue>({
           className={cn(
             "flex max-w-full flex-1 flex-col sm:border-l border-border",
             // Chrome issue
-            controlsOpen &&
-              "sm:max-w-[calc(100vw_-_208px)] md:max-w-[calc(100vw_-_288px)]"
+            "group-data-[expanded=true]/controls:sm:max-w-[calc(100vw_-_208px)] group-data-[expanded=true]/controls:md:max-w-[calc(100vw_-_288px)]"
           )}
         >
           <div
@@ -320,19 +322,8 @@ export function DataTableInfinite<TData, TValue>({
               "z-10 pb-4 sticky top-0"
             )}
           >
-            <DataTableFilterCommand
-              table={table}
-              schema={columnFilterSchema}
-              filterFields={filterFields}
-              isLoading={isFetching || isLoading}
-            />
-            <DataTableToolbar
-              table={table}
-              controlsOpen={controlsOpen}
-              setControlsOpen={setControlsOpen}
-              isLoading={isFetching || isLoading}
-              enableColumnOrdering={true}
-            />
+            <DataTableFilterCommand schema={columnFilterSchema} />
+            <DataTableToolbar />
             <TimelineChart
               data={chartData}
               className="-mb-2"
@@ -486,7 +477,6 @@ export function DataTableInfinite<TData, TValue>({
         // TODO: make it dynamic via renderSheetDetailsContent
         title={(selectedRow?.original as ColumnSchema | undefined)?.pathname}
         titleClassName="font-mono"
-        table={table}
       >
         <SheetDetailsContent
           table={table}
@@ -495,6 +485,6 @@ export function DataTableInfinite<TData, TValue>({
           filterRows={filterRows}
         />
       </DataTableSheetDetails>
-    </>
+    </DataTableProvider>
   );
 }

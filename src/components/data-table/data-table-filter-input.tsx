@@ -7,22 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useDataTable } from "@/providers/data-table";
 
 function getFilter(filterValue: unknown) {
   return typeof filterValue === "string" ? filterValue : null;
 }
 
-type DataTableFilterInputProps<TData> = DataTableInputFilterField<TData> & {
-  table: Table<TData>;
-};
-
 export function DataTableFilterInput<TData>({
-  table,
   value: _value,
-}: DataTableFilterInputProps<TData>) {
+}: DataTableInputFilterField<TData>) {
   const value = _value as string;
+  const { table, columnFilters } = useDataTable();
   const column = table.getColumn(value);
-  const filterValue = column?.getFilterValue();
+  const filterValue = columnFilters.find((i) => i.id === value)?.value;
   const filters = getFilter(filterValue);
   const [input, setInput] = useState<string | null>(filters);
 

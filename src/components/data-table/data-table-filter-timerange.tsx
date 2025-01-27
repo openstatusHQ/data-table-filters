@@ -1,28 +1,20 @@
 "use client";
 
-import type { Table } from "@tanstack/react-table";
 import { useMemo } from "react";
 import type { DataTableTimerangeFilterField } from "./types";
 import { isArrayOfDates } from "@/lib/is-array";
 import { DatePickerWithRange } from "@/components/custom/date-picker-with-range";
 import type { DateRange } from "react-day-picker";
-
-type DataTableFilterTimerangeProps<TData> =
-  DataTableTimerangeFilterField<TData> & {
-    table: Table<TData>;
-  };
-
-// TBD: add debounce to reduce to number of filters
-// TODO: extract onChange
+import { useDataTable } from "@/providers/data-table";
 
 export function DataTableFilterTimerange<TData>({
-  table,
   value: _value,
   presets,
-}: DataTableFilterTimerangeProps<TData>) {
+}: DataTableTimerangeFilterField<TData>) {
   const value = _value as string;
+  const { table, columnFilters } = useDataTable();
   const column = table.getColumn(value);
-  const filterValue = column?.getFilterValue();
+  const filterValue = columnFilters.find((i) => i.id === value)?.value;
 
   const date: DateRange | undefined = useMemo(
     () =>

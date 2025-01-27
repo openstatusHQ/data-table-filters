@@ -1,21 +1,17 @@
 "use client";
 
-import type { Table } from "@tanstack/react-table";
 import type { DataTableFilterField } from "./types";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-
-type DataTableFilterResetButtonProps<TData> = DataTableFilterField<TData> & {
-  table: Table<TData>;
-};
+import { useDataTable } from "@/providers/data-table";
 
 export function DataTableFilterResetButton<TData>({
-  table,
   value: _value,
-}: DataTableFilterResetButtonProps<TData>) {
+}: DataTableFilterField<TData>) {
+  const { columnFilters, table } = useDataTable();
   const value = _value as string;
   const column = table.getColumn(value);
-  const filterValue = column?.getFilterValue();
+  const filterValue = columnFilters.find((f) => f.id === value)?.value;
 
   // TODO: check if we could useMemo
   const filters = filterValue

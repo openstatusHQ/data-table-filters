@@ -1,6 +1,6 @@
 "use client";
 
-import type { Table } from "@tanstack/react-table";
+import type { ColumnFiltersState, Table } from "@tanstack/react-table";
 import { useState } from "react";
 import type { DataTableCheckboxFilterField } from "./types";
 import { cn } from "@/lib/utils";
@@ -8,23 +8,20 @@ import { Search } from "lucide-react";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type DataTableFilterCheckboxProps<TData> =
-  DataTableCheckboxFilterField<TData> & {
-    table: Table<TData>;
-  };
+import { useDataTable } from "@/providers/data-table";
 
 export function DataTableFilterCheckbox<TData>({
-  table,
   value: _value,
   options,
   component,
-}: DataTableFilterCheckboxProps<TData>) {
+}: DataTableCheckboxFilterField<TData>) {
   const value = _value as string;
   const [inputValue, setInputValue] = useState("");
+  const { table, columnFilters } = useDataTable();
   const column = table.getColumn(value);
+  // REMINDER: avoid using column?.getFilterValue()
+  const filterValue = columnFilters.find((i) => i.id === value)?.value;
   const facetedValue = column?.getFacetedUniqueValues();
-  const filterValue = column?.getFilterValue();
 
   if (!options?.length) return null;
 

@@ -30,22 +30,18 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useHotKey } from "@/hooks/use-hot-key";
+import { useDataTable } from "@/providers/data-table";
 
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
 
-interface DataTableFilterCommandProps<TData, TSchema extends z.AnyZodObject> {
-  table: Table<TData>;
+interface DataTableFilterCommandProps<TSchema extends z.AnyZodObject> {
   schema: TSchema;
-  filterFields?: DataTableFilterField<TData>[];
-  isLoading?: boolean;
 }
 
-export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
+export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
   schema,
-  table,
-  filterFields: _filterFields,
-  isLoading,
-}: DataTableFilterCommandProps<TData, TSchema>) {
+}: DataTableFilterCommandProps<TSchema>) {
+  const { table, isLoading, filterFields: _filterFields } = useDataTable();
   const columnFilters = table.getState().columnFilters;
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState<boolean>(false);

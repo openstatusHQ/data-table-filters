@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, GripVertical, Settings2 } from "lucide-react";
-import type { Table } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,15 +24,10 @@ import {
   SortableItem,
 } from "@/components/custom/sortable";
 
-interface DataTableViewOptionsProps<TData> {
-  table: Table<TData>;
-  enableOrdering?: boolean;
-}
+import { useDataTable } from "@/providers/data-table";
 
-export function DataTableViewOptions<TData>({
-  table,
-  enableOrdering = false,
-}: DataTableViewOptionsProps<TData>) {
+export function DataTableViewOptions() {
+  const { table, enableColumnOrdering } = useDataTable();
   const [open, setOpen] = useState(false);
   const [drag, setDrag] = useState(false);
   const [search, setSearch] = useState("");
@@ -109,7 +103,7 @@ export function DataTableViewOptions<TData>({
                           <Check className={cn("h-4 w-4")} />
                         </div>
                         <span>{column.columnDef.meta?.label || column.id}</span>
-                        {enableOrdering && !search ? (
+                        {enableColumnOrdering && !search ? (
                           <SortableDragHandle
                             variant="ghost"
                             size="icon"
