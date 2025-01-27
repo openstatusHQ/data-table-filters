@@ -30,6 +30,7 @@ export function DataTableFilterInput<TData>({
 
   useEffect(() => {
     const newValue = debouncedInput?.trim() === "" ? null : debouncedInput;
+    if (debouncedInput === null) return;
     column?.setFilterValue(newValue);
   }, [debouncedInput]);
 
