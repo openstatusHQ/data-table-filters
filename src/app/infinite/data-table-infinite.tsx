@@ -222,9 +222,8 @@ export function DataTableInfinite<TData, TValue>({
       .flatRows.find((row) => row.id === selectedRowKey);
   }, [rowSelection, table, isLoading, isFetching]);
 
-  // FIXME: cannot share a uuid with the sheet details
+  // TODO: can only share uuid within the first batch
   React.useEffect(() => {
-    console.log(rowSelection, selectedRow);
     if (isLoading || isFetching) return;
     if (Object.keys(rowSelection)?.length && !selectedRow) {
       setSearch({ uuid: null });
