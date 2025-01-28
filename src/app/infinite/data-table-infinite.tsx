@@ -215,14 +215,17 @@ export function DataTableInfinite<TData, TValue>({
   }, [sorting]);
 
   const selectedRow = React.useMemo(() => {
+    if (isLoading || isFetching) return;
     const selectedRowKey = Object.keys(rowSelection)?.[0];
     return table
       .getCoreRowModel()
       .flatRows.find((row) => row.id === selectedRowKey);
-  }, [rowSelection, table]);
+  }, [rowSelection, table, isLoading, isFetching]);
 
   // FIXME: cannot share a uuid with the sheet details
   React.useEffect(() => {
+    console.log(rowSelection, selectedRow);
+    if (isLoading || isFetching) return;
     if (Object.keys(rowSelection)?.length && !selectedRow) {
       setSearch({ uuid: null });
       setRowSelection({});
@@ -230,7 +233,7 @@ export function DataTableInfinite<TData, TValue>({
       setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowSelection, selectedRow]);
+  }, [rowSelection, selectedRow, isLoading, isFetching]);
 
   /**
    * https://tanstack.com/table/v8/docs/guide/column-sizing#advanced-column-resizing-performance

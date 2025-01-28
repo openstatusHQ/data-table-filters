@@ -5,7 +5,6 @@ import {
   CalendarClock,
   CalendarDays,
   CalendarSearch,
-  Check,
   ChevronLeft,
   ChevronRight,
   Copy,
@@ -32,7 +31,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { getStatusColor } from "@/lib/request/status-code";
 import { flags, regions } from "@/constants/region";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,14 +110,7 @@ export function SheetDetailsContent<TData>({
           className="flex gap-4 my-1 py-1 text-sm justify-between items-center w-full"
         >
           <dt className="text-muted-foreground">Status Code</dt>
-          <dd>
-            <Badge
-              variant="outline"
-              className={`${statusColor.bg} ${statusColor.border} ${statusColor.text} font-mono`}
-            >
-              {data.status}
-            </Badge>
-          </dd>
+          <dd className={cn(statusColor.text, "font-mono")}>{data.status}</dd>
         </RowAction>
       </div>
       <div>
@@ -290,22 +281,26 @@ export function SheetDetailsContent<TData>({
 }
 
 const skeleton = {
-  ID: "h-5 w-52",
-  Success: "h-5 w-5",
+  "Request ID": "h-5 w-52",
   Date: "h-5 w-36",
   "Status Code": "h-5 w-12",
+  Method: "h-5 w-10",
   Host: "h-5 w-24",
   Pathname: "h-5 w-56",
   Region: "h-5 w-12",
   Latency: "h-5 w-16",
   Percentile: "h-5 w-12",
+  // TODO: check for the correct size
   "Timing Phases": "h-5 w-52",
+  // TODO: check for the correct size
+  Headers: "h-5 w-52",
+  // TODO: check for the correct size
   Message: "h-5 w-52",
 };
 
 export function SheetDetailsContentSkeleton() {
   return (
-    <dl>
+    <dl className="divide-y">
       {Object.entries(skeleton).map(([key, size]) => (
         <div
           key={key}

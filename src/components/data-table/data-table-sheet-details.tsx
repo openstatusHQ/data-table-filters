@@ -18,10 +18,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Table } from "@tanstack/react-table";
 import { Kbd } from "@/components/custom/kbd";
 import { cn } from "@/lib/utils";
 import { useDataTable } from "@/providers/data-table";
+import { Skeleton } from "../ui/skeleton";
 
 export interface DataTableSheetDetailsProps<TData> {
   title?: string;
@@ -34,30 +34,39 @@ export function DataTableSheetDetails<TData>({
   titleClassName,
   children,
 }: DataTableSheetDetailsProps<TData>) {
-  const { table, rowSelection } = useDataTable();
+  const props = useDataTable();
+  const { table, rowSelection, isLoading } = props;
+
   const selectedRowKey = Object.keys(rowSelection)?.[0];
+
+  const selectedRow = React.useMemo(() => {
+    if (isLoading) return;
+    return table
+      .getCoreRowModel()
+      .flatRows.find((row) => row.id === selectedRowKey);
+  }, [selectedRowKey, isLoading]);
 
   const index = table
     .getCoreRowModel()
-    .flatRows.findIndex((row) => row.id === selectedRowKey);
+    .flatRows.findIndex((row) => row.id === selectedRow?.id);
 
   const nextId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index + 1]?.id,
-    [index, table]
+    [index, isLoading]
   );
 
   const prevId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index - 1]?.id,
-    [index, table]
+    [index, isLoading]
   );
 
   const onPrev = React.useCallback(() => {
     if (prevId) table.setRowSelection({ [prevId]: true });
-  }, [prevId, table]);
+  }, [prevId, isLoading]);
 
   const onNext = React.useCallback(() => {
     if (nextId) table.setRowSelection({ [nextId]: true });
-  }, [nextId, table]);
+  }, [nextId, isLoading]);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -107,7 +116,7 @@ export function DataTableSheetDetails<TData>({
         <SheetHeader className="sticky top-0 border-b bg-background p-4 z-10">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className={cn(titleClassName, "text-left truncate")}>
-              {title}
+              {isLoading ? <Skeleton className="h-7 w-36" /> : title}
             </SheetTitle>
             <div className="flex items-center gap-1 h-7">
               <TooltipProvider>
@@ -117,7 +126,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!prevId}
+                      disabled={!prevId || isLoading}
                       onClick={onPrev}
                     >
                       <ChevronUp className="h-5 w-5" />
@@ -138,7 +147,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!nextId}
+                      disabled={!nextId || isLoading}
                       onClick={onNext}
                     >
                       <ChevronDown className="h-5 w-5" />
