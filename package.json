@@ -45,7 +45,6 @@
     "react": "^19",
     "react-day-picker": "^8.10.1",
     "react-dom": "^19",
-    "react-scan": "^0.1.1",
     "recharts": "^2.15.0",
     "sonner": "^1.7.2",
     "tailwind-merge": "^2.6.0",

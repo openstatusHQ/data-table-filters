@@ -7,7 +7,6 @@ import PlausibleProvider from "next-plausible";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
-import { ScanPerformance } from "@/components/layout/scan-performance";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -43,16 +42,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <ScanPerformance />
-      <PlausibleProvider domain="data-table.openstatus.dev">
-        <ReactQueryProvider>
-          <NuqsAdapter>
-            <body
-              className={cn(
-                "min-h-screen bg-background font-sans antialiased",
-                fontSans.variable
-              )}
-            >
+      {process.env.NODE_ENV === "development" ? (
+        <head>
+          <script
+            src="https://unpkg.com/react-scan/dist/auto.global.js"
+            async
+          />
+        </head>
+      ) : null}
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}
+      >
+        <PlausibleProvider domain="data-table.openstatus.dev">
+          <ReactQueryProvider>
+            <NuqsAdapter>
               <ThemeProvider
                 attribute="class"
                 defaultTheme="system"
@@ -61,10 +67,10 @@ export default function RootLayout({
                 {children}
                 <Toaster richColors />
               </ThemeProvider>
-            </body>
-          </NuqsAdapter>
-        </ReactQueryProvider>
-      </PlausibleProvider>
+            </NuqsAdapter>
+          </ReactQueryProvider>
+        </PlausibleProvider>
+      </body>
     </html>
   );
 }

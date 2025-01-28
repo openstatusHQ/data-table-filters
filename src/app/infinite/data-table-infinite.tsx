@@ -187,6 +187,7 @@ export function DataTableInfinite<TData, TValue>({
       return map;
     },
     filterFns: { inDateRange, arrSome },
+    debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
     meta: { getRowClassName },
   });
 
