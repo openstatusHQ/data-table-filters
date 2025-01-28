@@ -46,24 +46,27 @@ export function DataTableFilterControls() {
                 <DataTableFilterResetButton {...field} />
               </div>
             </AccordionTrigger>
-            {/* REMINDER: avoid the focus state to be cut due to overflow-hidden */}
-            <AccordionContent className="p-1">
-              {(() => {
-                switch (field.type) {
-                  case "checkbox": {
-                    return <DataTableFilterCheckbox {...field} />;
+            <AccordionContent>
+              {/* REMINDER: avoid the focus state to be cut due to overflow-hidden */}
+              {/* REMINDER: need to move within here because of accordion height animation */}
+              <div className="p-1">
+                {(() => {
+                  switch (field.type) {
+                    case "checkbox": {
+                      return <DataTableFilterCheckbox {...field} />;
+                    }
+                    case "slider": {
+                      return <DataTableFilterSlider {...field} />;
+                    }
+                    case "input": {
+                      return <DataTableFilterInput {...field} />;
+                    }
+                    case "timerange": {
+                      return <DataTableFilterTimerange {...field} />;
+                    }
                   }
-                  case "slider": {
-                    return <DataTableFilterSlider {...field} />;
-                  }
-                  case "input": {
-                    return <DataTableFilterInput {...field} />;
-                  }
-                  case "timerange": {
-                    return <DataTableFilterTimerange {...field} />;
-                  }
-                }
-              })()}
+                })()}
+              </div>
             </AccordionContent>
           </AccordionItem>
         );
