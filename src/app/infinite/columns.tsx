@@ -76,7 +76,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
   {
     id: "uuid",
     accessorKey: "uuid",
-    header: "UUID",
+    header: "Request Id",
     cell: ({ row }) => {
       const value = row.getValue("uuid") as string;
       return <TextWithTooltip text={value} />;
@@ -84,7 +84,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     size: 130,
     minSize: 130,
     meta: {
-      label: "UUID",
+      label: "Request Id",
       cellClassName:
         "font-mono w-[--col-uuid-size] max-w-[--col-uuid-size] min-w-[--col-uuid-size]",
       headerClassName:

@@ -84,7 +84,7 @@ export function SheetDetailsContent<TData>({
   return (
     <dl className={cn("divide-y", className)} {...props}>
       <div className="flex gap-4 py-2 text-sm justify-between items-center">
-        <dt className="text-muted-foreground">Request ID</dt>
+        <dt className="text-muted-foreground">Request Id</dt>
         <dd className="font-mono truncate">{data.uuid}</dd>
       </div>
       <div>
@@ -281,7 +281,7 @@ export function SheetDetailsContent<TData>({
 }
 
 const skeleton = {
-  "Request ID": "h-5 w-52",
+  "Request Id": "h-5 w-52",
   Date: "h-5 w-36",
   "Status Code": "h-5 w-12",
   Method: "h-5 w-10",
