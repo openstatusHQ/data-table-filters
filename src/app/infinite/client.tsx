@@ -88,6 +88,14 @@ export function Client() {
         .filter(({ value }) => value ?? undefined)}
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
+      defaultColumnVisibility={{
+        uuid: false,
+        "timing.dns": false,
+        "timing.connection": false,
+        "timing.tls": false,
+        "timing.ttfb": false,
+        "timing.transfer": false,
+      }}
       filterFields={filterFields}
       sheetFields={sheetFields}
       isFetching={isFetching}

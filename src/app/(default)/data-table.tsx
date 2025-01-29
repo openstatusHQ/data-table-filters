@@ -78,21 +78,22 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    // REMINDER: it doesn't support array of strings (WARNING: might not work for other types)
     getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
-      const map = getFacetedUniqueValues<TData>()(table, columnId)();
-      // TODO: it would be great to do it dynamically, if we recognize the row to be Array.isArray
-      if (["regions", "tags"].includes(columnId)) {
-        const rowValues = table
-          .getGlobalFacetedRowModel()
-          .flatRows.map((row) => row.getValue(columnId) as string[]);
-        for (const values of rowValues) {
-          for (const value of values) {
-            const prevValue = map.get(value) || 0;
-            map.set(value, prevValue + 1);
+      const facets = getFacetedUniqueValues<TData>()(table, columnId)();
+      const customFacets = new Map();
+      for (const [key, value] of facets as any) {
+        if (Array.isArray(key)) {
+          for (const k of key) {
+            const prevValue = customFacets.get(k) || 0;
+            customFacets.set(k, prevValue + value);
           }
+        } else {
+          const prevValue = customFacets.get(key) || 0;
+          customFacets.set(key, prevValue + value);
         }
       }
-      return map;
+      return customFacets;
     },
   });
 

@@ -55,15 +55,6 @@ import { DataTableResetButton } from "@/components/data-table/data-table-reset-b
 import { DataTableProvider } from "@/providers/data-table";
 import { DataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
 
-const defaultColumnVisibility = {
-  uuid: false,
-  "timing.dns": false,
-  "timing.connection": false,
-  "timing.tls": false,
-  "timing.ttfb": false,
-  "timing.transfer": false,
-};
-
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -74,6 +65,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   defaultColumnFilters?: ColumnFiltersState;
   defaultColumnSorting?: SortingState;
   defaultRowSelection?: RowSelectionState;
+  defaultColumnVisibility?: VisibilityState;
   filterFields?: DataTableFilterField<TData>[];
   sheetFields?: SheetField<TData>[];
   totalRows?: number;
@@ -94,6 +86,7 @@ export function DataTableInfinite<TData, TValue>({
   defaultColumnFilters = [],
   defaultColumnSorting = [],
   defaultRowSelection = {},
+  defaultColumnVisibility = {},
   filterFields = [],
   sheetFields = [],
   isFetching,
@@ -175,21 +168,22 @@ export function DataTableInfinite<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
+    // REMINDER: it doesn't support array of strings (WARNING: might not work for other types)
     getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
-      const map = getFacetedUniqueValues<TData>()(table, columnId)();
-      // TODO: it would be great to do it dynamically, if we recognize the row to be Array.isArray
-      if (["regions"].includes(columnId)) {
-        const rowValues = table
-          .getGlobalFacetedRowModel()
-          .flatRows.map((row) => row.getValue(columnId) as string[]);
-        for (const values of rowValues) {
-          for (const value of values) {
-            const prevValue = map.get(value) || 0;
-            map.set(value, prevValue + 1);
+      const facets = getFacetedUniqueValues<TData>()(table, columnId)();
+      const customFacets = new Map();
+      for (const [key, value] of facets as any) {
+        if (Array.isArray(key)) {
+          for (const k of key) {
+            const prevValue = customFacets.get(k) || 0;
+            customFacets.set(k, prevValue + value);
           }
+        } else {
+          const prevValue = customFacets.get(key) || 0;
+          customFacets.set(key, prevValue + value);
         }
       }
-      return map;
+      return customFacets;
     },
     filterFns: { inDateRange, arrSome },
     debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
