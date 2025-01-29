@@ -138,8 +138,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       const value = row.getValue("host") as string;
       return <TextWithTooltip text={value} />;
     },
-    size: 130,
-    minSize: 130,
+    size: 125,
+    minSize: 125,
     meta: {
       cellClassName: "font-mono w-[--col-host-size] max-w-[--col-host-size]",
       headerClassName: "min-w-[--header-host-size] w-[--header-host-size]",
