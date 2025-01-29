@@ -1,6 +1,5 @@
 "use client";
 
-import type { ColumnFiltersState, Table } from "@tanstack/react-table";
 import { useState } from "react";
 import type { DataTableCheckboxFilterField } from "./types";
 import { cn } from "@/lib/utils";

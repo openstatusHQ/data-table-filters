@@ -3,7 +3,7 @@
 import * as React from "react";
 import { DataTableInfinite } from "./data-table-infinite";
 import { columns } from "./columns";
-import { filterFields as defaultFilterFields } from "./constants";
+import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -89,6 +89,7 @@ export function Client() {
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
       filterFields={filterFields}
+      sheetFields={sheetFields}
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}

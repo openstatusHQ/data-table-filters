@@ -65,3 +65,21 @@ export type DataTableFilterField<TData> =
   | DataTableSliderFilterField<TData>
   | DataTableInputFilterField<TData>
   | DataTableTimerangeFilterField<TData>;
+
+/** ----------------------------------------- */
+
+export type SheetField<TData> = {
+  id: keyof TData;
+  label: string;
+  // FIXME: rethink that! I dont think we need this as there is no input type
+  // REMINDER: readonly if we only want to copy the value (e.g. uuid)
+  // TODO: we might have some values that are not in the data but can be computed
+  type: "readonly" | "input" | "checkbox" | "slider" | "timerange";
+  component?: (
+    // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
+    props: TData & { metadata?: Record<string, unknown> }
+  ) => JSX.Element | null | string;
+  condition?: (props: TData) => boolean;
+  className?: string;
+  skeletonClassName?: string;
+};

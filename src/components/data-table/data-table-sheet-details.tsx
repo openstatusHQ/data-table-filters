@@ -21,7 +21,7 @@ import {
 import { Kbd } from "@/components/custom/kbd";
 import { cn } from "@/lib/utils";
 import { useDataTable } from "@/providers/data-table";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface DataTableSheetDetailsProps<TData> {
   title?: string;

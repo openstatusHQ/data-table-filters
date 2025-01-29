@@ -5,12 +5,20 @@ import { type ColumnSchema } from "./schema";
 import type {
   DataTableFilterField,
   Option,
+  SheetField,
 } from "@/components/data-table/types";
 import { getStatusColor } from "@/lib/request/status-code";
 import { METHODS } from "@/constants/method";
-import { REGIONS } from "@/constants/region";
+import { flags, regions, REGIONS } from "@/constants/region";
 import { RESULTS } from "@/constants/results";
 import { getResultColor, getResultLabel } from "@/lib/request/result";
+import { format } from "date-fns";
+import { formatMilliseconds } from "@/lib/format";
+import { SheetTimingPhases } from "./_components/sheet-timing-phases";
+import { TabsObjectView } from "./_components/tabs-object-view";
+import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
+import { PopoverPercentile } from "./_components/popover-percentile";
+import { Percentile } from "@/lib/request/percentile";
 
 // instead of filterFields, maybe just 'fields' with a filterDisabled prop?
 // that way, we could have 'message' or 'headers' field with label and value as well as type!
@@ -151,3 +159,128 @@ export const filterFields = [
     options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
 ] satisfies DataTableFilterField<ColumnSchema>[];
+
+export const sheetFields = [
+  {
+    id: "uuid",
+    label: "Request ID",
+    type: "readonly",
+    skeletonClassName: "w-64",
+  },
+  {
+    id: "date",
+    label: "Date",
+    type: "timerange",
+    component: (props) => format(new Date(props.date), "LLL dd, y HH:mm:ss"),
+    skeletonClassName: "w-36",
+  },
+  {
+    id: "status",
+    label: "Status",
+    type: "checkbox",
+    component: (props) => {
+      return (
+        <span className={cn("font-mono", getStatusColor(props.status).text)}>
+          {props.status}
+        </span>
+      );
+    },
+    skeletonClassName: "w-12",
+  },
+  {
+    id: "method",
+    label: "Method",
+    type: "checkbox",
+    component: (props) => {
+      return <span className="font-mono">{props.method}</span>;
+    },
+    skeletonClassName: "w-10",
+  },
+  {
+    id: "host",
+    label: "Host",
+    type: "input",
+    skeletonClassName: "w-24",
+  },
+  {
+    id: "pathname",
+    label: "Pathname",
+    type: "input",
+    skeletonClassName: "w-56",
+  },
+  {
+    id: "regions",
+    label: "Regions",
+    type: "checkbox",
+    skeletonClassName: "w-12",
+    component: (props) => (
+      <>
+        <span className="text-muted-foreground text-xs">
+          {flags[props.regions[0]]} {regions[props.regions[0]]}
+        </span>{" "}
+        {props.regions[0]}
+      </>
+    ),
+  },
+  {
+    id: "latency",
+    label: "Latency",
+    type: "slider",
+    component: (props) => (
+      <>
+        {formatMilliseconds(props.latency)}
+        <span className="text-muted-foreground">ms</span>
+      </>
+    ),
+    skeletonClassName: "w-16",
+  },
+  {
+    id: "percentile",
+    label: "Percentile",
+    type: "readonly",
+    component: (props) => {
+      return (
+        <PopoverPercentile
+          data={props}
+          percentiles={
+            props.metadata?.currentPercentiles as Record<Percentile, number>
+          }
+          filterRows={props.metadata?.filterRows as number}
+          className="ml-auto"
+        />
+      );
+    },
+    skeletonClassName: "w-12",
+  },
+  {
+    id: "timing.dns", // REMINDER: cannot be 'timing' as it is a property of the object
+    label: "Timing Phases",
+    type: "readonly",
+    component: (props) => (
+      <SheetTimingPhases latency={props.latency} timing={props} />
+    ),
+    className: "flex-col items-start w-full gap-1",
+  },
+  {
+    id: "headers",
+    label: "Headers",
+    type: "readonly",
+    component: (props) => (
+      // REMINDER: negative margin to make it look like the header is on the same level of the tab triggers
+      <TabsObjectView data={props.headers} className="-mt-[22px]" />
+    ),
+    className: "flex-col items-start w-full gap-1",
+  },
+  {
+    id: "message",
+    label: "Message",
+    type: "readonly",
+    condition: (props) => props.message !== undefined,
+    component: (props) => (
+      <CopyToClipboardContainer className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono text-sm">
+        {JSON.stringify(props.message, null, 2)}
+      </CopyToClipboardContainer>
+    ),
+    className: "flex-col items-start w-full gap-1",
+  },
+] satisfies SheetField<ColumnSchema>[];

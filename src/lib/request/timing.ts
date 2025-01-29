@@ -6,7 +6,7 @@ export const timingPhases = [
   "timing.transfer",
 ] as const;
 
-type TimingPhase = (typeof timingPhases)[number];
+export type TimingPhase = (typeof timingPhases)[number];
 
 export function getTimingColor(timing: TimingPhase) {
   switch (timing) {

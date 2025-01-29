@@ -32,7 +32,10 @@ import {
 import { DataTableFilterControls } from "@/components/data-table/data-table-filter-controls";
 import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
 import { ColumnSchema, columnFilterSchema } from "./schema";
-import type { DataTableFilterField } from "@/components/data-table/types";
+import type {
+  DataTableFilterField,
+  SheetField,
+} from "@/components/data-table/types";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -41,7 +44,6 @@ import { searchParamsParser } from "./search-params";
 import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SheetDetailsContent } from "./sheet-details-content";
 import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
@@ -51,6 +53,7 @@ import { TimelineChart } from "./timeline-chart";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
 import { DataTableProvider } from "@/providers/data-table";
+import { DataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
 
 const defaultColumnVisibility = {
   uuid: false,
@@ -72,6 +75,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   defaultColumnSorting?: SortingState;
   defaultRowSelection?: RowSelectionState;
   filterFields?: DataTableFilterField<TData>[];
+  sheetFields?: SheetField<TData>[];
   totalRows?: number;
   filterRows?: number;
   totalRowsFetched?: number;
@@ -91,6 +95,7 @@ export function DataTableInfinite<TData, TValue>({
   defaultColumnSorting = [],
   defaultRowSelection = {},
   filterFields = [],
+  sheetFields = [],
   isFetching,
   isLoading,
   fetchNextPage,
@@ -481,11 +486,18 @@ export function DataTableInfinite<TData, TValue>({
         title={(selectedRow?.original as ColumnSchema | undefined)?.pathname}
         titleClassName="font-mono"
       >
-        <SheetDetailsContent
+        <DataTableSheetContent
           table={table}
-          data={selectedRow?.original as ColumnSchema}
-          percentiles={currentPercentiles}
-          filterRows={filterRows}
+          data={selectedRow?.original}
+          filterFields={filterFields}
+          fields={sheetFields}
+          // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
+          metadata={{
+            totalRows,
+            filterRows,
+            totalRowsFetched,
+            currentPercentiles,
+          }}
         />
       </DataTableSheetDetails>
     </DataTableProvider>

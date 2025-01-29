@@ -18,7 +18,7 @@ const CopyToClipboardContainer = React.forwardRef<
   };
 
   return (
-    <div className="relative group">
+    <div className="relative group text-left">
       <div
         ref={composeRefs(ref, innerRef)}
         className={cn("peer", className)}
