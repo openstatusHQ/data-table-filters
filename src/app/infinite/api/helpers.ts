@@ -100,6 +100,10 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
   }));
 }
 
+export function getFacetsFromData(data: ColumnSchema[]) {
+  // TODO: implement
+}
+
 export function getPercentileFromData(data: ColumnSchema[]) {
   const latencies = data.map((row) => row.latency);
 

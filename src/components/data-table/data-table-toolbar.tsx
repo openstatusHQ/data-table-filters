@@ -15,6 +15,7 @@ import { useHotKey } from "@/hooks/use-hot-key";
 import { useDataTable } from "@/providers/data-table";
 import { useControls } from "@/providers/controls";
 import { useMemo } from "react";
+import { formatCompactNumber } from "@/lib/format";
 
 export function DataTableToolbar() {
   const { table, isLoading } = useDataTable();
@@ -67,7 +68,11 @@ export function DataTableToolbar() {
           </Tooltip>
         </TooltipProvider>
         <p className="text-sm text-muted-foreground">
-          {rows.filtered} of {rows.total} row(s) filtered
+          <span className="font-medium font-mono">
+            {formatCompactNumber(rows.filtered)}
+          </span>{" "}
+          of <span className="font-medium font-mono">{rows.total}</span> row(s)
+          filtered
           {/* TODO: add "(total X rows)" */}
         </p>
         {isLoading ? (

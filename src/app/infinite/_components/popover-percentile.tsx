@@ -54,7 +54,10 @@ export function PopoverPercentile({
         />
         {!data?.percentile ? "N/A" : `P${Math.round(data.percentile)}`}
       </PopoverTrigger>
-      <PopoverContent className="w-40 flex flex-col gap-2 p-2 text-xs">
+      <PopoverContent
+        className="w-40 flex flex-col gap-2 p-2 text-xs"
+        align="end"
+      >
         <p>
           Calculated from filtered result of{" "}
           <span className="font-medium font-mono">
