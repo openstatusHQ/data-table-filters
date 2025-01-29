@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDataTable } from "@/providers/data-table";
 
 export function DataTableFilterCheckbox<TData>({
@@ -16,7 +17,7 @@ export function DataTableFilterCheckbox<TData>({
 }: DataTableCheckboxFilterField<TData>) {
   const value = _value as string;
   const [inputValue, setInputValue] = useState("");
-  const { table, columnFilters } = useDataTable();
+  const { table, columnFilters, isLoading } = useDataTable();
   const column = table.getColumn(value);
   // REMINDER: avoid using column?.getFilterValue()
   const filterValue = columnFilters.find((i) => i.id === value)?.value;
@@ -88,7 +89,11 @@ export function DataTableFilterCheckbox<TData>({
                     <span className="truncate font-normal">{option.label}</span>
                   )}
                   <span className="ml-auto flex items-center justify-center font-mono text-xs">
-                    {facetedValue?.get(option.value)}
+                    {isLoading ? (
+                      <Skeleton className="h-4 w-4" />
+                    ) : (
+                      facetedValue?.get(option.value)
+                    )}
                   </span>
                   <button
                     type="button"
