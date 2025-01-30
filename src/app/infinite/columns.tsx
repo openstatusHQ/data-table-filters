@@ -254,7 +254,11 @@ export const columns: ColumnDef<ColumnSchema>[] = [
               ))}
             </div>
           </HoverCardTrigger>
-          <HoverCardContent side="bottom" className="p-2 w-auto z-10">
+          <HoverCardContent
+            side="bottom"
+            align="end"
+            className="p-2 w-auto z-10"
+          >
             <div className="flex flex-col gap-1">
               {timingPhases.map((phase) => {
                 const color = getTimingColor(phase);
