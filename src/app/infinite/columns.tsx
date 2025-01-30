@@ -64,8 +64,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     },
     filterFn: "inDateRange",
     enableResizing: false,
-    size: 194,
-    minSize: 194,
+    size: 200,
+    minSize: 200,
     meta: {
       headerClassName:
         "w-[--header-date-size] max-w-[--header-date-size] min-w-[--header-date-size]",
