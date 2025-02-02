@@ -16,6 +16,7 @@ import {
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
 import { REGIONS } from "@/constants/region";
+import { RESULTS } from "@/constants/results";
 
 export function filterData(
   data: ColumnSchema[],
@@ -67,8 +68,9 @@ export function filterData(
           return false;
         }
       }
-      if (key === "success" && isArrayOfBooleans(filter)) {
-        if (!filter.includes(row[key])) {
+      if (key === "result" && Array.isArray(filter)) {
+        const typedFilter = filter as unknown as (typeof RESULTS)[number][];
+        if (!typedFilter.includes(row[key])) {
           return false;
         }
       }
@@ -96,6 +98,10 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
     ...row,
     percentile: calculatePercentile(latencies, row.latency),
   }));
+}
+
+export function getFacetsFromData(data: ColumnSchema[]) {
+  // TODO: implement
 }
 
 export function getPercentileFromData(data: ColumnSchema[]) {
@@ -148,9 +154,9 @@ export function groupChartData(
 
     return {
       timestamp: timestamp.date.getTime(), // TODO: use date-fns and interval to determine the format
-      200: filteredData.filter((row) => row.status === 200).length,
-      400: filteredData.filter((row) => row.status === 400).length,
-      500: filteredData.filter((row) => row.status === 500).length,
+      success: filteredData.filter((row) => row.result === "success").length,
+      warning: filteredData.filter((row) => row.result === "warning").length,
+      error: filteredData.filter((row) => row.result === "error").length,
     };
   });
 }

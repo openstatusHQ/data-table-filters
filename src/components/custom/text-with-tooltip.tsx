@@ -5,6 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface TextWithTooltipProps {
   text: string | number;
@@ -23,27 +24,33 @@ export function TextWithTooltip({ text, className }: TextWithTooltipProps) {
       }
     };
 
+    const resizeObserver = new ResizeObserver(() => {
+      checkTruncation();
+    });
+
+    if (textRef.current) {
+      resizeObserver.observe(textRef.current);
+    }
+
     checkTruncation();
-    window.addEventListener("resize", checkTruncation);
 
     return () => {
-      window.removeEventListener("resize", checkTruncation);
+      resizeObserver.disconnect();
     };
   }, []);
 
-  // REMiNDER: check if that is the correct way to handle this
-  if (!isTruncated)
-    return (
-      <div ref={textRef} className={`truncate ${className}`}>
-        {text}
-      </div>
-    );
-
   return (
-    <TooltipProvider disableHoverableContent delayDuration={100}>
+    <TooltipProvider delayDuration={100} disableHoverableContent>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <div ref={textRef} className={`truncate ${className}`}>
+        <TooltipTrigger disabled={!isTruncated} asChild>
+          <div
+            ref={textRef}
+            className={cn(
+              "truncate",
+              !isTruncated && "pointer-events-none",
+              className
+            )}
+          >
             {text}
           </div>
         </TooltipTrigger>
@@ -52,5 +59,3 @@ export function TextWithTooltip({ text, className }: TextWithTooltipProps) {
     </TooltipProvider>
   );
 }
-
-export default TextWithTooltip;

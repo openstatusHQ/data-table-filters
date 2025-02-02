@@ -5,11 +5,23 @@ import { type ColumnSchema } from "./schema";
 import type {
   DataTableFilterField,
   Option,
+  SheetField,
 } from "@/components/data-table/types";
 import { getStatusColor } from "@/lib/request/status-code";
 import { METHODS } from "@/constants/method";
-import { REGIONS } from "@/constants/region";
+import { flags, regions, REGIONS } from "@/constants/region";
+import { RESULTS } from "@/constants/results";
+import { getResultColor, getResultLabel } from "@/lib/request/result";
+import { format } from "date-fns";
+import { formatMilliseconds } from "@/lib/format";
+import { SheetTimingPhases } from "./_components/sheet-timing-phases";
+import { TabsObjectView } from "./_components/tabs-object-view";
+import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
+import { PopoverPercentile } from "./_components/popover-percentile";
+import { Percentile } from "@/lib/request/percentile";
 
+// instead of filterFields, maybe just 'fields' with a filterDisabled prop?
+// that way, we could have 'message' or 'headers' field with label and value as well as type!
 export const filterFields = [
   {
     label: "Time Range",
@@ -19,10 +31,33 @@ export const filterFields = [
     commandDisabled: true,
   },
   {
-    label: "Success",
-    value: "success",
+    label: "Result",
+    value: "result",
     type: "checkbox",
-    options: [true, false].map((bool) => ({ label: `${bool}`, value: bool })),
+    defaultOpen: true,
+    options: RESULTS.map((result) => ({ label: result, value: result })),
+    component: (props: Option) => {
+      // TODO: type `Option` with `options` values via Generics
+      const value = props.value as (typeof RESULTS)[number];
+      return (
+        <div className="flex w-full items-center justify-between gap-2 max-w-28 font-mono">
+          <span className="capitalize text-foreground/70 group-hover:text-accent-foreground">
+            {props.label}
+          </span>
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "h-2.5 w-2.5 rounded-[2px]",
+                getResultColor(value).bg
+              )}
+            />
+            <span className="text-xs text-muted-foreground/70">
+              {getResultLabel(value)}
+            </span>
+          </div>
+        </div>
+      );
+    },
   },
   {
     label: "Host",
@@ -43,9 +78,9 @@ export const filterFields = [
     options: [
       { label: "200", value: 200 },
       { label: "400", value: 400 },
+      { label: "404", value: 404 },
       { label: "500", value: 500 },
     ], // REMINDER: this is a placeholder to set the type in the client.tsx
-    defaultOpen: true,
     component: (props: Option) => {
       if (typeof props.value === "boolean") return null;
       if (typeof props.value === "undefined") return null;
@@ -124,3 +159,128 @@ export const filterFields = [
     options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
 ] satisfies DataTableFilterField<ColumnSchema>[];
+
+export const sheetFields = [
+  {
+    id: "uuid",
+    label: "Request ID",
+    type: "readonly",
+    skeletonClassName: "w-64",
+  },
+  {
+    id: "date",
+    label: "Date",
+    type: "timerange",
+    component: (props) => format(new Date(props.date), "LLL dd, y HH:mm:ss"),
+    skeletonClassName: "w-36",
+  },
+  {
+    id: "status",
+    label: "Status",
+    type: "checkbox",
+    component: (props) => {
+      return (
+        <span className={cn("font-mono", getStatusColor(props.status).text)}>
+          {props.status}
+        </span>
+      );
+    },
+    skeletonClassName: "w-12",
+  },
+  {
+    id: "method",
+    label: "Method",
+    type: "checkbox",
+    component: (props) => {
+      return <span className="font-mono">{props.method}</span>;
+    },
+    skeletonClassName: "w-10",
+  },
+  {
+    id: "host",
+    label: "Host",
+    type: "input",
+    skeletonClassName: "w-24",
+  },
+  {
+    id: "pathname",
+    label: "Pathname",
+    type: "input",
+    skeletonClassName: "w-56",
+  },
+  {
+    id: "regions",
+    label: "Regions",
+    type: "checkbox",
+    skeletonClassName: "w-12",
+    component: (props) => (
+      <>
+        <span className="text-muted-foreground text-xs">
+          {flags[props.regions[0]]} {regions[props.regions[0]]}
+        </span>{" "}
+        {props.regions[0]}
+      </>
+    ),
+  },
+  {
+    id: "latency",
+    label: "Latency",
+    type: "slider",
+    component: (props) => (
+      <>
+        {formatMilliseconds(props.latency)}
+        <span className="text-muted-foreground">ms</span>
+      </>
+    ),
+    skeletonClassName: "w-16",
+  },
+  {
+    id: "percentile",
+    label: "Percentile",
+    type: "readonly",
+    component: (props) => {
+      return (
+        <PopoverPercentile
+          data={props}
+          percentiles={
+            props.metadata?.currentPercentiles as Record<Percentile, number>
+          }
+          filterRows={props.metadata?.filterRows as number}
+          className="ml-auto"
+        />
+      );
+    },
+    skeletonClassName: "w-12",
+  },
+  {
+    id: "timing.dns", // REMINDER: cannot be 'timing' as it is a property of the object
+    label: "Timing Phases",
+    type: "readonly",
+    component: (props) => (
+      <SheetTimingPhases latency={props.latency} timing={props} />
+    ),
+    className: "flex-col items-start w-full gap-1",
+  },
+  {
+    id: "headers",
+    label: "Headers",
+    type: "readonly",
+    component: (props) => (
+      // REMINDER: negative margin to make it look like the header is on the same level of the tab triggers
+      <TabsObjectView data={props.headers} className="-mt-[22px]" />
+    ),
+    className: "flex-col items-start w-full gap-1",
+  },
+  {
+    id: "message",
+    label: "Message",
+    type: "readonly",
+    condition: (props) => props.message !== undefined,
+    component: (props) => (
+      <CopyToClipboardContainer className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono text-sm">
+        {JSON.stringify(props.message, null, 2)}
+      </CopyToClipboardContainer>
+    ),
+    className: "flex-col items-start w-full gap-1",
+  },
+] satisfies SheetField<ColumnSchema>[];

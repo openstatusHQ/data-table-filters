@@ -18,51 +18,65 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Table } from "@tanstack/react-table";
 import { Kbd } from "@/components/custom/kbd";
 import { cn } from "@/lib/utils";
+import { useDataTable } from "@/providers/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface DataTableSheetDetailsProps<TData> {
-  table: Table<TData>;
   title?: string;
   titleClassName?: string;
   children?: React.ReactNode;
 }
 
 export function DataTableSheetDetails<TData>({
-  table,
   title,
   titleClassName,
   children,
 }: DataTableSheetDetailsProps<TData>) {
-  const selectedRowKey =
-    Object.keys(table.getState().rowSelection)?.[0] || undefined;
+  const props = useDataTable();
+  const { table, rowSelection, isLoading } = props;
+
+  const selectedRowKey = Object.keys(rowSelection)?.[0];
+
+  const selectedRow = React.useMemo(() => {
+    if (isLoading) return;
+    return table
+      .getCoreRowModel()
+      .flatRows.find((row) => row.id === selectedRowKey);
+  }, [selectedRowKey, isLoading]);
 
   const index = table
     .getCoreRowModel()
-    .flatRows.findIndex((row) => row.id === selectedRowKey);
+    .flatRows.findIndex((row) => row.id === selectedRow?.id);
 
   const nextId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index + 1]?.id,
-    [index, table]
+    [index, isLoading]
   );
 
   const prevId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index - 1]?.id,
-    [index, table]
+    [index, isLoading]
   );
 
   const onPrev = React.useCallback(() => {
     if (prevId) table.setRowSelection({ [prevId]: true });
-  }, [prevId, table]);
+  }, [prevId, isLoading]);
 
   const onNext = React.useCallback(() => {
     if (nextId) table.setRowSelection({ [nextId]: true });
-  }, [nextId, table]);
+  }, [nextId, isLoading]);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (!selectedRowKey) return;
+
+      // REMINDER: prevent dropdown navigation inside of sheet to change row selection
+      const activeElement = document.activeElement;
+      const isMenuActive = activeElement?.closest('[role="menu"]');
+
+      if (isMenuActive) return;
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
@@ -81,13 +95,28 @@ export function DataTableSheetDetails<TData>({
   return (
     <Sheet
       open={!!selectedRowKey}
-      onOpenChange={() => table.toggleAllRowsSelected(false)}
+      onOpenChange={() => {
+        // REMINDER: focus back to the row that was selected
+        // We need to manually focus back due to missing Trigger component
+        const el = selectedRowKey
+          ? document.getElementById(selectedRowKey)
+          : null;
+        table.resetRowSelection();
+
+        // REMINDER: when navigating between tabs in the sheet and exit the sheet, the tab gets lost
+        // We need a minimal delay to allow the sheet to close before focusing back to the row
+        setTimeout(() => el?.focus(), 0);
+      }}
     >
-      <SheetContent className="sm:max-w-md overflow-y-auto p-0" hideClose>
-        <SheetHeader className="sticky top-0 border-b bg-background p-4">
+      <SheetContent
+        // onCloseAutoFocus={(e) => e.preventDefault()}
+        className="sm:max-w-md overflow-y-auto p-0"
+        hideClose
+      >
+        <SheetHeader className="sticky top-0 border-b bg-background p-4 z-10">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className={cn(titleClassName, "text-left truncate")}>
-              {title}
+              {isLoading ? <Skeleton className="h-7 w-36" /> : title}
             </SheetTitle>
             <div className="flex items-center gap-1 h-7">
               <TooltipProvider>
@@ -97,7 +126,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!prevId}
+                      disabled={!prevId || isLoading}
                       onClick={onPrev}
                     >
                       <ChevronUp className="h-5 w-5" />
@@ -118,7 +147,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!nextId}
+                      disabled={!nextId || isLoading}
                       onClick={onNext}
                     >
                       <ChevronDown className="h-5 w-5" />

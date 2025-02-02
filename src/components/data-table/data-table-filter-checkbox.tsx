@@ -1,6 +1,5 @@
 "use client";
 
-import type { Table } from "@tanstack/react-table";
 import { useState } from "react";
 import type { DataTableCheckboxFilterField } from "./types";
 import { cn } from "@/lib/utils";
@@ -8,23 +7,21 @@ import { Search } from "lucide-react";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type DataTableFilterCheckboxProps<TData> =
-  DataTableCheckboxFilterField<TData> & {
-    table: Table<TData>;
-  };
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDataTable } from "@/providers/data-table";
 
 export function DataTableFilterCheckbox<TData>({
-  table,
   value: _value,
   options,
   component,
-}: DataTableFilterCheckboxProps<TData>) {
+}: DataTableCheckboxFilterField<TData>) {
   const value = _value as string;
   const [inputValue, setInputValue] = useState("");
+  const { table, columnFilters, isLoading } = useDataTable();
   const column = table.getColumn(value);
+  // REMINDER: avoid using column?.getFilterValue()
+  const filterValue = columnFilters.find((i) => i.id === value)?.value;
   const facetedValue = column?.getFacetedUniqueValues();
-  const filterValue = column?.getFilterValue();
 
   if (!options?.length) return null;
 
@@ -57,7 +54,8 @@ export function DataTableFilterCheckbox<TData>({
       ) : null}
       <div className="rounded-lg border border-border empty:border-none">
         {filterOptions
-          .sort((a, b) => a.label.localeCompare(b.label))
+          // TODO: we shoudn't sort the options here, instead filterOptions should be sorted by default
+          // .sort((a, b) => a.label.localeCompare(b.label))
           .map((option, index) => {
             const checked = filters.includes(option.value);
 
@@ -65,7 +63,7 @@ export function DataTableFilterCheckbox<TData>({
               <div
                 key={String(option.value)}
                 className={cn(
-                  "group relative flex items-center space-x-2 px-2 py-2.5 hover:bg-accent",
+                  "group relative flex items-center space-x-2 px-2 py-2.5 hover:bg-accent/50",
                   index !== filterOptions.length - 1 ? "border-b" : undefined
                 )}
               >
@@ -83,7 +81,7 @@ export function DataTableFilterCheckbox<TData>({
                 />
                 <Label
                   htmlFor={`${value}-${option.value}`}
-                  className="flex w-full items-center justify-center gap-1 truncate text-muted-foreground group-hover:text-accent-foreground"
+                  className="flex w-full items-center justify-center gap-1 truncate text-foreground/70 group-hover:text-accent-foreground"
                 >
                   {Component ? (
                     <Component {...option} />
@@ -91,7 +89,11 @@ export function DataTableFilterCheckbox<TData>({
                     <span className="truncate font-normal">{option.label}</span>
                   )}
                   <span className="ml-auto flex items-center justify-center font-mono text-xs">
-                    {facetedValue?.get(option.value)}
+                    {isLoading ? (
+                      <Skeleton className="h-4 w-4" />
+                    ) : (
+                      facetedValue?.get(option.value)
+                    )}
                   </span>
                   <button
                     type="button"

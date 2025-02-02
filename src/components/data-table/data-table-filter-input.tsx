@@ -1,24 +1,40 @@
 "use client";
 
-import type { Table } from "@tanstack/react-table";
 import type { DataTableInputFilterField } from "./types";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useDataTable } from "@/providers/data-table";
 
-type DataTableFilterInputProps<TData> = DataTableInputFilterField<TData> & {
-  table: Table<TData>;
-};
+function getFilter(filterValue: unknown) {
+  return typeof filterValue === "string" ? filterValue : null;
+}
 
 export function DataTableFilterInput<TData>({
-  table,
   value: _value,
-}: DataTableFilterInputProps<TData>) {
+}: DataTableInputFilterField<TData>) {
   const value = _value as string;
+  const { table, columnFilters } = useDataTable();
   const column = table.getColumn(value);
-  const filterValue = column?.getFilterValue();
+  const filterValue = columnFilters.find((i) => i.id === value)?.value;
+  const filters = getFilter(filterValue);
+  const [input, setInput] = useState<string | null>(filters);
 
-  const filters = typeof filterValue === "string" ? filterValue : "";
+  const debouncedInput = useDebounce(input, 500);
+
+  useEffect(() => {
+    const newValue = debouncedInput?.trim() === "" ? null : debouncedInput;
+    if (debouncedInput === null) return;
+    column?.setFilterValue(newValue);
+  }, [debouncedInput]);
+
+  useEffect(() => {
+    if (debouncedInput?.trim() !== filters) {
+      setInput(filters);
+    }
+  }, [filters]);
 
   return (
     <div className="grid w-full gap-1.5">
@@ -31,12 +47,8 @@ export function DataTableFilterInput<TData>({
         containerClassName="h-9 rounded-lg"
         name={value}
         id={value}
-        value={filters}
-        onChange={(e) => {
-          const val = e.target.value;
-          const newValue = val.trim() === "" ? null : val;
-          column?.setFilterValue(newValue);
-        }}
+        value={input || ""}
+        onChange={(e) => setInput(e.target.value)}
       />
     </div>
   );

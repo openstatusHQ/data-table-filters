@@ -1,9 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Minus, X } from "lucide-react";
+import { Minus } from "lucide-react";
 import type { ColumnSchema } from "./schema";
-import { format } from "date-fns";
 import { getStatusColor } from "@/lib/request/status-code";
 import { regions } from "@/constants/region";
 import {
@@ -19,35 +18,39 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import TextWithTooltip from "@/components/custom/text-with-tooltip";
-import { UTCDate } from "@date-fns/utc";
-
-const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
+import { HoverCardTimestamp } from "./_components/hover-card-timestamp";
+import { RESULTS } from "@/constants/results";
+import { getResultColor } from "@/lib/request/result";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
-    accessorKey: "success",
+    accessorKey: "result",
     header: "",
     cell: ({ row }) => {
-      const value = row.getValue("success");
-      if (value) return <Check className="h-4 w-4 text-green-500/60" />;
-      return <X className="h-4 w-4 text-red-500" />;
-    },
-    filterFn: "arrSome",
-    meta: { headerClassName: "w-4" },
-  },
-  {
-    id: "uuid",
-    accessorKey: "uuid",
-    header: "UUID",
-    cell: ({ row }) => {
-      const value = row.getValue("uuid") as string;
+      const value = row.getValue("result") as (typeof RESULTS)[number];
       return (
-        <TextWithTooltip className="font-mono max-w-[85px]" text={value} />
+        <div className="flex items-center justify-center">
+          <div
+            className={cn(
+              "h-2.5 w-2.5 rounded-[2px]",
+              getResultColor(value).bg
+            )}
+          />
+        </div>
       );
     },
+    enableHiding: false,
+    enableResizing: false,
+    filterFn: "arrSome",
+    size: 27,
+    minSize: 27,
+    maxSize: 27,
     meta: {
-      label: "UUID",
+      headerClassName:
+        "w-[--header-result-size] max-w-[--header-result-size] min-w-[--header-result-size]",
+      cellClassName:
+        "w-[--col-result-size] max-w-[--col-result-size] min-w-[--col-result-size]",
     },
   },
   {
@@ -57,44 +60,35 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     ),
     cell: ({ row }) => {
       const date = new Date(row.getValue("date"));
-      return (
-        <HoverCard openDelay={0} closeDelay={0}>
-          <HoverCardTrigger asChild>
-            <div className="font-mono whitespace-nowrap">
-              {format(date, "LLL dd, y HH:mm:ss")}
-            </div>
-          </HoverCardTrigger>
-          <HoverCardContent
-            side="right"
-            align="start"
-            alignOffset={-4}
-            className="p-2 w-auto z-10"
-          >
-            <dl className="flex flex-col gap-1">
-              <div className="flex gap-4 text-sm justify-between items-center">
-                <dt className="text-muted-foreground">Timestamp</dt>
-                <dd className="font-mono truncate">{date.getTime()}</dd>
-              </div>
-              <div className="flex gap-4 text-sm justify-between items-center">
-                <dt className="text-muted-foreground">UTC</dt>
-                <dd className="font-mono truncate">
-                  {format(new UTCDate(date), "LLL dd, y HH:mm:ss")}
-                </dd>
-              </div>
-              <div className="flex gap-4 text-sm justify-between items-center">
-                <dt className="text-muted-foreground">{timezone}</dt>
-                <dd className="font-mono truncate">
-                  {format(date, "LLL dd, y HH:mm:ss")}
-                </dd>
-              </div>
-            </dl>
-          </HoverCardContent>
-        </HoverCard>
-      );
+      return <HoverCardTimestamp date={date} />;
     },
     filterFn: "inDateRange",
+    enableResizing: false,
+    size: 200,
+    minSize: 200,
     meta: {
-      // headerClassName: "w-[182px]",
+      headerClassName:
+        "w-[--header-date-size] max-w-[--header-date-size] min-w-[--header-date-size]",
+      cellClassName:
+        "font-mono w-[--col-date-size] max-w-[--col-date-size] min-w-[--col-date-size]",
+    },
+  },
+  {
+    id: "uuid",
+    accessorKey: "uuid",
+    header: "Request Id",
+    cell: ({ row }) => {
+      const value = row.getValue("uuid") as string;
+      return <TextWithTooltip text={value} />;
+    },
+    size: 130,
+    minSize: 130,
+    meta: {
+      label: "Request Id",
+      cellClassName:
+        "font-mono w-[--col-uuid-size] max-w-[--col-uuid-size] min-w-[--col-uuid-size]",
+      headerClassName:
+        "min-w-[--header-uuid-size] w-[--header-uuid-size] max-w-[--header-uuid-size]",
     },
   },
   {
@@ -112,25 +106,43 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <div className="text-muted-foreground">{`${value}`}</div>;
     },
     filterFn: "arrSome",
+    enableResizing: false,
+    size: 60,
+    minSize: 60,
+    meta: {
+      headerClassName:
+        "w-[--header-status-size] max-w-[--header-status-size] min-w-[--header-status-size]",
+      cellClassName:
+        "font-mono w-[--col-status-size] max-w-[--col-status-size] min-w-[--col-status-size]",
+    },
   },
   {
     // TODO: make it a type of MethodSchema!
     accessorKey: "method",
     header: "Method",
-    cell: ({ row }) => {
-      const value = row.getValue("method") as string;
-      return <div className="font-mono">{value}</div>;
-    },
     filterFn: "arrIncludesSome",
+    enableResizing: false,
+    size: 69,
+    minSize: 69,
+    meta: {
+      cellClassName:
+        "font-mono text-muted-foreground w-[--col-method-size] max-w-[--col-method-size] min-w-[--col-method-size]",
+      headerClassName:
+        "w-[--header-method-size] max-w-[--header-method-size] min-w-[--header-method-size]",
+    },
   },
   {
     accessorKey: "host",
     header: "Host",
     cell: ({ row }) => {
       const value = row.getValue("host") as string;
-      return (
-        <TextWithTooltip className="font-mono max-w-[120px]" text={value} />
-      );
+      return <TextWithTooltip text={value} />;
+    },
+    size: 125,
+    minSize: 125,
+    meta: {
+      cellClassName: "font-mono w-[--col-host-size] max-w-[--col-host-size]",
+      headerClassName: "min-w-[--header-host-size] w-[--header-host-size]",
     },
   },
   {
@@ -138,9 +150,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "Pathname",
     cell: ({ row }) => {
       const value = row.getValue("pathname") as string;
-      return (
-        <TextWithTooltip className="font-mono max-w-[120px]" text={value} />
-      );
+      return <TextWithTooltip text={value} />;
+    },
+    size: 130,
+    minSize: 130,
+    meta: {
+      cellClassName:
+        "font-mono w-[--col-pathname-size] max-w-[--col-pathname-size]",
+      headerClassName:
+        "min-w-[--header-pathname-size] w-[--header-pathname-size]",
     },
   },
   {
@@ -154,6 +172,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
+    meta: {
+      headerClassName:
+        "w-[--header-latency-size] max-w-[--header-latency-size] min-w-[--header-latency-size]",
+      cellClassName:
+        "font-mono w-[--col-latency-size] max-w-[--col-latency-size] min-w-[--col-latency-size]",
+    },
   },
   {
     accessorKey: "regions",
@@ -168,9 +195,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         } else {
           return (
             <div className="whitespace-nowrap">
-              <span className="font-mono">{value}</span>{" "}
-              <span className="text-muted-foreground">
-                - {`${regions[value[0]]}`}
+              <span>{value}</span>{" "}
+              <span className="text-muted-foreground text-xs">
+                {`${regions[value[0]]}`}
               </span>
             </div>
           );
@@ -184,6 +211,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <Minus className="h-4 w-4 text-muted-foreground/50" />;
     },
     filterFn: "arrIncludesSome",
+    enableResizing: false,
+    size: 163,
+    minSize: 163,
+    meta: {
+      headerClassName:
+        "w-[--header-regions-size] max-w-[--header-regions-size] min-w-[--header-regions-size]",
+      cellClassName:
+        "font-mono w-[--col-regions-size] max-w-[--col-regions-size] min-w-[--col-regions-size]",
+    },
   },
   {
     accessorKey: "timing",
@@ -198,7 +234,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       };
       const latency = row.getValue("latency") as number;
       const percentage = getTimingPercentage(timing, latency);
-      // create a separate component for this
+      // TODO: create a separate component for this in _components
       return (
         <HoverCard openDelay={50} closeDelay={50}>
           <HoverCardTrigger
@@ -218,7 +254,11 @@ export const columns: ColumnDef<ColumnSchema>[] = [
               ))}
             </div>
           </HoverCardTrigger>
-          <HoverCardContent side="bottom" className="p-2 w-auto z-10">
+          <HoverCardContent
+            side="bottom"
+            align="end"
+            className="p-2 w-auto z-10"
+          >
             <div className="flex flex-col gap-1">
               {timingPhases.map((phase) => {
                 const color = getTimingColor(phase);
@@ -227,7 +267,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
                   <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
                     <div className="flex items-center gap-2">
                       <div className={cn(color, "h-2 w-2 rounded-full")} />
-                      <div className="uppercase text-accent-foreground">
+                      <div className="uppercase font-mono text-accent-foreground">
                         {getTimingLabel(phase)}
                       </div>
                     </div>
@@ -250,8 +290,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         </HoverCard>
       );
     },
+    enableResizing: false,
+    size: 130,
+    minSize: 130,
     meta: {
       label: "Timing Phases",
+      headerClassName:
+        "w-[--header-timing-size] max-w-[--header-timing-size] min-w-[--header-timing-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-size] max-w-[--col-timing-size] min-w-[--col-timing-size]",
     },
   },
   {
@@ -265,8 +312,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "DNS",
+      headerClassName:
+        "w-[--header-timing-dns-size] max-w-[--header-timing-dns-size] min-w-[--header-timing-dns-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-dns-size] max-w-[--col-timing-dns-size] min-w-[--col-timing-dns-size]",
     },
   },
   {
@@ -280,8 +334,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "Connection",
+      headerClassName:
+        "w-[--header-timing-connection-size] max-w-[--header-timing-connection-size] min-w-[--header-timing-connection-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-connection-size] max-w-[--col-timing-connection-size] min-w-[--col-timing-connection-size]",
     },
   },
   {
@@ -295,8 +356,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "TLS",
+      headerClassName:
+        "w-[--header-timing-tls-size] max-w-[--header-timing-tls-size] min-w-[--header-timing-tls-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-tls-size] max-w-[--col-timing-tls-size] min-w-[--col-timing-tls-size]",
     },
   },
   {
@@ -310,8 +378,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "TTFB",
+      headerClassName:
+        "w-[--header-timing-ttfb-size] max-w-[--header-timing-ttfb-size] min-w-[--header-timing-ttfb-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-ttfb-size] max-w-[--col-timing-ttfb-size] min-w-[--col-timing-ttfb-size]",
     },
   },
   {
@@ -325,8 +400,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       return <LatencyDisplay value={value} />;
     },
     filterFn: "inNumberRange",
+    enableResizing: false,
+    size: 110,
+    minSize: 110,
     meta: {
       label: "Transfer",
+      headerClassName:
+        "w-[--header-timing-transfer-size] max-w-[--header-timing-transfer-size] min-w-[--header-timing-transfer-size]",
+      cellClassName:
+        "font-mono w-[--col-timing-transfer-size] max-w-[--col-timing-transfer-size] min-w-[--col-timing-transfer-size]",
     },
   },
 ];

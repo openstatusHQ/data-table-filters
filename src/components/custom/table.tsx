@@ -7,8 +7,12 @@ interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
 }
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
-  ({ className, containerClassName, ...props }, ref) => (
-    <div className={cn("w-full overflow-auto", containerClassName)}>
+  ({ className, containerClassName, onScroll, ...props }, ref) => (
+    <div
+      className={cn("w-full overflow-auto", containerClassName)}
+      // REMINDER: we are not scrolling the table, but the container
+      {...{ onScroll }}
+    >
       <table
         ref={ref}
         className={cn("w-full caption-bottom text-sm", className)}

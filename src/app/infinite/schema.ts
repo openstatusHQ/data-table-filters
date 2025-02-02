@@ -6,6 +6,7 @@ import {
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
 import { z } from "zod";
+import { RESULTS } from "@/constants/results";
 
 // https://github.com/colinhacks/zod/issues/2985#issue-2008642190
 const stringToBoolean = z
@@ -35,7 +36,7 @@ export const columnSchema = z
     method: z.enum(METHODS),
     host: z.string(),
     pathname: z.string(),
-    success: z.boolean(),
+    result: z.enum(RESULTS),
     latency: z.number(),
     status: z.number(),
     regions: z.enum(REGIONS).array(),
@@ -51,10 +52,10 @@ export type TimingSchema = z.infer<typeof timingSchema>;
 
 // TODO: can we get rid of this in favor of nuqs search-params?
 export const columnFilterSchema = z.object({
-  success: z
+  result: z
     .string()
     .transform((val) => val.split(ARRAY_DELIMITER))
-    .pipe(stringToBoolean.array())
+    .pipe(z.enum(RESULTS).array())
     .optional(),
   method: z
     .string()

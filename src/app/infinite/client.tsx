@@ -3,17 +3,28 @@
 import * as React from "react";
 import { DataTableInfinite } from "./data-table-infinite";
 import { columns } from "./columns";
-import { filterFields as defaultFilterFields } from "./constants";
+import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
+import { useHotKey } from "@/hooks/use-hot-key";
+import { getResultRowClassName } from "@/lib/request/result";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
   const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
     dataOptions(search)
   );
+
+  useHotKey(() => {
+    // FIXME: some dedicated div[tabindex="0"] do not auto-unblur (e.g. the DataTableFilterResetButton)
+    // REMINDER: we cannot just document.activeElement?.blur(); as the next tab will focus the next element in line,
+    // which is not what we want. We want to reset entirely.
+    document.body.setAttribute("tabindex", "0");
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
+  }, ".");
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
@@ -30,6 +41,7 @@ export function Client() {
 
   const { sort, start, size, uuid, ...filter } = search;
 
+  // TODO: auto search via API when the user changes the filter instead of hardcoded
   const filterFields = React.useMemo(
     () =>
       defaultFilterFields.map((field) => {
@@ -76,11 +88,22 @@ export function Client() {
         .filter(({ value }) => value ?? undefined)}
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
+      defaultColumnVisibility={{
+        uuid: false,
+        "timing.dns": false,
+        "timing.connection": false,
+        "timing.tls": false,
+        "timing.ttfb": false,
+        "timing.transfer": false,
+      }}
       filterFields={filterFields}
+      sheetFields={sheetFields}
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       chartData={chartData}
+      getRowClassName={(row) => getResultRowClassName(row.original.result)}
+      getRowId={(row) => row.uuid}
     />
   );
 }

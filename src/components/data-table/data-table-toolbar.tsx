@@ -7,39 +7,29 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Table } from "@tanstack/react-table";
 import { LoaderCircle, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
-import { useEffect } from "react";
 import { Kbd } from "@/components/custom/kbd";
+import { DataTableResetButton } from "./data-table-reset-button";
+import { useHotKey } from "@/hooks/use-hot-key";
+import { useDataTable } from "@/providers/data-table";
+import { useControls } from "@/providers/controls";
+import { useMemo } from "react";
+import { formatCompactNumber } from "@/lib/format";
 
-interface DataTableToolbarProps<TData> {
-  table: Table<TData>;
-  controlsOpen: boolean;
-  setControlsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  isLoading?: boolean;
-  enableColumnOrdering?: boolean;
-}
-
-export function DataTableToolbar<TData>({
-  table,
-  controlsOpen,
-  setControlsOpen,
-  isLoading,
-  enableColumnOrdering,
-}: DataTableToolbarProps<TData>) {
+export function DataTableToolbar() {
+  const { table, isLoading } = useDataTable();
+  const { open, setOpen } = useControls();
+  useHotKey(() => setOpen((prev) => !prev), "b");
   const filters = table.getState().columnFilters;
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "b" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setControlsOpen((prev) => !prev);
-      }
-    };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, [setControlsOpen]);
+  const rows = useMemo(
+    () => ({
+      total: table.getCoreRowModel().rows.length,
+      filtered: table.getFilteredRowModel().rows.length,
+    }),
+    [isLoading]
+  );
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -50,10 +40,10 @@ export function DataTableToolbar<TData>({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setControlsOpen((prev) => !prev)}
+                onClick={() => setOpen((prev) => !prev)}
                 className="flex gap-2"
               >
-                {controlsOpen ? (
+                {open ? (
                   <>
                     <PanelLeftClose className="h-4 w-4" />
                     <span className="hidden sm:block">Hide Controls</span>
@@ -70,7 +60,7 @@ export function DataTableToolbar<TData>({
               <p>
                 Toggle controls with{" "}
                 <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">
-                  <span className="mr-0.5">⌘</span>
+                  <span className="mr-1">⌘</span>
                   <span>B</span>
                 </Kbd>
               </p>
@@ -78,8 +68,11 @@ export function DataTableToolbar<TData>({
           </Tooltip>
         </TooltipProvider>
         <p className="text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} of{" "}
-          {table.getCoreRowModel().rows.length} row(s) filtered
+          <span className="font-medium font-mono">
+            {formatCompactNumber(rows.filtered)}
+          </span>{" "}
+          of <span className="font-medium font-mono">{rows.total}</span> row(s)
+          filtered
           {/* TODO: add "(total X rows)" */}
         </p>
         {isLoading ? (
@@ -87,20 +80,8 @@ export function DataTableToolbar<TData>({
         ) : null}
       </div>
       <div className="flex items-center gap-2">
-        {filters.length ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => table.resetColumnFilters()}
-          >
-            <X className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
-        ) : null}
-        <DataTableViewOptions
-          table={table}
-          enableOrdering={enableColumnOrdering}
-        />
+        {filters.length ? <DataTableResetButton /> : null}
+        <DataTableViewOptions />
       </div>
     </div>
   );

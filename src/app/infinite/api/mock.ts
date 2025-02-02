@@ -22,12 +22,37 @@ function getRandomTiming(latency: number) {
   };
 }
 
+// REMINDER: for later
+function getRandomMetadata(): Record<string, string> {
+  const rand = Math.random();
+  if (rand < 0.5) {
+    return {
+      env: "production",
+    };
+  } else {
+    return {
+      env: "staging",
+    };
+  }
+}
+
+function getResult(status: number) {
+  if (`${status}`.startsWith("2")) return "success";
+  if (`${status}`.startsWith("4")) return "warning";
+  if (`${status}`.startsWith("5")) return "error";
+  return "error";
+}
+
 function getRandomStatusCode() {
   const rand = Math.random();
   if (rand < 0.9) {
     return 200;
-  } else if (rand < 0.94) {
-    return 400;
+  } else if (rand < 0.96) {
+    if (Math.random() < 0.5) {
+      return 400;
+    } else {
+      return 404;
+    }
   } else {
     return 500;
   }
@@ -37,7 +62,14 @@ function getMessage() {
   return 'ERR_INTERNAL_DISASTER: "The server spilled coffee on itself."';
 }
 
-const pathnames = ["/bikes/gravel", "/bikes/racing", "/bikes/mountain"];
+const shopPathnames = [
+  "/bikes/gravel/road",
+  "/bikes/racing/track",
+  "/bikes/mountain/trail",
+  "/bikes/city/cargo",
+];
+
+const apiPathnames = ["/v1/products", "/v1/orders", "/v1/customers"];
 
 function getRandomRequestObject(): {
   method: (typeof METHODS)[number];
@@ -49,13 +81,13 @@ function getRandomRequestObject(): {
     return {
       method: "POST",
       host: "api.acme-shop.com",
-      pathname: "/v1/products",
+      pathname: apiPathnames[Math.floor(Math.random() * apiPathnames.length)],
     };
   } else {
     return {
       method: "GET",
       host: "acme-shop.com",
-      pathname: pathnames[Math.floor(Math.random() * pathnames.length)],
+      pathname: shopPathnames[Math.floor(Math.random() * shopPathnames.length)],
     };
   }
 }
@@ -110,7 +142,7 @@ export function createMockData({
   return [
     {
       uuid: crypto.randomUUID(),
-      success: 200 === statusCode.ams,
+      result: getResult(statusCode.ams),
       latency: latency.ams,
       regions: ["ams"],
       status: statusCode.ams,
@@ -122,7 +154,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      success: 200 === statusCode.iad,
+      result: getResult(statusCode.iad),
       latency: latency.iad,
       regions: ["iad"],
       status: statusCode.iad,
@@ -134,7 +166,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      success: 200 === statusCode.gru,
+      result: getResult(statusCode.gru),
       latency: latency.gru,
       regions: ["gru"],
       status: statusCode.gru,
@@ -146,7 +178,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      success: 200 === statusCode.syd,
+      result: getResult(statusCode.syd),
       latency: latency.syd,
       regions: ["syd"],
       status: statusCode.syd,
@@ -158,7 +190,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      success: 200 === statusCode.fra,
+      result: getResult(statusCode.fra),
       latency: latency.fra,
       regions: ["fra"],
       status: statusCode.fra,
@@ -170,7 +202,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      success: 200 === statusCode.hkg,
+      result: getResult(statusCode.hkg),
       latency: latency.hkg,
       regions: ["hkg"],
       status: statusCode.hkg,

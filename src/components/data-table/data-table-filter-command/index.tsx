@@ -29,22 +29,19 @@ import {
 } from "./utils";
 import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useHotKey } from "@/hooks/use-hot-key";
+import { useDataTable } from "@/providers/data-table";
 
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
 
-interface DataTableFilterCommandProps<TData, TSchema extends z.AnyZodObject> {
-  table: Table<TData>;
+interface DataTableFilterCommandProps<TSchema extends z.AnyZodObject> {
   schema: TSchema;
-  filterFields?: DataTableFilterField<TData>[];
-  isLoading?: boolean;
 }
 
-export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
+export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
   schema,
-  table,
-  filterFields: _filterFields,
-  isLoading,
-}: DataTableFilterCommandProps<TData, TSchema>) {
+}: DataTableFilterCommandProps<TSchema>) {
+  const { table, isLoading, filterFields: _filterFields } = useDataTable();
   const columnFilters = table.getState().columnFilters;
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState<boolean>(false);
@@ -113,16 +110,7 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
     }
   }, [columnFilters, filterFields, open]);
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-    };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+  useHotKey(() => setOpen((open) => !open), "k");
 
   useEffect(() => {
     if (open) {
@@ -135,7 +123,7 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
       <button
         type="button"
         className={cn(
-          "group flex w-full items-center rounded-lg border border-input bg-background px-3 text-muted-foreground ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:bg-accent hover:text-accent-foreground",
+          "group flex w-full items-center rounded-lg border border-input bg-background px-3 text-muted-foreground ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:bg-accent/50 hover:text-accent-foreground",
           open ? "hidden" : "visible"
         )}
         onClick={() => setOpen(true)}
@@ -153,13 +141,13 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
           )}
         </span>
         <Kbd className="ml-auto text-muted-foreground group-hover:text-accent-foreground">
-          <span className="mr-0.5">⌘</span>
+          <span className="mr-1">⌘</span>
           <span>K</span>
         </Kbd>
       </button>
       <Command
         className={cn(
-          "overflow-visible rounded-lg border shadow-md [&>div]:border-none",
+          "overflow-visible rounded-lg border border-border shadow-md [&>div]:border-none dark:bg-muted/50",
           open ? "visible" : "hidden"
         )}
         filter={(value, search, keywords) =>
@@ -203,7 +191,7 @@ export function DataTableFilterCommand<TData, TSchema extends z.AnyZodObject>({
           className="text-foreground"
         />
         <div className="relative">
-          <div className="absolute top-2 z-10 w-full overflow-hidden rounded-lg border border-accent-foreground/30 bg-popover text-popover-foreground shadow-md outline-none animate-in">
+          <div className="absolute top-2 z-10 w-full overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md outline-none animate-in">
             {/* default height is 300px but in case of more, we'd like to tease the user */}
             <CommandList className="max-h-[310px]">
               <CommandGroup heading="Filter">
