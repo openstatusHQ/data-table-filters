@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { LoaderCircle, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { FilterIcon, LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
@@ -45,12 +45,14 @@ export function DataTableToolbar() {
               >
                 {open ? (
                   <>
-                    <PanelLeftClose className="h-4 w-4" />
+                    <PanelLeftClose className="hidden sm:block h-4 w-4" />
+                    <FilterIcon className="block sm:hidden h-4 w-4" />
                     <span className="hidden sm:block">Hide Controls</span>
                   </>
                 ) : (
                   <>
-                    <PanelLeftOpen className="h-4 w-4" />
+                    <PanelLeftOpen className="hidden sm:block h-4 w-4" />
+                    <FilterIcon className="block sm:hidden h-4 w-4" />
                     <span className="hidden sm:block">Show Controls</span>
                   </>
                 )}
