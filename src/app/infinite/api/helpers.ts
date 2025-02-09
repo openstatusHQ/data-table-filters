@@ -100,8 +100,7 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
   }));
 }
 
-// FIXME: make dynamic or use the constants on (BUT it uses `component` and "use client")
-//  this avoids having "headers" and "message"
+// FIXME: cannot use `filterFields` because it uses `component` and "use client"
 const filterValues = [
   "result",
   "latency",
@@ -140,13 +139,22 @@ export function getFacetsFromData(data: ColumnSchema[]) {
 
   const result = Object.fromEntries(
     Array.from(valuesMap.entries()).map(([key, valueMap]) => {
-      // TODO: discuss if we could move min/max in here?
-      const rows = Array.from(valueMap.entries()).map(([value, total]) => ({
-        value,
-        total,
-      }));
+      let min: number | undefined;
+      let max: number | undefined;
+      const rows = Array.from(valueMap.entries()).map(([value, total]) => {
+        if (typeof value === "number") {
+          if (!min) min = value;
+          else min = value < min ? value : min;
+          if (!max) max = value;
+          else max = value > max ? value : max;
+        }
+        return {
+          value,
+          total,
+        };
+      });
       const total = Array.from(valueMap.values()).reduce((a, b) => a + b, 0);
-      return [key, { rows, total }];
+      return [key, { rows, total, min, max }];
     })
   );
 

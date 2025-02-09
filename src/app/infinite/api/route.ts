@@ -32,25 +32,6 @@ export async function GET(req: NextRequest) {
   const facets = getFacetsFromData(filteredData);
   const withPercentileData = percentileData(sortedData);
 
-  // TODO: extract into helper
-  // FIXME: this is fugly
-  const totalFilters = totalData.reduce((prev, curr) => {
-    for (const key in curr) {
-      const value = curr[key as keyof typeof curr];
-      const prevValue = prev[key as keyof typeof prev] || [];
-      if (Array.isArray(value)) {
-        prev[key as keyof typeof prev] = [
-          // @ts-ignore
-          ...new Set([...prevValue, ...value]),
-        ];
-      } else {
-        // @ts-ignore
-        prev[key as keyof typeof prev] = [...new Set([...prevValue, value])];
-      }
-    }
-    return prev;
-  }, {} as Record<string, (number | string | boolean | Date)[]>);
-
   const latencies = withPercentileData.map(({ latency }) => latency);
 
   const currentPercentiles = {
@@ -66,7 +47,6 @@ export async function GET(req: NextRequest) {
     meta: {
       totalRowCount: totalData.length,
       filterRowCount: filteredData.length,
-      totalFilters,
       currentPercentiles,
       chartData,
       facets,

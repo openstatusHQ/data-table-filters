@@ -63,13 +63,11 @@ export const filterFields = [
     label: "Host",
     value: "host",
     type: "input",
-    options: [{ label: "", value: "" }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Pathname",
     value: "pathname",
     type: "input",
-    options: [{ label: "", value: "" }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Status Code",
@@ -116,7 +114,7 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
+    defaultOpen: true,
   },
   {
     label: "DNS",
@@ -124,7 +122,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Connection",
@@ -132,7 +129,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "TLS",
@@ -140,7 +136,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "TTFB",
@@ -148,7 +143,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Transfer",
@@ -156,7 +150,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
 ] satisfies DataTableFilterField<ColumnSchema>[];
 

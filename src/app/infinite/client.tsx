@@ -27,7 +27,6 @@ export function Client() {
   const lastPage = data?.pages?.[data?.pages.length - 1];
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
   const filterDBRowCount = lastPage?.meta?.filterRowCount;
-  const totalFilters = lastPage?.meta?.totalFilters;
   const currentPercentiles = lastPage?.meta?.currentPercentiles;
   const chartData = lastPage?.meta?.chartData;
   const facets = lastPage?.meta?.facets;
@@ -37,35 +36,30 @@ export function Client() {
 
   // REMINDER: this is currently needed for the cmdk search
   // TODO: auto search via API when the user changes the filter instead of hardcoded
-  const filterFields = React.useMemo(
-    () =>
-      defaultFilterFields.map((field) => {
-        if (
-          field.value === "latency" ||
-          field.value === "timing.dns" ||
-          field.value === "timing.connection" ||
-          field.value === "timing.tls" ||
-          field.value === "timing.ttfb" ||
-          field.value === "timing.transfer" ||
-          field.value === "status"
-        ) {
-          field.options =
-            totalFilters?.[field.value].map((value) => ({
-              label: `${value}`,
-              value,
-            })) ?? field.options;
-        }
-        if (field.value === "host" || field.value === "pathname") {
-          field.options =
-            totalFilters?.[field.value].map((value) => ({
-              label: `${value}`,
-              value,
-            })) ?? field.options;
-        }
-        return field;
-      }),
-    [totalFilters]
-  );
+  const filterFields = defaultFilterFields.map((field) => {
+    const facetsField = facets?.[field.value];
+    if (!facetsField) return field;
+    if (field.options && field.options.length > 0) return field;
+
+    // REMINDER: if no options are set, we need to set them via the API
+    const options = facetsField.rows.map(({ value }) => {
+      return {
+        label: `${value}`,
+        value,
+      };
+    });
+
+    if (field.type === "slider") {
+      return {
+        ...field,
+        min: facetsField.min ?? field.min,
+        max: facetsField.max ?? field.max,
+        options,
+      };
+    }
+
+    return { ...field, options };
+  });
 
   return (
     <DataTableInfinite
@@ -83,7 +77,7 @@ export function Client() {
         .filter(({ value }) => value ?? undefined)}
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
-      // FIXME: make it configurable
+      // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`
       defaultColumnVisibility={{
         uuid: false,
         "timing.dns": false,
@@ -107,16 +101,12 @@ export function Client() {
         );
       }}
       getFacetedMinMaxValues={(table, columnId) => {
-        return facets?.[columnId]?.rows.reduce((prev, curr) => {
-          if (Number.isNaN(Number(curr.value))) return prev;
-          if (prev === undefined)
-            return [Number(curr.value), Number(curr.value)];
-          if (Number(curr.value) < prev[0])
-            return [Number(curr.value), prev[1]];
-          if (Number(curr.value) > prev[1])
-            return [prev[0], Number(curr.value)];
-          return prev;
-        }, undefined as undefined | [number, number]);
+        const min = facets?.[columnId]?.min;
+        const max = facets?.[columnId]?.max;
+        if (min && max) return [min, max];
+        if (min) return [min, min];
+        if (max) return [max, max];
+        return undefined;
       }}
     />
   );

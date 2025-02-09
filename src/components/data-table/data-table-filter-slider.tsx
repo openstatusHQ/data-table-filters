@@ -31,11 +31,10 @@ export function DataTableFilterSlider<TData>({
   const filterValue = columnFilters.find((i) => i.id === value)?.value;
   const filters = getFilter(filterValue);
   const [input, setInput] = useState<number[] | null>(filters);
-  // TODO: when selected, the min/max values can not decrease/increase
+  // FIXME: when selected, the min/max values can not decrease/increase
   // this requires a bit more work
-  // const [min, max] = getFacetedMinMaxValues?.(table, value) ||
-  //   column?.getFacetedMinMaxValues() || [defaultMin, defaultMax];
-  const [min, max] = [defaultMin, defaultMax];
+  const [min, max] = getFacetedMinMaxValues?.(table, value) ||
+    column?.getFacetedMinMaxValues() || [defaultMin, defaultMax];
 
   const debouncedInput = useDebounce(input, 500);
 

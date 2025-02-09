@@ -202,21 +202,12 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
             {/* default height is 300px but in case of more, we'd like to tease the user */}
             <CommandList className="max-h-[310px]">
               <CommandGroup heading="Filter">
-                {filterFields?.map((field) => {
+                {/* REMINDER: we are mutating the filterFields `min` and `max` - to avoid that, we should clone the filterFields */}
+                {/* TODO: check if there is a better way to do this */}
+                {filterFields.map((field) => {
                   if (typeof field.value !== "string") return null;
                   if (inputValue.includes(`${field.value}:`)) return null;
                   // TBD: should we handle this in the component?
-                  if (field.type === "slider") {
-                    const [min, max] = getFacetedMinMaxValues?.(
-                      table,
-                      field.value
-                    ) ||
-                      table
-                        .getColumn(field.value)
-                        ?.getFacetedMinMaxValues() || [field.min, field.max];
-                    field.min = min;
-                    field.max = max;
-                  }
                   return (
                     <CommandItem
                       key={field.value}
