@@ -29,7 +29,7 @@ export function Client() {
   const lastPage = data?.pages?.[data?.pages.length - 1];
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
   const filterDBRowCount = lastPage?.meta?.filterRowCount;
-  const currentPercentiles = lastPage?.meta?.currentPercentiles;
+  const currentPercentiles = lastPage?.meta?.metadata?.currentPercentiles;
   const chartData = lastPage?.meta?.chartData;
   const facets = lastPage?.meta?.facets;
   const totalFetched = flatData?.length;

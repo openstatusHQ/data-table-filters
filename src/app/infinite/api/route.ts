@@ -11,6 +11,7 @@ import {
 } from "./helpers";
 import { calculateSpecificPercentile } from "@/lib/request/percentile";
 import { addDays } from "date-fns";
+import type { InfiniteQueryMeta, LogsMeta } from "../query-options";
 
 export async function GET(req: NextRequest) {
   // TODO: we could use a POST request to avoid this
@@ -58,7 +59,6 @@ export async function GET(req: NextRequest) {
     meta: {
       totalRowCount: totalData.length,
       filterRowCount: filteredData.length,
-      currentPercentiles,
       chartData,
       // REMINDER: we separate the slider for keeping the min/max facets of the slider fields
       facets: {
@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
           )
         ),
       },
-    },
+      metadata: { currentPercentiles },
+    } satisfies InfiniteQueryMeta<LogsMeta>,
   });
 }
