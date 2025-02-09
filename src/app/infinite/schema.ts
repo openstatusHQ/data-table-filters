@@ -112,3 +112,7 @@ export const columnFilterSchema = z.object({
 });
 
 export type ColumnFilterSchema = z.infer<typeof columnFilterSchema>;
+
+// REMINDER: could make `new Map()` of facets more typesafe
+// const stringNumberMap = z.map(z.string(), z.number());
+// type StringNumberMap = z.infer<typeof stringNumberMap>;

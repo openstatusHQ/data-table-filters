@@ -19,17 +19,23 @@ function getFilter(filterValue: unknown) {
     : null;
 }
 
+// TODO: discuss if we even need the `defaultMin` and `defaultMax`
 export function DataTableFilterSlider<TData>({
   value: _value,
-  min,
-  max,
+  min: defaultMin,
+  max: defaultMax,
 }: DataTableSliderFilterField<TData>) {
   const value = _value as string;
-  const { table, columnFilters } = useDataTable();
+  const { table, columnFilters, getFacetedMinMaxValues } = useDataTable();
   const column = table.getColumn(value);
   const filterValue = columnFilters.find((i) => i.id === value)?.value;
   const filters = getFilter(filterValue);
   const [input, setInput] = useState<number[] | null>(filters);
+  // TODO: when selected, the min/max values can not decrease/increase
+  // this requires a bit more work
+  // const [min, max] = getFacetedMinMaxValues?.(table, value) ||
+  //   column?.getFacetedMinMaxValues() || [defaultMin, defaultMax];
+  const [min, max] = [defaultMin, defaultMax];
 
   const debouncedInput = useDebounce(input, 500);
 

@@ -100,8 +100,57 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
   }));
 }
 
+// FIXME: make dynamic or use the constants on (BUT it uses `component` and "use client")
+//  this avoids having "headers" and "message"
+const filterValues = [
+  "result",
+  "latency",
+  "timing.dns",
+  "timing.connection",
+  "timing.tls",
+  "timing.ttfb",
+  "timing.transfer",
+  "status",
+  "regions",
+  "method",
+  "host",
+  "pathname",
+] as const;
+
+// serialize and deserialize the valuesMap
+// because we cannot pass Map() as response
+
 export function getFacetsFromData(data: ColumnSchema[]) {
-  // TODO: implement
+  const valuesMap = data.reduce((prev, curr) => {
+    Object.entries(curr).forEach(([key, value]) => {
+      if (filterValues.includes(key as any)) {
+        // REMINDER: because regions is an array with a single value we need to convert to string
+        // TODO: we should make the region a single string instead of an array?!?
+        const _value = Array.isArray(value) ? value.toString() : value;
+        const total = prev.get(key)?.get(_value) || 0;
+        if (prev.has(key) && _value) {
+          prev.get(key)?.set(_value, total + 1);
+        } else if (_value) {
+          prev.set(key, new Map([[_value, 1]]));
+        }
+      }
+    });
+    return prev;
+  }, new Map<string, Map<any, number>>());
+
+  const result = Object.fromEntries(
+    Array.from(valuesMap.entries()).map(([key, valueMap]) => {
+      // TODO: discuss if we could move min/max in here?
+      const rows = Array.from(valueMap.entries()).map(([value, total]) => ({
+        value,
+        total,
+      }));
+      const total = Array.from(valueMap.values()).reduce((a, b) => a + b, 0);
+      return [key, { rows, total }];
+    })
+  );
+
+  return result;
 }
 
 export function getPercentileFromData(data: ColumnSchema[]) {

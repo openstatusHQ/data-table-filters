@@ -1,8 +1,18 @@
 import type { MakeArray } from "@/types";
 import { ColumnSchema } from "./schema";
 import { SearchParamsType, searchParamsSerializer } from "./search-params";
-import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  keepPreviousData,
+  queryOptions,
+} from "@tanstack/react-query";
 import { Percentile } from "@/lib/request/percentile";
+
+// TODO: discuss where to put this
+export type FacetingFields = {
+  rows: { value: any; total: number }[];
+  total: number;
+};
 
 export type InfiniteQueryMeta = {
   totalRowCount: number;
@@ -10,6 +20,7 @@ export type InfiniteQueryMeta = {
   totalFilters: MakeArray<ColumnSchema>;
   currentPercentiles: Record<Percentile, number>;
   chartData: { timestamp: number; [key: string]: number }[];
+  facets: Record<string, FacetingFields>;
 };
 
 export const dataOptions = (search: SearchParamsType) => {

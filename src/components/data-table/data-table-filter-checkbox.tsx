@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDataTable } from "@/providers/data-table";
+import { formatCompactNumber } from "@/lib/format";
 
 export function DataTableFilterCheckbox<TData>({
   value: _value,
@@ -17,11 +18,13 @@ export function DataTableFilterCheckbox<TData>({
 }: DataTableCheckboxFilterField<TData>) {
   const value = _value as string;
   const [inputValue, setInputValue] = useState("");
-  const { table, columnFilters, isLoading } = useDataTable();
+  const { table, columnFilters, isLoading, getFacetedUniqueValues } =
+    useDataTable();
   const column = table.getColumn(value);
   // REMINDER: avoid using column?.getFilterValue()
   const filterValue = columnFilters.find((i) => i.id === value)?.value;
-  const facetedValue = column?.getFacetedUniqueValues();
+  const facetedValue =
+    getFacetedUniqueValues?.(table, value) || column?.getFacetedUniqueValues();
 
   if (!options?.length) return null;
 
@@ -40,6 +43,10 @@ export function DataTableFilterCheckbox<TData>({
       ? filterValue
       : [filterValue]
     : [];
+
+  if (value === "status") {
+    console.log({ value, facetedValue });
+  }
 
   return (
     <div className="grid gap-2">
@@ -91,9 +98,9 @@ export function DataTableFilterCheckbox<TData>({
                   <span className="ml-auto flex items-center justify-center font-mono text-xs">
                     {isLoading ? (
                       <Skeleton className="h-4 w-4" />
-                    ) : (
-                      facetedValue?.get(option.value)
-                    )}
+                    ) : facetedValue?.has(option.value) ? (
+                      formatCompactNumber(facetedValue.get(option.value) || 0)
+                    ) : null}
                   </span>
                   <button
                     type="button"

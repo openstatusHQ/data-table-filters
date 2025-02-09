@@ -3,6 +3,7 @@ import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
 import {
   filterData,
+  getFacetsFromData,
   groupChartData,
   percentileData,
   sortData,
@@ -26,8 +27,9 @@ export async function GET(req: NextRequest) {
 
   const rangedData = filterData(totalData, { date: _date });
   const filteredData = filterData(rangedData, { ...search, date: null });
-  const graphedData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
+  const chartData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
   const sortedData = sortData(filteredData, search.sort);
+  const facets = getFacetsFromData(filteredData);
   const withPercentileData = percentileData(sortedData);
 
   // TODO: extract into helper
@@ -66,7 +68,8 @@ export async function GET(req: NextRequest) {
       filterRowCount: filteredData.length,
       totalFilters,
       currentPercentiles,
-      chartData: graphedData,
+      chartData,
+      facets,
     },
   });
 }
