@@ -4,7 +4,7 @@ import {
   differenceInMinutes,
   isSameDay,
 } from "date-fns";
-import { type ColumnSchema } from "../schema";
+import type { FacetMetadataSchema, ColumnSchema } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
   isArrayOfBooleans,
@@ -17,6 +17,25 @@ import {
 } from "@/lib/request/percentile";
 import { REGIONS } from "@/constants/region";
 import { RESULTS } from "@/constants/results";
+
+export const sliderFilterValues = [
+  "latency",
+  "timing.dns",
+  "timing.connection",
+  "timing.tls",
+  "timing.ttfb",
+  "timing.transfer",
+] as const satisfies (keyof ColumnSchema)[];
+
+export const filterValues = [
+  "result",
+  ...sliderFilterValues,
+  "status",
+  "regions",
+  "method",
+  "host",
+  "pathname",
+] as const satisfies (keyof ColumnSchema)[];
 
 export function filterData(
   data: ColumnSchema[],
@@ -100,29 +119,6 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
   }));
 }
 
-// FIXME: cannot use `filterFields` because it uses `component` and "use client"
-export const sliderFilterValues = [
-  "latency",
-  "timing.dns",
-  "timing.connection",
-  "timing.tls",
-  "timing.ttfb",
-  "timing.transfer",
-] as const;
-
-export const filterValues = [
-  "result",
-  ...sliderFilterValues,
-  "status",
-  "regions",
-  "method",
-  "host",
-  "pathname",
-] as const;
-
-// serialize and deserialize the valuesMap
-// because we cannot pass Map() as response
-
 export function getFacetsFromData(data: ColumnSchema[]) {
   const valuesMap = data.reduce((prev, curr) => {
     Object.entries(curr).forEach(([key, value]) => {
@@ -141,7 +137,7 @@ export function getFacetsFromData(data: ColumnSchema[]) {
     return prev;
   }, new Map<string, Map<any, number>>());
 
-  const result = Object.fromEntries(
+  const facets = Object.fromEntries(
     Array.from(valuesMap.entries()).map(([key, valueMap]) => {
       let min: number | undefined;
       let max: number | undefined;
@@ -162,7 +158,7 @@ export function getFacetsFromData(data: ColumnSchema[]) {
     })
   );
 
-  return result;
+  return facets satisfies Record<string, FacetMetadataSchema>;
 }
 
 export function getPercentileFromData(data: ColumnSchema[]) {

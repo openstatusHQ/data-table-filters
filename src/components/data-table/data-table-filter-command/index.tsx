@@ -47,7 +47,6 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
     isLoading,
     filterFields: _filterFields,
     getFacetedUniqueValues,
-    getFacetedMinMaxValues,
   } = useDataTable();
   const columnFilters = table.getState().columnFilters;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -202,8 +201,6 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
             {/* default height is 300px but in case of more, we'd like to tease the user */}
             <CommandList className="max-h-[310px]">
               <CommandGroup heading="Filter">
-                {/* REMINDER: we are mutating the filterFields `min` and `max` - to avoid that, we should clone the filterFields */}
-                {/* TODO: check if there is a better way to do this */}
                 {filterFields.map((field) => {
                   if (typeof field.value !== "string") return null;
                   if (inputValue.includes(`${field.value}:`)) return null;

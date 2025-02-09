@@ -10,6 +10,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { getResultRowClassName } from "@/lib/request/result";
+import type { FacetMetadataSchema } from "./schema";
+import type { Table as TTable } from "@tanstack/react-table";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
@@ -94,20 +96,8 @@ export function Client() {
       chartData={chartData}
       getRowClassName={(row) => getResultRowClassName(row.original.result)}
       getRowId={(row) => row.uuid}
-      getFacetedUniqueValues={(table, columnId) => {
-        return new Map(
-          facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) ||
-            []
-        );
-      }}
-      getFacetedMinMaxValues={(table, columnId) => {
-        const min = facets?.[columnId]?.min;
-        const max = facets?.[columnId]?.max;
-        if (min && max) return [min, max];
-        if (min) return [min, min];
-        if (max) return [max, max];
-        return undefined;
-      }}
+      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
     />
   );
 }
@@ -121,4 +111,27 @@ function useResetFocus() {
     document.body.focus();
     document.body.removeAttribute("tabindex");
   }, ".");
+}
+
+function getFacetedUniqueValues<TData>(
+  facets?: Record<string, FacetMetadataSchema>
+) {
+  return (_: TTable<TData>, columnId: string): Map<string, number> => {
+    return new Map(
+      facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) || []
+    );
+  };
+}
+
+function getFacetedMinMaxValues<TData>(
+  facets?: Record<string, FacetMetadataSchema>
+) {
+  return (_: TTable<TData>, columnId: string): [number, number] | undefined => {
+    const min = facets?.[columnId]?.min;
+    const max = facets?.[columnId]?.max;
+    if (min && max) return [min, max];
+    if (min) return [min, min];
+    if (max) return [max, max];
+    return undefined;
+  };
 }

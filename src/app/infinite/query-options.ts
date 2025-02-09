@@ -1,23 +1,15 @@
-import { ColumnSchema } from "./schema";
-import { SearchParamsType, searchParamsSerializer } from "./search-params";
+import type { ColumnSchema } from "./schema";
+import { type SearchParamsType, searchParamsSerializer } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
-import { Percentile } from "@/lib/request/percentile";
-
-// TODO: discuss where to put this
-export type FacetingFields = {
-  rows: { value: any; total: number }[];
-  total: number;
-  // REMINDER: used for the `getFacetedMinMaxValues` function
-  min?: number;
-  max?: number;
-};
+import type { Percentile } from "@/lib/request/percentile";
+import type { FacetMetadataSchema } from "./schema";
 
 export type InfiniteQueryMeta = {
   totalRowCount: number;
   filterRowCount: number;
   currentPercentiles: Record<Percentile, number>;
   chartData: { timestamp: number; [key: string]: number }[];
-  facets: Record<string, FacetingFields>;
+  facets: Record<string, FacetMetadataSchema>;
 };
 
 export const dataOptions = (search: SearchParamsType) => {

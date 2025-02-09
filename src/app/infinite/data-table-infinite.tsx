@@ -55,7 +55,6 @@ import { useHotKey } from "@/hooks/use-hot-key";
 import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
 import { DataTableProvider } from "@/providers/data-table";
 import { DataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
-import { FacetingFields } from "./query-options";
 
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue> {

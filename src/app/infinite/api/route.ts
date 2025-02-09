@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       ? [search.date[0], addDays(search.date[0], 1)]
       : search.date;
 
+  // REMINDER: we need to filter out the slider values because they are not part of the search params
   const _rest = Object.fromEntries(
     Object.entries(search).filter(
       ([key]) => !sliderFilterValues.includes(key as any)
