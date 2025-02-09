@@ -3,6 +3,8 @@ import { ColumnSchema } from "../schema";
 import { subMinutes } from "date-fns";
 import { REGIONS } from "@/constants/region";
 
+const DAYS = 20;
+
 function getRandomTiming(latency: number) {
   // Generate random percentages within the specified ranges
   const dns = Math.random() * (0.15 - 0.05) + 0.05; // 5% to 15%
@@ -215,6 +217,6 @@ export function createMockData({
   ];
 }
 
-export const mock = Array.from({ length: 14 * 24 })
+export const mock = Array.from({ length: DAYS * 24 })
   .map((_, i) => createMockData({ minutes: i * 60 }))
   .reduce((prev, curr) => prev.concat(curr), []) satisfies ColumnSchema[];

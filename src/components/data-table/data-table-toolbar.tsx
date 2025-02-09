@@ -18,7 +18,7 @@ import { useMemo } from "react";
 import { formatCompactNumber } from "@/lib/format";
 
 export function DataTableToolbar() {
-  const { table, isLoading } = useDataTable();
+  const { table, isLoading, columnFilters } = useDataTable();
   const { open, setOpen } = useControls();
   useHotKey(() => setOpen((prev) => !prev), "b");
   const filters = table.getState().columnFilters;
@@ -28,7 +28,7 @@ export function DataTableToolbar() {
       total: table.getCoreRowModel().rows.length,
       filtered: table.getFilteredRowModel().rows.length,
     }),
-    [isLoading]
+    [isLoading, columnFilters]
   );
 
   return (
@@ -73,7 +73,6 @@ export function DataTableToolbar() {
           </span>{" "}
           of <span className="font-medium font-mono">{rows.total}</span> row(s)
           filtered
-          {/* TODO: add "(total X rows)" */}
         </p>
         {isLoading ? (
           <LoaderCircle className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />
