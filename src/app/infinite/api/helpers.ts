@@ -101,14 +101,18 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
 }
 
 // FIXME: cannot use `filterFields` because it uses `component` and "use client"
-const filterValues = [
-  "result",
+export const sliderFilterValues = [
   "latency",
   "timing.dns",
   "timing.connection",
   "timing.tls",
   "timing.ttfb",
   "timing.transfer",
+] as const;
+
+export const filterValues = [
+  "result",
+  ...sliderFilterValues,
   "status",
   "regions",
   "method",

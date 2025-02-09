@@ -114,7 +114,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    defaultOpen: true,
   },
   {
     label: "DNS",

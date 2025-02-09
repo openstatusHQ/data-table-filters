@@ -6,6 +6,7 @@ import {
   getFacetsFromData,
   groupChartData,
   percentileData,
+  sliderFilterValues,
   sortData,
 } from "./helpers";
 import { calculateSpecificPercentile } from "@/lib/request/percentile";
@@ -25,10 +26,19 @@ export async function GET(req: NextRequest) {
       ? [search.date[0], addDays(search.date[0], 1)]
       : search.date;
 
+  const _rest = Object.fromEntries(
+    Object.entries(search).filter(
+      ([key]) => !sliderFilterValues.includes(key as any)
+    )
+  );
+
   const rangedData = filterData(totalData, { date: _date });
-  const filteredData = filterData(rangedData, { ...search, date: null });
+  const withoutSliderData = filterData(rangedData, { ..._rest, date: null });
+
+  const filteredData = filterData(withoutSliderData, { ...search, date: null });
   const chartData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
   const sortedData = sortData(filteredData, search.sort);
+  const withoutSliderFacets = getFacetsFromData(withoutSliderData);
   const facets = getFacetsFromData(filteredData);
   const withPercentileData = percentileData(sortedData);
 
@@ -49,7 +59,15 @@ export async function GET(req: NextRequest) {
       filterRowCount: filteredData.length,
       currentPercentiles,
       chartData,
-      facets,
+      // REMINDER: we separate the slider for keeping the min/max facets of the slider fields
+      facets: {
+        ...withoutSliderFacets,
+        ...Object.fromEntries(
+          Object.entries(facets).filter(
+            ([key]) => !sliderFilterValues.includes(key as any)
+          )
+        ),
+      },
     },
   });
 }
