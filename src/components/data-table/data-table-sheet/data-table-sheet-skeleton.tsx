@@ -2,13 +2,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { SheetField } from "../types";
 
-interface SheetDetailsContentSkeletonProps<TData> {
-  fields: SheetField<TData>[];
+interface SheetDetailsContentSkeletonProps<TData, TMeta> {
+  fields: SheetField<TData, TMeta>[];
 }
 
-export function SheetDetailsContentSkeleton<TData>({
+export function SheetDetailsContentSkeleton<TData, TMeta>({
   fields,
-}: SheetDetailsContentSkeletonProps<TData>) {
+}: SheetDetailsContentSkeletonProps<TData, TMeta>) {
   return (
     <dl className="divide-y">
       {fields.map((field) => (

@@ -68,7 +68,7 @@ export type DataTableFilterField<TData> =
 
 /** ----------------------------------------- */
 
-export type SheetField<TData> = {
+export type SheetField<TData, TMeta = Record<string, unknown>> = {
   id: keyof TData;
   label: string;
   // FIXME: rethink that! I dont think we need this as there is no input type
@@ -77,7 +77,13 @@ export type SheetField<TData> = {
   type: "readonly" | "input" | "checkbox" | "slider" | "timerange";
   component?: (
     // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
-    props: TData & { metadata?: Record<string, unknown> }
+    props: TData & {
+      metadata?: {
+        totalRows: number;
+        filterRows: number;
+        totalRowsFetched: number;
+      } & TMeta;
+    }
   ) => JSX.Element | null | string;
   condition?: (props: TData) => boolean;
   className?: string;

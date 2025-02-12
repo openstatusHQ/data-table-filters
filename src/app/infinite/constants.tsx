@@ -18,7 +18,7 @@ import { SheetTimingPhases } from "./_components/sheet-timing-phases";
 import { TabsObjectView } from "./_components/tabs-object-view";
 import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
 import { PopoverPercentile } from "./_components/popover-percentile";
-import { Percentile } from "@/lib/request/percentile";
+import type { LogsMeta } from "./query-options";
 
 // instead of filterFields, maybe just 'fields' with a filterDisabled prop?
 // that way, we could have 'message' or 'headers' field with label and value as well as type!
@@ -234,9 +234,7 @@ export const sheetFields = [
       return (
         <PopoverPercentile
           data={props}
-          percentiles={
-            props.metadata?.currentPercentiles as Record<Percentile, number>
-          }
+          percentiles={props.metadata?.currentPercentiles}
           filterRows={props.metadata?.filterRows as number}
           className="ml-auto"
         />
@@ -275,4 +273,4 @@ export const sheetFields = [
     ),
     className: "flex-col items-start w-full gap-1",
   },
-] satisfies SheetField<ColumnSchema>[];
+] satisfies SheetField<ColumnSchema, LogsMeta>[];

@@ -7,16 +7,23 @@ import { DataTableSheetRowAction } from "./data-table-sheet-row-action";
 import { DataTableFilterField, SheetField } from "../types";
 import { SheetDetailsContentSkeleton } from "./data-table-sheet-skeleton";
 
-interface DataTableSheetContentProps<TData>
+interface DataTableSheetContentProps<TData, TMeta>
   extends React.HTMLAttributes<HTMLDListElement> {
   data?: TData;
   table: Table<TData>;
-  fields: SheetField<TData>[];
+  fields: SheetField<TData, TMeta>[];
   filterFields: DataTableFilterField<TData>[];
-  metadata?: Record<string, unknown>;
+  // totalRows: number;
+  // filterRows: number;
+  // totalRowsFetched: number;
+  metadata?: TMeta & {
+    totalRows: number;
+    filterRows: number;
+    totalRowsFetched: number;
+  };
 }
 
-export function DataTableSheetContent<TData>({
+export function DataTableSheetContent<TData, TMeta>({
   data,
   table,
   className,
@@ -24,7 +31,7 @@ export function DataTableSheetContent<TData>({
   filterFields,
   metadata,
   ...props
-}: DataTableSheetContentProps<TData>) {
+}: DataTableSheetContentProps<TData, TMeta>) {
   if (!data) return <SheetDetailsContentSkeleton fields={fields} />;
 
   return (

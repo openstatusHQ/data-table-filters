@@ -29,7 +29,7 @@ export function Client() {
   const lastPage = data?.pages?.[data?.pages.length - 1];
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
   const filterDBRowCount = lastPage?.meta?.filterRowCount;
-  const currentPercentiles = lastPage?.meta?.metadata?.currentPercentiles;
+  const metadata = lastPage?.meta?.metadata;
   const chartData = lastPage?.meta?.chartData;
   const facets = lastPage?.meta?.facets;
   const totalFetched = flatData?.length;
@@ -70,7 +70,6 @@ export function Client() {
       totalRows={totalDBRowCount}
       filterRows={filterDBRowCount}
       totalRowsFetched={totalFetched}
-      currentPercentiles={currentPercentiles}
       defaultColumnFilters={Object.entries(filter)
         .map(([key, value]) => ({
           id: key,
@@ -88,6 +87,7 @@ export function Client() {
         "timing.ttfb": false,
         "timing.transfer": false,
       }}
+      meta={metadata}
       filterFields={filterFields}
       sheetFields={sheetFields}
       isFetching={isFetching}
