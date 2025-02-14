@@ -6,8 +6,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Command, Github, Globe, Twitter } from "lucide-react";
-import { Link } from "@/components/custom/link";
+import NextLink from "next/link";
 import { Kbd } from "@/components/custom/kbd";
+import { Link } from "@/components/custom/link";
 
 export function SocialsFooter() {
   return (
@@ -15,19 +16,19 @@ export function SocialsFooter() {
       <div className="w-full flex justify-center items-center gap-2 p-1">
         <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4" />
         <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
-          <Link href="https://github.com/openstatusHQ/data-table-filters">
+          <NextLink href="https://github.com/openstatusHQ/data-table-filters">
             <Github className="h-4 w-4" />
-          </Link>
+          </NextLink>
         </Button>
         <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
-          <Link href="https://twitter.com/openstatusHQ">
+          <NextLink href="https://twitter.com/openstatusHQ">
             <Twitter className="h-4 w-4" />
-          </Link>
+          </NextLink>
         </Button>
         <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
-          <Link href="https://openstatus.dev">
+          <NextLink href="https://openstatus.dev">
             <Globe className="h-4 w-4" />
-          </Link>
+          </NextLink>
         </Button>
         <Popover>
           <PopoverTrigger asChild>
@@ -41,13 +42,17 @@ export function SocialsFooter() {
         </Popover>
       </div>
       <p className="text-muted-foreground text-xs text-center">
-        Powered by <Link href="https://openstatus.dev">OpenStatus</Link>
+        Powered by{" "}
+        <Link href="https://openstatus.dev" hideArrow>
+          OpenStatus
+        </Link>
       </p>
       <p className="text-muted-foreground text-[10px] text-center">
         The data is mocked. It is in active development. For feedback, please{" "}
         <Link
           href="https://github.com/openstatusHQ/data-table-filters/issues/new"
           className="text-muted-foreground"
+          hideArrow
         >
           open an issue
         </Link>{" "}
