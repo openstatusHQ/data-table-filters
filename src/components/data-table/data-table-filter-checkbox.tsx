@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDataTable } from "@/providers/data-table";
+import { formatCompactNumber } from "@/lib/format";
 
 export function DataTableFilterCheckbox<TData>({
   value: _value,
@@ -17,18 +18,18 @@ export function DataTableFilterCheckbox<TData>({
 }: DataTableCheckboxFilterField<TData>) {
   const value = _value as string;
   const [inputValue, setInputValue] = useState("");
-  const { table, columnFilters, isLoading } = useDataTable();
+  const { table, columnFilters, isLoading, getFacetedUniqueValues } =
+    useDataTable();
   const column = table.getColumn(value);
   // REMINDER: avoid using column?.getFilterValue()
   const filterValue = columnFilters.find((i) => i.id === value)?.value;
-  const facetedValue = column?.getFacetedUniqueValues();
-
-  if (!options?.length) return null;
+  const facetedValue =
+    getFacetedUniqueValues?.(table, value) || column?.getFacetedUniqueValues();
 
   const Component = component;
 
   // filter out the options based on the input value
-  const filterOptions = options.filter(
+  const filterOptions = options?.filter(
     (option) =>
       inputValue === "" ||
       option.label.toLowerCase().includes(inputValue.toLowerCase())
@@ -41,9 +42,27 @@ export function DataTableFilterCheckbox<TData>({
       : [filterValue]
     : [];
 
+  // REMINDER: if no options are defined, while fetching data, we should show a skeleton
+  if (isLoading && !filterOptions?.length)
+    return (
+      <div className="grid rounded-lg border border-border divide-y">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex gap-2 items-center justify-between px-2 py-2.5"
+          >
+            <Skeleton className="h-4 w-4 rounded-sm" />
+            <Skeleton className="h-4 w-full rounded-sm" />
+          </div>
+        ))}
+      </div>
+    );
+
+  if (!filterOptions?.length) return null;
+
   return (
     <div className="grid gap-2">
-      {options.length > 4 ? (
+      {options && options.length > 4 ? (
         <InputWithAddons
           placeholder="Search"
           leading={<Search className="mt-0.5 h-4 w-4" />}
@@ -91,9 +110,9 @@ export function DataTableFilterCheckbox<TData>({
                   <span className="ml-auto flex items-center justify-center font-mono text-xs">
                     {isLoading ? (
                       <Skeleton className="h-4 w-4" />
-                    ) : (
-                      facetedValue?.get(option.value)
-                    )}
+                    ) : facetedValue?.has(option.value) ? (
+                      formatCompactNumber(facetedValue.get(option.value) || 0)
+                    ) : null}
                   </span>
                   <button
                     type="button"

@@ -25,6 +25,14 @@ interface DataTableContextType<TData = unknown, TValue = unknown> {
   rowSelection: RowSelectionState;
   columnOrder: string[];
   columnVisibility: VisibilityState;
+  getFacetedUniqueValues?: (
+    table: Table<TData>,
+    columnId: string
+  ) => Map<string, number>;
+  getFacetedMinMaxValues?: (
+    table: Table<TData>,
+    columnId: string
+  ) => undefined | [number, number];
 }
 
 export const DataTableContext = createContext<DataTableContextType<
@@ -51,6 +59,8 @@ export function DataTableProvider<TData, TValue>({
       props.columns,
       props.enableColumnOrdering,
       props.isLoading,
+      props.getFacetedUniqueValues,
+      props.getFacetedMinMaxValues,
     ]
   );
 

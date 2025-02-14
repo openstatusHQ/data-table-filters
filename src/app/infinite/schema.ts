@@ -112,3 +112,12 @@ export const columnFilterSchema = z.object({
 });
 
 export type ColumnFilterSchema = z.infer<typeof columnFilterSchema>;
+
+export const facetMetadataSchema = z.object({
+  rows: z.array(z.object({ value: z.any(), total: z.number() })),
+  total: z.number(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+});
+
+export type FacetMetadataSchema = z.infer<typeof facetMetadataSchema>;

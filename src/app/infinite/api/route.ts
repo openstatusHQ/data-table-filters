@@ -3,12 +3,15 @@ import { mock } from "./mock";
 import { searchParamsCache } from "../search-params";
 import {
   filterData,
+  getFacetsFromData,
   groupChartData,
   percentileData,
+  sliderFilterValues,
   sortData,
 } from "./helpers";
 import { calculateSpecificPercentile } from "@/lib/request/percentile";
 import { addDays } from "date-fns";
+import type { InfiniteQueryMeta, LogsMeta } from "../query-options";
 
 export async function GET(req: NextRequest) {
   // TODO: we could use a POST request to avoid this
@@ -24,30 +27,22 @@ export async function GET(req: NextRequest) {
       ? [search.date[0], addDays(search.date[0], 1)]
       : search.date;
 
-  const rangedData = filterData(totalData, { date: _date });
-  const filteredData = filterData(rangedData, { ...search, date: null });
-  const graphedData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
-  const sortedData = sortData(filteredData, search.sort);
-  const withPercentileData = percentileData(sortedData);
+  // REMINDER: we need to filter out the slider values because they are not part of the search params
+  const _rest = Object.fromEntries(
+    Object.entries(search).filter(
+      ([key]) => !sliderFilterValues.includes(key as any)
+    )
+  );
 
-  // TODO: extract into helper
-  // FIXME: this is fugly
-  const totalFilters = totalData.reduce((prev, curr) => {
-    for (const key in curr) {
-      const value = curr[key as keyof typeof curr];
-      const prevValue = prev[key as keyof typeof prev] || [];
-      if (Array.isArray(value)) {
-        prev[key as keyof typeof prev] = [
-          // @ts-ignore
-          ...new Set([...prevValue, ...value]),
-        ];
-      } else {
-        // @ts-ignore
-        prev[key as keyof typeof prev] = [...new Set([...prevValue, value])];
-      }
-    }
-    return prev;
-  }, {} as Record<string, (number | string | boolean | Date)[]>);
+  const rangedData = filterData(totalData, { date: _date });
+  const withoutSliderData = filterData(rangedData, { ..._rest, date: null });
+
+  const filteredData = filterData(withoutSliderData, { ...search, date: null });
+  const chartData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
+  const sortedData = sortData(filteredData, search.sort);
+  const withoutSliderFacets = getFacetsFromData(withoutSliderData);
+  const facets = getFacetsFromData(filteredData);
+  const withPercentileData = percentileData(sortedData);
 
   const latencies = withPercentileData.map(({ latency }) => latency);
 
@@ -64,9 +59,17 @@ export async function GET(req: NextRequest) {
     meta: {
       totalRowCount: totalData.length,
       filterRowCount: filteredData.length,
-      totalFilters,
-      currentPercentiles,
-      chartData: graphedData,
-    },
+      chartData,
+      // REMINDER: we separate the slider for keeping the min/max facets of the slider fields
+      facets: {
+        ...withoutSliderFacets,
+        ...Object.fromEntries(
+          Object.entries(facets).filter(
+            ([key]) => !sliderFilterValues.includes(key as any)
+          )
+        ),
+      },
+      metadata: { currentPercentiles },
+    } satisfies InfiniteQueryMeta<LogsMeta>,
   });
 }

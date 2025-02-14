@@ -14,7 +14,8 @@ import {
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
-  getFacetedUniqueValues,
+  getFacetedUniqueValues as getTTableFacetedUniqueValues,
+  getFacetedMinMaxValues as getTTableFacetedMinMaxValues,
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
@@ -68,6 +69,15 @@ export interface DataTableInfiniteProps<TData, TValue> {
   defaultColumnVisibility?: VisibilityState;
   filterFields?: DataTableFilterField<TData>[];
   sheetFields?: SheetField<TData>[];
+  // REMINDER: close to the same signature as the `getFacetedUniqueValues` of the `useReactTable`
+  getFacetedUniqueValues?: (
+    table: TTable<TData>,
+    columnId: string
+  ) => Map<string, number>;
+  getFacetedMinMaxValues?: (
+    table: TTable<TData>,
+    columnId: string
+  ) => undefined | [number, number];
   totalRows?: number;
   filterRows?: number;
   totalRowsFetched?: number;
@@ -97,6 +107,8 @@ export function DataTableInfinite<TData, TValue>({
   totalRowsFetched = 0,
   currentPercentiles,
   chartData = [],
+  getFacetedUniqueValues,
+  getFacetedMinMaxValues,
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -168,23 +180,8 @@ export function DataTableInfinite<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
-    // REMINDER: it doesn't support array of strings (WARNING: might not work for other types)
-    getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
-      const facets = getFacetedUniqueValues<TData>()(table, columnId)();
-      const customFacets = new Map();
-      for (const [key, value] of facets as any) {
-        if (Array.isArray(key)) {
-          for (const k of key) {
-            const prevValue = customFacets.get(k) || 0;
-            customFacets.set(k, prevValue + value);
-          }
-        } else {
-          const prevValue = customFacets.get(key) || 0;
-          customFacets.set(key, prevValue + value);
-        }
-      }
-      return customFacets;
-    },
+    getFacetedUniqueValues: getTTableFacetedUniqueValues(),
+    getFacetedMinMaxValues: getTTableFacetedMinMaxValues(),
     filterFns: { inDateRange, arrSome },
     debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
     meta: { getRowClassName },
@@ -277,6 +274,8 @@ export function DataTableInfinite<TData, TValue>({
       columnVisibility={columnVisibility}
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
+      getFacetedUniqueValues={getFacetedUniqueValues}
+      getFacetedMinMaxValues={getFacetedMinMaxValues}
     >
       <div
         className="flex w-full min-h-screen h-full flex-col sm:flex-row"
@@ -461,7 +460,11 @@ export function DataTableInfinite<TData, TValue>({
                       </Button>
                     ) : (
                       <p className="text-muted-foreground text-sm">
-                        No more data to load (total:{" "}
+                        No more data to load (
+                        <span className="font-medium font-mono">
+                          {formatCompactNumber(filterRows)}
+                        </span>{" "}
+                        of{" "}
                         <span className="font-medium font-mono">
                           {formatCompactNumber(totalRows)}
                         </span>{" "}
