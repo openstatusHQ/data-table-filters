@@ -1,0 +1,79 @@
+## Guide (WIP)
+
+This helps you to get started with the infinite scroll data-table and define the columns, filters, search params, sheet fields and more.
+
+Remember, we are using the shadcn/ui components. Some modifications still live in `src/components/custom/*` but will eventually be migrating back to shadcn/ui to be fully compliant.
+
+### columns
+
+The `columns.tsx` file is our known source of truth for the columns. If you are familiar with shadcn, you should feel right at home.
+
+We have extended the `meta` prop to include specfici `headerClassName` and `cellClassName` if required. They will be applied in your data-table accordingly and will avoid you to change the `data-table-infinite.tsx` file. All other props are defined by the `ColumnDef` type from Tanstack table.
+
+### filters
+
+The `filterFields` in array within the `constants.tsx` file is what defines the left sidebar controls of the data-table and the cmdk input items.
+
+We support the following `type`:
+
+- `input`
+- `checkbox`
+- `slider`
+- `timerange`
+
+They are defined as `DataTableFilterField` types and can have the following properties:
+
+- `label`
+- `value`
+- `type`
+- `defaultOpen`
+- `commandDisabled`
+
+Based on the type, we will add additional properties to the filter field.
+
+> Currently, only the `checkbox` type has a `component` prop. This is used to render a custom checkbox component.
+
+### sheet
+
+The `sheetFields` array within the `constants.tsx` file is what defines the components inside of the `Sheet` component that is rendered when you select a row in the data-table.
+
+> Yet to be implemented: only trigger a selection if the `sheetFields` is defined.
+
+They are defined as `SheetField` types and can have the following properties:
+
+- `id`
+- `label`
+- `type`
+- `component`
+- `condition`
+- `className`
+- `skeletonClassName`
+
+The `id` corresponds to the column `id` in the `columns.tsx` file. That way, we can link the values of the sheet to the column values.
+
+If `value` differs from the `label.toLowerCase()`, it will be shown in the Controls sidebar as a muted string. This is useful if you want the cmdk input to differ from the controls accordion header label: e.g. within the cmdk input, you can filter for `status:400` but the controls will show `Status Code` as header label.
+
+### search params
+
+The `searchParams` array within the `search-params.ts` file is what defines the search params that are used to filter the data in the data-table.
+
+It mainly includes the same fields as the `filterFields` array - but defined with the `nuqs` parser functions.
+
+> It would be great if we could merge both values, the `filterFields` and the `searchParams` together and have a single source of truth. - Or make both types extend a single type for better type safety.
+
+
+### api
+
+To share the same search options between the client and the server, we use the same `searchParams` array from the `search-params.ts` file within our `route.ts` file. Based on the filters, we query the mock data and return the results.
+
+It will be up to you to implement the actual API endpoint and query the data from your database.
+
+The `meta` object allows us to return additional data that is not part of the `data` array. That can be data for the chart like `chartData`, or statistics to be used in the `Sheet` component like `currentPercentiles`.
+
+The `meta` object should always return the following data:
+
+- `totalRowCount`
+- `filterRowCount`
+- `totalFilters`
+
+The `totalFilters` will define our facet values for every filter field. While the default is the client side facet values, so the values from the data already fetched, you can also define the facet values on the server side to return the actual values from the database.

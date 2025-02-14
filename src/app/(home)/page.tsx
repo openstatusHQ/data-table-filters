@@ -307,7 +307,7 @@ function Pagination() {
 
 function Hero() {
   return (
-    <div className="flex flex-col-reverse items-start justify-between gap-4 sm:flex-row">
+    <div className="flex flex-col-reverse items-start justify-between gap-8 sm:flex-row">
       <div className="max-w-4xl">
         <h1 className="font-bold tracking-tight text-foreground mb-4 text-3xl sm:text-4xl md:text-5xl text-balance">
           Powerful <span className="text-nowrap">Data-Table</span> for React
