@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
-import { Inter as FontSans } from "next/font/google";
-import { cn } from "@/lib/utils";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import PlausibleProvider from "next-plausible";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 
-const fontSans = FontSans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
-const TITLE = "Data Table | OpenStatus";
+const TITLE = "Powerful Data-Table for React | OpenStatus";
 const DESCRIPTION =
-  "Powered by tanstack table and shadcn ui with controls and cmdk using search params as state via nuqs.";
+  "Flexible, fast, and easy-to-use filters with tanstack table, shadcn/ui and search params via nuqs.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://data-table.openstatus.dev"),
@@ -41,7 +36,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
       {process.env.NODE_ENV === "development" ? (
         <head>
           <script
@@ -50,12 +49,7 @@ export default function RootLayout({
           />
         </head>
       ) : null}
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable
-        )}
-      >
+      <body className="min-h-screen bg-background antialiased">
         <PlausibleProvider domain="data-table.openstatus.dev">
           <ReactQueryProvider>
             <NuqsAdapter>
