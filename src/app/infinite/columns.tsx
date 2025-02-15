@@ -20,22 +20,19 @@ import {
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
 import { HoverCardTimestamp } from "./_components/hover-card-timestamp";
-import { RESULTS } from "@/constants/results";
-import { getResultColor } from "@/lib/request/result";
+import { LEVELS } from "@/constants/levels";
+import { getLevelColor } from "@/lib/request/level";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
-    accessorKey: "result",
+    accessorKey: "level",
     header: "",
     cell: ({ row }) => {
-      const value = row.getValue("result") as (typeof RESULTS)[number];
+      const value = row.getValue("level") as (typeof LEVELS)[number];
       return (
         <div className="flex items-center justify-center">
           <div
-            className={cn(
-              "h-2.5 w-2.5 rounded-[2px]",
-              getResultColor(value).bg
-            )}
+            className={cn("h-2.5 w-2.5 rounded-[2px]", getLevelColor(value).bg)}
           />
         </div>
       );
@@ -48,9 +45,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     maxSize: 27,
     meta: {
       headerClassName:
-        "w-[--header-result-size] max-w-[--header-result-size] min-w-[--header-result-size]",
+        "w-[--header-level-size] max-w-[--header-level-size] min-w-[--header-level-size]",
       cellClassName:
-        "w-[--col-result-size] max-w-[--col-result-size] min-w-[--col-result-size]",
+        "w-[--col-level-size] max-w-[--col-level-size] min-w-[--col-level-size]",
     },
   },
   {

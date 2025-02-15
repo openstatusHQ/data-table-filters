@@ -124,3 +124,11 @@ The `meta` object should always return the following data:
 - `totalFilters`
 
 The `totalFilters` will define our facet values for every filter field. While the default is the client side facet values, so the values from the data already fetched, you can also define the facet values on the server side to return the actual values from the database.
+
+### timeline chart
+
+The timeline chart helps you to visualize the data over time. It utilizes the shadcn component (checkout out the [docs](https://ui.shadcn.com/docs/components/chart)) and renders the bars based on the the amount of data items you defined in the `{ timestamp: number; [key: string]: number }[];` array.
+
+As default, the key is the `level` that takes "success", "warning", "error" as values.
+
+> The `TimelineChart` component is currently not configurable (especially the labels/tooltips) via props but will be in the future. You'll have to update the component yourself to adapt to your needs.
