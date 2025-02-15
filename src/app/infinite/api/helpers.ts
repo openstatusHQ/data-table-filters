@@ -16,7 +16,7 @@ import {
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
 import { REGIONS } from "@/constants/region";
-import { RESULTS } from "@/constants/results";
+import { LEVELS } from "@/constants/levels";
 
 export const sliderFilterValues = [
   "latency",
@@ -28,7 +28,7 @@ export const sliderFilterValues = [
 ] as const satisfies (keyof ColumnSchema)[];
 
 export const filterValues = [
-  "result",
+  "level",
   ...sliderFilterValues,
   "status",
   "regions",
@@ -87,8 +87,8 @@ export function filterData(
           return false;
         }
       }
-      if (key === "result" && Array.isArray(filter)) {
-        const typedFilter = filter as unknown as (typeof RESULTS)[number][];
+      if (key === "level" && Array.isArray(filter)) {
+        const typedFilter = filter as unknown as (typeof LEVELS)[number][];
         if (!typedFilter.includes(row[key])) {
           return false;
         }
@@ -211,9 +211,9 @@ export function groupChartData(
 
     return {
       timestamp: timestamp.date.getTime(), // TODO: use date-fns and interval to determine the format
-      success: filteredData.filter((row) => row.result === "success").length,
-      warning: filteredData.filter((row) => row.result === "warning").length,
-      error: filteredData.filter((row) => row.result === "error").length,
+      success: filteredData.filter((row) => row.level === "success").length,
+      warning: filteredData.filter((row) => row.level === "warning").length,
+      error: filteredData.filter((row) => row.level === "error").length,
     };
   });
 }

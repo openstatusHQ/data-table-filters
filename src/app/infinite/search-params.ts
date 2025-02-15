@@ -18,7 +18,7 @@ import {
 } from "@/lib/delimiters";
 import { REGIONS } from "@/constants/region";
 import { METHODS } from "@/constants/method";
-import { RESULTS } from "@/constants/results";
+import { LEVELS } from "@/constants/levels";
 
 // https://logs.run/i?sort=latency.desc
 
@@ -35,7 +35,7 @@ export const parseAsSort = createParser({
 
 export const searchParamsParser = {
   // CUSTOM FILTERS
-  result: parseAsArrayOf(parseAsStringLiteral(RESULTS), ARRAY_DELIMITER),
+  level: parseAsArrayOf(parseAsStringLiteral(LEVELS), ARRAY_DELIMITER),
   latency: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   "timing.dns": parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   "timing.connection": parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),

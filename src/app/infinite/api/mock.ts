@@ -38,7 +38,7 @@ function getRandomMetadata(): Record<string, string> {
   }
 }
 
-function getResult(status: number) {
+function getLevel(status: number) {
   if (`${status}`.startsWith("2")) return "success";
   if (`${status}`.startsWith("4")) return "warning";
   if (`${status}`.startsWith("5")) return "error";
@@ -144,7 +144,7 @@ export function createMockData({
   return [
     {
       uuid: crypto.randomUUID(),
-      result: getResult(statusCode.ams),
+      level: getLevel(statusCode.ams),
       latency: latency.ams,
       regions: ["ams"],
       status: statusCode.ams,
@@ -156,7 +156,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      result: getResult(statusCode.iad),
+      level: getLevel(statusCode.iad),
       latency: latency.iad,
       regions: ["iad"],
       status: statusCode.iad,
@@ -168,7 +168,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      result: getResult(statusCode.gru),
+      level: getLevel(statusCode.gru),
       latency: latency.gru,
       regions: ["gru"],
       status: statusCode.gru,
@@ -180,7 +180,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      result: getResult(statusCode.syd),
+      level: getLevel(statusCode.syd),
       latency: latency.syd,
       regions: ["syd"],
       status: statusCode.syd,
@@ -192,7 +192,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      result: getResult(statusCode.fra),
+      level: getLevel(statusCode.fra),
       latency: latency.fra,
       regions: ["fra"],
       status: statusCode.fra,
@@ -204,7 +204,7 @@ export function createMockData({
     },
     {
       uuid: crypto.randomUUID(),
-      result: getResult(statusCode.hkg),
+      level: getLevel(statusCode.hkg),
       latency: latency.hkg,
       regions: ["hkg"],
       status: statusCode.hkg,

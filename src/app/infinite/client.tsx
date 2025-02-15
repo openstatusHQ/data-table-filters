@@ -9,7 +9,7 @@ import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
 import { useHotKey } from "@/hooks/use-hot-key";
-import { getResultRowClassName } from "@/lib/request/result";
+import { getLevelRowClassName } from "@/lib/request/level";
 import type { FacetMetadataSchema } from "./schema";
 import type { Table as TTable } from "@tanstack/react-table";
 
@@ -94,7 +94,7 @@ export function Client() {
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       chartData={chartData}
-      getRowClassName={(row) => getResultRowClassName(row.original.result)}
+      getRowClassName={(row) => getLevelRowClassName(row.original.level)}
       getRowId={(row) => row.uuid}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}

@@ -1,8 +1,8 @@
-import { RESULTS } from "@/constants/results";
+import { LEVELS } from "@/constants/levels";
 import { cn } from "../utils";
 
-export function getResultColor(
-  value: (typeof RESULTS)[number]
+export function getLevelColor(
+  value: (typeof LEVELS)[number]
 ): Record<"text" | "bg" | "border", string> {
   switch (value) {
     case "success":
@@ -32,7 +32,7 @@ export function getResultColor(
   }
 }
 
-export function getResultRowClassName(value: (typeof RESULTS)[number]): string {
+export function getLevelRowClassName(value: (typeof LEVELS)[number]): string {
   switch (value) {
     case "success":
       return "";
@@ -49,7 +49,7 @@ export function getResultRowClassName(value: (typeof RESULTS)[number]): string {
   }
 }
 
-export function getResultLabel(value: (typeof RESULTS)[number]): string {
+export function getLevelLabel(value: (typeof LEVELS)[number]): string {
   switch (value) {
     case "success":
       return "2xx";

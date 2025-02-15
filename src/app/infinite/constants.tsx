@@ -10,8 +10,8 @@ import type {
 import { getStatusColor } from "@/lib/request/status-code";
 import { METHODS } from "@/constants/method";
 import { flags, regions, REGIONS } from "@/constants/region";
-import { RESULTS } from "@/constants/results";
-import { getResultColor, getResultLabel } from "@/lib/request/result";
+import { LEVELS } from "@/constants/levels";
+import { getLevelColor, getLevelLabel } from "@/lib/request/level";
 import { format } from "date-fns";
 import { formatMilliseconds } from "@/lib/format";
 import { SheetTimingPhases } from "./_components/sheet-timing-phases";
@@ -31,14 +31,14 @@ export const filterFields = [
     commandDisabled: true,
   },
   {
-    label: "Result",
-    value: "result",
+    label: "Level",
+    value: "level",
     type: "checkbox",
     defaultOpen: true,
-    options: RESULTS.map((result) => ({ label: result, value: result })),
+    options: LEVELS.map((level) => ({ label: level, value: level })),
     component: (props: Option) => {
       // TODO: type `Option` with `options` values via Generics
-      const value = props.value as (typeof RESULTS)[number];
+      const value = props.value as (typeof LEVELS)[number];
       return (
         <div className="flex w-full items-center justify-between gap-2 max-w-28 font-mono">
           <span className="capitalize text-foreground/70 group-hover:text-accent-foreground">
@@ -48,11 +48,11 @@ export const filterFields = [
             <div
               className={cn(
                 "h-2.5 w-2.5 rounded-[2px]",
-                getResultColor(value).bg
+                getLevelColor(value).bg
               )}
             />
             <span className="text-xs text-muted-foreground/70">
-              {getResultLabel(value)}
+              {getLevelLabel(value)}
             </span>
           </div>
         </div>
