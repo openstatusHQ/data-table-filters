@@ -136,11 +136,14 @@ export function DataTable<TData, TValue>({
       <div className="flex w-full h-full flex-col gap-3 sm:flex-row">
         <div
           className={cn(
-            "hidden md:block w-full p-1 sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
-            "group-data-[expanded=false]/controls:hidden"
+            "w-full p-1 sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
+            "group-data-[expanded=false]/controls:hidden",
+            "hidden sm:block"
           )}
         >
-          <DataTableFilterControls />
+          <div className="-m-1 h-full p-1">
+            <DataTableFilterControls />
+          </div>
         </div>
         <div className="flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1">
           <DataTableFilterCommand schema={columnFilterSchema} />

@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { FilterIcon, LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
@@ -16,6 +16,7 @@ import { useDataTable } from "@/providers/data-table";
 import { useControls } from "@/providers/controls";
 import { useMemo } from "react";
 import { formatCompactNumber } from "@/lib/format";
+import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 
 export function DataTableToolbar() {
   const { table, isLoading, columnFilters } = useDataTable();
@@ -41,19 +42,17 @@ export function DataTableToolbar() {
                 size="sm"
                 variant="ghost"
                 onClick={() => setOpen((prev) => !prev)}
-                className="flex gap-2"
+                className="hidden gap-2 sm:flex"
               >
                 {open ? (
                   <>
-                    <PanelLeftClose className="hidden sm:block h-4 w-4" />
-                    <FilterIcon className="block sm:hidden h-4 w-4" />
-                    <span className="hidden sm:block">Hide Controls</span>
+                    <PanelLeftClose className="h-4 w-4" />
+                    <span className="hidden md:block">Hide Controls</span>
                   </>
                 ) : (
                   <>
-                    <PanelLeftOpen className="hidden sm:block h-4 w-4" />
-                    <FilterIcon className="block sm:hidden h-4 w-4" />
-                    <span className="hidden sm:block">Show Controls</span>
+                    <PanelLeftOpen className="h-4 w-4" />
+                    <span className="hidden md:block">Show Controls</span>
                   </>
                 )}
               </Button>
@@ -69,6 +68,9 @@ export function DataTableToolbar() {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        <div className="block sm:hidden">
+          <DataTableFilterControlsDrawer />
+        </div>
         <p className="text-sm text-muted-foreground">
           <span className="font-medium font-mono">
             {formatCompactNumber(rows.filtered)}
