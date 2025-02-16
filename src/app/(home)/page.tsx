@@ -3,6 +3,9 @@ import { default as NextLink } from "next/link";
 import { Link } from "@/components/custom/link";
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
@@ -43,37 +46,40 @@ export default function Home() {
             </p>
           </div>
         </NextLink>
-        <NextLink href="/infinite" className="group flex flex-col gap-2.5">
-          <div className="xl:aspect-video flex flex-col justify-center rounded-lg border border-border/70 group-hover:border-border bg-muted/40 group-hover:bg-muted/50 px-5 py-6 md:px-10 md:py-12">
-            <div className="group-hover:scale-[1.02] transition-all duration-300 w-full flex flex-row items-end gap-2.5 sm:divide-x">
-              <div className="hidden sm:block">
-                <Controls className="w-24 border-b border-transparent" />
-              </div>
-              <div className="flex flex-1 flex-col gap-2">
-                <div className="flex flex-col gap-2 px-2.5">
-                  <CommandInput />
-                  <Timeline />
-                  <Toolbar />
+        <div className="relative">
+          <GuideBadgeLink className="absolute -top-3 right-3" />
+          <NextLink href="/infinite" className="group flex flex-col gap-2.5">
+            <div className="xl:aspect-video flex flex-col justify-center rounded-lg border border-border/70 group-hover:border-border bg-muted/40 group-hover:bg-muted/50 px-5 py-6 md:px-10 md:py-12">
+              <div className="group-hover:scale-[1.02] transition-all duration-300 w-full flex flex-row items-end gap-2.5 sm:divide-x">
+                <div className="hidden sm:block">
+                  <Controls className="w-24 border-b border-transparent" />
                 </div>
-                <GridTable className="border-l-1 md:border-l-0" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="flex flex-col gap-2 px-2.5">
+                    <CommandInput />
+                    <Timeline />
+                    <Toolbar />
+                  </div>
+                  <GridTable className="border-l-1 md:border-l-0" />
+                </div>
               </div>
             </div>
-          </div>
-          <div className="px-2.5 py-2">
-            <p className="font-medium group-hover:underline">
-              Infinite Data-Table
-            </p>
-            <p className="text-sm text-muted-foreground">
-              A{" "}
-              <span className="underline decoration-wavy underline-offset-2 decoration-blue-500">
-                cooked
-              </span>{" "}
-              infinite scroll data-table with a{" "}
-              <span className="font-medium text-foreground">server-side</span>{" "}
-              filter and pagination.
-            </p>
-          </div>
-        </NextLink>
+            <div className="px-2.5 py-2">
+              <p className="font-medium group-hover:underline">
+                Infinite Data-Table
+              </p>
+              <p className="text-sm text-muted-foreground">
+                A{" "}
+                <span className="underline decoration-wavy underline-offset-2 decoration-blue-500">
+                  cooked
+                </span>{" "}
+                infinite scroll data-table with a{" "}
+                <span className="font-medium text-foreground">server-side</span>{" "}
+                filter and row selection.
+              </p>
+            </div>
+          </NextLink>
+        </div>
       </div>
       <div className="px-2.5 py-2">
         <BlogPosts />
@@ -363,5 +369,20 @@ function BlogPosts() {
         </Link>
       </p>
     </div>
+  );
+}
+
+function GuideBadgeLink({ className }: { className?: string }) {
+  return (
+    <NextLink href="/guide" className={cn("group", className)}>
+      <Badge
+        variant="outline"
+        className="border-dashed border-border pr-1.5 bg-background"
+      >
+        Guide{" "}
+        <ArrowRight className="relative mb-[1px] inline h-3 w-0 transition-all group-hover:w-3" />
+        <ChevronRight className="relative mb-[1px] inline h-3 w-3 transition-all group-hover:w-0" />
+      </Badge>
+    </NextLink>
   );
 }
