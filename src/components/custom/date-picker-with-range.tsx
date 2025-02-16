@@ -13,6 +13,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { kbdVariants } from "@/components/custom/kbd";
 import { Input } from "@/components/ui/input";
@@ -48,7 +57,7 @@ export function DatePickerWithRange({
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover>
+      <Popover modal={true}>
         <PopoverTrigger asChild>
           <Button
             id="date"
@@ -75,9 +84,22 @@ export function DatePickerWithRange({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <div className="flex justify-between">
-            <DatePresets onSelect={setDate} selected={date} presets={presets} />
-            <Separator orientation="vertical" className="h-auto w-[px]" />
+          <div className="flex flex-col justify-between sm:flex-row">
+            <div className="hidden sm:block">
+              <DatePresets
+                onSelect={setDate}
+                selected={date}
+                presets={presets}
+              />
+            </div>
+            <div className="block sm:hidden p-3">
+              <DatePresetsSelect
+                onSelect={setDate}
+                selected={date}
+                presets={presets}
+              />
+            </div>
+            <Separator orientation="vertical" className="h-auto w-px" />
             <Calendar
               initialFocus
               mode="range"
@@ -131,6 +153,69 @@ function DatePresets({
   );
 }
 
+function DatePresetsSelect({
+  selected,
+  onSelect,
+  presets,
+}: {
+  selected: DateRange | undefined;
+  onSelect: (date: DateRange | undefined) => void;
+  presets: DatePreset[];
+}) {
+  function findPreset(from?: Date, to?: Date) {
+    return presets.find((p) => p.from === from && p.to === to)?.shortcut;
+  }
+  const [value, setValue] = React.useState<string | undefined>(
+    findPreset(selected?.from, selected?.to)
+  );
+
+  React.useEffect(() => {
+    const preset = findPreset(selected?.from, selected?.to);
+    if (preset === value) return;
+    setValue(preset);
+  }, [selected, presets]);
+
+  return (
+    <Select
+      value={value}
+      onValueChange={(v) => {
+        const preset = presets.find((p) => p.shortcut === v);
+        if (preset) {
+          onSelect({ from: preset.from, to: preset.to });
+        }
+      }}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Date Presets" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Date Presets</SelectLabel>
+          {presets.map(({ label, shortcut }) => {
+            return (
+              <SelectItem
+                key={label}
+                value={shortcut}
+                className="flex items-center justify-between [&>span:last-child]:w-full [&>span:last-child]:flex [&>span:last-child]:justify-between"
+              >
+                <span>{label}</span>
+                <span
+                  className={cn(
+                    kbdVariants(),
+                    "uppercase ml-2 h-5 leading-snug"
+                  )}
+                >
+                  {shortcut}
+                </span>
+              </SelectItem>
+            );
+          })}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+}
+
 // REMINDER: We can add min max date range validation https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local#setting_maximum_and_minimum_dates_and_times
 function CustomDateRange({
   selected,
@@ -160,7 +245,7 @@ function CustomDateRange({
   return (
     <div className="flex flex-col gap-2 p-3">
       <p className="text-xs uppercase text-muted-foreground">Custom Range</p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid sm:grid-cols-2 gap-2">
         <div className="grid w-full gap-1.5">
           <Label htmlFor="from">Start</Label>
           <Input
