@@ -10,15 +10,15 @@ import type {
 import { getStatusColor } from "@/lib/request/status-code";
 import { METHODS } from "@/constants/method";
 import { flags, regions, REGIONS } from "@/constants/region";
-import { RESULTS } from "@/constants/results";
-import { getResultColor, getResultLabel } from "@/lib/request/result";
+import { LEVELS } from "@/constants/levels";
+import { getLevelColor, getLevelLabel } from "@/lib/request/level";
 import { format } from "date-fns";
 import { formatMilliseconds } from "@/lib/format";
 import { SheetTimingPhases } from "./_components/sheet-timing-phases";
 import { TabsObjectView } from "./_components/tabs-object-view";
 import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
 import { PopoverPercentile } from "./_components/popover-percentile";
-import { Percentile } from "@/lib/request/percentile";
+import type { LogsMeta } from "./query-options";
 
 // instead of filterFields, maybe just 'fields' with a filterDisabled prop?
 // that way, we could have 'message' or 'headers' field with label and value as well as type!
@@ -31,14 +31,14 @@ export const filterFields = [
     commandDisabled: true,
   },
   {
-    label: "Result",
-    value: "result",
+    label: "Level",
+    value: "level",
     type: "checkbox",
     defaultOpen: true,
-    options: RESULTS.map((result) => ({ label: result, value: result })),
+    options: LEVELS.map((level) => ({ label: level, value: level })),
     component: (props: Option) => {
       // TODO: type `Option` with `options` values via Generics
-      const value = props.value as (typeof RESULTS)[number];
+      const value = props.value as (typeof LEVELS)[number];
       return (
         <div className="flex w-full items-center justify-between gap-2 max-w-28 font-mono">
           <span className="capitalize text-foreground/70 group-hover:text-accent-foreground">
@@ -48,11 +48,11 @@ export const filterFields = [
             <div
               className={cn(
                 "h-2.5 w-2.5 rounded-[2px]",
-                getResultColor(value).bg
+                getLevelColor(value).bg
               )}
             />
             <span className="text-xs text-muted-foreground/70">
-              {getResultLabel(value)}
+              {getLevelLabel(value)}
             </span>
           </div>
         </div>
@@ -63,13 +63,11 @@ export const filterFields = [
     label: "Host",
     value: "host",
     type: "input",
-    options: [{ label: "", value: "" }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Pathname",
     value: "pathname",
     type: "input",
-    options: [{ label: "", value: "" }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Status Code",
@@ -116,7 +114,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "DNS",
@@ -124,7 +121,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Connection",
@@ -132,7 +128,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "TLS",
@@ -140,7 +135,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "TTFB",
@@ -148,7 +142,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
   {
     label: "Transfer",
@@ -156,7 +149,6 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
-    options: [{ label: "10", value: 10 }], // REMINDER: this is a placeholder to set the type in the client.tsx
   },
 ] satisfies DataTableFilterField<ColumnSchema>[];
 
@@ -242,9 +234,7 @@ export const sheetFields = [
       return (
         <PopoverPercentile
           data={props}
-          percentiles={
-            props.metadata?.currentPercentiles as Record<Percentile, number>
-          }
+          percentiles={props.metadata?.currentPercentiles}
           filterRows={props.metadata?.filterRows as number}
           className="ml-auto"
         />
@@ -283,4 +273,4 @@ export const sheetFields = [
     ),
     className: "flex-col items-start w-full gap-1",
   },
-] satisfies SheetField<ColumnSchema>[];
+] satisfies SheetField<ColumnSchema, LogsMeta>[];

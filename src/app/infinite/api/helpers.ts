@@ -4,7 +4,7 @@ import {
   differenceInMinutes,
   isSameDay,
 } from "date-fns";
-import { type ColumnSchema } from "../schema";
+import type { FacetMetadataSchema, ColumnSchema } from "../schema";
 import type { SearchParamsType } from "../search-params";
 import {
   isArrayOfBooleans,
@@ -16,7 +16,26 @@ import {
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
 import { REGIONS } from "@/constants/region";
-import { RESULTS } from "@/constants/results";
+import { LEVELS } from "@/constants/levels";
+
+export const sliderFilterValues = [
+  "latency",
+  "timing.dns",
+  "timing.connection",
+  "timing.tls",
+  "timing.ttfb",
+  "timing.transfer",
+] as const satisfies (keyof ColumnSchema)[];
+
+export const filterValues = [
+  "level",
+  ...sliderFilterValues,
+  "status",
+  "regions",
+  "method",
+  "host",
+  "pathname",
+] as const satisfies (keyof ColumnSchema)[];
 
 export function filterData(
   data: ColumnSchema[],
@@ -68,8 +87,8 @@ export function filterData(
           return false;
         }
       }
-      if (key === "result" && Array.isArray(filter)) {
-        const typedFilter = filter as unknown as (typeof RESULTS)[number][];
+      if (key === "level" && Array.isArray(filter)) {
+        const typedFilter = filter as unknown as (typeof LEVELS)[number][];
         if (!typedFilter.includes(row[key])) {
           return false;
         }
@@ -101,7 +120,45 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
 }
 
 export function getFacetsFromData(data: ColumnSchema[]) {
-  // TODO: implement
+  const valuesMap = data.reduce((prev, curr) => {
+    Object.entries(curr).forEach(([key, value]) => {
+      if (filterValues.includes(key as any)) {
+        // REMINDER: because regions is an array with a single value we need to convert to string
+        // TODO: we should make the region a single string instead of an array?!?
+        const _value = Array.isArray(value) ? value.toString() : value;
+        const total = prev.get(key)?.get(_value) || 0;
+        if (prev.has(key) && _value) {
+          prev.get(key)?.set(_value, total + 1);
+        } else if (_value) {
+          prev.set(key, new Map([[_value, 1]]));
+        }
+      }
+    });
+    return prev;
+  }, new Map<string, Map<any, number>>());
+
+  const facets = Object.fromEntries(
+    Array.from(valuesMap.entries()).map(([key, valueMap]) => {
+      let min: number | undefined;
+      let max: number | undefined;
+      const rows = Array.from(valueMap.entries()).map(([value, total]) => {
+        if (typeof value === "number") {
+          if (!min) min = value;
+          else min = value < min ? value : min;
+          if (!max) max = value;
+          else max = value > max ? value : max;
+        }
+        return {
+          value,
+          total,
+        };
+      });
+      const total = Array.from(valueMap.values()).reduce((a, b) => a + b, 0);
+      return [key, { rows, total, min, max }];
+    })
+  );
+
+  return facets satisfies Record<string, FacetMetadataSchema>;
 }
 
 export function getPercentileFromData(data: ColumnSchema[]) {
@@ -154,9 +211,9 @@ export function groupChartData(
 
     return {
       timestamp: timestamp.date.getTime(), // TODO: use date-fns and interval to determine the format
-      success: filteredData.filter((row) => row.result === "success").length,
-      warning: filteredData.filter((row) => row.result === "warning").length,
-      error: filteredData.filter((row) => row.result === "error").length,
+      success: filteredData.filter((row) => row.level === "success").length,
+      warning: filteredData.filter((row) => row.level === "warning").length,
+      error: filteredData.filter((row) => row.level === "error").length,
     };
   });
 }

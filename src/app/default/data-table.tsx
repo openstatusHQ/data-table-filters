@@ -11,6 +11,7 @@ import type {
 import {
   flexRender,
   getCoreRowModel,
+  getFacetedMinMaxValues,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
@@ -78,6 +79,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
     // REMINDER: it doesn't support array of strings (WARNING: might not work for other types)
     getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
       const facets = getFacetedUniqueValues<TData>()(table, columnId)();

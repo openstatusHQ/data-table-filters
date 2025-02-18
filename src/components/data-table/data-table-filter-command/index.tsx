@@ -31,6 +31,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useDataTable } from "@/providers/data-table";
+import { formatCompactNumber } from "@/lib/format";
 
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
 
@@ -41,7 +42,12 @@ interface DataTableFilterCommandProps<TSchema extends z.AnyZodObject> {
 export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
   schema,
 }: DataTableFilterCommandProps<TSchema>) {
-  const { table, isLoading, filterFields: _filterFields } = useDataTable();
+  const {
+    table,
+    isLoading,
+    filterFields: _filterFields,
+    getFacetedUniqueValues,
+  } = useDataTable();
   const columnFilters = table.getState().columnFilters;
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState<boolean>(false);
@@ -195,9 +201,10 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
             {/* default height is 300px but in case of more, we'd like to tease the user */}
             <CommandList className="max-h-[310px]">
               <CommandGroup heading="Filter">
-                {filterFields?.map((field) => {
+                {filterFields.map((field) => {
                   if (typeof field.value !== "string") return null;
                   if (inputValue.includes(`${field.value}:`)) return null;
+                  // TBD: should we handle this in the component?
                   return (
                     <CommandItem
                       key={field.value}
@@ -238,7 +245,9 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
                   if (!currentWord.includes(`${field.value}:`)) return null;
 
                   const column = table.getColumn(field.value);
-                  const facetedValue = column?.getFacetedUniqueValues();
+                  const facetedValue =
+                    getFacetedUniqueValues?.(table, field.value) ||
+                    column?.getFacetedUniqueValues();
 
                   const options = getFieldOptions({ field });
 
@@ -267,7 +276,9 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
                         {`${optionValue}`}
                         {facetedValue?.has(optionValue) ? (
                           <span className="ml-auto font-mono text-muted-foreground">
-                            {facetedValue?.get(optionValue)}
+                            {formatCompactNumber(
+                              facetedValue.get(optionValue) || 0
+                            )}
                           </span>
                         ) : null}
                       </CommandItem>

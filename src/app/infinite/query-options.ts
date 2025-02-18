@@ -1,15 +1,19 @@
-import type { MakeArray } from "@/types";
-import { ColumnSchema } from "./schema";
-import { SearchParamsType, searchParamsSerializer } from "./search-params";
+import type { ColumnSchema } from "./schema";
+import { type SearchParamsType, searchParamsSerializer } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
-import { Percentile } from "@/lib/request/percentile";
+import type { Percentile } from "@/lib/request/percentile";
+import type { FacetMetadataSchema } from "./schema";
 
-export type InfiniteQueryMeta = {
+export type LogsMeta = {
+  currentPercentiles: Record<Percentile, number>;
+};
+
+export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
   totalRowCount: number;
   filterRowCount: number;
-  totalFilters: MakeArray<ColumnSchema>;
-  currentPercentiles: Record<Percentile, number>;
   chartData: { timestamp: number; [key: string]: number }[];
+  facets: Record<string, FacetMetadataSchema>;
+  metadata?: TMeta;
 };
 
 export const dataOptions = (search: SearchParamsType) => {
@@ -21,7 +25,7 @@ export const dataOptions = (search: SearchParamsType) => {
       const response = await fetch(`/infinite/api${serialize}`);
       return response.json() as Promise<{
         data: ColumnSchema[];
-        meta: InfiniteQueryMeta;
+        meta: InfiniteQueryMeta<LogsMeta>;
       }>;
     },
     initialPageParam: 0,

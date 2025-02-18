@@ -6,7 +6,7 @@ import {
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
 import { z } from "zod";
-import { RESULTS } from "@/constants/results";
+import { LEVELS } from "@/constants/levels";
 
 // https://github.com/colinhacks/zod/issues/2985#issue-2008642190
 const stringToBoolean = z
@@ -36,7 +36,7 @@ export const columnSchema = z
     method: z.enum(METHODS),
     host: z.string(),
     pathname: z.string(),
-    result: z.enum(RESULTS),
+    level: z.enum(LEVELS),
     latency: z.number(),
     status: z.number(),
     regions: z.enum(REGIONS).array(),
@@ -52,10 +52,10 @@ export type TimingSchema = z.infer<typeof timingSchema>;
 
 // TODO: can we get rid of this in favor of nuqs search-params?
 export const columnFilterSchema = z.object({
-  result: z
+  level: z
     .string()
     .transform((val) => val.split(ARRAY_DELIMITER))
-    .pipe(z.enum(RESULTS).array())
+    .pipe(z.enum(LEVELS).array())
     .optional(),
   method: z
     .string()
@@ -112,3 +112,12 @@ export const columnFilterSchema = z.object({
 });
 
 export type ColumnFilterSchema = z.infer<typeof columnFilterSchema>;
+
+export const facetMetadataSchema = z.object({
+  rows: z.array(z.object({ value: z.any(), total: z.number() })),
+  total: z.number(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+});
+
+export type FacetMetadataSchema = z.infer<typeof facetMetadataSchema>;

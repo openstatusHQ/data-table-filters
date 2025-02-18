@@ -16,9 +16,10 @@ import { useDataTable } from "@/providers/data-table";
 import { useControls } from "@/providers/controls";
 import { useMemo } from "react";
 import { formatCompactNumber } from "@/lib/format";
+import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 
 export function DataTableToolbar() {
-  const { table, isLoading } = useDataTable();
+  const { table, isLoading, columnFilters } = useDataTable();
   const { open, setOpen } = useControls();
   useHotKey(() => setOpen((prev) => !prev), "b");
   const filters = table.getState().columnFilters;
@@ -28,7 +29,7 @@ export function DataTableToolbar() {
       total: table.getCoreRowModel().rows.length,
       filtered: table.getFilteredRowModel().rows.length,
     }),
-    [isLoading]
+    [isLoading, columnFilters]
   );
 
   return (
@@ -41,7 +42,7 @@ export function DataTableToolbar() {
                 size="sm"
                 variant="ghost"
                 onClick={() => setOpen((prev) => !prev)}
-                className="flex gap-2"
+                className="hidden gap-2 sm:flex"
               >
                 {open ? (
                   <>
@@ -69,13 +70,15 @@ export function DataTableToolbar() {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        <div className="block sm:hidden">
+          <DataTableFilterControlsDrawer />
+        </div>
         <p className="text-sm text-muted-foreground">
           <span className="font-medium font-mono">
             {formatCompactNumber(rows.filtered)}
           </span>{" "}
           of <span className="font-medium font-mono">{rows.total}</span> row(s)
           filtered
-          {/* TODO: add "(total X rows)" */}
         </p>
         {isLoading ? (
           <LoaderCircle className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />

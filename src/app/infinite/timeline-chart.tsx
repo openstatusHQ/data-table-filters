@@ -13,22 +13,22 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
 import { ColumnFiltersColumn } from "@tanstack/react-table";
-import { getResultLabel } from "@/lib/request/result";
-import { RESULTS } from "@/constants/results";
+import { getLevelLabel } from "@/lib/request/level";
+import { LEVELS } from "@/constants/levels";
 
 export const description = "A stacked bar chart";
 
 const chartConfig = {
   success: {
-    label: <TooltipLabel result="success" />,
+    label: <TooltipLabel level="success" />,
     color: "hsl(var(--success))",
   },
   warning: {
-    label: <TooltipLabel result="warning" />,
+    label: <TooltipLabel level="warning" />,
     color: "hsl(var(--warning))",
   },
   error: {
-    label: <TooltipLabel result="error" />,
+    label: <TooltipLabel level="error" />,
     color: "hsl(var(--error))",
   },
 } satisfies ChartConfig;
@@ -151,17 +151,18 @@ export function TimelineChart({
             fillOpacity={0.08}
           />
         )}
+        LEVELS
       </BarChart>
     </ChartContainer>
   );
 }
 
-function TooltipLabel({ result }: { result: (typeof RESULTS)[number] }) {
+function TooltipLabel({ level }: { level: (typeof LEVELS)[number] }) {
   return (
     <div className="font-mono flex w-20 justify-between items-center gap-2 mr-2">
-      <div className="capitalize text-foreground/70">{result}</div>
+      <div className="capitalize text-foreground/70">{level}</div>
       <div className="text-xs text-muted-foreground/70">
-        {getResultLabel(result)}
+        {getLevelLabel(level)}
       </div>
     </div>
   );

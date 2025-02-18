@@ -14,7 +14,8 @@ import {
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
-  getFacetedUniqueValues,
+  getFacetedUniqueValues as getTTableFacetedUniqueValues,
+  getFacetedMinMaxValues as getTTableFacetedMinMaxValues,
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
@@ -44,10 +45,9 @@ import { searchParamsParser } from "./search-params";
 import { type FetchNextPageOptions } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Percentile } from "@/lib/request/percentile";
 import { formatCompactNumber } from "@/lib/format";
 import { inDateRange, arrSome } from "@/lib/table/filterfns";
-import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet-details";
+import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
 import { SocialsFooter } from "./_components/socials-footer";
 import { TimelineChart } from "./timeline-chart";
 import { useHotKey } from "@/hooks/use-hot-key";
@@ -56,7 +56,7 @@ import { DataTableProvider } from "@/providers/data-table";
 import { DataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
 
 // TODO: add a possible chartGroupBy
-export interface DataTableInfiniteProps<TData, TValue> {
+export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   columns: ColumnDef<TData, TValue>[];
   getRowClassName?: (row: Row<TData>) => string;
   // REMINDER: make sure to pass the correct id to access the rows
@@ -67,18 +67,27 @@ export interface DataTableInfiniteProps<TData, TValue> {
   defaultRowSelection?: RowSelectionState;
   defaultColumnVisibility?: VisibilityState;
   filterFields?: DataTableFilterField<TData>[];
-  sheetFields?: SheetField<TData>[];
+  sheetFields?: SheetField<TData, TMeta>[];
+  // REMINDER: close to the same signature as the `getFacetedUniqueValues` of the `useReactTable`
+  getFacetedUniqueValues?: (
+    table: TTable<TData>,
+    columnId: string
+  ) => Map<string, number>;
+  getFacetedMinMaxValues?: (
+    table: TTable<TData>,
+    columnId: string
+  ) => undefined | [number, number];
   totalRows?: number;
   filterRows?: number;
   totalRowsFetched?: number;
-  currentPercentiles?: Record<Percentile, number>;
+  meta: TMeta;
   chartData?: { timestamp: number; [key: string]: number }[];
   isFetching?: boolean;
   isLoading?: boolean;
   fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
 }
 
-export function DataTableInfinite<TData, TValue>({
+export function DataTableInfinite<TData, TValue, TMeta>({
   columns,
   getRowClassName,
   getRowId,
@@ -95,9 +104,11 @@ export function DataTableInfinite<TData, TValue>({
   totalRows = 0,
   filterRows = 0,
   totalRowsFetched = 0,
-  currentPercentiles,
   chartData = [],
-}: DataTableInfiniteProps<TData, TValue>) {
+  getFacetedUniqueValues,
+  getFacetedMinMaxValues,
+  meta,
+}: DataTableInfiniteProps<TData, TValue, TMeta>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
   const [sorting, setSorting] =
@@ -168,23 +179,8 @@ export function DataTableInfinite<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
-    // REMINDER: it doesn't support array of strings (WARNING: might not work for other types)
-    getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
-      const facets = getFacetedUniqueValues<TData>()(table, columnId)();
-      const customFacets = new Map();
-      for (const [key, value] of facets as any) {
-        if (Array.isArray(key)) {
-          for (const k of key) {
-            const prevValue = customFacets.get(k) || 0;
-            customFacets.set(k, prevValue + value);
-          }
-        } else {
-          const prevValue = customFacets.get(key) || 0;
-          customFacets.set(key, prevValue + value);
-        }
-      }
-      return customFacets;
-    },
+    getFacetedUniqueValues: getTTableFacetedUniqueValues(),
+    getFacetedMinMaxValues: getTTableFacetedMinMaxValues(),
     filterFns: { inDateRange, arrSome },
     debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
     meta: { getRowClassName },
@@ -277,6 +273,8 @@ export function DataTableInfinite<TData, TValue>({
       columnVisibility={columnVisibility}
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
+      getFacetedUniqueValues={getFacetedUniqueValues}
+      getFacetedMinMaxValues={getFacetedMinMaxValues}
     >
       <div
         className="flex w-full min-h-screen h-full flex-col sm:flex-row"
@@ -290,7 +288,8 @@ export function DataTableInfinite<TData, TValue>({
         <div
           className={cn(
             "w-full h-full flex flex-col sm:min-h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 sm:sticky sm:top-0 sm:max-h-screen",
-            "group-data-[expanded=false]/controls:hidden"
+            "group-data-[expanded=false]/controls:hidden",
+            "hidden sm:block"
           )}
         >
           <div className="p-2 md:sticky md:top-0 border-b border-border bg-background">
@@ -461,7 +460,11 @@ export function DataTableInfinite<TData, TValue>({
                       </Button>
                     ) : (
                       <p className="text-muted-foreground text-sm">
-                        No more data to load (total:{" "}
+                        No more data to load (
+                        <span className="font-medium font-mono">
+                          {formatCompactNumber(filterRows)}
+                        </span>{" "}
+                        of{" "}
                         <span className="font-medium font-mono">
                           {formatCompactNumber(totalRows)}
                         </span>{" "}
@@ -485,12 +488,16 @@ export function DataTableInfinite<TData, TValue>({
           data={selectedRow?.original}
           filterFields={filterFields}
           fields={sheetFields}
+          // totalRows={totalRows}
+          // filterRows={filterRows}
+          // totalRowsFetched={totalRowsFetched}
           // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
           metadata={{
             totalRows,
             filterRows,
             totalRowsFetched,
-            currentPercentiles,
+            // REMINDER: includes `currentPercentiles`
+            ...meta,
           }}
         />
       </DataTableSheetDetails>
