@@ -13,6 +13,9 @@ It currently includes:
 
 The examples are heavily inspired by datadog and vercel log tables.
 
+> [!NOTE]
+> We are working on a [Guide](https://data-table.openstatus.dev/guide) to help you get started it and not wild guess which component does what.
+
 ## Built With
 
 Our stack is:
