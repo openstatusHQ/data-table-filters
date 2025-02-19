@@ -7,7 +7,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { FilterIcon, LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import {
+  FilterIcon,
+  LoaderCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
