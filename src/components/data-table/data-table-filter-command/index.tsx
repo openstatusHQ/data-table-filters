@@ -16,7 +16,6 @@ import { LoaderCircle, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Kbd } from "@/components/custom/kbd";
-import type { Table } from "@tanstack/react-table";
 import type { z } from "zod";
 import type { DataTableFilterField } from "../types";
 import { deserialize, serializeColumFilters } from "../utils";

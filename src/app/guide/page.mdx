@@ -276,7 +276,7 @@ export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
   /**
    * The data for the timeline chart
    */
-  chartData: { timestamp: number; [key: string]: number }[];
+  chartData: BaseChartSchema[];
   /**
    * The facets for every filter field
    */
@@ -305,11 +305,16 @@ type LogsMeta = {
 The timeline chart helps you to visualize the data over time. It utilizes the shadcn component (checkout out the [docs](https://ui.shadcn.com/docs/components/chart)) and renders the bars based on the the amount of data items you defined.
 
 ```ts
-type TimelineChartProps = {
+type BaseChartSchema = {
+    timestamp: number;
+    [key: string]: number;
+}
+
+interface TimelineChartProps<TChart extends BaseChartSchema> = {
     /**
      * The data from `chartData` in the `meta` object
      */
-    data: { timestamp: number; [key: string]: number }[];
+    data: TChart[];
     // ...
 }
 ```

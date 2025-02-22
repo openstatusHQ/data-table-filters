@@ -4,13 +4,13 @@ import {
   differenceInMinutes,
   isSameDay,
 } from "date-fns";
-import type { FacetMetadataSchema, ColumnSchema } from "../schema";
+import type {
+  FacetMetadataSchema,
+  ColumnSchema,
+  TimelineChartSchema,
+} from "../schema";
 import type { SearchParamsType } from "../search-params";
-import {
-  isArrayOfBooleans,
-  isArrayOfDates,
-  isArrayOfNumbers,
-} from "@/lib/is-array";
+import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
@@ -176,7 +176,7 @@ export function getPercentileFromData(data: ColumnSchema[]) {
 export function groupChartData(
   data: ColumnSchema[],
   dates: Date[] | null
-): { timestamp: number; [key: string]: number }[] {
+): TimelineChartSchema[] {
   if (data?.length === 0 && !dates) return [];
 
   // If we only have one date, we need to add a day to it

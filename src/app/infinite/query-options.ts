@@ -1,8 +1,11 @@
-import type { ColumnSchema } from "./schema";
+import type {
+  ColumnSchema,
+  FacetMetadataSchema,
+  BaseChartSchema,
+} from "./schema";
 import { type SearchParamsType, searchParamsSerializer } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 import type { Percentile } from "@/lib/request/percentile";
-import type { FacetMetadataSchema } from "./schema";
 
 export type LogsMeta = {
   currentPercentiles: Record<Percentile, number>;
@@ -11,7 +14,7 @@ export type LogsMeta = {
 export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
   totalRowCount: number;
   filterRowCount: number;
-  chartData: { timestamp: number; [key: string]: number }[];
+  chartData: BaseChartSchema[];
   facets: Record<string, FacetMetadataSchema>;
   metadata?: TMeta;
 };

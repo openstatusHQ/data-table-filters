@@ -32,7 +32,7 @@ import {
 } from "@/components/custom/table";
 import { DataTableFilterControls } from "@/components/data-table/data-table-filter-controls";
 import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
-import { ColumnSchema, columnFilterSchema } from "./schema";
+import { ColumnSchema, BaseChartSchema, columnFilterSchema } from "./schema";
 import type {
   DataTableFilterField,
   SheetField,
@@ -81,7 +81,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   filterRows?: number;
   totalRowsFetched?: number;
   meta: TMeta;
-  chartData?: { timestamp: number; [key: string]: number }[];
+  chartData?: BaseChartSchema[];
   isFetching?: boolean;
   isLoading?: boolean;
   fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
@@ -325,11 +325,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
           >
             <DataTableFilterCommand schema={columnFilterSchema} />
             <DataTableToolbar />
-            <TimelineChart
-              data={chartData}
-              className="-mb-2"
-              handleFilter={table.getColumn("date")?.setFilterValue}
-            />
+            <TimelineChart data={chartData} className="-mb-2" columnId="date" />
           </div>
           <div className="z-0">
             <Table

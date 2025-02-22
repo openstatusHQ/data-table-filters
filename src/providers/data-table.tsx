@@ -10,6 +10,8 @@ import type {
 import { createContext, useContext, useMemo } from "react";
 import { ControlsProvider } from "./controls";
 
+// TODO: move to `@/components/data-table/data-table-provider.tsx`
+
 // REMINDER: read about how to move controlled state out of the useReactTable hook
 // https://github.com/TanStack/table/discussions/4005#discussioncomment-7303569
 
