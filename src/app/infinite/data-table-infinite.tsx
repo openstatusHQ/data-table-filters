@@ -287,9 +287,9 @@ export function DataTableInfinite<TData, TValue, TMeta>({
       >
         <div
           className={cn(
-            "w-full h-full flex flex-col sm:min-h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 sm:sticky sm:top-0 sm:max-h-screen",
+            "w-full h-full flex-col sm:min-h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72 sm:sticky sm:top-0 sm:max-h-screen",
             "group-data-[expanded=false]/controls:hidden",
-            "hidden sm:block"
+            "hidden sm:flex"
           )}
         >
           <div className="p-2 md:sticky md:top-0 border-b border-border bg-background">
