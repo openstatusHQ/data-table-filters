@@ -240,7 +240,7 @@ export type SheetField<TData, TMeta = Record<string, unknown>> = {
 };
 ```
 
-### api
+## API
 
 We use `@tanstack/react-query` and its `useInfiniteQuery` method to fetch the data.
 
@@ -257,9 +257,15 @@ export async function GET(req: Request) {
     return Response.json({ data, meta } satisfies {
         data: ColumnSchema[], // TODO: defined ColumnSchema
         meta: InfiniteQueryMeta<LogsMeta>,
+        nextCursor: number | null, // timestamp of the last item in the data array
+        prevCursor: number | null, // timestamp of the first item in the data array - used for live mode
     })
 }
 ```
+
+We initially started with `size` and `start`, making `size*start` the offset but it has some drawbacks when it comes to live mode. Instead, we use the `cursor` to mark a timestamp and the `direction` to determine the direction of the pagination - `"prev"` for live mode or `"next"` for load more. If you don't need live mode, you can ignore the `prevCursor` and `fetchPreviousPage` (including the `LiveButton` component).
+
+To parse the response, we use [`superjson`](https://github.com/flightcontrolhq/superjson) to serialize and deserialize the data. This is especially useful when using `Date` objects or other non-serializable values.
 
 The `meta` object allows us to return additional data that is not part of the `data` array. That can be data for the chart like `chartData`, or statistics to be used in the `Sheet` component like `currentPercentiles`.
 
@@ -300,7 +306,7 @@ type LogsMeta = {
 };
 ```
 
-### Timeline Chart
+## Timeline Chart
 
 The timeline chart helps you to visualize the data over time. It utilizes the shadcn component (checkout out the [docs](https://ui.shadcn.com/docs/components/chart)) and renders the bars based on the the amount of data items you defined.
 

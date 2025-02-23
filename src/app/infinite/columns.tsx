@@ -21,7 +21,8 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
 import { HoverCardTimestamp } from "./_components/hover-card-timestamp";
 import { LEVELS } from "@/constants/levels";
-import { getLevelColor } from "@/lib/request/level";
+import { HoverCardPortal } from "@radix-ui/react-hover-card";
+import { LevelIndicator } from "./_components/level-indicator";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
@@ -29,13 +30,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: "",
     cell: ({ row }) => {
       const value = row.getValue("level") as (typeof LEVELS)[number];
-      return (
-        <div className="flex items-center justify-center">
-          <div
-            className={cn("h-2.5 w-2.5 rounded-[2px]", getLevelColor(value).bg)}
-          />
-        </div>
-      );
+      return <LevelIndicator level={value} />;
     },
     enableHiding: false,
     enableResizing: false,
@@ -251,39 +246,42 @@ export const columns: ColumnDef<ColumnSchema>[] = [
               ))}
             </div>
           </HoverCardTrigger>
-          <HoverCardContent
-            side="bottom"
-            align="end"
-            className="p-2 w-auto z-10"
-          >
-            <div className="flex flex-col gap-1">
-              {timingPhases.map((phase) => {
-                const color = getTimingColor(phase);
-                const percentageValue = percentage[phase];
-                return (
-                  <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className={cn(color, "h-2 w-2 rounded-full")} />
-                      <div className="uppercase font-mono text-accent-foreground">
-                        {getTimingLabel(phase)}
+          {/* REMINDER: allows us to port the content to the document.body, which is helpful when using opacity-50 on the row element */}
+          <HoverCardPortal>
+            <HoverCardContent
+              side="bottom"
+              align="end"
+              className="p-2 w-auto z-10"
+            >
+              <div className="flex flex-col gap-1">
+                {timingPhases.map((phase) => {
+                  const color = getTimingColor(phase);
+                  const percentageValue = percentage[phase];
+                  return (
+                    <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className={cn(color, "h-2 w-2 rounded-full")} />
+                        <div className="uppercase font-mono text-accent-foreground">
+                          {getTimingLabel(phase)}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="font-mono text-muted-foreground">
+                          {percentageValue}
+                        </div>
+                        <div className="font-mono">
+                          {new Intl.NumberFormat("en-US", {
+                            maximumFractionDigits: 3,
+                          }).format(timing[phase])}
+                          <span className="text-muted-foreground">ms</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="font-mono text-muted-foreground">
-                        {percentageValue}
-                      </div>
-                      <div className="font-mono">
-                        {new Intl.NumberFormat("en-US", {
-                          maximumFractionDigits: 3,
-                        }).format(timing[phase])}
-                        <span className="text-muted-foreground">ms</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </HoverCardContent>
+                  );
+                })}
+              </div>
+            </HoverCardContent>
+          </HoverCardPortal>
         </HoverCard>
       );
     },

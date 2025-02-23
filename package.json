@@ -55,6 +55,7 @@
     "rehype-pretty-code": "^0.14.0",
     "shiki": "^1.29.0",
     "sonner": "^1.7.2",
+    "superjson": "^2.2.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",

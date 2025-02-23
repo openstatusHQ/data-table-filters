@@ -42,7 +42,10 @@ import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
-import { type FetchNextPageOptions } from "@tanstack/react-query";
+import {
+  FetchPreviousPageOptions,
+  type FetchNextPageOptions,
+} from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCompactNumber } from "@/lib/format";
@@ -54,6 +57,7 @@ import { useHotKey } from "@/hooks/use-hot-key";
 import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
 import { DataTableProvider } from "@/providers/data-table";
 import { DataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
+import { LiveButton } from "./_components/live-button";
 
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue, TMeta> {
@@ -85,6 +89,8 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   isFetching?: boolean;
   isLoading?: boolean;
   fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
+  fetchPreviousPage?: (options?: FetchPreviousPageOptions | undefined) => void;
+  renderLiveRow: (props?: { row: Row<TData> }) => React.ReactNode;
 }
 
 export function DataTableInfinite<TData, TValue, TMeta>({
@@ -101,6 +107,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   isFetching,
   isLoading,
   fetchNextPage,
+  fetchPreviousPage,
   totalRows = 0,
   filterRows = 0,
   totalRowsFetched = 0,
@@ -108,6 +115,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
   meta,
+  renderLiveRow,
 }: DataTableInfiniteProps<TData, TValue, TMeta>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -324,7 +332,12 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             )}
           >
             <DataTableFilterCommand schema={columnFilterSchema} />
-            <DataTableToolbar />
+            {/* TBD: better flexibility with compound components? */}
+            <DataTableToolbar
+              renderActions={() => (
+                <LiveButton fetchPreviousPage={fetchPreviousPage} />
+              )}
+            />
             <TimelineChart data={chartData} className="-mb-2" columnId="date" />
           </div>
           <div className="z-0">
@@ -395,49 +408,54 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     // REMINDER: if we want to add arrow navigation https://github.com/TanStack/table/discussions/2752#discussioncomment-192558
-                    <TableRow
-                      key={row.id}
-                      id={row.id}
-                      tabIndex={0}
-                      data-state={row.getIsSelected() && "selected"}
-                      onClick={() => row.toggleSelected()}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          row.toggleSelected();
-                        }
-                      }}
-                      className={cn(
-                        "[&>:not(:last-child)]:border-r",
-                        "transition-colors focus-visible:outline outline-1 -outline-offset-1 outline-primary focus-visible:bg-muted/50 data-[state=selected]:outline",
-                        table.options.meta?.getRowClassName?.(row)
-                      )}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className={cn(
-                            "border-b border-border truncate",
-                            cell.column.columnDef.meta?.cellClassName
-                          )}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
+                    <React.Fragment key={row.id}>
+                      {renderLiveRow?.({ row })}
+                      <TableRow
+                        id={row.id}
+                        tabIndex={0}
+                        data-state={row.getIsSelected() && "selected"}
+                        onClick={() => row.toggleSelected()}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            row.toggleSelected();
+                          }
+                        }}
+                        className={cn(
+                          "[&>:not(:last-child)]:border-r",
+                          "transition-colors focus-visible:outline outline-1 -outline-offset-1 outline-primary focus-visible:bg-muted/50 data-[state=selected]:outline",
+                          table.options.meta?.getRowClassName?.(row)
+                        )}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              "border-b border-border truncate",
+                              cell.column.columnDef.meta?.cellClassName
+                            )}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </React.Fragment>
                   ))
                 ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment>
+                    {renderLiveRow()}
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
                 )}
                 <TableRow className="hover:bg-transparent data-[state=selected]:bg-transparent">
                   <TableCell colSpan={columns.length} className="text-center">

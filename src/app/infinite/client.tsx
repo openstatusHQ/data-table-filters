@@ -12,17 +12,23 @@ import { useHotKey } from "@/hooks/use-hot-key";
 import { getLevelRowClassName } from "@/lib/request/level";
 import type { FacetMetadataSchema } from "./schema";
 import type { Table as TTable } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
+import { LiveRow } from "./_components/live-row";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
-  const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
-    dataOptions(search)
-  );
+  const { data, isFetching, isLoading, fetchNextPage, fetchPreviousPage } =
+    useInfiniteQuery(dataOptions(search));
   useResetFocus();
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
     [data?.pages]
+  );
+
+  // REMINDER: used to capture the live mode on timestamp
+  const liveTimestamp = React.useRef<number | undefined>(
+    search.live ? new Date().getTime() : undefined
   );
 
   // REMINDER: meta data is always the same for all pages as filters do not change(!)
@@ -34,7 +40,8 @@ export function Client() {
   const facets = lastPage?.meta?.facets;
   const totalFetched = flatData?.length;
 
-  const { sort, start, size, uuid, ...filter } = search;
+  const { sort, start, size, uuid, cursor, direction, live, ...filter } =
+    search;
 
   // REMINDER: this is currently needed for the cmdk search
   // TODO: auto search via API when the user changes the filter instead of hardcoded
@@ -62,6 +69,27 @@ export function Client() {
 
     return { ...field, options };
   });
+
+  React.useEffect(() => {
+    if (live) liveTimestamp.current = new Date().getTime();
+    else liveTimestamp.current = undefined;
+  }, [live]);
+
+  const liveMode = React.useMemo(() => {
+    if (!live) return undefined;
+
+    const item = flatData.find((item) => {
+      // return first item that is there if not liveTimestamp
+      if (!liveTimestamp.current) return true;
+      // return first item that is after the liveTimestamp
+      if (item.date.getTime() > liveTimestamp.current) return false;
+      return true;
+      // return first item if no liveTimestamp
+    });
+
+    if (item) return { timestamp: liveTimestamp.current, row: item };
+    return { timestamp: liveTimestamp.current, row: undefined };
+  }, [live, flatData]);
 
   return (
     <DataTableInfinite
@@ -93,11 +121,22 @@ export function Client() {
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
+      fetchPreviousPage={fetchPreviousPage}
       chartData={chartData}
-      getRowClassName={(row) => getLevelRowClassName(row.original.level)}
+      getRowClassName={(row) => {
+        const rowTimestamp = row.original.date.getTime();
+        const isPast = rowTimestamp <= (liveTimestamp.current || -1);
+        const levelClassName = getLevelRowClassName(row.original.level);
+        return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
+      }}
       getRowId={(row) => row.uuid}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+      renderLiveRow={(props) => {
+        if (!liveTimestamp.current) return null;
+        if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
+        return <LiveRow />;
+      }}
     />
   );
 }

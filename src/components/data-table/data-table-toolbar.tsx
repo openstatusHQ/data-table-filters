@@ -7,12 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  FilterIcon,
-  LoaderCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from "lucide-react";
+import { LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
@@ -23,7 +18,11 @@ import { useMemo } from "react";
 import { formatCompactNumber } from "@/lib/format";
 import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 
-export function DataTableToolbar() {
+interface DataTableToolbarProps {
+  renderActions?: () => React.ReactNode;
+}
+
+export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
   const { table, isLoading, columnFilters } = useDataTable();
   const { open, setOpen } = useControls();
   useHotKey(() => setOpen((prev) => !prev), "b");
@@ -51,15 +50,13 @@ export function DataTableToolbar() {
               >
                 {open ? (
                   <>
-                    <PanelLeftClose className="hidden sm:block h-4 w-4" />
-                    <FilterIcon className="block sm:hidden h-4 w-4" />
-                    <span className="hidden sm:block">Hide Controls</span>
+                    <PanelLeftClose className="h-4 w-4" />
+                    <span className="hidden md:block">Hide Controls</span>
                   </>
                 ) : (
                   <>
-                    <PanelLeftOpen className="hidden sm:block h-4 w-4" />
-                    <FilterIcon className="block sm:hidden h-4 w-4" />
-                    <span className="hidden sm:block">Show Controls</span>
+                    <PanelLeftOpen className="h-4 w-4" />
+                    <span className="hidden md:block">Show Controls</span>
                   </>
                 )}
               </Button>
@@ -91,6 +88,7 @@ export function DataTableToolbar() {
       </div>
       <div className="flex items-center gap-2">
         {filters.length ? <DataTableResetButton /> : null}
+        {renderActions?.()}
         <DataTableViewOptions />
       </div>
     </div>
