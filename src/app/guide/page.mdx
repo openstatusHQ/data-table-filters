@@ -128,6 +128,8 @@ export type Input = {
 };
 ```
 
+**Limitations**: Spaces cannot be used in the input value as they get interpreted as a separator in the cmdk input (and vice versa). An issue [#27](https://github.com/openstatusHQ/data-table-filters/issues/27) is open to tackle this.
+
 #### Checkbox
 
 The `checkbox` type will be rendered the options as list of checkboxes in the Controls sidebar. If there are more than 5 options, a search input will be included on top of the list to filter the options. The cmdk input will list all the defined `options` once the value is selected. You can also define a custom component to be rendered for each option.
