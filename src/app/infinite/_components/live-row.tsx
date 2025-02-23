@@ -10,7 +10,7 @@ export function LiveRow() {
       </TableCell>
       <TableCell
         colSpan={columns.length - 1}
-        className="border-b border-t border-r border-info text-info"
+        className="border-b border-t border-r border-info text-info font-medium"
       >
         Live Mode
       </TableCell>
