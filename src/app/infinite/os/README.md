@@ -14,6 +14,10 @@ Differences:
 - Facets need an api endpoint on tb with a calculation. It returns the percentiles and the count.
 - Percentiles are not available in the current tb facet api.
 
+FIXME:
+
+- [ ] DataTableSheetDetails are using `isLoading` to show the loading state. On Live Mode, it will always be loading every X seconds.
+
 TODO:
 
 Clickhouse/Tinybird pipe to get facets with count:
