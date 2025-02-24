@@ -218,12 +218,12 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   }, [sorting]);
 
   const selectedRow = React.useMemo(() => {
-    if (isLoading || isFetching) return;
+    if ((isLoading || isFetching) && !data.length) return;
     const selectedRowKey = Object.keys(rowSelection)?.[0];
     return table
       .getCoreRowModel()
       .flatRows.find((row) => row.id === selectedRowKey);
-  }, [rowSelection, table, isLoading, isFetching]);
+  }, [rowSelection, table, isLoading, isFetching, data]);
 
   // TODO: can only share uuid within the first batch
   React.useEffect(() => {
@@ -502,9 +502,6 @@ export function DataTableInfinite<TData, TValue, TMeta>({
           data={selectedRow?.original}
           filterFields={filterFields}
           fields={sheetFields}
-          // totalRows={totalRows}
-          // filterRows={filterRows}
-          // totalRowsFetched={totalRowsFetched}
           // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
           metadata={{
             totalRows,

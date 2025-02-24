@@ -40,7 +40,7 @@ export function DataTableSheetDetails<TData>({
   const selectedRowKey = Object.keys(rowSelection)?.[0];
 
   const selectedRow = React.useMemo(() => {
-    if (isLoading) return;
+    if (isLoading && !selectedRowKey) return;
     return table
       .getCoreRowModel()
       .flatRows.find((row) => row.id === selectedRowKey);
@@ -116,7 +116,11 @@ export function DataTableSheetDetails<TData>({
         <SheetHeader className="sticky top-0 border-b bg-background p-4 z-10">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className={cn(titleClassName, "text-left truncate")}>
-              {isLoading ? <Skeleton className="h-7 w-36" /> : title}
+              {isLoading && !selectedRowKey ? (
+                <Skeleton className="h-7 w-36" />
+              ) : (
+                title
+              )}
             </SheetTitle>
             <div className="flex items-center gap-1 h-7">
               <TooltipProvider>
