@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { TooltipPortal } from "@radix-ui/react-tooltip";
 
 interface TextWithTooltipProps {
   text: string | number;
@@ -54,7 +55,9 @@ export function TextWithTooltip({ text, className }: TextWithTooltipProps) {
             {text}
           </div>
         </TooltipTrigger>
-        <TooltipContent>{text}</TooltipContent>
+        <TooltipPortal>
+          <TooltipContent>{text}</TooltipContent>
+        </TooltipPortal>
       </Tooltip>
     </TooltipProvider>
   );
