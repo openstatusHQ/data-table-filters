@@ -75,18 +75,28 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
         <div className="block sm:hidden">
           <DataTableFilterControlsDrawer />
         </div>
-        <p className="text-sm text-muted-foreground">
-          <span className="font-medium font-mono">
-            {formatCompactNumber(rows.filtered)}
-          </span>{" "}
-          of <span className="font-medium font-mono">{rows.total}</span> row(s)
-          filtered
-        </p>
+        <div>
+          <p className="text-sm text-muted-foreground hidden sm:block">
+            <span className="font-medium font-mono">
+              {formatCompactNumber(rows.filtered)}
+            </span>{" "}
+            of <span className="font-medium font-mono">{rows.total}</span>{" "}
+            row(s) <span className="sr-only sm:not-sr-only">filtered</span>
+          </p>
+          <p className="text-sm text-muted-foreground block sm:hidden">
+            <span className="font-medium font-mono">
+              {formatCompactNumber(rows.filtered)}
+            </span>{" "}
+            row(s)
+          </p>
+        </div>
         {isLoading ? (
-          <LoaderCircle className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />
-        ) : null}
+          <LoaderCircle className="mx-2 h-4 w-4 animate-spin text-muted-foreground" />
+        ) : (
+          <span className="mx-2 h-4 w-4" />
+        )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
         {filters.length ? <DataTableResetButton /> : null}
         {renderActions?.()}
         <DataTableViewOptions />
