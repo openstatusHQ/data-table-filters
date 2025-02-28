@@ -356,9 +356,6 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
                 </span>
                 <Separator orientation="vertical" className="my-auto h-3" />
                 <span>
-                  Union: <Kbd variant="outline">regions:a,b</Kbd>
-                </span>
-                <span>
                   Range: <Kbd variant="outline">p95:59-340</Kbd>
                 </span>
               </div>

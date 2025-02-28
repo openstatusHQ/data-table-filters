@@ -15,23 +15,16 @@ import {
   calculatePercentile,
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
-import { REGIONS } from "@/constants/region";
 import { LEVELS } from "@/constants/levels";
 
 export const sliderFilterValues = [
   "latency",
-  "timing.dns",
-  "timing.connection",
-  "timing.tls",
-  "timing.ttfb",
-  "timing.transfer",
 ] as const satisfies (keyof ColumnSchema)[];
 
 export const filterValues = [
   "level",
   ...sliderFilterValues,
   "status",
-  "regions",
   "method",
   "host",
   "pathname",
@@ -46,33 +39,8 @@ export function filterData(
     for (const key in filters) {
       const filter = filters[key as keyof typeof filters];
       if (filter === undefined || filter === null) continue;
-      if (
-        (key === "latency" ||
-          key === "timing.dns" ||
-          key === "timing.connection" ||
-          key === "timing.tls" ||
-          key === "timing.ttfb" ||
-          key === "timing.transfer") &&
-        isArrayOfNumbers(filter)
-      ) {
-        if (filter.length === 1 && row[key] !== filter[0]) {
-          return false;
-        } else if (
-          filter.length === 2 &&
-          (row[key] < filter[0] || row[key] > filter[1])
-        ) {
-          return false;
-        }
-        return true;
-      }
       if (key === "status" && isArrayOfNumbers(filter)) {
         if (!filter.includes(row[key])) {
-          return false;
-        }
-      }
-      if (key === "regions" && Array.isArray(filter)) {
-        const typedFilter = filter as unknown as typeof REGIONS;
-        if (!typedFilter.includes(row[key]?.[0])) {
           return false;
         }
       }
@@ -123,8 +91,6 @@ export function getFacetsFromData(data: ColumnSchema[]) {
   const valuesMap = data.reduce((prev, curr) => {
     Object.entries(curr).forEach(([key, value]) => {
       if (filterValues.includes(key as any)) {
-        // REMINDER: because regions is an array with a single value we need to convert to string
-        // TODO: we should make the region a single string instead of an array?!?
         const _value = Array.isArray(value) ? value.toString() : value;
         const total = prev.get(key)?.get(_value) || 0;
         if (prev.has(key) && _value) {

@@ -9,7 +9,6 @@ import type {
 } from "@/components/data-table/types";
 import { getStatusColor } from "@/lib/request/status-code";
 import { METHODS } from "@/constants/method";
-import { flags, regions, REGIONS } from "@/constants/region";
 import { LEVELS } from "@/constants/levels";
 import { getLevelColor, getLevelLabel } from "@/lib/request/level";
 import { format } from "date-fns";
@@ -100,52 +99,8 @@ export const filterFields = [
     },
   },
   {
-    label: "Regions",
-    value: "regions",
-    type: "checkbox",
-    options: REGIONS.map((region) => ({ label: region, value: region })),
-    component: (props: Option) => {
-      return <span className="font-mono">{props.value}</span>;
-    },
-  },
-  {
     label: "Latency",
     value: "latency",
-    type: "slider",
-    min: 0,
-    max: 5000,
-  },
-  {
-    label: "DNS",
-    value: "timing.dns",
-    type: "slider",
-    min: 0,
-    max: 5000,
-  },
-  {
-    label: "Connection",
-    value: "timing.connection",
-    type: "slider",
-    min: 0,
-    max: 5000,
-  },
-  {
-    label: "TLS",
-    value: "timing.tls",
-    type: "slider",
-    min: 0,
-    max: 5000,
-  },
-  {
-    label: "TTFB",
-    value: "timing.ttfb",
-    type: "slider",
-    min: 0,
-    max: 5000,
-  },
-  {
-    label: "Transfer",
-    value: "timing.transfer",
     type: "slider",
     min: 0,
     max: 5000,
@@ -201,20 +156,6 @@ export const sheetFields = [
     skeletonClassName: "w-56",
   },
   {
-    id: "regions",
-    label: "Regions",
-    type: "checkbox",
-    skeletonClassName: "w-12",
-    component: (props) => (
-      <>
-        <span className="text-muted-foreground text-xs">
-          {flags[props.regions[0]]} {regions[props.regions[0]]}
-        </span>{" "}
-        {props.regions[0]}
-      </>
-    ),
-  },
-  {
     id: "latency",
     label: "Latency",
     type: "slider",
@@ -241,15 +182,6 @@ export const sheetFields = [
       );
     },
     skeletonClassName: "w-12",
-  },
-  {
-    id: "timing.dns", // REMINDER: cannot be 'timing' as it is a property of the object
-    label: "Timing Phases",
-    type: "readonly",
-    component: (props) => (
-      <SheetTimingPhases latency={props.latency} timing={props} />
-    ),
-    className: "flex-col items-start w-full gap-1",
   },
   {
     id: "headers",

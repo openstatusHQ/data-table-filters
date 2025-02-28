@@ -2,7 +2,6 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { ColumnSchema } from "@/app/(home)/schema";
-import { REGIONS } from "@/constants/region";
 
 // Define the raw log format type
 export interface RawLog {
@@ -55,50 +54,6 @@ function determineLevel(status: number): "success" | "warning" | "error" {
 }
 
 /**
- * Extracts region from service name or router name
- * This is a placeholder implementation - adjust based on your actual region determination logic
- * @param serviceName The service name from the log
- * @param routerName The router name from the log
- * @returns Array of regions
- */
-function extractRegions(
-  serviceName: string,
-  routerName: string
-): (typeof REGIONS)[number][] {
-  // This is a placeholder implementation
-  // In a real implementation, you would parse the service name or router name to extract regions
-  // For now, we'll return a random region for demonstration
-  const randomIndex = Math.floor(Math.random() * REGIONS.length);
-  return [REGIONS[randomIndex]];
-}
-
-/**
- * Distributes the total duration into timing phases
- * This is a simplified implementation - adjust based on your actual timing distribution logic
- * @param duration Total duration in nanoseconds
- * @returns Timing phases in milliseconds
- */
-function distributeTiming(duration: number): {
-  "timing.dns": number;
-  "timing.connection": number;
-  "timing.tls": number;
-  "timing.ttfb": number;
-  "timing.transfer": number;
-} {
-  // Convert nanoseconds to milliseconds
-  const durationMs = duration / 1000000;
-
-  // Distribute the timing (simplified approach)
-  return {
-    "timing.dns": Math.round(durationMs * 0.1),
-    "timing.connection": Math.round(durationMs * 0.2),
-    "timing.tls": Math.round(durationMs * 0.1),
-    "timing.ttfb": Math.round(durationMs * 0.5),
-    "timing.transfer": Math.round(durationMs * 0.1),
-  };
-}
-
-/**
  * Parses a raw log into the ColumnSchema format
  * @param logString JSON string of the raw log
  * @returns Parsed log in ColumnSchema format
@@ -107,14 +62,8 @@ export function parseLog(logString: string): ColumnSchema {
   // Parse the JSON string
   const rawLog: RawLog = JSON.parse(logString);
 
-  // Extract timing information
-  const timing = distributeTiming(rawLog.Duration);
-
   // Determine the level based on status code
   const level = determineLevel(rawLog.DownstreamStatus);
-
-  // Extract regions
-  const regions = extractRegions(rawLog.ServiceName, rawLog.RouterName);
 
   // Create headers object (simplified)
   const headers: Record<string, string> = {
@@ -131,11 +80,9 @@ export function parseLog(logString: string): ColumnSchema {
     level: level,
     latency: Math.round(rawLog.Duration / 1000000), // Convert nanoseconds to milliseconds
     status: rawLog.DownstreamStatus,
-    regions: regions,
     date: new Date(rawLog.StartUTC),
     headers: headers,
     message: rawLog.msg || undefined,
-    ...timing,
   };
 
   return parsedLog;

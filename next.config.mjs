@@ -13,6 +13,7 @@ const nextConfig = {
     // https://react.dev/learn/react-compiler
     reactCompiler: true,
   },
+  output: "standalone",
 };
 
 export default nextConfig;

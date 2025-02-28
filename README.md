@@ -1,24 +1,17 @@
-## About The Project
+# Access Log UI
 
-This is a standalone data-table demo that we will be using within the [OpenStatus](https://openstatus.dev) dashboard.
+<p style="display: flex; align-items: center;">
+  <img src="public/logos/AccessLogUI.svg" alt="Access Log UI Logo" width="70"  style="margin-right: 20px;">
+  <span>A modern UI for viewing and analyzing access logs with powerful filtering and search capabilities.</span>
+</p>
 
-![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
+<p align="center">
+  <img src="public/example.jpg" alt="Access Log UI Example" width="100%">
+</p>
 
-To make it not only more accessible for you to use, but also work on PoC/MVP with data-tables, we have started this repository. We will maintain it and add new examples over time.
-
-It currently includes:
-
-- [data-table with simple pagination](https://data-table.openstatus.dev/default)
-- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite)
-
-The examples are heavily inspired by datadog and vercel log tables.
-
-> [!NOTE]
-> We are working on a [Guide](https://data-table.openstatus.dev/guide) to help you get started it and not wild guess which component does what.
+This is a fork of the amazing https://github.com/openstatusHQ/data-table-filters with support for reading an access log file (in JSON format for now).
 
 ## Built With
-
-Our stack is:
 
 - [nextjs](https://nextjs.org)
 - [tanstack-query](https://tanstack.com/query/latest)
@@ -28,23 +21,23 @@ Our stack is:
 - [nuqs](http://nuqs.47ng.com)
 - [dnd-kit](https://dndkit.com)
 
-We will consider making an example with [vitejs](https://vitejs.dev) for all our raw react lovers. **Contributions are welcome!**
-
 ## Getting Started
 
-No environment variable required. Run the development server:
+You can configure this project using .env file
+
+```
+USE_MOCK_DATA=false
+LOG_FILE_PATH=./logs/access.log
+```
+
+and to run the project in development mode:
 
 ```bash
-npm run dev
+yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Want more?
-
-If you are looking for specific use-cases or like what we are building and want to hire us, feel free write us to [hire@openstatus.dev](mailto:hire@openstatus.dev) or book a call via [cal.com](https://cal.com/team/openstatus/30min).
-
 ## Credits
 
-- [sadmann17](https://x.com/sadmann17) for the dope `<Sortable />` component around `@dnd-kit` (see [sortable.sadmn.com](https://sortable.sadmn.com))
-- [shelwin\_](https://x.com/shelwin_) for the draggable chart inspiration (see [zoom-chart-demo.vercel.app](https://zoom-chart-demo.vercel.app))
+- [openstatusHQ](https://github.com/openstatusHQ) for the amazing data table filters example

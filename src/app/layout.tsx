@@ -9,24 +9,11 @@ import { GeistMono } from "geist/font/mono";
 
 const TITLE = "Access log UI";
 const DESCRIPTION =
-  "Flexible, fast, and easy-to-use filters with tanstack table, shadcn/ui and search params via nuqs.";
+  "A modern UI for viewing and analyzing access logs with powerful filtering and search capabilities.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://data-table.openstatus.dev"),
   title: TITLE,
   description: DESCRIPTION,
-  twitter: {
-    images: ["/assets/data-table-infinite.png"],
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-  },
-  openGraph: {
-    type: "website",
-    images: ["/assets/data-table-infinite.png"],
-    title: TITLE,
-    description: DESCRIPTION,
-  },
 };
 
 export default function RootLayout({
