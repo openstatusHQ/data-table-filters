@@ -50,17 +50,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Set default environment variables
-ENV USE_MOCK_DATA=true
-ENV LOG_FILE_PATH=/app/data/access-json.log
-
-# Copy the data directory for mock logs
-COPY --chown=nextjs:nodejs data ./data
-
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
 
-CMD ["node", "server.js"] 
+CMD ["node", "server.js"]
