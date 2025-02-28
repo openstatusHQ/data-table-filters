@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { mock } from "./mock";
-import { searchParamsCache } from "../search-params";
+import { mock } from "../mock";
+import { searchParamsCache } from "../../search-params";
 import {
   filterData,
   getFacetsFromData,
@@ -8,11 +8,11 @@ import {
   percentileData,
   sliderFilterValues,
   sortData,
-} from "./helpers";
+} from "../helpers";
 import { calculateSpecificPercentile } from "@/lib/request/percentile";
 import { addDays } from "date-fns";
-import type { InfiniteQueryMeta, LogsMeta } from "../query-options";
-import { ColumnSchema } from "../schema";
+import type { InfiniteQueryMeta, LogsMeta } from "../../query-options";
+import { ColumnSchema } from "../../schema";
 import { getLogsFromTraefikAccessLog } from "@/lib/logs/traefik";
 
 export async function GET(req: NextRequest) {
@@ -47,20 +47,9 @@ export async function GET(req: NextRequest) {
   const sortedData = sortData(filteredData, search.sort);
   const withoutSliderFacets = getFacetsFromData(withoutSliderData);
   const facets = getFacetsFromData(filteredData);
-  const withPercentileData = percentileData(sortedData);
-
-  const latencies = withPercentileData.map(({ latency }) => latency);
-
-  const currentPercentiles = {
-    50: calculateSpecificPercentile(latencies, 50),
-    75: calculateSpecificPercentile(latencies, 75),
-    90: calculateSpecificPercentile(latencies, 90),
-    95: calculateSpecificPercentile(latencies, 95),
-    99: calculateSpecificPercentile(latencies, 99),
-  };
 
   return Response.json({
-    data: withPercentileData.slice(search.start, search.start + search.size),
+    data: sortedData.slice(search.start, search.start + search.size),
     meta: {
       totalRowCount: totalData.length,
       filterRowCount: filteredData.length,
@@ -74,7 +63,6 @@ export async function GET(req: NextRequest) {
           )
         ),
       },
-      metadata: { currentPercentiles },
     },
   } satisfies {
     data: ColumnSchema[];

@@ -1,3 +1,5 @@
+import { DownloadLogsButton } from "@/components/custom/download-logs-button";
+import { Kbd } from "@/components/custom/kbd";
 import { ModeToggle } from "@/components/theme/toggle-mode";
 import { Button } from "@/components/ui/button";
 import {
@@ -5,10 +7,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Command, Github, Globe, Twitter } from "lucide-react";
+import { Command, Github } from "lucide-react";
 import NextLink from "next/link";
-import { Kbd } from "@/components/custom/kbd";
-import { Link } from "@/components/custom/link";
 
 export function SocialsFooter() {
   return (
@@ -16,18 +16,8 @@ export function SocialsFooter() {
       <div className="w-full flex justify-center items-center gap-2 p-1">
         <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4" />
         <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
-          <NextLink href="https://github.com/openstatusHQ/data-table-filters">
+          <NextLink href="https://github.com/premieroctet/access-log-ui">
             <Github className="h-4 w-4" />
-          </NextLink>
-        </Button>
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
-          <NextLink href="https://twitter.com/openstatusHQ">
-            <Twitter className="h-4 w-4" />
-          </NextLink>
-        </Button>
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
-          <NextLink href="https://openstatus.dev">
-            <Globe className="h-4 w-4" />
           </NextLink>
         </Button>
         <Popover>
@@ -40,24 +30,8 @@ export function SocialsFooter() {
             <HotkeyOverview />
           </PopoverContent>
         </Popover>
+        <DownloadLogsButton />
       </div>
-      <p className="text-muted-foreground text-xs text-center">
-        Powered by{" "}
-        <Link href="https://openstatus.dev" hideArrow>
-          OpenStatus
-        </Link>
-      </p>
-      <p className="text-muted-foreground text-[10px] text-center">
-        The data is mocked. It is in active development. For feedback, please{" "}
-        <Link
-          href="https://github.com/openstatusHQ/data-table-filters/issues/new"
-          className="text-muted-foreground"
-          hideArrow
-        >
-          open an issue
-        </Link>{" "}
-        on GitHub.
-      </p>
     </div>
   );
 }

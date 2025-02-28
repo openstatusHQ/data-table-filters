@@ -6,11 +6,7 @@ import {
 } from "date-fns";
 import type { FacetMetadataSchema, ColumnSchema } from "../schema";
 import type { SearchParamsType } from "../search-params";
-import {
-  isArrayOfBooleans,
-  isArrayOfDates,
-  isArrayOfNumbers,
-} from "@/lib/is-array";
+import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
