@@ -124,9 +124,11 @@ export async function getLogsFromTraefikAccessLog(
 ): Promise<ColumnSchema[]> {
   // Return cached logs if available
   if (cachedLogs) {
+    console.log("Using cached logs...");
     return cachedLogs;
   }
 
+  console.log("Reading log file...");
   // Read and parse logs if not cached
   const logLines = await readLogFile(filePath);
   cachedLogs = parseLogs(logLines);
