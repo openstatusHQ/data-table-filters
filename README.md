@@ -38,6 +38,18 @@ yarn dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## For Coolify
+
+To use this project with Coolify, you have to update your traefik proxy configuration to add access logs :
+
+```
+      - '--accesslog.filepath=/traefik/logs/access.log'
+      - '--accesslog.format=json'
+      - '--accesslog.bufferingsize=100'
+```
+
+![Coolify](public/coolify.png)
+
 ## Credits
 
 - [openstatusHQ](https://github.com/openstatusHQ) for the amazing data table filters example

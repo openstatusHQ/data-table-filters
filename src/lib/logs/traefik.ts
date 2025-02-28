@@ -116,9 +116,19 @@ export async function readLogFile(filePath: string): Promise<string[]> {
   }
 }
 
+// Cache to store parsed logs
+let cachedLogs: ColumnSchema[] | null = null;
+
 export async function getLogsFromTraefikAccessLog(
   filePath: string
 ): Promise<ColumnSchema[]> {
+  // Return cached logs if available
+  if (cachedLogs) {
+    return cachedLogs;
+  }
+
+  // Read and parse logs if not cached
   const logLines = await readLogFile(filePath);
-  return parseLogs(logLines);
+  cachedLogs = parseLogs(logLines);
+  return cachedLogs;
 }
