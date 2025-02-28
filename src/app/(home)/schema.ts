@@ -8,20 +8,6 @@ import { REGIONS } from "@/constants/region";
 import { z } from "zod";
 import { LEVELS } from "@/constants/levels";
 
-// https://github.com/colinhacks/zod/issues/2985#issue-2008642190
-const stringToBoolean = z
-  .string()
-  .toLowerCase()
-  .transform((val) => {
-    try {
-      return JSON.parse(val);
-    } catch (e) {
-      console.log(e);
-      return undefined;
-    }
-  })
-  .pipe(z.boolean().optional());
-
 export const timingSchema = z.object({
   "timing.dns": z.number(),
   "timing.connection": z.number(),

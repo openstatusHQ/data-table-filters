@@ -13,6 +13,7 @@ import { calculateSpecificPercentile } from "@/lib/request/percentile";
 import { addDays } from "date-fns";
 import type { InfiniteQueryMeta, LogsMeta } from "../query-options";
 import { ColumnSchema } from "../schema";
+import { getLogsFromTraefikAccessLog } from "@/lib/logs/traefik";
 
 export async function GET(req: NextRequest) {
   // TODO: we could use a POST request to avoid this
@@ -21,7 +22,10 @@ export async function GET(req: NextRequest) {
 
   const search = searchParamsCache.parse(Object.fromEntries(_search));
 
-  const totalData = mock;
+  const totalData =
+    process.env.USE_MOCK_DATA === "true"
+      ? mock
+      : await getLogsFromTraefikAccessLog(process.env.LOG_FILE_PATH);
 
   const _date =
     search.date?.length === 1

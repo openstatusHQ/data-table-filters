@@ -24,20 +24,6 @@ function getRandomTiming(latency: number) {
   };
 }
 
-// REMINDER: for later
-function getRandomMetadata(): Record<string, string> {
-  const rand = Math.random();
-  if (rand < 0.5) {
-    return {
-      env: "production",
-    };
-  } else {
-    return {
-      env: "staging",
-    };
-  }
-}
-
 function getLevel(status: number) {
   if (`${status}`.startsWith("2")) return "success";
   if (`${status}`.startsWith("4")) return "warning";
