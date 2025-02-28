@@ -44,6 +44,7 @@ import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import {
   FetchPreviousPageOptions,
+  RefetchOptions,
   type FetchNextPageOptions,
 } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
@@ -58,6 +59,7 @@ import { DataTableResetButton } from "@/components/data-table/data-table-reset-b
 import { DataTableProvider } from "@/providers/data-table";
 import { DataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
 import { LiveButton } from "./_components/live-button";
+import { RefreshButton } from "./_components/refresh-button";
 
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue, TMeta> {
@@ -90,6 +92,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   isLoading?: boolean;
   fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
   fetchPreviousPage?: (options?: FetchPreviousPageOptions | undefined) => void;
+  refetch: (options?: RefetchOptions | undefined) => void;
   renderLiveRow: (props?: { row: Row<TData> }) => React.ReactNode;
 }
 
@@ -108,6 +111,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   isLoading,
   fetchNextPage,
   fetchPreviousPage,
+  refetch,
   totalRows = 0,
   filterRows = 0,
   totalRowsFetched = 0,
@@ -334,9 +338,10 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             <DataTableFilterCommand schema={columnFilterSchema} />
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
-              renderActions={() => (
-                <LiveButton fetchPreviousPage={fetchPreviousPage} />
-              )}
+              renderActions={() => [
+                <RefreshButton key="refresh" onClick={refetch} />,
+                <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />,
+              ]}
             />
             <TimelineChart data={chartData} className="-mb-2" columnId="date" />
           </div>

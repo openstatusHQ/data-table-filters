@@ -17,8 +17,14 @@ import { LiveRow } from "./_components/live-row";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
-  const { data, isFetching, isLoading, fetchNextPage, fetchPreviousPage } =
-    useInfiniteQuery(dataOptions(search));
+  const {
+    data,
+    isFetching,
+    isLoading,
+    fetchNextPage,
+    fetchPreviousPage,
+    refetch,
+  } = useInfiniteQuery(dataOptions(search));
   useResetFocus();
 
   const flatData = React.useMemo(
@@ -122,6 +128,7 @@ export function Client() {
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       fetchPreviousPage={fetchPreviousPage}
+      refetch={refetch}
       chartData={chartData}
       getRowClassName={(row) => {
         const rowTimestamp = row.original.date.getTime();
