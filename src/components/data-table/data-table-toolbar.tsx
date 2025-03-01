@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { LoaderCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
@@ -90,11 +90,6 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
             row(s)
           </p>
         </div>
-        {isLoading ? (
-          <LoaderCircle className="mx-2 h-4 w-4 animate-spin text-muted-foreground" />
-        ) : (
-          <span className="mx-2 h-4 w-4" />
-        )}
       </div>
       <div className="flex items-center gap-2 ml-auto">
         {filters.length ? <DataTableResetButton /> : null}
