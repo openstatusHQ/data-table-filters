@@ -11,7 +11,9 @@ import { useDataTable } from "@/providers/data-table";
 import { useHotKey } from "@/hooks/use-hot-key";
 
 interface LiveButtonProps {
-  fetchPreviousPage?: (options?: FetchPreviousPageOptions | undefined) => void;
+  fetchPreviousPage?: (
+    options?: FetchPreviousPageOptions | undefined
+  ) => Promise<unknown>;
 }
 
 export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
@@ -20,12 +22,24 @@ export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
   useHotKey(handleClick, "j");
 
   React.useEffect(() => {
-    const interval = setInterval(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    async function fetchData() {
       if (live) {
-        fetchPreviousPage?.();
+        await fetchPreviousPage?.();
+        timeoutId = setTimeout(fetchData, 4_000);
+      } else {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
       }
-    }, 4_000);
-    return () => clearInterval(interval);
+    }
+
+    fetchData();
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [live, fetchPreviousPage]);
 
   // REMINDER: make sure to reset live when date is set

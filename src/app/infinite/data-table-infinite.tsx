@@ -89,8 +89,12 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   chartData?: BaseChartSchema[];
   isFetching?: boolean;
   isLoading?: boolean;
-  fetchNextPage: (options?: FetchNextPageOptions | undefined) => void;
-  fetchPreviousPage?: (options?: FetchPreviousPageOptions | undefined) => void;
+  fetchNextPage: (
+    options?: FetchNextPageOptions | undefined
+  ) => Promise<unknown>;
+  fetchPreviousPage?: (
+    options?: FetchPreviousPageOptions | undefined
+  ) => Promise<unknown>;
   refetch: (options?: RefetchOptions | undefined) => void;
   renderLiveRow: (props?: { row: Row<TData> }) => React.ReactNode;
 }
