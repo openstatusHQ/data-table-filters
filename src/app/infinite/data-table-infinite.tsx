@@ -479,6 +479,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
           data={selectedRow?.original}
           filterFields={filterFields}
           fields={sheetFields}
+          // TODO: check if we should memoize this
           // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
           metadata={{
             totalRows,
