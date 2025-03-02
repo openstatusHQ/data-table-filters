@@ -29,9 +29,7 @@ export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
         await fetchPreviousPage?.();
         timeoutId = setTimeout(fetchData, 4_000);
       } else {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
+        clearTimeout(timeoutId);
       }
     }
 
