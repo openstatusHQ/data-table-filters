@@ -15,11 +15,13 @@ The inifnite scrollable data-table is mainly composed of the following parts:
 
 You will have full control over the data-table and the components that are rendered. Feel free to extend, modify or remove components as you see fit.
 
-## Table Columns
+## Table
+
+### Table Columns
 
 The `columns.tsx` file is our known source of truth for the columns. If you are familiar with shadcn, you should feel right at home. Check out the shadcn/ui [docs](https://ui.shadcn.com/docs/components/data-table) for more information.
 
-### Extending Tanstack Table Types
+#### Extending Tanstack Table Types
 
 We extend the meta types mainly for _styling_ and _filter functions_. That way, we can avoid changing the data-table components itself.
 
@@ -65,6 +67,28 @@ declare module "@tanstack/react-table" {
   }
 }
 ```
+
+### Table Rows
+
+The more data you have, the more you need to think about how to render the rows, especially in an infinitely scrollable data-table.
+
+We currently memoize with a custom deps function to avoid re-rendering the rows when the data is the same.
+
+```tsx
+const MemoizedRow = React.memo(
+  ({ row, selected }: { row: Row<unknown>; selected: boolean }) => {
+    useQueryState("live", searchParamsParser.live);
+    return /* ... */
+  },
+  (prev, next) => prev.row.id === next.row.id && prev.selected === next.selected
+) as typeof Row;
+```
+
+The row re-renders only if the `id` or `selected` state of the row changes, and with the `useQueryState` hook, we force a re-render when the `live` param changes (making the `getRowClassName` prop being called to set an opacity to the row).
+
+> At a certain point we need to think adding `@tanstack/react-virtual` to the mix.
+
+
 
 ## Filters
 
@@ -330,3 +354,13 @@ interface TimelineChartProps<TChart extends BaseChartSchema> = {
 As default, the data keys are coming from the `level` field that takes "**success**", "**warning**", "**error**" as values.
 
 > The `TimelineChart` component is currently not configurable (especially the labels/tooltips) via props but will be in the future. You'll have to update the component yourself to adapt to your needs.
+
+## Live Mode
+
+The live mode is a feature that allows you to see the data in real-time.
+
+We append the `live` param to the search params parser (**not** the filter fields) to make trigger a new fetch every 4 seconds. Thanks to the search params, the live mode retains after a page reload.
+
+The `fetchPreviousPage` from the the `useInfiniteQuery` is being used. The newly fetched data will be appended to the beginning of the data array. (contrary to the `fetchNextPage` which appends to the end of the data array)
+
+For the demo, we add some mock data in the future to see the live mode in action. At some point, no more can be fetcheed anymore. You'll need to refresh the page or wait for the cache to miss. 
