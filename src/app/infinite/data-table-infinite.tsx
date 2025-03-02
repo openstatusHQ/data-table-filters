@@ -57,10 +57,9 @@ import { TimelineChart } from "./timeline-chart";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
 import { DataTableProvider } from "@/providers/data-table";
-import { DataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
+import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
 import { LiveButton } from "./_components/live-button";
 import { RefreshButton } from "./_components/refresh-button";
-
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   columns: ColumnDef<TData, TValue>[];
@@ -475,7 +474,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
         title={(selectedRow?.original as ColumnSchema | undefined)?.pathname}
         titleClassName="font-mono"
       >
-        <DataTableSheetContent
+        <MemoizedDataTableSheetContent
           table={table}
           data={selectedRow?.original}
           filterFields={filterFields}

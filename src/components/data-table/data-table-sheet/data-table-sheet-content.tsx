@@ -91,3 +91,11 @@ export function DataTableSheetContent<TData, TMeta>({
     </dl>
   );
 }
+
+export const MemoizedDataTableSheetContent = React.memo(
+  DataTableSheetContent,
+  (prev, next) => {
+    // REMINDER: only check if data is the same, rest is useless
+    return prev.data === next.data;
+  }
+) as typeof DataTableSheetContent;
