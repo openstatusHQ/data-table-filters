@@ -23,19 +23,18 @@ import { cn } from "@/lib/utils";
 import { useDataTable } from "@/providers/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export interface DataTableSheetDetailsProps<TData> {
+export interface DataTableSheetDetailsProps {
   title?: string;
   titleClassName?: string;
   children?: React.ReactNode;
 }
 
-export function DataTableSheetDetails<TData>({
+export function DataTableSheetDetails({
   title,
   titleClassName,
   children,
-}: DataTableSheetDetailsProps<TData>) {
-  const props = useDataTable();
-  const { table, rowSelection, isLoading } = props;
+}: DataTableSheetDetailsProps) {
+  const { table, rowSelection, isLoading } = useDataTable();
 
   const selectedRowKey = Object.keys(rowSelection)?.[0];
 
@@ -130,7 +129,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!prevId || isLoading}
+                      disabled={!prevId}
                       onClick={onPrev}
                     >
                       <ChevronUp className="h-5 w-5" />
@@ -151,7 +150,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!nextId || isLoading}
+                      disabled={!nextId}
                       onClick={onNext}
                     >
                       <ChevronDown className="h-5 w-5" />
