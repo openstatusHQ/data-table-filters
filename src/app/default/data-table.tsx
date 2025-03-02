@@ -113,8 +113,6 @@ export function DataTable<TData, TValue>({
       return prev;
     }, {} as Record<string, unknown>);
 
-    console.log({ search });
-
     setSearch(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnFilters]);
@@ -126,12 +124,7 @@ export function DataTable<TData, TValue>({
       filterFields={filterFields}
       columnFilters={columnFilters}
       sorting={sorting}
-      // REMINDER: default values for the `/infinite` table
-      rowSelection={{}}
-      columnOrder={[]}
-      columnVisibility={{}}
-      enableColumnOrdering={false}
-      isLoading={undefined}
+      pagination={pagination}
     >
       <div className="flex w-full h-full flex-col gap-3 sm:flex-row">
         <div
@@ -198,7 +191,7 @@ export function DataTable<TData, TValue>({
               </TableBody>
             </Table>
           </div>
-          <DataTablePagination table={table} />
+          <DataTablePagination />
         </div>
       </div>
     </DataTableProvider>
