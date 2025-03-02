@@ -40,7 +40,7 @@ import type {
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useQueryStates } from "nuqs";
+import { useQueryState, useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import {
   FetchPreviousPageOptions,
@@ -415,38 +415,11 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                     // REMINDER: if we want to add arrow navigation https://github.com/TanStack/table/discussions/2752#discussioncomment-192558
                     <React.Fragment key={row.id}>
                       {renderLiveRow?.({ row })}
-                      <TableRow
-                        id={row.id}
-                        tabIndex={0}
-                        data-state={row.getIsSelected() && "selected"}
-                        onClick={() => row.toggleSelected()}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            row.toggleSelected();
-                          }
-                        }}
-                        className={cn(
-                          "[&>:not(:last-child)]:border-r",
-                          "transition-colors focus-visible:outline outline-1 -outline-offset-1 outline-primary focus-visible:bg-muted/50 data-[state=selected]:outline",
-                          table.options.meta?.getRowClassName?.(row)
-                        )}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className={cn(
-                              "border-b border-border truncate",
-                              cell.column.columnDef.meta?.cellClassName
-                            )}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
+                      <MemoizedRow
+                        row={row}
+                        table={table}
+                        selected={row.getIsSelected()}
+                      />
                     </React.Fragment>
                   ))
                 ) : (
@@ -520,3 +493,60 @@ export function DataTableInfinite<TData, TValue, TMeta>({
     </DataTableProvider>
   );
 }
+
+/**
+ * REMINDER: this is the heaviest component in the table if lots of rows
+ * Some other components are rendered more often necessary, but are fixed size (not like rows that can grow in height)
+ * e.g. DataTableFilterControls, DataTableFilterCommand, DataTableToolbar, DataTableHeader
+ */
+
+function Row<TData>({
+  row,
+  table,
+  selected,
+}: {
+  row: Row<TData>;
+  table: TTable<TData>;
+  // REMINDER: row.getIsSelected(); - just for memoization
+  selected?: boolean;
+}) {
+  // REMINDER: rerender the row when live mode is toggled - used to opacity the row
+  // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
+  useQueryState("live", searchParamsParser.live);
+  return (
+    <TableRow
+      id={row.id}
+      tabIndex={0}
+      data-state={selected && "selected"}
+      onClick={() => row.toggleSelected()}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          row.toggleSelected();
+        }
+      }}
+      className={cn(
+        "[&>:not(:last-child)]:border-r",
+        "transition-colors focus-visible:outline outline-1 -outline-offset-1 outline-primary focus-visible:bg-muted/50 data-[state=selected]:outline",
+        table.options.meta?.getRowClassName?.(row)
+      )}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell
+          key={cell.id}
+          className={cn(
+            "border-b border-border truncate",
+            cell.column.columnDef.meta?.cellClassName
+          )}
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  );
+}
+
+const MemoizedRow = React.memo(
+  Row,
+  (prev, next) => prev.row.id === next.row.id && prev.selected === next.selected
+) as typeof Row;
