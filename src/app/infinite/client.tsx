@@ -51,30 +51,32 @@ export function Client() {
 
   // REMINDER: this is currently needed for the cmdk search
   // TODO: auto search via API when the user changes the filter instead of hardcoded
-  const filterFields = defaultFilterFields.map((field) => {
-    const facetsField = facets?.[field.value];
-    if (!facetsField) return field;
-    if (field.options && field.options.length > 0) return field;
+  const filterFields = React.useMemo(() => {
+    return defaultFilterFields.map((field) => {
+      const facetsField = facets?.[field.value];
+      if (!facetsField) return field;
+      if (field.options && field.options.length > 0) return field;
 
-    // REMINDER: if no options are set, we need to set them via the API
-    const options = facetsField.rows.map(({ value }) => {
-      return {
-        label: `${value}`,
-        value,
-      };
+      // REMINDER: if no options are set, we need to set them via the API
+      const options = facetsField.rows.map(({ value }) => {
+        return {
+          label: `${value}`,
+          value,
+        };
+      });
+
+      if (field.type === "slider") {
+        return {
+          ...field,
+          min: facetsField.min ?? field.min,
+          max: facetsField.max ?? field.max,
+          options,
+        };
+      }
+
+      return { ...field, options };
     });
-
-    if (field.type === "slider") {
-      return {
-        ...field,
-        min: facetsField.min ?? field.min,
-        max: facetsField.max ?? field.max,
-        options,
-      };
-    }
-
-    return { ...field, options };
-  });
+  }, [facets]);
 
   React.useEffect(() => {
     if (live) liveTimestamp.current = new Date().getTime();
