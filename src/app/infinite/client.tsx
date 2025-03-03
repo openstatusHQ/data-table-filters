@@ -4,7 +4,7 @@ import * as React from "react";
 import { DataTableInfinite } from "./data-table-infinite";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
-import { useQueryStates } from "nuqs";
+import { useQueryState, useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
@@ -32,10 +32,7 @@ export function Client() {
     [data?.pages]
   );
 
-  // REMINDER: used to capture the live mode on timestamp
-  const liveTimestamp = React.useRef<number | undefined>(
-    search.live ? new Date().getTime() : undefined
-  );
+  const liveMode = useLiveMode(flatData);
 
   // REMINDER: meta data is always the same for all pages as filters do not change(!)
   const lastPage = data?.pages?.[data?.pages.length - 1];
@@ -78,27 +75,6 @@ export function Client() {
     });
   }, [facets]);
 
-  React.useEffect(() => {
-    if (live) liveTimestamp.current = new Date().getTime();
-    else liveTimestamp.current = undefined;
-  }, [live]);
-
-  const liveMode = React.useMemo(() => {
-    if (!live) return undefined;
-
-    const item = flatData.find((item) => {
-      // return first item that is there if not liveTimestamp
-      if (!liveTimestamp.current) return true;
-      // return first item that is after the liveTimestamp
-      if (item.date.getTime() > liveTimestamp.current) return false;
-      return true;
-      // return first item if no liveTimestamp
-    });
-
-    if (item) return { timestamp: liveTimestamp.current, row: item };
-    return { timestamp: liveTimestamp.current, row: undefined };
-  }, [live, flatData]);
-
   return (
     <DataTableInfinite
       columns={columns}
@@ -134,7 +110,7 @@ export function Client() {
       chartData={chartData}
       getRowClassName={(row) => {
         const rowTimestamp = row.original.date.getTime();
-        const isPast = rowTimestamp <= (liveTimestamp.current || -1);
+        const isPast = rowTimestamp <= (liveMode.timestamp || -1);
         const levelClassName = getLevelRowClassName(row.original.level);
         return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
       }}
@@ -142,7 +118,7 @@ export function Client() {
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
       renderLiveRow={(props) => {
-        if (!liveTimestamp.current) return null;
+        if (!liveMode.timestamp) return null;
         if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
         return <LiveRow />;
       }}
@@ -159,6 +135,37 @@ function useResetFocus() {
     document.body.focus();
     document.body.removeAttribute("tabindex");
   }, ".");
+}
+
+// TODO: make a BaseObject (incl. date and uuid e.g. for every upcoming branch of infinite table)
+function useLiveMode<TData extends { date: Date }>(data: TData[]) {
+  const [live] = useQueryState("live", searchParamsParser.live);
+  // REMINDER: used to capture the live mode on timestamp
+  const liveTimestamp = React.useRef<number | undefined>(
+    live ? new Date().getTime() : undefined
+  );
+
+  React.useEffect(() => {
+    if (live) liveTimestamp.current = new Date().getTime();
+    else liveTimestamp.current = undefined;
+  }, [live]);
+
+  const anchorRow = React.useMemo(() => {
+    if (!live) return undefined;
+
+    const item = data.find((item) => {
+      // return first item that is there if not liveTimestamp
+      if (!liveTimestamp.current) return true;
+      // return first item that is after the liveTimestamp
+      if (item.date.getTime() > liveTimestamp.current) return false;
+      return true;
+      // return first item if no liveTimestamp
+    });
+
+    return item;
+  }, [live, data]);
+
+  return { row: anchorRow, timestamp: liveTimestamp.current };
 }
 
 function getFacetedUniqueValues<TData>(

@@ -10,6 +10,8 @@ import { CirclePlay, CirclePause } from "lucide-react";
 import { useDataTable } from "@/providers/data-table";
 import { useHotKey } from "@/hooks/use-hot-key";
 
+const REFRESH_INTERVAL = 4_000;
+
 interface LiveButtonProps {
   fetchPreviousPage?: (
     options?: FetchPreviousPageOptions | undefined
@@ -27,7 +29,7 @@ export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
     async function fetchData() {
       if (live) {
         await fetchPreviousPage?.();
-        timeoutId = setTimeout(fetchData, 4_000);
+        timeoutId = setTimeout(fetchData, REFRESH_INTERVAL);
       } else {
         clearTimeout(timeoutId);
       }
