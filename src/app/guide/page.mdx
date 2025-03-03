@@ -332,7 +332,9 @@ type LogsMeta = {
 };
 ```
 
-## Timeline Chart
+## More
+
+### Timeline Chart
 
 The timeline chart helps you to visualize the data over time. It utilizes the shadcn component (checkout out the [docs](https://ui.shadcn.com/docs/components/chart)) and renders the bars based on the the amount of data items you defined.
 
@@ -355,7 +357,7 @@ As default, the data keys are coming from the `level` field that takes "**succes
 
 > The `TimelineChart` component is currently not configurable (especially the labels/tooltips) via props but will be in the future. You'll have to update the component yourself to adapt to your needs.
 
-## Live Mode
+### Live Mode
 
 The live mode is a feature that allows you to see the data in real-time.
 
@@ -364,3 +366,17 @@ We append the `live` param to the search params parser (**not** the filter field
 The `fetchPreviousPage` from the the `useInfiniteQuery` is being used. The newly fetched data will be appended to the beginning of the data array. (contrary to the `fetchNextPage` which appends to the end of the data array)
 
 For the demo, we add some mock data in the future to see the live mode in action. At some point, no more can be fetcheed anymore. You'll need to refresh the page or wait for the cache to miss. 
+
+## Debugging
+
+We use `react-scan` to for performance debugging. It will show you the components that are being re-rendered. You can enable it by setting the `NEXT_PUBLIC_REACT_SCAN` environment variable to `true` and is automatically enabled in the development environment.
+
+For tanstack query, we use the `ReactQueryDevtools` to see the queries and mutations. It automatically shows up in the development environment.
+
+Tanstack table debug logs can be enabled by setting the `NEXT_PUBLIC_TABLE_DEBUG` environment variable to `true`.
+
+```
+# .env.local
+NEXT_PUBLIC_REACT_SCAN=true
+NEXT_PUBLIC_TABLE_DEBUG=true
+```
