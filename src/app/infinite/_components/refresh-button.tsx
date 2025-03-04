@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { LoaderCircle, RefreshCcw } from "lucide-react";
 
 interface RefreshButtonProps {
@@ -18,9 +18,9 @@ export function RefreshButton({ onClick }: RefreshButtonProps) {
       className="h-9 w-9"
     >
       {isLoading ? (
-        <LoaderCircle className="w-4 h-4 animate-spin" />
+        <LoaderCircle className="h-4 w-4 animate-spin" />
       ) : (
-        <RefreshCcw className="w-4 h-4" />
+        <RefreshCcw className="h-4 w-4" />
       )}
     </Button>
   );

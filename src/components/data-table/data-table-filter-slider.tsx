@@ -7,16 +7,16 @@ import { Slider } from "@/components/custom/slider";
 import { isArrayOfNumbers } from "@/lib/is-array";
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 
 function getFilter(filterValue: unknown) {
   return typeof filterValue === "number"
     ? [filterValue, filterValue]
     : Array.isArray(filterValue) && isArrayOfNumbers(filterValue)
-    ? filterValue.length === 1
-      ? [filterValue[0], filterValue[0]]
-      : filterValue
-    : null;
+      ? filterValue.length === 1
+        ? [filterValue[0], filterValue[0]]
+        : filterValue
+      : null;
 }
 
 // TODO: discuss if we even need the `defaultMin` and `defaultMax`

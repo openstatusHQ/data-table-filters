@@ -29,7 +29,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useHotKey } from "@/hooks/use-hot-key";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { formatCompactNumber } from "@/lib/format";
 
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
@@ -53,10 +53,10 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
   const [currentWord, setCurrentWord] = useState<string>("");
   const filterFields = useMemo(
     () => _filterFields?.filter((i) => !i.commandDisabled),
-    [_filterFields]
+    [_filterFields],
   );
   const [inputValue, setInputValue] = useState<string>(
-    serializeColumFilters(columnFilters, filterFields)
+    serializeColumFilters(columnFilters, filterFields),
   );
   const [lastSearches, setLastSearches] = useLocalStorage<
     {
@@ -90,7 +90,7 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
         prev[curr.id] = curr.value;
         return prev;
       },
-      {} as Record<string, unknown>
+      {} as Record<string, unknown>,
     );
 
     if (searchParams.success) {
@@ -129,12 +129,12 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
         type="button"
         className={cn(
           "group flex w-full items-center rounded-lg border border-input bg-background px-3 text-muted-foreground ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:bg-accent/50 hover:text-accent-foreground",
-          open ? "hidden" : "visible"
+          open ? "hidden" : "visible",
         )}
         onClick={() => setOpen(true)}
       >
         {isLoading ? (
-          <LoaderCircle className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground animate-spin" />
+          <LoaderCircle className="mr-2 h-4 w-4 shrink-0 animate-spin text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
         ) : (
           <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
         )}
@@ -152,8 +152,8 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
       </button>
       <Command
         className={cn(
-          "overflow-visible rounded-lg border border-border shadow-md [&>div]:border-none dark:bg-muted/50",
-          open ? "visible" : "hidden"
+          "overflow-visible rounded-lg border border-border shadow-md dark:bg-muted/50 [&>div]:border-none",
+          open ? "visible" : "hidden",
         )}
         filter={(value, search, keywords) =>
           getFilterValue({ value, search, keywords, currentWord })
@@ -176,7 +176,7 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
             if (!search) return;
             const timestamp = Date.now();
             const searchIndex = lastSearches.findIndex(
-              (item) => item.search === search
+              (item) => item.search === search,
             );
             if (searchIndex !== -1) {
               lastSearches[searchIndex].timestamp = timestamp;
@@ -223,7 +223,7 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
                           const prefix = isStarting ? "" : " ";
                           const input = prev.replace(
                             `${prefix}${currentWord}`,
-                            `${prefix}${value}`
+                            `${prefix}${value}`,
                           );
                           return `${input}:`;
                         });
@@ -267,7 +267,7 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
                               optionValue,
                               value,
                               field,
-                            })
+                            }),
                           );
                           setCurrentWord("");
                         }}
@@ -276,7 +276,7 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
                         {facetedValue?.has(optionValue) ? (
                           <span className="ml-auto font-mono text-muted-foreground">
                             {formatCompactNumber(
-                              facetedValue.get(optionValue) || 0
+                              facetedValue.get(optionValue) || 0,
                             )}
                           </span>
                         ) : null}
@@ -324,8 +324,8 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
                             // TODO: extract into function
                             setLastSearches(
                               lastSearches.filter(
-                                (i) => i.search !== item.search
-                              )
+                                (i) => i.search !== item.search,
+                              ),
                             );
                           }}
                           className="ml-1 hidden rounded-md p-0.5 hover:bg-background group-aria-[selected=true]:block"

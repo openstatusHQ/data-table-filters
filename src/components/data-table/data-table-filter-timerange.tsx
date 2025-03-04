@@ -5,7 +5,7 @@ import type { DataTableTimerangeFilterField } from "./types";
 import { isArrayOfDates } from "@/lib/is-array";
 import { DatePickerWithRange } from "@/components/custom/date-picker-with-range";
 import type { DateRange } from "react-day-picker";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 
 export function DataTableFilterTimerange<TData>({
   value: _value,
@@ -21,9 +21,9 @@ export function DataTableFilterTimerange<TData>({
       filterValue instanceof Date
         ? { from: filterValue, to: undefined }
         : Array.isArray(filterValue) && isArrayOfDates(filterValue)
-        ? { from: filterValue?.[0], to: filterValue?.[1] }
-        : undefined,
-    [filterValue]
+          ? { from: filterValue?.[0], to: filterValue?.[1] }
+          : undefined,
+    [filterValue],
   );
 
   const setDate = (date: DateRange | undefined) => {

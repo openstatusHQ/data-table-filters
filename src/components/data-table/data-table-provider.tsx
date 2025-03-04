@@ -9,9 +9,7 @@ import type {
   VisibilityState,
 } from "@tanstack/react-table";
 import { createContext, useContext, useMemo } from "react";
-import { ControlsProvider } from "./controls";
-
-// TODO: move to `@/components/data-table/data-table-provider.tsx`
+import { ControlsProvider } from "../../providers/controls";
 
 // REMINDER: read about how to move controlled state out of the useReactTable hook
 // https://github.com/TanStack/table/discussions/4005#discussioncomment-7303569
@@ -33,11 +31,11 @@ interface DataTableBaseContextType<TData = unknown, TValue = unknown> {
   isLoading?: boolean;
   getFacetedUniqueValues?: (
     table: Table<TData>,
-    columnId: string
+    columnId: string,
   ) => Map<string, number>;
   getFacetedMinMaxValues?: (
     table: Table<TData>,
-    columnId: string
+    columnId: string,
   ) => undefined | [number, number];
 }
 
@@ -82,7 +80,7 @@ export function DataTableProvider<TData, TValue>({
       props.isLoading,
       props.getFacetedUniqueValues,
       props.getFacetedMinMaxValues,
-    ]
+    ],
   );
 
   return (

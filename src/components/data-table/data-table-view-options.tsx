@@ -24,7 +24,7 @@ import {
   SortableItem,
 } from "@/components/custom/sortable";
 
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 
 export function DataTableViewOptions() {
   const { table, enableColumnOrdering } = useDataTable();
@@ -39,7 +39,7 @@ export function DataTableViewOptions() {
       table.getAllColumns().sort((a, b) => {
         return columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id);
       }),
-    [columnOrder]
+    [columnOrder],
   );
 
   return (
@@ -71,7 +71,7 @@ export function DataTableViewOptions() {
                 onValueChange={(items) =>
                   table.setColumnOrder(items.map((c) => c.id))
                 }
-                overlay={<div className="w-full h-8 rounded-md bg-muted/60" />}
+                overlay={<div className="h-8 w-full rounded-md bg-muted/60" />}
                 onDragStart={() => setDrag(true)}
                 onDragEnd={() => setDrag(false)}
                 onDragCancel={() => setDrag(false)}
@@ -80,7 +80,7 @@ export function DataTableViewOptions() {
                   .filter(
                     (column) =>
                       typeof column.accessorFn !== "undefined" &&
-                      column.getCanHide()
+                      column.getCanHide(),
                   )
                   .map((column) => (
                     <SortableItem key={column.id} value={column.id} asChild>
@@ -97,7 +97,7 @@ export function DataTableViewOptions() {
                             "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                             column.getIsVisible()
                               ? "bg-primary text-primary-foreground"
-                              : "opacity-50 [&_svg]:invisible"
+                              : "opacity-50 [&_svg]:invisible",
                           )}
                         >
                           <Check className={cn("h-4 w-4")} />
@@ -107,7 +107,7 @@ export function DataTableViewOptions() {
                           <SortableDragHandle
                             variant="ghost"
                             size="icon"
-                            className="size-5 ml-auto text-muted-foreground hover:text-foreground focus:bg-muted focus:text-foreground"
+                            className="ml-auto size-5 text-muted-foreground hover:text-foreground focus:bg-muted focus:text-foreground"
                           >
                             <GripVertical
                               className="size-4"

@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
-import { DataTableProvider } from "@/providers/data-table";
+import { DataTableProvider } from "@/components/data-table/data-table-provider";
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -102,16 +102,19 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     const columnFiltersWithNullable = filterFields.map((field) => {
       const filterValue = columnFilters.find(
-        (filter) => filter.id === field.value
+        (filter) => filter.id === field.value,
       );
       if (!filterValue) return { id: field.value, value: null };
       return { id: field.value, value: filterValue.value };
     });
 
-    const search = columnFiltersWithNullable.reduce((prev, curr) => {
-      prev[curr.id as string] = curr.value;
-      return prev;
-    }, {} as Record<string, unknown>);
+    const search = columnFiltersWithNullable.reduce(
+      (prev, curr) => {
+        prev[curr.id as string] = curr.value;
+        return prev;
+      },
+      {} as Record<string, unknown>,
+    );
 
     setSearch(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,11 +129,11 @@ export function DataTable<TData, TValue>({
       sorting={sorting}
       pagination={pagination}
     >
-      <div className="flex w-full h-full flex-col gap-3 sm:flex-row">
+      <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
         <div
           className={cn(
-            "hidden sm:block w-full p-1 sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
-            "group-data-[expanded=false]/controls:hidden"
+            "hidden w-full p-1 sm:block sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
+            "group-data-[expanded=false]/controls:hidden",
           )}
         >
           <DataTableFilterControls />
@@ -153,7 +156,7 @@ export function DataTable<TData, TValue>({
                             ? null
                             : flexRender(
                                 header.column.columnDef.header,
-                                header.getContext()
+                                header.getContext(),
                               )}
                         </TableHead>
                       );
@@ -172,7 +175,7 @@ export function DataTable<TData, TValue>({
                         <TableCell key={cell.id}>
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
+                            cell.getContext(),
                           )}
                         </TableCell>
                       ))}

@@ -29,7 +29,7 @@ export function Client() {
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
-    [data?.pages]
+    [data?.pages],
   );
 
   const liveMode = useLiveMode(flatData);
@@ -142,7 +142,7 @@ function useLiveMode<TData extends { date: Date }>(data: TData[]) {
   const [live] = useQueryState("live", searchParamsParser.live);
   // REMINDER: used to capture the live mode on timestamp
   const liveTimestamp = React.useRef<number | undefined>(
-    live ? new Date().getTime() : undefined
+    live ? new Date().getTime() : undefined,
   );
 
   React.useEffect(() => {
@@ -169,17 +169,17 @@ function useLiveMode<TData extends { date: Date }>(data: TData[]) {
 }
 
 function getFacetedUniqueValues<TData>(
-  facets?: Record<string, FacetMetadataSchema>
+  facets?: Record<string, FacetMetadataSchema>,
 ) {
   return (_: TTable<TData>, columnId: string): Map<string, number> => {
     return new Map(
-      facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) || []
+      facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) || [],
     );
   };
 }
 
 function getFacetedMinMaxValues<TData>(
-  facets?: Record<string, FacetMetadataSchema>
+  facets?: Record<string, FacetMetadataSchema>,
 ) {
   return (_: TTable<TData>, columnId: string): [number, number] | undefined => {
     const min = facets?.[columnId]?.min;

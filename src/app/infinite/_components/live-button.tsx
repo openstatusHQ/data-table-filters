@@ -7,14 +7,14 @@ import { searchParamsParser } from "../search-params";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CirclePlay, CirclePause } from "lucide-react";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { useHotKey } from "@/hooks/use-hot-key";
 
 const REFRESH_INTERVAL = 4_000;
 
 interface LiveButtonProps {
   fetchPreviousPage?: (
-    options?: FetchPreviousPageOptions | undefined
+    options?: FetchPreviousPageOptions | undefined,
   ) => Promise<unknown>;
 }
 

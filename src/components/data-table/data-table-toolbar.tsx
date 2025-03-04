@@ -12,7 +12,7 @@ import { DataTableViewOptions } from "./data-table-view-options";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
 import { useHotKey } from "@/hooks/use-hot-key";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { useControls } from "@/providers/controls";
 import { useMemo } from "react";
 import { formatCompactNumber } from "@/lib/format";
@@ -33,7 +33,7 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
       total: table.getCoreRowModel().rows.length,
       filtered: table.getFilteredRowModel().rows.length,
     }),
-    [isLoading, columnFilters]
+    [isLoading, columnFilters],
   );
 
   return (
@@ -76,22 +76,22 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
           <DataTableFilterControlsDrawer />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground hidden sm:block">
-            <span className="font-medium font-mono">
+          <p className="hidden text-sm text-muted-foreground sm:block">
+            <span className="font-mono font-medium">
               {formatCompactNumber(rows.filtered)}
             </span>{" "}
-            of <span className="font-medium font-mono">{rows.total}</span>{" "}
+            of <span className="font-mono font-medium">{rows.total}</span>{" "}
             row(s) <span className="sr-only sm:not-sr-only">filtered</span>
           </p>
-          <p className="text-sm text-muted-foreground block sm:hidden">
-            <span className="font-medium font-mono">
+          <p className="block text-sm text-muted-foreground sm:hidden">
+            <span className="font-mono font-medium">
               {formatCompactNumber(rows.filtered)}
             </span>{" "}
             row(s)
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="ml-auto flex items-center gap-2">
         {filters.length ? <DataTableResetButton /> : null}
         {renderActions?.()}
         <DataTableViewOptions />

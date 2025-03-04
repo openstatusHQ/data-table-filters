@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
 import { getLevelLabel } from "@/lib/request/level";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { BaseChartSchema, TimelineChartSchema } from "./schema";
 
 export const description = "A stacked bar chart";
@@ -64,7 +64,7 @@ export function TimelineChart<TChart extends BaseChartSchema>({
         ...item,
         [columnId]: new Date(item.timestamp).toString(),
       })),
-    [data]
+    [data],
   );
 
   // REMINDER: time difference (ms) between the first and last timestamp
@@ -89,7 +89,7 @@ export function TimelineChart<TChart extends BaseChartSchema>({
   const handleMouseUp: CategoricalChartFunc = (e) => {
     if (refAreaLeft && refAreaRight) {
       const [left, right] = [refAreaLeft, refAreaRight].sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+        (a, b) => new Date(a).getTime() - new Date(b).getTime(),
       );
       table
         .getColumn(columnId)
@@ -107,7 +107,7 @@ export function TimelineChart<TChart extends BaseChartSchema>({
         "aspect-auto h-[60px] w-full",
         "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted/50", // otherwise same color as 200
         "select-none", // disable text selection
-        className
+        className,
       )}
     >
       <BarChart
@@ -182,7 +182,7 @@ function TooltipLabel({
   level: keyof Omit<TimelineChartSchema, "timestamp">;
 }) {
   return (
-    <div className="font-mono flex w-20 justify-between items-center gap-2 mr-2">
+    <div className="mr-2 flex w-20 items-center justify-between gap-2 font-mono">
       <div className="capitalize text-foreground/70">{level}</div>
       <div className="text-xs text-muted-foreground/70">
         {getLevelLabel(level)}

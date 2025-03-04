@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/custom/kbd";
 import { cn } from "@/lib/utils";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export interface DataTableSheetDetailsProps {
@@ -51,12 +51,12 @@ export function DataTableSheetDetails({
 
   const nextId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index + 1]?.id,
-    [index, isLoading]
+    [index, isLoading],
   );
 
   const prevId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index - 1]?.id,
-    [index, isLoading]
+    [index, isLoading],
   );
 
   const onPrev = React.useCallback(() => {
@@ -109,19 +109,19 @@ export function DataTableSheetDetails({
     >
       <SheetContent
         // onCloseAutoFocus={(e) => e.preventDefault()}
-        className="sm:max-w-md overflow-y-auto p-0"
+        className="overflow-y-auto p-0 sm:max-w-md"
         hideClose
       >
-        <SheetHeader className="sticky top-0 border-b bg-background p-4 z-10">
+        <SheetHeader className="sticky top-0 z-10 border-b bg-background p-4">
           <div className="flex items-center justify-between gap-2">
-            <SheetTitle className={cn(titleClassName, "text-left truncate")}>
+            <SheetTitle className={cn(titleClassName, "truncate text-left")}>
               {isLoading && !selectedRowKey ? (
                 <Skeleton className="h-7 w-36" />
               ) : (
                 title
               )}
             </SheetTitle>
-            <div className="flex items-center gap-1 h-7">
+            <div className="flex h-7 items-center gap-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
