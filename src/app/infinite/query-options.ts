@@ -35,11 +35,13 @@ export const dataOptions = (search: SearchParamsType) => {
     ], // remove uuid/live as it would otherwise retrigger a fetch
     queryFn: async ({ pageParam }) => {
       const cursor = new Date(pageParam.cursor);
-      const direction = pageParam.direction as "next" | "prev";
+      const direction = pageParam.direction as "next" | "prev" | undefined;
       const serialize = searchParamsSerializer({
         ...search,
         cursor,
         direction,
+        uuid: null,
+        live: null,
       });
       const response = await fetch(`/infinite/api${serialize}`);
       const json = await response.json();

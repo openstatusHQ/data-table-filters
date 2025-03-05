@@ -16,6 +16,8 @@ import type { InfiniteQueryResponse } from "../query-options";
 import { ColumnSchema } from "../schema";
 import SuperJSON from "superjson";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   // TODO: we could use a POST request to avoid this
   const _search: Map<string, string> = new Map();
@@ -32,8 +34,8 @@ export async function GET(req: NextRequest) {
   // REMINDER: we need to filter out the slider values because they are not part of the search params
   const _rest = Object.fromEntries(
     Object.entries(search).filter(
-      ([key]) => !sliderFilterValues.includes(key as any)
-    )
+      ([key]) => !sliderFilterValues.includes(key as any),
+    ),
   );
 
   const rangedData = filterData(totalData, { date: _date });
@@ -73,14 +75,14 @@ export async function GET(req: NextRequest) {
           ...withoutSliderFacets,
           ...Object.fromEntries(
             Object.entries(facets).filter(
-              ([key]) => !sliderFilterValues.includes(key as any)
-            )
+              ([key]) => !sliderFilterValues.includes(key as any),
+            ),
           ),
         },
         metadata: { currentPercentiles },
       },
       prevCursor,
       nextCursor,
-    } satisfies InfiniteQueryResponse<ColumnSchema[]>)
+    } satisfies InfiniteQueryResponse<ColumnSchema[]>),
   );
 }
