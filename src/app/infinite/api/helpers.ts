@@ -4,13 +4,13 @@ import {
   differenceInMinutes,
   isSameDay,
 } from "date-fns";
-import type { FacetMetadataSchema, ColumnSchema } from "../schema";
+import type {
+  FacetMetadataSchema,
+  ColumnSchema,
+  TimelineChartSchema,
+} from "../schema";
 import type { SearchParamsType } from "../search-params";
-import {
-  isArrayOfBooleans,
-  isArrayOfDates,
-  isArrayOfNumbers,
-} from "@/lib/is-array";
+import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
@@ -119,6 +119,38 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
   }));
 }
 
+export function splitData(data: ColumnSchema[], search: SearchParamsType) {
+  let newData: ColumnSchema[] = [];
+  const now = new Date();
+
+  // TODO: write a helper function for this
+  data.forEach((item) => {
+    if (search.direction === "next") {
+      if (
+        item.date.getTime() < search.cursor.getTime() &&
+        newData.length < search.size
+      ) {
+        newData.push(item);
+        // TODO: check how to deal with the cases that there are some items left with the same date
+      } else if (
+        item.date.getTime() === newData[newData.length - 1]?.date.getTime()
+      ) {
+        newData.push(item);
+      }
+    } else if (search.direction === "prev") {
+      if (
+        item.date.getTime() > search.cursor.getTime() &&
+        // REMINDER: we need to make sure that we don't get items that are in the future which we do with mockLive data
+        item.date.getTime() < now.getTime()
+      ) {
+        newData.push(item);
+      }
+    }
+  });
+
+  return newData;
+}
+
 export function getFacetsFromData(data: ColumnSchema[]) {
   const valuesMap = data.reduce((prev, curr) => {
     Object.entries(curr).forEach(([key, value]) => {
@@ -176,7 +208,7 @@ export function getPercentileFromData(data: ColumnSchema[]) {
 export function groupChartData(
   data: ColumnSchema[],
   dates: Date[] | null
-): { timestamp: number; [key: string]: number }[] {
+): TimelineChartSchema[] {
   if (data?.length === 0 && !dates) return [];
 
   // If we only have one date, we need to add a day to it

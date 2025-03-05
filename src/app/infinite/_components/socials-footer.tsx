@@ -5,34 +5,37 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Command, Github, Globe, Twitter } from "lucide-react";
+import { Command, Book } from "lucide-react";
 import NextLink from "next/link";
 import { Kbd } from "@/components/custom/kbd";
 import { Link } from "@/components/custom/link";
+import { Github } from "@/components/icons/github";
+import { X } from "@/components/icons/x";
+import { Bluesky } from "@/components/icons/bluesky";
 
 export function SocialsFooter() {
   return (
     <div className="flex flex-col gap-2">
-      <div className="w-full flex justify-center items-center gap-2 p-1">
-        <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4" />
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
+      <div className="w-full grid grid-cols-3 md:grid-cols-6 justify-center items-center gap-2 p-1">
+        <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
           <NextLink href="https://github.com/openstatusHQ/data-table-filters">
             <Github className="h-4 w-4" />
           </NextLink>
         </Button>
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
           <NextLink href="https://twitter.com/openstatusHQ">
-            <Twitter className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </NextLink>
         </Button>
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
-          <NextLink href="https://openstatus.dev">
-            <Globe className="h-4 w-4" />
+        <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
+          <NextLink href="https://bsky.app/profile/openstatus.dev">
+            <Bluesky className="h-4 w-4" />
           </NextLink>
         </Button>
+        <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4 w-8 h-8" />
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-9 px-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
               <Command className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -40,6 +43,11 @@ export function SocialsFooter() {
             <HotkeyOverview />
           </PopoverContent>
         </Popover>
+        <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
+          <NextLink href="/guide">
+            <Book className="h-4 w-4" />
+          </NextLink>
+        </Button>
       </div>
       <p className="text-muted-foreground text-xs text-center">
         Powered by{" "}
@@ -68,6 +76,10 @@ const hotkeys = [
   {
     key: "U",
     description: "Undo column state (order, visibility)",
+  },
+  {
+    key: "J",
+    description: "Toggle live mode",
   },
   { key: "Esc", description: "Reset table filters" },
   {

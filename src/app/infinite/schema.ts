@@ -121,3 +121,19 @@ export const facetMetadataSchema = z.object({
 });
 
 export type FacetMetadataSchema = z.infer<typeof facetMetadataSchema>;
+
+export type BaseChartSchema = { timestamp: number; [key: string]: number };
+
+export const timelineChartSchema = z.object({
+  timestamp: z.number(), // UNIX
+  ...LEVELS.reduce(
+    (acc, level) => ({
+      ...acc,
+      [level]: z.number().default(0),
+    }),
+    {} as Record<(typeof LEVELS)[number], z.ZodNumber>
+  ),
+  // REMINDER: make sure to have the `timestamp` field in the object
+}) satisfies z.ZodType<BaseChartSchema>;
+
+export type TimelineChartSchema = z.infer<typeof timelineChartSchema>;

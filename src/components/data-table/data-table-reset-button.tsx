@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/custom/kbd";
 import { useHotKey } from "@/hooks/use-hot-key";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 
 export function DataTableResetButton() {
   const { table } = useDataTable();

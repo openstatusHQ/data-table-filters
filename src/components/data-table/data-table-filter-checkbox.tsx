@@ -8,7 +8,7 @@ import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { formatCompactNumber } from "@/lib/format";
 
 export function DataTableFilterCheckbox<TData>({
@@ -32,7 +32,7 @@ export function DataTableFilterCheckbox<TData>({
   const filterOptions = options?.filter(
     (option) =>
       inputValue === "" ||
-      option.label.toLowerCase().includes(inputValue.toLowerCase())
+      option.label.toLowerCase().includes(inputValue.toLowerCase()),
   );
 
   // CHECK: it could be filterValue or searchValue
@@ -45,11 +45,11 @@ export function DataTableFilterCheckbox<TData>({
   // REMINDER: if no options are defined, while fetching data, we should show a skeleton
   if (isLoading && !filterOptions?.length)
     return (
-      <div className="grid rounded-lg border border-border divide-y">
+      <div className="grid divide-y rounded-lg border border-border">
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
-            className="flex gap-2 items-center justify-between px-2 py-2.5"
+            className="flex items-center justify-between gap-2 px-2 py-2.5"
           >
             <Skeleton className="h-4 w-4 rounded-sm" />
             <Skeleton className="h-4 w-full rounded-sm" />
@@ -83,7 +83,7 @@ export function DataTableFilterCheckbox<TData>({
                 key={String(option.value)}
                 className={cn(
                   "group relative flex items-center space-x-2 px-2 py-2.5 hover:bg-accent/50",
-                  index !== filterOptions.length - 1 ? "border-b" : undefined
+                  index !== filterOptions.length - 1 ? "border-b" : undefined,
                 )}
               >
                 <Checkbox
@@ -94,7 +94,7 @@ export function DataTableFilterCheckbox<TData>({
                       ? [...(filters || []), option.value]
                       : filters?.filter((value) => option.value !== value);
                     column?.setFilterValue(
-                      newValue?.length ? newValue : undefined
+                      newValue?.length ? newValue : undefined,
                     );
                   }}
                 />
@@ -119,7 +119,7 @@ export function DataTableFilterCheckbox<TData>({
                     onClick={() => column?.setFilterValue([option.value])}
                     className={cn(
                       "absolute inset-y-0 right-0 hidden font-normal text-muted-foreground backdrop-blur-sm hover:text-foreground group-hover:block",
-                      "rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      "rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     )}
                   >
                     <span className="px-2">only</span>

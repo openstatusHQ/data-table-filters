@@ -4,7 +4,7 @@ import * as React from "react";
 import { DataTableInfinite } from "./data-table-infinite";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
-import { useQueryStates } from "nuqs";
+import { useQueryState, useQueryStates } from "nuqs";
 import { searchParamsParser } from "./search-params";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { dataOptions } from "./query-options";
@@ -12,18 +12,27 @@ import { useHotKey } from "@/hooks/use-hot-key";
 import { getLevelRowClassName } from "@/lib/request/level";
 import type { FacetMetadataSchema } from "./schema";
 import type { Table as TTable } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
+import { LiveRow } from "./_components/live-row";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
-  const { data, isFetching, isLoading, fetchNextPage } = useInfiniteQuery(
-    dataOptions(search)
-  );
+  const {
+    data,
+    isFetching,
+    isLoading,
+    fetchNextPage,
+    fetchPreviousPage,
+    refetch,
+  } = useInfiniteQuery(dataOptions(search));
   useResetFocus();
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
-    [data?.pages]
+    [data?.pages],
   );
+
+  const liveMode = useLiveMode(flatData);
 
   // REMINDER: meta data is always the same for all pages as filters do not change(!)
   const lastPage = data?.pages?.[data?.pages.length - 1];
@@ -34,34 +43,37 @@ export function Client() {
   const facets = lastPage?.meta?.facets;
   const totalFetched = flatData?.length;
 
-  const { sort, start, size, uuid, ...filter } = search;
+  const { sort, start, size, uuid, cursor, direction, live, ...filter } =
+    search;
 
   // REMINDER: this is currently needed for the cmdk search
   // TODO: auto search via API when the user changes the filter instead of hardcoded
-  const filterFields = defaultFilterFields.map((field) => {
-    const facetsField = facets?.[field.value];
-    if (!facetsField) return field;
-    if (field.options && field.options.length > 0) return field;
+  const filterFields = React.useMemo(() => {
+    return defaultFilterFields.map((field) => {
+      const facetsField = facets?.[field.value];
+      if (!facetsField) return field;
+      if (field.options && field.options.length > 0) return field;
 
-    // REMINDER: if no options are set, we need to set them via the API
-    const options = facetsField.rows.map(({ value }) => {
-      return {
-        label: `${value}`,
-        value,
-      };
+      // REMINDER: if no options are set, we need to set them via the API
+      const options = facetsField.rows.map(({ value }) => {
+        return {
+          label: `${value}`,
+          value,
+        };
+      });
+
+      if (field.type === "slider") {
+        return {
+          ...field,
+          min: facetsField.min ?? field.min,
+          max: facetsField.max ?? field.max,
+          options,
+        };
+      }
+
+      return { ...field, options };
     });
-
-    if (field.type === "slider") {
-      return {
-        ...field,
-        min: facetsField.min ?? field.min,
-        max: facetsField.max ?? field.max,
-        options,
-      };
-    }
-
-    return { ...field, options };
-  });
+  }, [facets]);
 
   return (
     <DataTableInfinite
@@ -93,11 +105,23 @@ export function Client() {
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
+      fetchPreviousPage={fetchPreviousPage}
+      refetch={refetch}
       chartData={chartData}
-      getRowClassName={(row) => getLevelRowClassName(row.original.level)}
+      getRowClassName={(row) => {
+        const rowTimestamp = row.original.date.getTime();
+        const isPast = rowTimestamp <= (liveMode.timestamp || -1);
+        const levelClassName = getLevelRowClassName(row.original.level);
+        return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
+      }}
       getRowId={(row) => row.uuid}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+      renderLiveRow={(props) => {
+        if (!liveMode.timestamp) return null;
+        if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
+        return <LiveRow />;
+      }}
     />
   );
 }
@@ -113,18 +137,49 @@ function useResetFocus() {
   }, ".");
 }
 
+// TODO: make a BaseObject (incl. date and uuid e.g. for every upcoming branch of infinite table)
+function useLiveMode<TData extends { date: Date }>(data: TData[]) {
+  const [live] = useQueryState("live", searchParamsParser.live);
+  // REMINDER: used to capture the live mode on timestamp
+  const liveTimestamp = React.useRef<number | undefined>(
+    live ? new Date().getTime() : undefined,
+  );
+
+  React.useEffect(() => {
+    if (live) liveTimestamp.current = new Date().getTime();
+    else liveTimestamp.current = undefined;
+  }, [live]);
+
+  const anchorRow = React.useMemo(() => {
+    if (!live) return undefined;
+
+    const item = data.find((item) => {
+      // return first item that is there if not liveTimestamp
+      if (!liveTimestamp.current) return true;
+      // return first item that is after the liveTimestamp
+      if (item.date.getTime() > liveTimestamp.current) return false;
+      return true;
+      // return first item if no liveTimestamp
+    });
+
+    return item;
+  }, [live, data]);
+
+  return { row: anchorRow, timestamp: liveTimestamp.current };
+}
+
 function getFacetedUniqueValues<TData>(
-  facets?: Record<string, FacetMetadataSchema>
+  facets?: Record<string, FacetMetadataSchema>,
 ) {
   return (_: TTable<TData>, columnId: string): Map<string, number> => {
     return new Map(
-      facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) || []
+      facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) || [],
     );
   };
 }
 
 function getFacetedMinMaxValues<TData>(
-  facets?: Record<string, FacetMetadataSchema>
+  facets?: Record<string, FacetMetadataSchema>,
 ) {
   return (_: TTable<TData>, columnId: string): [number, number] | undefined => {
     const min = facets?.[columnId]?.min;

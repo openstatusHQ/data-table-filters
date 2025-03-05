@@ -15,11 +15,13 @@ The inifnite scrollable data-table is mainly composed of the following parts:
 
 You will have full control over the data-table and the components that are rendered. Feel free to extend, modify or remove components as you see fit.
 
-## Table Columns
+## Table
+
+### Table Columns
 
 The `columns.tsx` file is our known source of truth for the columns. If you are familiar with shadcn, you should feel right at home. Check out the shadcn/ui [docs](https://ui.shadcn.com/docs/components/data-table) for more information.
 
-### Extending Tanstack Table Types
+#### Extending Tanstack Table Types
 
 We extend the meta types mainly for _styling_ and _filter functions_. That way, we can avoid changing the data-table components itself.
 
@@ -65,6 +67,28 @@ declare module "@tanstack/react-table" {
   }
 }
 ```
+
+### Table Rows
+
+The more data you have, the more you need to think about how to render the rows, especially in an infinitely scrollable data-table.
+
+We currently memoize with a custom deps function to avoid re-rendering the rows when the data is the same.
+
+```tsx
+const MemoizedRow = React.memo(
+  ({ row, selected }: { row: Row<unknown>; selected: boolean }) => {
+    useQueryState("live", searchParamsParser.live);
+    return /* ... */
+  },
+  (prev, next) => prev.row.id === next.row.id && prev.selected === next.selected
+) as typeof Row;
+```
+
+The row re-renders only if the `id` or `selected` state of the row changes, and with the `useQueryState` hook, we force a re-render when the `live` param changes (making the `getRowClassName` prop being called to set an opacity to the row).
+
+> At a certain point we need to think adding `@tanstack/react-virtual` to the mix.
+
+
 
 ## Filters
 
@@ -127,6 +151,8 @@ export type Input = {
   options?: Option[];
 };
 ```
+
+**Limitations**: Spaces cannot be used in the input value as they get interpreted as a separator in the cmdk input (and vice versa). An issue [#27](https://github.com/openstatusHQ/data-table-filters/issues/27) is open to tackle this.
 
 #### Checkbox
 
@@ -240,7 +266,7 @@ export type SheetField<TData, TMeta = Record<string, unknown>> = {
 };
 ```
 
-### api
+## API
 
 We use `@tanstack/react-query` and its `useInfiniteQuery` method to fetch the data.
 
@@ -257,9 +283,15 @@ export async function GET(req: Request) {
     return Response.json({ data, meta } satisfies {
         data: ColumnSchema[], // TODO: defined ColumnSchema
         meta: InfiniteQueryMeta<LogsMeta>,
+        nextCursor: number | null, // timestamp of the last item in the data array
+        prevCursor: number | null, // timestamp of the first item in the data array - used for live mode
     })
 }
 ```
+
+We initially started with `size` and `start`, making `size*start` the offset but it has some drawbacks when it comes to live mode. Instead, we use the `cursor` to mark a timestamp and the `direction` to determine the direction of the pagination - `"prev"` for live mode or `"next"` for load more. If you don't need live mode, you can ignore the `prevCursor` and `fetchPreviousPage` (including the `LiveButton` component).
+
+To parse the response, we use [`superjson`](https://github.com/flightcontrolhq/superjson) to serialize and deserialize the data. This is especially useful when using `Date` objects or other non-serializable values.
 
 The `meta` object allows us to return additional data that is not part of the `data` array. That can be data for the chart like `chartData`, or statistics to be used in the `Sheet` component like `currentPercentiles`.
 
@@ -276,7 +308,7 @@ export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
   /**
    * The data for the timeline chart
    */
-  chartData: { timestamp: number; [key: string]: number }[];
+  chartData: BaseChartSchema[];
   /**
    * The facets for every filter field
    */
@@ -300,16 +332,23 @@ type LogsMeta = {
 };
 ```
 
+## More
+
 ### Timeline Chart
 
 The timeline chart helps you to visualize the data over time. It utilizes the shadcn component (checkout out the [docs](https://ui.shadcn.com/docs/components/chart)) and renders the bars based on the the amount of data items you defined.
 
 ```ts
-type TimelineChartProps = {
+type BaseChartSchema = {
+    timestamp: number;
+    [key: string]: number;
+}
+
+interface TimelineChartProps<TChart extends BaseChartSchema> = {
     /**
      * The data from `chartData` in the `meta` object
      */
-    data: { timestamp: number; [key: string]: number }[];
+    data: TChart[];
     // ...
 }
 ```
@@ -317,3 +356,27 @@ type TimelineChartProps = {
 As default, the data keys are coming from the `level` field that takes "**success**", "**warning**", "**error**" as values.
 
 > The `TimelineChart` component is currently not configurable (especially the labels/tooltips) via props but will be in the future. You'll have to update the component yourself to adapt to your needs.
+
+### Live Mode
+
+The live mode is a feature that allows you to see the data in real-time.
+
+We append the `live` param to the search params parser (**not** the filter fields) to make trigger a new fetch every 4 seconds. Thanks to the search params, the live mode retains after a page reload.
+
+The `fetchPreviousPage` from the the `useInfiniteQuery` is being used. The newly fetched data will be appended to the beginning of the data array. (contrary to the `fetchNextPage` which appends to the end of the data array)
+
+For the demo, we add some mock data in the future to see the live mode in action. At some point, no more can be fetcheed anymore. You'll need to refresh the page or wait for the cache to miss. 
+
+## Debugging
+
+We use `react-scan` to for performance debugging. It will show you the components that are being re-rendered. You can enable it by setting the `NEXT_PUBLIC_REACT_SCAN` environment variable to `true` and is automatically enabled in the development environment.
+
+For tanstack query, we use the `ReactQueryDevtools` to see the queries and mutations. It automatically shows up in the development environment.
+
+Tanstack table debug logs can be enabled by setting the `NEXT_PUBLIC_TABLE_DEBUG` environment variable to `true`.
+
+```
+# .env.local
+NEXT_PUBLIC_REACT_SCAN=true
+NEXT_PUBLIC_TABLE_DEBUG=true
+```

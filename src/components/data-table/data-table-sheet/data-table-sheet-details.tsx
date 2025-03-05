@@ -20,27 +20,26 @@ import {
 } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/custom/kbd";
 import { cn } from "@/lib/utils";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export interface DataTableSheetDetailsProps<TData> {
+export interface DataTableSheetDetailsProps {
   title?: string;
   titleClassName?: string;
   children?: React.ReactNode;
 }
 
-export function DataTableSheetDetails<TData>({
+export function DataTableSheetDetails({
   title,
   titleClassName,
   children,
-}: DataTableSheetDetailsProps<TData>) {
-  const props = useDataTable();
-  const { table, rowSelection, isLoading } = props;
+}: DataTableSheetDetailsProps) {
+  const { table, rowSelection, isLoading } = useDataTable();
 
   const selectedRowKey = Object.keys(rowSelection)?.[0];
 
   const selectedRow = React.useMemo(() => {
-    if (isLoading) return;
+    if (isLoading && !selectedRowKey) return;
     return table
       .getCoreRowModel()
       .flatRows.find((row) => row.id === selectedRowKey);
@@ -52,12 +51,12 @@ export function DataTableSheetDetails<TData>({
 
   const nextId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index + 1]?.id,
-    [index, isLoading]
+    [index, isLoading],
   );
 
   const prevId = React.useMemo(
     () => table.getCoreRowModel().flatRows[index - 1]?.id,
-    [index, isLoading]
+    [index, isLoading],
   );
 
   const onPrev = React.useCallback(() => {
@@ -110,15 +109,19 @@ export function DataTableSheetDetails<TData>({
     >
       <SheetContent
         // onCloseAutoFocus={(e) => e.preventDefault()}
-        className="sm:max-w-md overflow-y-auto p-0"
+        className="overflow-y-auto p-0 sm:max-w-md"
         hideClose
       >
-        <SheetHeader className="sticky top-0 border-b bg-background p-4 z-10">
+        <SheetHeader className="sticky top-0 z-10 border-b bg-background p-4">
           <div className="flex items-center justify-between gap-2">
-            <SheetTitle className={cn(titleClassName, "text-left truncate")}>
-              {isLoading ? <Skeleton className="h-7 w-36" /> : title}
+            <SheetTitle className={cn(titleClassName, "truncate text-left")}>
+              {isLoading && !selectedRowKey ? (
+                <Skeleton className="h-7 w-36" />
+              ) : (
+                title
+              )}
             </SheetTitle>
-            <div className="flex items-center gap-1 h-7">
+            <div className="flex h-7 items-center gap-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -126,7 +129,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!prevId || isLoading}
+                      disabled={!prevId}
                       onClick={onPrev}
                     >
                       <ChevronUp className="h-5 w-5" />
@@ -147,7 +150,7 @@ export function DataTableSheetDetails<TData>({
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7"
-                      disabled={!nextId || isLoading}
+                      disabled={!nextId}
                       onClick={onNext}
                     >
                       <ChevronDown className="h-5 w-5" />

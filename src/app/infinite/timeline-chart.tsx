@@ -12,9 +12,9 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
-import { ColumnFiltersColumn } from "@tanstack/react-table";
 import { getLevelLabel } from "@/lib/request/level";
-import { LEVELS } from "@/constants/levels";
+import { useDataTable } from "@/components/data-table/data-table-provider";
+import { BaseChartSchema, TimelineChartSchema } from "./schema";
 
 export const description = "A stacked bar chart";
 
@@ -33,16 +33,25 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function TimelineChart({
+interface TimelineChartProps<TChart extends BaseChartSchema> {
+  className?: string;
+  /**
+   * The table column id to filter by - needs to be a type of `timerange` (e.g. "date").
+   * TBD: if using keyof TData to be closer to the data table props
+   */
+  columnId: string;
+  /**
+   * Same data as of the InfiniteQueryMeta.
+   */
+  data: TChart[];
+}
+
+export function TimelineChart<TChart extends BaseChartSchema>({
   data,
   className,
-  handleFilter,
-}: {
-  data: { timestamp: number; [key: string]: number }[];
-  className?: string;
-  // FIXME: check how to make it more versatile - pass `table` instead?
-  handleFilter?: ColumnFiltersColumn<unknown>["setFilterValue"];
-}) {
+  columnId,
+}: TimelineChartProps<TChart>) {
+  const { table } = useDataTable();
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -53,11 +62,12 @@ export function TimelineChart({
     () =>
       data.map((item) => ({
         ...item,
-        date: new Date(item.timestamp).toString(),
+        [columnId]: new Date(item.timestamp).toString(),
       })),
-    [data]
+    [data],
   );
 
+  // REMINDER: time difference (ms) between the first and last timestamp
   const interval = useMemo(() => {
     if (data.length === 0) return 0;
     return Math.abs(data[0].timestamp - data[data.length - 1].timestamp);
@@ -79,9 +89,11 @@ export function TimelineChart({
   const handleMouseUp: CategoricalChartFunc = (e) => {
     if (refAreaLeft && refAreaRight) {
       const [left, right] = [refAreaLeft, refAreaRight].sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+        (a, b) => new Date(a).getTime() - new Date(b).getTime(),
       );
-      handleFilter?.([new Date(left), new Date(right)]);
+      table
+        .getColumn(columnId)
+        ?.setFilterValue([new Date(left), new Date(right)]);
     }
     setRefAreaLeft(null);
     setRefAreaRight(null);
@@ -95,7 +107,7 @@ export function TimelineChart({
         "aspect-auto h-[60px] w-full",
         "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted/50", // otherwise same color as 200
         "select-none", // disable text selection
-        className
+        className,
       )}
     >
       <BarChart
@@ -110,19 +122,22 @@ export function TimelineChart({
       >
         <CartesianGrid vertical={false} />
         <XAxis
-          dataKey="date"
+          dataKey={columnId}
           tickLine={false}
           minTickGap={32}
           axisLine={false}
           tickFormatter={(value) => {
+            const date = new Date(value);
+            if (isNaN(date.getTime())) return "N/A";
+            // TODO: how to extract into helper functions
             if (interval <= 1000 * 60 * 10) {
-              return format(new Date(value), "HH:mm:ss");
+              return format(date, "HH:mm:ss");
             } else if (interval <= 1000 * 60 * 60 * 24) {
-              return format(new Date(value), "HH:mm");
+              return format(date, "HH:mm");
             } else if (interval <= 1000 * 60 * 60 * 24 * 7) {
-              return format(new Date(value), "LLL dd HH:mm");
+              return format(date, "LLL dd HH:mm");
             }
-            return format(new Date(value), "LLL dd, y");
+            return format(date, "LLL dd, y");
           }}
           // interval="preserveStartEnd"
         />
@@ -131,14 +146,18 @@ export function TimelineChart({
           content={
             <ChartTooltipContent
               labelFormatter={(value) => {
+                const date = new Date(value);
+                if (isNaN(date.getTime())) return "N/A";
+                // TODO: how to extract into helper functions
                 if (interval <= 1000 * 60 * 10) {
-                  return format(new Date(value), "LLL dd, HH:mm:ss");
+                  return format(date, "LLL dd, HH:mm:ss");
                 }
-                return format(new Date(value), "LLL dd, y HH:mm");
+                return format(date, "LLL dd, y HH:mm");
               }}
             />
           }
         />
+        {/* TODO: we could use the `{timestamp, ...rest} = data[0]` to dynamically create the bars but that would mean the order can be very much random */}
         <Bar dataKey="error" stackId="a" fill="var(--color-error)" />
         <Bar dataKey="warning" stackId="a" fill="var(--color-warning)" />
         <Bar dataKey="success" stackId="a" fill="var(--color-success)" />
@@ -151,15 +170,19 @@ export function TimelineChart({
             fillOpacity={0.08}
           />
         )}
-        LEVELS
       </BarChart>
     </ChartContainer>
   );
 }
 
-function TooltipLabel({ level }: { level: (typeof LEVELS)[number] }) {
+// TODO: use a `formatTooltipLabel` function instead for composability
+function TooltipLabel({
+  level,
+}: {
+  level: keyof Omit<TimelineChartSchema, "timestamp">;
+}) {
   return (
-    <div className="font-mono flex w-20 justify-between items-center gap-2 mr-2">
+    <div className="mr-2 flex w-20 items-center justify-between gap-2 font-mono">
       <div className="capitalize text-foreground/70">{level}</div>
       <div className="text-xs text-muted-foreground/70">
         {getLevelLabel(level)}

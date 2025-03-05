@@ -41,7 +41,8 @@ export default function RootLayout({
       className={`${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
     >
-      {process.env.NODE_ENV === "development" ? (
+      {process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_REACT_SCAN === "true" ? (
         <head>
           <script
             src="https://unpkg.com/react-scan/dist/auto.global.js"

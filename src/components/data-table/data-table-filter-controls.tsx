@@ -12,7 +12,7 @@ import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
 import { DataTableFilterSlider } from "./data-table-filter-slider";
 import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterTimerange } from "./data-table-filter-timerange";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 
 // FIXME: use @container (especially for the slider element) to restructure elements
 
@@ -32,13 +32,13 @@ export function DataTableFilterControls() {
         const value = field.value as string;
         return (
           <AccordionItem key={value} value={value} className="border-none">
-            <AccordionTrigger className="px-2 py-0 hover:no-underline w-full data-[state=closed]:text-muted-foreground data-[state=open]:text-foreground hover:data-[state=closed]:text-foreground focus-within:data-[state=closed]:text-foreground">
-              <div className="w-full flex items-center justify-between gap-2 truncate pr-2 py-2">
-                <div className="flex gap-2 items-center truncate">
+            <AccordionTrigger className="w-full px-2 py-0 hover:no-underline data-[state=closed]:text-muted-foreground data-[state=open]:text-foreground focus-within:data-[state=closed]:text-foreground hover:data-[state=closed]:text-foreground">
+              <div className="flex w-full items-center justify-between gap-2 truncate py-2 pr-2">
+                <div className="flex items-center gap-2 truncate">
                   <p className="text-sm font-medium">{field.label}</p>
                   {value !== field.label.toLowerCase() &&
                   !field.commandDisabled ? (
-                    <p className="text-muted-foreground text-[10px] font-mono mt-px truncate">
+                    <p className="mt-px truncate font-mono text-[10px] text-muted-foreground">
                       {value}
                     </p>
                   ) : null}

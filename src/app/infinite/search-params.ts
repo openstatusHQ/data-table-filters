@@ -3,6 +3,7 @@ import {
   createSearchParamsCache,
   createSerializer,
   parseAsArrayOf,
+  parseAsBoolean,
   parseAsInteger,
   parseAsString,
   parseAsStringLiteral,
@@ -50,8 +51,12 @@ export const searchParamsParser = {
   date: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER),
   // REQUIRED FOR SORTING & PAGINATION
   sort: parseAsSort,
-  size: parseAsInteger.withDefault(30),
+  size: parseAsInteger.withDefault(40),
   start: parseAsInteger.withDefault(0),
+  // REQUIRED FOR INFINITE SCROLLING (Live Mode and Load More)
+  direction: parseAsStringLiteral(["prev", "next"]).withDefault("next"),
+  cursor: parseAsTimestamp.withDefault(new Date()),
+  live: parseAsBoolean.withDefault(false),
   // REQUIRED FOR SELECTION
   uuid: parseAsString,
 };

@@ -1,8 +1,12 @@
-import type { ColumnSchema } from "./schema";
+import type {
+  ColumnSchema,
+  FacetMetadataSchema,
+  BaseChartSchema,
+} from "./schema";
 import { type SearchParamsType, searchParamsSerializer } from "./search-params";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 import type { Percentile } from "@/lib/request/percentile";
-import type { FacetMetadataSchema } from "./schema";
+import SuperJSON from "superjson";
 
 export type LogsMeta = {
   currentPercentiles: Record<Percentile, number>;
@@ -11,25 +15,45 @@ export type LogsMeta = {
 export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
   totalRowCount: number;
   filterRowCount: number;
-  chartData: { timestamp: number; [key: string]: number }[];
+  chartData: BaseChartSchema[];
   facets: Record<string, FacetMetadataSchema>;
   metadata?: TMeta;
 };
 
+export type InfiniteQueryResponse<TData = ColumnSchema[]> = {
+  data: TData;
+  meta: InfiniteQueryMeta<LogsMeta>;
+  prevCursor: number | null;
+  nextCursor: number | null;
+};
+
 export const dataOptions = (search: SearchParamsType) => {
   return infiniteQueryOptions({
-    queryKey: ["data-table", searchParamsSerializer({ ...search, uuid: null })], // remove uuid as it would otherwise retrigger a fetch
-    queryFn: async ({ pageParam = 0 }) => {
-      const start = (pageParam as number) * search.size;
-      const serialize = searchParamsSerializer({ ...search, start });
+    queryKey: [
+      "data-table",
+      searchParamsSerializer({ ...search, uuid: null, live: null }),
+    ], // remove uuid/live as it would otherwise retrigger a fetch
+    queryFn: async ({ pageParam }) => {
+      const cursor = new Date(pageParam.cursor);
+      const direction = pageParam.direction as "next" | "prev";
+      const serialize = searchParamsSerializer({
+        ...search,
+        cursor,
+        direction,
+      });
       const response = await fetch(`/infinite/api${serialize}`);
-      return response.json() as Promise<{
-        data: ColumnSchema[];
-        meta: InfiniteQueryMeta<LogsMeta>;
-      }>;
+      const json = await response.json();
+      return SuperJSON.parse<InfiniteQueryResponse<ColumnSchema[]>>(json);
     },
-    initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => groups.length,
+    initialPageParam: { cursor: new Date().getTime(), direction: "next" },
+    getPreviousPageParam: (firstGroup, _groups) => {
+      if (!firstGroup.prevCursor) return null;
+      return { cursor: firstGroup.prevCursor, direction: "prev" };
+    },
+    getNextPageParam: (lastGroup, _groups) => {
+      if (!lastGroup.nextCursor) return null;
+      return { cursor: lastGroup.nextCursor, direction: "next" };
+    },
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });

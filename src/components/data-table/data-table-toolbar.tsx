@@ -7,23 +7,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  FilterIcon,
-  LoaderCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Kbd } from "@/components/custom/kbd";
 import { DataTableResetButton } from "./data-table-reset-button";
 import { useHotKey } from "@/hooks/use-hot-key";
-import { useDataTable } from "@/providers/data-table";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { useControls } from "@/providers/controls";
 import { useMemo } from "react";
 import { formatCompactNumber } from "@/lib/format";
 import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 
-export function DataTableToolbar() {
+interface DataTableToolbarProps {
+  renderActions?: () => React.ReactNode;
+}
+
+export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
   const { table, isLoading, columnFilters } = useDataTable();
   const { open, setOpen } = useControls();
   useHotKey(() => setOpen((prev) => !prev), "b");
@@ -34,7 +33,7 @@ export function DataTableToolbar() {
       total: table.getCoreRowModel().rows.length,
       filtered: table.getFilteredRowModel().rows.length,
     }),
-    [isLoading, columnFilters]
+    [isLoading, columnFilters],
   );
 
   return (
@@ -51,15 +50,13 @@ export function DataTableToolbar() {
               >
                 {open ? (
                   <>
-                    <PanelLeftClose className="hidden sm:block h-4 w-4" />
-                    <FilterIcon className="block sm:hidden h-4 w-4" />
-                    <span className="hidden sm:block">Hide Controls</span>
+                    <PanelLeftClose className="h-4 w-4" />
+                    <span className="hidden md:block">Hide Controls</span>
                   </>
                 ) : (
                   <>
-                    <PanelLeftOpen className="hidden sm:block h-4 w-4" />
-                    <FilterIcon className="block sm:hidden h-4 w-4" />
-                    <span className="hidden sm:block">Show Controls</span>
+                    <PanelLeftOpen className="h-4 w-4" />
+                    <span className="hidden md:block">Show Controls</span>
                   </>
                 )}
               </Button>
@@ -78,19 +75,25 @@ export function DataTableToolbar() {
         <div className="block sm:hidden">
           <DataTableFilterControlsDrawer />
         </div>
-        <p className="text-sm text-muted-foreground">
-          <span className="font-medium font-mono">
-            {formatCompactNumber(rows.filtered)}
-          </span>{" "}
-          of <span className="font-medium font-mono">{rows.total}</span> row(s)
-          filtered
-        </p>
-        {isLoading ? (
-          <LoaderCircle className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />
-        ) : null}
+        <div>
+          <p className="hidden text-sm text-muted-foreground sm:block">
+            <span className="font-mono font-medium">
+              {formatCompactNumber(rows.filtered)}
+            </span>{" "}
+            of <span className="font-mono font-medium">{rows.total}</span>{" "}
+            row(s) <span className="sr-only sm:not-sr-only">filtered</span>
+          </p>
+          <p className="block text-sm text-muted-foreground sm:hidden">
+            <span className="font-mono font-medium">
+              {formatCompactNumber(rows.filtered)}
+            </span>{" "}
+            row(s)
+          </p>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {filters.length ? <DataTableResetButton /> : null}
+        {renderActions?.()}
         <DataTableViewOptions />
       </div>
     </div>

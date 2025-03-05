@@ -8,6 +8,7 @@ import {
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import { UTCDate } from "@date-fns/utc";
+import { HoverCardPortal } from "@radix-ui/react-hover-card";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Copy } from "lucide-react";
 import { Check } from "lucide-react";
@@ -41,23 +42,26 @@ export function HoverCardTimestamp({
           {format(date, "LLL dd, y HH:mm:ss")}
         </div>
       </HoverCardTrigger>
-      <HoverCardContent
-        className="p-2 w-auto z-10"
-        {...{ side, align, alignOffset, sideOffset }}
-      >
-        <dl className="flex flex-col gap-1">
-          <Row value={String(date.getTime())} label="Timestamp" />
-          <Row
-            value={format(new UTCDate(date), "LLL dd, y HH:mm:ss")}
-            label="UTC"
-          />
-          <Row value={format(date, "LLL dd, y HH:mm:ss")} label={timezone} />
-          <Row
-            value={formatDistanceToNowStrict(date, { addSuffix: true })}
-            label="Relative"
-          />
-        </dl>
-      </HoverCardContent>
+      {/* REMINDER: allows us to port the content to the document.body, which is helpful when using opacity-50 on the row element */}
+      <HoverCardPortal>
+        <HoverCardContent
+          className="p-2 w-auto z-10"
+          {...{ side, align, alignOffset, sideOffset }}
+        >
+          <dl className="flex flex-col gap-1">
+            <Row value={String(date.getTime())} label="Timestamp" />
+            <Row
+              value={format(new UTCDate(date), "LLL dd, y HH:mm:ss")}
+              label="UTC"
+            />
+            <Row value={format(date, "LLL dd, y HH:mm:ss")} label={timezone} />
+            <Row
+              value={formatDistanceToNowStrict(date, { addSuffix: true })}
+              label="Relative"
+            />
+          </dl>
+        </HoverCardContent>
+      </HoverCardPortal>
     </HoverCard>
   );
 }
