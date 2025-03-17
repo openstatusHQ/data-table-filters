@@ -1,23 +1,22 @@
-import { cn } from "@/lib/utils";
-import { default as NextLink } from "next/link";
 import { Link } from "@/components/custom/link";
 import { SocialsFooter } from "@/components/layout/socials-footer";
-import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight } from "lucide-react";
-import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ArrowRight, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { default as NextLink } from "next/link";
 
 export default function Home() {
   return (
-    <div className="container mx-auto w-full min-h-screen flex flex-col p-4 gap-8 sm:p-8 xl:gap-12 xl:p-12">
+    <div className="container mx-auto flex min-h-screen w-full flex-col gap-8 p-4 sm:p-8 xl:gap-12 xl:p-12">
       <div className="px-2.5">
         <Hero />
       </div>
-      <div className="border-dashed border-border border-b" />
-      <div className="grid xl:grid-cols-2 gap-8 xl:gap-12">
+      <div className="border-b border-dashed border-border" />
+      <div className="grid gap-8 xl:grid-cols-2 xl:gap-12">
         <NextLink href="/default" className="group flex flex-col gap-2.5">
-          <div className="xl:aspect-video flex flex-col justify-center rounded-lg border border-border/70 group-hover:border-border bg-muted/40 group-hover:bg-muted/50 px-5 py-6 md:px-10 md:py-12">
-            <div className="group-hover:scale-[1.02] transition-all duration-300 w-full flex flex-col gap-2.5">
+          <div className="flex flex-col justify-center rounded-lg border border-border/70 bg-muted/40 px-5 py-6 group-hover:border-border group-hover:bg-muted/50 md:px-10 md:py-12 xl:aspect-video">
+            <div className="flex w-full flex-col gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
               <div className="flex flex-1 flex-row items-end gap-2.5">
                 <div className="-my-2 hidden sm:block">
                   <Controls className="w-24" />
@@ -37,7 +36,7 @@ export default function Home() {
             </p>
             <p className="text-sm text-muted-foreground">
               A{" "}
-              <span className="underline decoration-wavy underline-offset-2 decoration-yellow-500">
+              <span className="underline decoration-yellow-500 decoration-wavy underline-offset-2">
                 simple
               </span>{" "}
               data-table with a{" "}
@@ -49,8 +48,8 @@ export default function Home() {
         <div className="relative">
           <GuideBadgeLink className="absolute -top-3 right-3" />
           <NextLink href="/infinite" className="group flex flex-col gap-2.5">
-            <div className="xl:aspect-video flex flex-col justify-center rounded-lg border border-border/70 group-hover:border-border bg-muted/40 group-hover:bg-muted/50 px-5 py-6 md:px-10 md:py-12">
-              <div className="group-hover:scale-[1.02] transition-all duration-300 w-full flex flex-row items-end gap-2.5 sm:divide-x">
+            <div className="flex flex-col justify-center rounded-lg border border-border/70 bg-muted/40 px-5 py-6 group-hover:border-border group-hover:bg-muted/50 md:px-10 md:py-12 xl:aspect-video">
+              <div className="flex w-full flex-row items-end gap-2.5 transition-all duration-300 group-hover:scale-[1.02] sm:divide-x">
                 <div className="hidden sm:block">
                   <Controls className="w-24 border-b border-transparent" />
                 </div>
@@ -70,7 +69,7 @@ export default function Home() {
               </p>
               <p className="text-sm text-muted-foreground">
                 A{" "}
-                <span className="underline decoration-wavy underline-offset-2 decoration-blue-500">
+                <span className="underline decoration-blue-500 decoration-wavy underline-offset-2">
                   cooked
                 </span>{" "}
                 infinite scroll data-table with a{" "}
@@ -84,7 +83,7 @@ export default function Home() {
       <div className="px-2.5 py-2">
         <BlogPosts />
       </div>
-      <div className="border-dashed border-border border-b" />
+      <div className="border-b border-dashed border-border" />
       <SocialsFooter />
     </div>
   );
@@ -92,29 +91,29 @@ export default function Home() {
 
 function DefaultTable() {
   return (
-    <div className="border border-border rounded-lg divide-y overflow-hidden">
-      <div className="px-2.5 py-2 flex gap-2 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:last-child]:bg-foreground/60 hover:bg-muted">
+    <div className="divide-y overflow-hidden rounded-lg border border-border">
+      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm" />
-        <div className="h-2.5 w-12 sm:w-24 rounded-sm" />
+        <div className="h-2.5 w-12 rounded-sm sm:w-24" />
         <div className="h-2.5 w-16 rounded-sm" />
       </div>
-      <div className="px-2.5 py-2 flex gap-2 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:last-child]:bg-foreground/60 hover:bg-muted">
+      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-16 rounded-sm" />
-        <div className="h-2.5 w-12 sm:w-24 rounded-sm" />
+        <div className="h-2.5 w-12 rounded-sm sm:w-24" />
         <div className="h-2.5 w-16 rounded-sm" />
       </div>
-      <div className="px-2.5 py-2 flex gap-2 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:last-child]:bg-foreground/60 hover:bg-muted">
+      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm" />
-        <div className="h-2.5 w-12 sm:w-24 rounded-sm" />
+        <div className="h-2.5 w-12 rounded-sm sm:w-24" />
         <div className="h-2.5 w-16 rounded-sm" />
       </div>
-      <div className="px-2.5 py-2 flex gap-2 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:last-child]:bg-foreground/60 hover:bg-muted">
+      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-16 rounded-sm" />
-        <div className="h-2.5 w-12 sm:w-24 rounded-sm" />
+        <div className="h-2.5 w-12 rounded-sm sm:w-24" />
         <div className="h-2.5 w-16 rounded-sm" />
       </div>
     </div>
@@ -125,93 +124,93 @@ function GridTable({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "border border-border divide-y border-l-0 overflow-hidden",
-        className
+        "divide-y overflow-hidden border border-l-0 border-border",
+        className,
       )}
     >
-      <div className="grid grid-cols-6 divide-x [&>*:nth-child(odd)>div]:bg-muted-foreground/30 [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:last-child>div]:ml-auto hover:bg-muted">
+      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-10 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-10" />
         </div>
         <div className="px-2.5 py-2">
           <div className="h-2.5 w-full rounded-sm" />
         </div>
-        <div className="px-2.5 py-2 col-span-2">
-          <div className="h-2.5 w-full sm:w-20 rounded-sm" />
+        <div className="col-span-2 px-2.5 py-2">
+          <div className="h-2.5 w-full rounded-sm sm:w-20" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-8 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x [&>*:nth-child(odd)>div]:bg-muted-foreground/30 [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:last-child>div]:ml-auto hover:bg-muted">
+      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-10 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-10" />
         </div>
         <div className="px-2.5 py-2">
           <div className="h-2.5 w-full rounded-sm" />
         </div>
-        <div className="px-2.5 py-2 col-span-2">
-          <div className="h-2.5 w-full sm:w-20 rounded-sm" />
+        <div className="col-span-2 px-2.5 py-2">
+          <div className="h-2.5 w-full rounded-sm sm:w-20" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-8 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x [&>*:nth-child(odd)>div]:bg-muted-foreground/30 [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:last-child>div]:ml-auto hover:bg-muted">
+      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-10 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-10" />
         </div>
         <div className="px-2.5 py-2">
           <div className="h-2.5 w-full rounded-sm" />
         </div>
-        <div className="px-2.5 py-2 col-span-2">
-          <div className="h-2.5 w-full sm:w-20 rounded-sm" />
+        <div className="col-span-2 px-2.5 py-2">
+          <div className="h-2.5 w-full rounded-sm sm:w-20" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-8 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x [&>*:nth-child(odd)>div]:bg-muted-foreground/30 [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:last-child>div]:ml-auto hover:bg-muted">
+      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-10 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-10" />
         </div>
         <div className="px-2.5 py-2">
           <div className="h-2.5 w-full rounded-sm" />
         </div>
-        <div className="px-2.5 py-2 col-span-2">
-          <div className="h-2.5 w-full sm:w-20 rounded-sm" />
+        <div className="col-span-2 px-2.5 py-2">
+          <div className="h-2.5 w-full rounded-sm sm:w-20" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-8 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x [&>*:nth-child(odd)>div]:bg-muted-foreground/30 [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:last-child>div]:ml-auto hover:bg-muted">
+      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-10 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-10" />
         </div>
         <div className="px-2.5 py-2">
           <div className="h-2.5 w-full rounded-sm" />
         </div>
-        <div className="px-2.5 py-2 col-span-2">
-          <div className="h-2.5 w-full sm:w-20 rounded-sm" />
+        <div className="col-span-2 px-2.5 py-2">
+          <div className="h-2.5 w-full rounded-sm sm:w-20" />
         </div>
         <div className="px-2.5 py-2">
-          <div className="h-2.5 w-full sm:w-8 rounded-sm" />
+          <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
     </div>
@@ -220,12 +219,12 @@ function GridTable({ className }: { className?: string }) {
 
 function CommandInput() {
   return (
-    <div className="flex justify-between border border-border rounded-lg px-2.5 py-2 hover:bg-muted">
+    <div className="flex justify-between rounded-lg border border-border px-2.5 py-2 hover:bg-muted">
       <div className="flex gap-2.5">
-        <div className="bg-foreground/70 h-2.5 w-12 rounded-sm" />
-        <div className="bg-foreground/70 h-2.5 w-8 rounded-sm" />
+        <div className="h-2.5 w-12 rounded-sm bg-foreground/70" />
+        <div className="h-2.5 w-8 rounded-sm bg-foreground/70" />
       </div>
-      <div className="bg-muted-foreground/40 h-2.5 w-4 rounded-sm" />
+      <div className="h-2.5 w-4 rounded-sm bg-muted-foreground/40" />
     </div>
   );
 }
@@ -233,8 +232,8 @@ function CommandInput() {
 function Toolbar() {
   return (
     <div className="flex justify-between gap-2.5">
-      <div className="bg-muted-foreground/40 h-2.5 w-8 rounded-sm" />
-      <div className="bg-muted-foreground/40 h-2.5 w-2.5 rounded-sm" />
+      <div className="h-2.5 w-8 rounded-sm bg-muted-foreground/40" />
+      <div className="h-2.5 w-2.5 rounded-sm bg-muted-foreground/40" />
     </div>
   );
 }
@@ -251,8 +250,8 @@ function Timeline() {
           <div
             key={i}
             className={cn(
-              "bg-muted-foreground/20 flex-1 rounded-sm hover:bg-muted-foreground/30",
-              height
+              "flex-1 rounded-sm bg-muted-foreground/20 hover:bg-muted-foreground/30",
+              height,
             )}
           />
         );
@@ -264,36 +263,36 @@ function Timeline() {
 function Controls({ className }: { className?: string }) {
   return (
     <div className={cn("divide-y divide-transparent", className)}>
-      <div className="py-2 flex flex-col gap-2">
-        <div className="flex gap-2.5 justify-between">
-          <div className="bg-foreground/50 h-2.5 w-10 rounded-sm" />
-          <div className="bg-foreground/50 size-2.5 rounded-sm" />
+      <div className="flex flex-col gap-2 py-2">
+        <div className="flex justify-between gap-2.5">
+          <div className="h-2.5 w-10 rounded-sm bg-foreground/50" />
+          <div className="size-2.5 rounded-sm bg-foreground/50" />
         </div>
-        <div className="bg-foreground/70 h-2.5 w-full rounded-sm" />
+        <div className="h-2.5 w-full rounded-sm bg-foreground/70" />
       </div>
-      <div className="group/controls py-2 flex gap-2.5 justify-between">
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
+      <div className="group/controls flex justify-between gap-2.5 py-2">
+        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
       </div>
-      <div className="group/controls py-2 flex gap-2.5 justify-between">
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
+      <div className="group/controls flex justify-between gap-2.5 py-2">
+        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
       </div>
-      <div className="group/controls py-2 flex gap-2.5 justify-between">
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
+      <div className="group/controls flex justify-between gap-2.5 py-2">
+        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
       </div>
-      <div className="group/controls py-2 flex gap-2.5 justify-between">
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
+      <div className="group/controls flex justify-between gap-2.5 py-2">
+        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
       </div>
-      <div className="group/controls py-2 flex gap-2.5 justify-between">
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
+      <div className="group/controls flex justify-between gap-2.5 py-2">
+        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
       </div>
-      <div className="group/controls py-2 flex gap-2.5 justify-between">
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
-        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
+      <div className="group/controls flex justify-between gap-2.5 py-2">
+        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
       </div>
     </div>
   );
@@ -301,12 +300,12 @@ function Controls({ className }: { className?: string }) {
 
 function Pagination() {
   return (
-    <div className="flex gap-2.5 justify-end">
-      <div className="h-2.5 w-8 bg-muted-foreground/30 rounded-sm" />
-      <div className="size-2.5 bg-foreground/50 rounded-sm" />
-      <div className="size-2.5 bg-foreground/50 rounded-sm" />
-      <div className="size-2.5 bg-foreground/70 rounded-sm" />
-      <div className="size-2.5 bg-foreground/70 rounded-sm" />
+    <div className="flex justify-end gap-2.5">
+      <div className="h-2.5 w-8 rounded-sm bg-muted-foreground/30" />
+      <div className="size-2.5 rounded-sm bg-foreground/50" />
+      <div className="size-2.5 rounded-sm bg-foreground/50" />
+      <div className="size-2.5 rounded-sm bg-foreground/70" />
+      <div className="size-2.5 rounded-sm bg-foreground/70" />
     </div>
   );
 }
@@ -315,11 +314,11 @@ function Hero() {
   return (
     <div className="flex flex-col-reverse items-start justify-between gap-8 sm:flex-row">
       <div className="max-w-4xl">
-        <h1 className="font-bold tracking-tight text-foreground mb-4 text-3xl sm:text-4xl md:text-5xl text-balance">
+        <h1 className="mb-4 text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <p className="text-lg text-muted-foreground max-w-[650px]">
+        <p className="max-w-[650px] text-lg text-muted-foreground">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
@@ -339,7 +338,7 @@ function Hero() {
       <NextLink
         href="https://openstatus.dev"
         target="_blank"
-        className="relative h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full overflow-hidden border border-border border-dashed bg-white"
+        className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed border-border bg-white sm:h-12 sm:w-12"
       >
         <Image
           src="/logos/OpenStatus.png"
@@ -354,21 +353,38 @@ function Hero() {
 
 function BlogPosts() {
   return (
-    <div className="flex flex-col gap-1">
-      <time className="font-mono text-muted-foreground text-sm">
-        {new Date("02-02-2025").toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </time>
-      <p className="text-foreground/80">
-        Blog post about features and caveats:{" "}
-        <Link href="http://openstatus.dev/blog/data-table-redesign">
-          The React data-table I always wanted
-        </Link>
-      </p>
-    </div>
+    <ul className="grid gap-2">
+      <li className="flex flex-col gap-0.5">
+        <time className="font-mono text-sm text-muted-foreground">
+          {new Date("03-16-2025").toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </time>
+        <p className="text-foreground/80">
+          Blog post about tanstack infinite query usage:{" "}
+          <Link href="https://www.openstatus.dev/blog/live-mode-infinite-query">
+            Live Mode
+          </Link>
+        </p>
+      </li>
+      <li className="flex flex-col gap-0.5">
+        <time className="font-mono text-sm text-muted-foreground">
+          {new Date("02-02-2025").toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </time>
+        <p className="text-foreground/80">
+          Blog post about features and caveats:{" "}
+          <Link href="http://openstatus.dev/blog/data-table-redesign">
+            The React data-table I always wanted
+          </Link>
+        </p>
+      </li>
+    </ul>
   );
 }
 
@@ -377,7 +393,7 @@ function GuideBadgeLink({ className }: { className?: string }) {
     <NextLink href="/guide" className={cn("group", className)}>
       <Badge
         variant="outline"
-        className="border-dashed border-border pr-1.5 bg-background"
+        className="border-dashed border-border bg-background pr-1.5"
       >
         Guide{" "}
         <ArrowRight className="relative mb-[1px] inline h-3 w-0 transition-all group-hover:w-3" />
