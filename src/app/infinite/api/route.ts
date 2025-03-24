@@ -1,5 +1,9 @@
+import { calculateSpecificPercentile } from "@/lib/request/percentile";
+import { addDays } from "date-fns";
 import { NextRequest } from "next/server";
-import { mock, mockLive } from "./mock";
+import SuperJSON from "superjson";
+import type { InfiniteQueryResponse } from "../query-options";
+import { ColumnSchema } from "../schema";
 import { searchParamsCache } from "../search-params";
 import {
   filterData,
@@ -10,15 +14,11 @@ import {
   sortData,
   splitData,
 } from "./helpers";
-import { calculateSpecificPercentile } from "@/lib/request/percentile";
-import { addDays } from "date-fns";
-import type { InfiniteQueryResponse } from "../query-options";
-import { ColumnSchema } from "../schema";
-import SuperJSON from "superjson";
+import { mock, mockLive } from "./mock";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest): Promise<Response> {
   // TODO: we could use a POST request to avoid this
   const _search: Map<string, string> = new Map();
   req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));

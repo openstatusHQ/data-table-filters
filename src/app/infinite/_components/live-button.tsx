@@ -1,14 +1,14 @@
 "use client";
 
-import * as React from "react";
-import { FetchPreviousPageOptions } from "@tanstack/react-query";
-import { useQueryStates } from "nuqs";
-import { searchParamsParser } from "../search-params";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { CirclePlay, CirclePause } from "lucide-react";
 import { useDataTable } from "@/components/data-table/data-table-provider";
+import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
+import { cn } from "@/lib/utils";
+import type { FetchPreviousPageOptions } from "@tanstack/react-query";
+import { CirclePause, CirclePlay } from "lucide-react";
+import { useQueryStates } from "nuqs";
+import * as React from "react";
+import { searchParamsParser } from "../search-params";
 
 const REFRESH_INTERVAL = 4_000;
 

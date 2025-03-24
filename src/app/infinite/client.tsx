@@ -122,6 +122,7 @@ export function Client() {
         if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
         return <LiveRow />;
       }}
+      renderSheetTitle={(props) => props.row?.original.pathname}
     />
   );
 }

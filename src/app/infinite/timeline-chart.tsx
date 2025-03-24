@@ -57,7 +57,6 @@ export function TimelineChart<TChart extends BaseChartSchema>({
   const [isSelecting, setIsSelecting] = useState(false);
 
   // REMINDER: date has to be a string for tooltip label to work - don't ask me why
-  // FIXME: move to server
   const chart = useMemo(
     () =>
       data.map((item) => ({
@@ -67,10 +66,12 @@ export function TimelineChart<TChart extends BaseChartSchema>({
     [data],
   );
 
-  // REMINDER: time difference (ms) between the first and last timestamp
-  const interval = useMemo(() => {
-    if (data.length === 0) return 0;
-    return Math.abs(data[0].timestamp - data[data.length - 1].timestamp);
+  const timerange = useMemo(() => {
+    if (data.length === 0) return { interval: 0, period: undefined };
+    const first = data[0].timestamp;
+    const last = data[data.length - 1].timestamp;
+    const interval = Math.abs(first - last); // in ms
+    return { interval, period: calculatePeriod(interval) };
   }, [data]);
 
   const handleMouseDown: CategoricalChartFunc = (e) => {
@@ -126,20 +127,19 @@ export function TimelineChart<TChart extends BaseChartSchema>({
           tickLine={false}
           minTickGap={32}
           axisLine={false}
+          // interval="preserveStartEnd"
           tickFormatter={(value) => {
             const date = new Date(value);
             if (isNaN(date.getTime())) return "N/A";
-            // TODO: how to extract into helper functions
-            if (interval <= 1000 * 60 * 10) {
+            if (timerange.period === "10m") {
               return format(date, "HH:mm:ss");
-            } else if (interval <= 1000 * 60 * 60 * 24) {
+            } else if (timerange.period === "1d") {
               return format(date, "HH:mm");
-            } else if (interval <= 1000 * 60 * 60 * 24 * 7) {
+            } else if (timerange.period === "1w") {
               return format(date, "LLL dd HH:mm");
             }
             return format(date, "LLL dd, y");
           }}
-          // interval="preserveStartEnd"
         />
         <ChartTooltip
           // defaultIndex={10}
@@ -148,8 +148,7 @@ export function TimelineChart<TChart extends BaseChartSchema>({
               labelFormatter={(value) => {
                 const date = new Date(value);
                 if (isNaN(date.getTime())) return "N/A";
-                // TODO: how to extract into helper functions
-                if (interval <= 1000 * 60 * 10) {
+                if (timerange.period === "10m") {
                   return format(date, "LLL dd, HH:mm:ss");
                 }
                 return format(date, "LLL dd, y HH:mm");
@@ -173,6 +172,21 @@ export function TimelineChart<TChart extends BaseChartSchema>({
       </BarChart>
     </ChartContainer>
   );
+}
+
+// TODO: check what's a good abbreviation for month vs. minutes
+function calculatePeriod(interval: number): "10m" | "1d" | "1w" | "1mo" {
+  if (interval <= 1000 * 60 * 10) {
+    // less than 10 minutes
+    return "10m";
+  } else if (interval <= 1000 * 60 * 60 * 24) {
+    // less than 1 day
+    return "1d";
+  } else if (interval <= 1000 * 60 * 60 * 24 * 7) {
+    // less than 1 week
+    return "1w";
+  }
+  return "1mo"; // defaults to 1 month
 }
 
 // TODO: use a `formatTooltipLabel` function instead for composability

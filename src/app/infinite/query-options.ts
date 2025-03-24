@@ -48,13 +48,13 @@ export const dataOptions = (search: SearchParamsType) => {
       return SuperJSON.parse<InfiniteQueryResponse<ColumnSchema[]>>(json);
     },
     initialPageParam: { cursor: new Date().getTime(), direction: "next" },
-    getPreviousPageParam: (firstGroup, _groups) => {
-      if (!firstGroup.prevCursor) return null;
-      return { cursor: firstGroup.prevCursor, direction: "prev" };
+    getPreviousPageParam: (firstPage, _pages) => {
+      if (!firstPage.prevCursor) return null;
+      return { cursor: firstPage.prevCursor, direction: "prev" };
     },
-    getNextPageParam: (lastGroup, _groups) => {
-      if (!lastGroup.nextCursor) return null;
-      return { cursor: lastGroup.nextCursor, direction: "next" };
+    getNextPageParam: (lastPage, _pages) => {
+      if (!lastPage.nextCursor) return null;
+      return { cursor: lastPage.nextCursor, direction: "next" };
     },
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,

@@ -24,7 +24,7 @@ import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export interface DataTableSheetDetailsProps {
-  title?: string;
+  title?: React.ReactNode;
   titleClassName?: string;
   children?: React.ReactNode;
 }
