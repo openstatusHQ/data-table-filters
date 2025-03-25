@@ -1,10 +1,10 @@
+import * as React from "react";
 import { columns } from "./columns";
-import { data, filterFields } from "./constants";
+import { filterFields } from "./constants";
+import { data } from "./data";
 import { DataTable } from "./data-table";
 import { searchParamsCache } from "./search-params";
 import { Skeleton } from "./skeleton";
-
-import * as React from "react";
 
 export default async function Page({
   searchParams,

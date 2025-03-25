@@ -56,7 +56,7 @@ import * as React from "react";
 import { LiveButton } from "./_components/live-button";
 import { RefreshButton } from "./_components/refresh-button";
 import { SocialsFooter } from "./_components/socials-footer";
-import { BaseChartSchema, columnFilterSchema, ColumnSchema } from "./schema";
+import { BaseChartSchema } from "./schema";
 import { searchParamsParser } from "./search-params";
 import { TimelineChart } from "./timeline-chart";
 
@@ -343,7 +343,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               "sticky top-0 z-10 pb-4",
             )}
           >
-            <DataTableFilterCommand schema={columnFilterSchema} />
+            <DataTableFilterCommand searchParamsParser={searchParamsParser} />
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
               renderActions={() => [

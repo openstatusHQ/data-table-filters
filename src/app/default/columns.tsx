@@ -1,13 +1,13 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Minus } from "lucide-react";
-import { tagsColor } from "./constants";
-import type { ColumnSchema } from "./schema";
-import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { Badge } from "@/components/ui/badge";
+import { tagColor } from "@/constants/tag";
+import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
+import type { ColumnDef } from "@tanstack/react-table";
 import { format, isSameDay } from "date-fns";
+import { Check, Minus } from "lucide-react";
+import type { ColumnSchema } from "./types";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
@@ -50,14 +50,14 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         return (
           <div className="flex flex-wrap gap-1">
             {value.map((v) => (
-              <Badge key={v} className={tagsColor[v].badge}>
+              <Badge key={v} className={tagColor[v].badge}>
                 {v}
               </Badge>
             ))}
           </div>
         );
       }
-      return <Badge className={tagsColor[value].badge}>{value}</Badge>;
+      return <Badge className={tagColor[value].badge}>{value}</Badge>;
     },
     filterFn: (row, id, value) => {
       const array = row.getValue(id) as string[];

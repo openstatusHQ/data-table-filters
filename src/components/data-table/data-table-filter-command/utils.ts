@@ -3,8 +3,10 @@ import {
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
 } from "@/lib/delimiters";
-import type { DataTableFilterField } from "../types";
 import { isArrayOfDates } from "@/lib/is-array";
+import { ColumnFiltersState } from "@tanstack/react-table";
+import { ParserBuilder } from "nuqs";
+import type { DataTableFilterField } from "../types";
 
 /**
  * Extracts the word from the given string at the specified caret position.
@@ -85,7 +87,7 @@ export function getFieldOptions<TData>({
             .filter(notEmpty)
         : Array.from(
             { length: field.max - field.min + 1 },
-            (_, i) => field.min + i
+            (_, i) => field.min + i,
           ) || [];
     }
     default: {
@@ -204,7 +206,59 @@ export function getFieldValueByType<TData>({
 }
 
 export function notEmpty<TValue>(
-  value: TValue | null | undefined
+  value: TValue | null | undefined,
 ): value is TValue {
   return value !== null && value !== undefined;
+}
+
+export function columnFiltersParser<TData>({
+  searchParamsParser,
+  filterFields,
+}: {
+  searchParamsParser: Record<string, ParserBuilder<any>>;
+  filterFields: DataTableFilterField<TData>[];
+}) {
+  return {
+    parse: (inputValue: string) => {
+      const values = inputValue
+        .trim()
+        .split(" ")
+        .reduce(
+          (prev, curr) => {
+            const [name, value] = curr.split(":");
+            if (!value || !name) return prev;
+            prev[name] = value;
+            return prev;
+          },
+          {} as Record<string, string>,
+        );
+
+      const searchParams = Object.entries(values).reduce(
+        (prev, [key, value]) => {
+          const parser = searchParamsParser[key];
+          if (!parser) return prev;
+
+          prev[key] = parser.parse(value);
+          return prev;
+        },
+        {} as Record<string, unknown>,
+      );
+
+      return searchParams;
+    },
+    serialize: (columnFilters: ColumnFiltersState) => {
+      const values = columnFilters.reduce((prev, curr) => {
+        const { commandDisabled } = filterFields?.find(
+          (field) => curr.id === field.value,
+        ) || { commandDisabled: true }; // if column filter is not found, disable the command by default
+        const parser = searchParamsParser[curr.id];
+
+        if (commandDisabled || !parser) return prev;
+
+        return `${prev}${curr.id}:${parser.serialize(curr.value)} `;
+      }, "");
+
+      return values;
+    },
+  };
 }
