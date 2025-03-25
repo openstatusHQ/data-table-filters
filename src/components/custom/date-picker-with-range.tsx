@@ -1,13 +1,11 @@
 "use client";
 
-import * as React from "react";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import type { DateRange } from "react-day-picker";
-
-import { cn } from "@/lib/utils";
+import { kbdVariants } from "@/components/custom/kbd";
+import type { DatePreset } from "@/components/data-table/types";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -23,12 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { kbdVariants } from "@/components/custom/kbd";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useDebounce } from "@/hooks/use-debounce";
 import { presets as defaultPresets } from "@/constants/date-preset";
-import type { DatePreset } from "@/components/data-table/types";
+import { useDebounce } from "@/hooks/use-debounce";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import * as React from "react";
+import type { DateRange } from "react-day-picker";
 
 interface DatePickerWithRangeProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -43,8 +42,11 @@ export function DatePickerWithRange({
   setDate,
   presets = defaultPresets,
 }: DatePickerWithRangeProps) {
+  const [open, setOpen] = React.useState(false);
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      if (!open) return;
+
       presets.map((preset) => {
         if (preset.shortcut === e.key) {
           setDate({ from: preset.from, to: preset.to });
@@ -53,11 +55,11 @@ export function DatePickerWithRange({
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [setDate, presets]);
+  }, [setDate, presets, open]);
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover modal={true}>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             id="date"
@@ -65,7 +67,7 @@ export function DatePickerWithRange({
             size="sm"
             className={cn(
               "max-w-full justify-start truncate text-left font-normal hover:bg-muted/50",
-              !date && "text-muted-foreground"
+              !date && "text-muted-foreground",
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -92,7 +94,7 @@ export function DatePickerWithRange({
                 presets={presets}
               />
             </div>
-            <div className="block sm:hidden p-3">
+            <div className="block p-3 sm:hidden">
               <DatePresetsSelect
                 onSelect={setDate}
                 selected={date}
@@ -140,7 +142,7 @@ function DatePresets({
               onClick={() => onSelect({ from, to })}
               className={cn(
                 "flex items-center justify-between gap-6",
-                !isActive && "border border-transparent"
+                !isActive && "border border-transparent",
               )}
             >
               <span className="mr-auto">{label}</span>
@@ -166,7 +168,7 @@ function DatePresetsSelect({
     return presets.find((p) => p.from === from && p.to === to)?.shortcut;
   }
   const [value, setValue] = React.useState<string | undefined>(
-    findPreset(selected?.from, selected?.to)
+    findPreset(selected?.from, selected?.to),
   );
 
   React.useEffect(() => {
@@ -196,13 +198,13 @@ function DatePresetsSelect({
               <SelectItem
                 key={label}
                 value={shortcut}
-                className="flex items-center justify-between [&>span:last-child]:w-full [&>span:last-child]:flex [&>span:last-child]:justify-between"
+                className="flex items-center justify-between [&>span:last-child]:flex [&>span:last-child]:w-full [&>span:last-child]:justify-between"
               >
                 <span>{label}</span>
                 <span
                   className={cn(
                     kbdVariants(),
-                    "uppercase ml-2 h-5 leading-snug"
+                    "ml-2 h-5 uppercase leading-snug",
                   )}
                 >
                   {shortcut}
@@ -225,7 +227,7 @@ function CustomDateRange({
   onSelect: (date: DateRange | undefined) => void;
 }) {
   const [dateFrom, setDateFrom] = React.useState<Date | undefined>(
-    selected?.from
+    selected?.from,
   );
   const [dateTo, setDateTo] = React.useState<Date | undefined>(selected?.to);
   const debounceDateFrom = useDebounce(dateFrom, 1000);
@@ -245,7 +247,7 @@ function CustomDateRange({
   return (
     <div className="flex flex-col gap-2 p-3">
       <p className="text-xs uppercase text-muted-foreground">Custom Range</p>
-      <div className="grid sm:grid-cols-2 gap-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         <div className="grid w-full gap-1.5">
           <Label htmlFor="from">Start</Label>
           <Input
