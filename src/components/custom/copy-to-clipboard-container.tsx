@@ -1,14 +1,34 @@
-import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Copy } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { composeRefs } from "@/lib/compose-refs";
+import { cn } from "@/lib/utils";
+import { cva, VariantProps } from "class-variance-authority";
+import { Check, Copy } from "lucide-react";
+import * as React from "react";
 
-const CopyToClipboardContainer = React.forwardRef<
+const containerVariants = cva(
+  "peer whitespace-pre-wrap break-all rounded-md border p-2 font-mono text-sm",
+  {
+    variants: {
+      variant: {
+        default: "border-border/50 bg-border/30",
+        destructive: "border-destructive/50 bg-destructive/30",
+      },
+      defaultVariants: {
+        variant: "default",
+      },
+    },
+  },
+);
+
+export interface CopyToClipboardContainerProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof containerVariants> {}
+
+export const CopyToClipboardContainer = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ children, className, ...props }, ref) => {
+  CopyToClipboardContainerProps
+>(({ children, variant, className, ...props }, ref) => {
   const innerRef = React.useRef<HTMLDivElement>(null);
   const { copy, isCopied } = useCopyToClipboard();
 
@@ -18,10 +38,10 @@ const CopyToClipboardContainer = React.forwardRef<
   };
 
   return (
-    <div className="relative group text-left">
+    <div className="group relative text-left">
       <div
         ref={composeRefs(ref, innerRef)}
-        className={cn("peer", className)}
+        className={cn(containerVariants({ variant }), className)}
         {...props}
       >
         {children}
@@ -29,7 +49,7 @@ const CopyToClipboardContainer = React.forwardRef<
       <Button
         variant="outline"
         size="icon"
-        className="absolute top-2 right-2 w-6 h-6 opacity-0 group-hover:opacity-100 peer-focus:opacity-100 focus:opacity-100"
+        className="absolute right-2 top-2 h-6 w-6 opacity-0 focus:opacity-100 group-hover:opacity-100 peer-focus:opacity-100"
         onClick={onClick}
       >
         {!isCopied ? (
@@ -41,7 +61,3 @@ const CopyToClipboardContainer = React.forwardRef<
     </div>
   );
 });
-
-CopyToClipboardContainer.displayName = "CopyToClipboardContainer";
-
-export default CopyToClipboardContainer;

@@ -1,3 +1,8 @@
+import { Kbd } from "@/components/custom/kbd";
+import { Link } from "@/components/custom/link";
+import { Bluesky } from "@/components/icons/bluesky";
+import { Github } from "@/components/icons/github";
+import { X } from "@/components/icons/x";
 import { ModeToggle } from "@/components/theme/toggle-mode";
 import { Button } from "@/components/ui/button";
 import {
@@ -5,18 +10,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Command, Book } from "lucide-react";
+import { Book, Command } from "lucide-react";
 import NextLink from "next/link";
-import { Kbd } from "@/components/custom/kbd";
-import { Link } from "@/components/custom/link";
-import { Github } from "@/components/icons/github";
-import { X } from "@/components/icons/x";
-import { Bluesky } from "@/components/icons/bluesky";
 
 export function SocialsFooter() {
   return (
     <div className="flex flex-col gap-2">
-      <div className="w-full grid grid-cols-3 md:grid-cols-6 justify-center items-center gap-2 p-1">
+      <div className="grid w-full grid-cols-3 items-center justify-center gap-2 p-1 md:grid-cols-6">
         <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
           <NextLink href="https://github.com/openstatusHQ/data-table-filters">
             <Github className="h-4 w-4" />
@@ -32,14 +32,14 @@ export function SocialsFooter() {
             <Bluesky className="h-4 w-4" />
           </NextLink>
         </Button>
-        <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4 w-8 h-8" />
+        <ModeToggle className="h-8 w-8 [&>svg]:h-4 [&>svg]:w-4" />
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
               <Command className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="px-2 py-1 w-auto">
+          <PopoverContent className="w-auto px-2 py-1">
             <HotkeyOverview />
           </PopoverContent>
         </Popover>
@@ -49,14 +49,14 @@ export function SocialsFooter() {
           </NextLink>
         </Button>
       </div>
-      <p className="text-muted-foreground text-xs text-center">
+      <p className="text-center text-xs text-muted-foreground">
         Powered by{" "}
         <Link href="https://openstatus.dev" hideArrow>
           OpenStatus
         </Link>
       </p>
-      <p className="text-muted-foreground text-[10px] text-center">
-        The data is mocked. It is in active development. For feedback, please{" "}
+      <p className="text-center text-[10px] text-muted-foreground">
+        The project is in active development. For feedback, please{" "}
         <Link
           href="https://github.com/openstatusHQ/data-table-filters/issues/new"
           className="text-muted-foreground"
@@ -100,7 +100,7 @@ function HotkeyOverview() {
                 <span>{props.key}</span>
               </Kbd>
             </span>
-            <span className="col-span-3 place-content-center text-muted-foreground text-xs">
+            <span className="col-span-3 place-content-center text-xs text-muted-foreground">
               {props.description}
             </span>
           </li>

@@ -65,7 +65,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   columns: ColumnDef<TData, TValue>[];
   getRowClassName?: (row: Row<TData>) => string;
   // REMINDER: make sure to pass the correct id to access the rows
-  getRowId: TableOptions<TData>["getRowId"];
+  getRowId?: TableOptions<TData>["getRowId"];
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;
   defaultColumnSorting?: SortingState;
@@ -87,6 +87,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   totalRowsFetched?: number;
   meta: TMeta;
   chartData?: BaseChartSchema[];
+  chartDataColumnId: string;
   isFetching?: boolean;
   isLoading?: boolean;
   fetchNextPage: (
@@ -96,7 +97,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
     options?: FetchPreviousPageOptions | undefined,
   ) => Promise<unknown>;
   refetch: (options?: RefetchOptions | undefined) => void;
-  renderLiveRow: (props?: { row: Row<TData> }) => React.ReactNode;
+  renderLiveRow?: (props?: { row: Row<TData> }) => React.ReactNode;
   renderSheetTitle: (props: { row?: Row<TData> }) => React.ReactNode;
   // TODO:
   renderChart?: () => React.ReactNode;
@@ -122,6 +123,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   filterRows = 0,
   totalRowsFetched = 0,
   chartData = [],
+  chartDataColumnId,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
   meta,
@@ -146,6 +148,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   const topBarRef = React.useRef<HTMLDivElement>(null);
   const tableRef = React.useRef<HTMLTableElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
+  // FIXME: searchParamsParser needs to be passed as property
   const [_, setSearch] = useQueryStates(searchParamsParser);
 
   const onScroll = React.useCallback(
@@ -348,11 +351,20 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             <DataTableToolbar
               renderActions={() => [
                 <RefreshButton key="refresh" onClick={refetch} />,
-                <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />,
+                fetchPreviousPage ? (
+                  <LiveButton
+                    key="live"
+                    fetchPreviousPage={fetchPreviousPage}
+                  />
+                ) : null,
               ]}
             />
             {/* TODO: move up to client component */}
-            <TimelineChart data={chartData} className="-mb-2" columnId="date" />
+            <TimelineChart
+              data={chartData}
+              className="-mb-2"
+              columnId={chartDataColumnId}
+            />
           </div>
           <div className="z-0">
             <Table
@@ -433,7 +445,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                   ))
                 ) : (
                   <React.Fragment>
-                    {renderLiveRow()}
+                    {renderLiveRow?.()}
                     <TableRow>
                       <TableCell
                         colSpan={columns.length}

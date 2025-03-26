@@ -1,19 +1,19 @@
 "use client";
 
-import * as React from "react";
-import { DataTableInfinite } from "./data-table-infinite";
-import { columns } from "./columns";
-import { filterFields as defaultFilterFields, sheetFields } from "./constants";
-import { useQueryState, useQueryStates } from "nuqs";
-import { searchParamsParser } from "./search-params";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { dataOptions } from "./query-options";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { getLevelRowClassName } from "@/lib/request/level";
-import type { FacetMetadataSchema } from "./schema";
-import type { Table as TTable } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import type { Table as TTable } from "@tanstack/react-table";
+import { useQueryState, useQueryStates } from "nuqs";
+import * as React from "react";
 import { LiveRow } from "./_components/live-row";
+import { columns } from "./columns";
+import { filterFields as defaultFilterFields, sheetFields } from "./constants";
+import { DataTableInfinite } from "./data-table-infinite";
+import { dataOptions } from "./query-options";
+import type { FacetMetadataSchema } from "./schema";
+import { searchParamsParser } from "./search-params";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
@@ -108,6 +108,7 @@ export function Client() {
       fetchPreviousPage={fetchPreviousPage}
       refetch={refetch}
       chartData={chartData}
+      chartDataColumnId="date"
       getRowClassName={(row) => {
         const rowTimestamp = row.original.date.getTime();
         const isPast = rowTimestamp <= (liveMode.timestamp || -1);
@@ -139,7 +140,7 @@ function useResetFocus() {
 }
 
 // TODO: make a BaseObject (incl. date and uuid e.g. for every upcoming branch of infinite table)
-function useLiveMode<TData extends { date: Date }>(data: TData[]) {
+export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
   const [live] = useQueryState("live", searchParamsParser.live);
   // REMINDER: used to capture the live mode on timestamp
   const liveTimestamp = React.useRef<number | undefined>(

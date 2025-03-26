@@ -17,3 +17,23 @@ export const flags: Record<string, string> = {
   iad: "🇺🇸",
   syd: "🇦🇺",
 };
+
+export const VERCEL_EDGE_REGIONS = [
+  "hnd1",
+  "sin1",
+  "cpt1",
+  "fra1",
+  "hkg1",
+  "syd1",
+  "gru1",
+  "dub1",
+  "sfo1",
+  "cdg1",
+  "icn1",
+  "kix1",
+  "iad1",
+  "arn1",
+  "bom1",
+  "lhr1",
+  "cle1",
+];

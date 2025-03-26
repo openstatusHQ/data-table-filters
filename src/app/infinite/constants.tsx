@@ -1,24 +1,24 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { type ColumnSchema } from "./schema";
+import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-container";
+import { KVTabs } from "@/components/custom/kv-tabs";
 import type {
   DataTableFilterField,
   Option,
   SheetField,
 } from "@/components/data-table/types";
-import { getStatusColor } from "@/lib/request/status-code";
+import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { flags, regions, REGIONS } from "@/constants/region";
-import { LEVELS } from "@/constants/levels";
-import { getLevelColor, getLevelLabel } from "@/lib/request/level";
-import { format } from "date-fns";
 import { formatMilliseconds } from "@/lib/format";
-import { SheetTimingPhases } from "./_components/sheet-timing-phases";
-import { TabsObjectView } from "./_components/tabs-object-view";
-import CopyToClipboardContainer from "@/components/custom/copy-to-clipboard-container";
+import { getLevelColor, getLevelLabel } from "@/lib/request/level";
+import { getStatusColor } from "@/lib/request/status-code";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { PopoverPercentile } from "./_components/popover-percentile";
+import { SheetTimingPhases } from "./_components/sheet-timing-phases";
 import type { LogsMeta } from "./query-options";
+import { type ColumnSchema } from "./schema";
 
 // instead of filterFields, maybe just 'fields' with a filterDisabled prop?
 // that way, we could have 'message' or 'headers' field with label and value as well as type!
@@ -40,7 +40,7 @@ export const filterFields = [
       // TODO: type `Option` with `options` values via Generics
       const value = props.value as (typeof LEVELS)[number];
       return (
-        <div className="flex w-full items-center justify-between gap-2 max-w-28 font-mono">
+        <div className="flex w-full max-w-28 items-center justify-between gap-2 font-mono">
           <span className="capitalize text-foreground/70 group-hover:text-accent-foreground">
             {props.label}
           </span>
@@ -48,7 +48,7 @@ export const filterFields = [
             <div
               className={cn(
                 "h-2.5 w-2.5 rounded-[2px]",
-                getLevelColor(value).bg
+                getLevelColor(value).bg,
               )}
             />
             <span className="text-xs text-muted-foreground/70">
@@ -207,7 +207,7 @@ export const sheetFields = [
     skeletonClassName: "w-12",
     component: (props) => (
       <>
-        <span className="text-muted-foreground text-xs">
+        <span className="text-xs text-muted-foreground">
           {flags[props.regions[0]]} {regions[props.regions[0]]}
         </span>{" "}
         {props.regions[0]}
@@ -257,7 +257,7 @@ export const sheetFields = [
     type: "readonly",
     component: (props) => (
       // REMINDER: negative margin to make it look like the header is on the same level of the tab triggers
-      <TabsObjectView data={props.headers} className="-mt-[22px]" />
+      <KVTabs data={props.headers} className="-mt-[22px]" />
     ),
     className: "flex-col items-start w-full gap-1",
   },
@@ -267,7 +267,7 @@ export const sheetFields = [
     type: "readonly",
     condition: (props) => props.message !== undefined,
     component: (props) => (
-      <CopyToClipboardContainer className="rounded-md bg-destructive/30 border border-destructive/50 p-2 whitespace-pre-wrap break-all font-mono text-sm">
+      <CopyToClipboardContainer variant="destructive">
         {JSON.stringify(props.message, null, 2)}
       </CopyToClipboardContainer>
     ),

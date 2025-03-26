@@ -1,4 +1,12 @@
-# OpenStatus Request Logs
+# OpenStatus Request Logs (light.openstatus.dev)
+
+With [light.openstatus.dev](https://light.openstatus.dev), we provide a lightweight version to monitor your services with vercel edge functions. You can set a cron job (e.g. vercel cron, github actions,..) and store the pings within Tinybird.
+
+The following `/light` folder is being used to display the results of your cron. With the lightweight version, we already provide an `/api/get` API route to fetch the stroed responses.
+
+It also showcases a basic infinite data-table with filter functionality.
+
+---
 
 > Highly experimental
 > Let's try to make reference to the components in the parent folder and make it as reusable as possible.
@@ -6,17 +14,12 @@
 Create a logs table for openstatus. Fetch logs from tinbird across all workspace monitors.
 
 - [ ] Create multiple tb endpoints for stats (percentiles, facets, etc)
-- [ ] Create a live mode endpoint to fetch logs from a specific timestamp on to now
 - [ ] Create API endpoint for bundled logic (should we, or should we not, bundle it in the frontend, aka here?)
 
 Differences:
 
 - Facets need an api endpoint on tb with a calculation. It returns the percentiles and the count.
 - Percentiles are not available in the current tb facet api.
-
-FIXME:
-
-- [ ] DataTableSheetDetails are using `isLoading` to show the loading state. On Live Mode, it will always be loading every X seconds.
 
 TODO:
 
@@ -51,6 +54,7 @@ SELECT
 FROM response_logs
 ```
 
-For the live mode pipe, use the mv with the least data.
+FIXME:
 
-- [ ] Split react query context into separate provider (instead of storing it in useDataTable)
+- [ ] uuid selection
+- [ ] searchParamsParser is hardcoded
