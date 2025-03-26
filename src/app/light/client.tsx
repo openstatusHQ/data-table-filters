@@ -1,5 +1,6 @@
 "use client";
 
+import { getLevelRowClassName } from "@/lib/request/level";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import * as React from "react";
@@ -19,7 +20,6 @@ export function Client() {
     [data?.pages],
   );
 
-  // REMINDER: meta data is always the same for all pages as filters do not change(!)
   const lastPage = data?.pages?.[data?.pages.length - 1];
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
   const filterDBRowCount = lastPage?.meta?.filterRowCount;
@@ -30,9 +30,12 @@ export function Client() {
 
   const { sort, cursor, direction, uuid, ...filter } = search;
 
-  // TODO: improve facets
   const filterFields = React.useMemo(() => {
     return defaultFilterFields.map((field) => {
+      const facet = facets?.[field.value];
+      if (facet) {
+        // TODO: facets
+      }
       return field;
     });
   }, [flatData]);
@@ -51,6 +54,7 @@ export function Client() {
         }))
         .filter(({ value }) => value ?? undefined)}
       defaultColumnSorting={sort ? [sort] : undefined}
+      getRowClassName={(row) => getLevelRowClassName(row.original.level)}
       meta={metadata}
       chartData={chartData}
       chartDataColumnId="timestamp"

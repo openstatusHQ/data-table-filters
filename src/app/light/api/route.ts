@@ -27,7 +27,7 @@ export async function GET(req: Request) {
         // FIXME: add facets
         facets: {},
         totalRowCount: data.length,
-        filterRowCount: 0,
+        filterRowCount: data.length,
       },
     } satisfies InfiniteQueryResponse<ColumnType[]>),
   );

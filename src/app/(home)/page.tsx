@@ -74,14 +74,14 @@ export default function Home() {
                 </span>{" "}
                 infinite scroll data-table with a{" "}
                 <span className="font-medium text-foreground">server-side</span>{" "}
-                filter and row selection.
+                filter, row selection and live mode.
               </p>
             </div>
           </NextLink>
         </div>
       </div>
       <div className="px-2.5 py-2">
-        <BlogPosts />
+        <Changelog />
       </div>
       <div className="border-b border-dashed border-border" />
       <SocialsFooter />
@@ -351,40 +351,55 @@ function Hero() {
   );
 }
 
-function BlogPosts() {
+const changelog: {
+  date: Date;
+  description: React.ReactNode;
+}[] = [
+  {
+    date: new Date("03-16-2025"),
+    description: (
+      <>
+        Blog post about tanstack infinite query usage:{" "}
+        <Link href="https://www.openstatus.dev/blog/live-mode-infinite-query">
+          Live Mode
+        </Link>
+      </>
+    ),
+  },
+  {
+    date: new Date("02-02-2025"),
+    description: (
+      <>
+        Blog post about features and caveats:{" "}
+        <Link href="http://openstatus.dev/blog/data-table-redesign">
+          The React data-table I always wanted
+        </Link>
+      </>
+    ),
+  },
+];
+
+function Changelog() {
   return (
-    <ul className="grid gap-2">
-      <li className="flex flex-col gap-0.5">
-        <time className="font-mono text-sm text-muted-foreground">
-          {new Date("03-16-2025").toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </time>
-        <p className="text-foreground/80">
-          Blog post about tanstack infinite query usage:{" "}
-          <Link href="https://www.openstatus.dev/blog/live-mode-infinite-query">
-            Live Mode
-          </Link>
-        </p>
-      </li>
-      <li className="flex flex-col gap-0.5">
-        <time className="font-mono text-sm text-muted-foreground">
-          {new Date("02-02-2025").toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </time>
-        <p className="text-foreground/80">
-          Blog post about features and caveats:{" "}
-          <Link href="http://openstatus.dev/blog/data-table-redesign">
-            The React data-table I always wanted
-          </Link>
-        </p>
-      </li>
-    </ul>
+    <div className="grid gap-2">
+      <p className="font-medium">Changelog</p>
+      <ul className="grid gap-2">
+        {changelog.map((item, i) => {
+          return (
+            <li key={i} className="flex flex-col gap-0.5">
+              <time className="font-mono text-sm text-muted-foreground">
+                {item.date.toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </time>
+              <p className="text-foreground/80">{item.description}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
