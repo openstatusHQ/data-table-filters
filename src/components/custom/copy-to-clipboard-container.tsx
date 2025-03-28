@@ -105,3 +105,5 @@ export const CopyToClipboardContainer = React.forwardRef<
     </div>
   );
 });
+
+CopyToClipboardContainer.displayName = "CopyToClipboardContainer";

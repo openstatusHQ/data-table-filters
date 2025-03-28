@@ -70,3 +70,5 @@ export const ShowMoreContainer = React.forwardRef<
     </div>
   );
 });
+
+ShowMoreContainer.displayName = "ShowMoreContainer";
