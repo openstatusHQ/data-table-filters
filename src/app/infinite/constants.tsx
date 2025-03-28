@@ -2,6 +2,7 @@
 
 import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-container";
 import { KVTabs } from "@/components/custom/kv-tabs";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import type {
   DataTableFilterField,
   Option,
@@ -9,7 +10,7 @@ import type {
 } from "@/components/data-table/types";
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
-import { flags, regions, REGIONS } from "@/constants/region";
+import { REGIONS } from "@/constants/region";
 import { formatMilliseconds } from "@/lib/format";
 import { getLevelColor, getLevelLabel } from "@/lib/request/level";
 import { getStatusColor } from "@/lib/request/status-code";
@@ -206,12 +207,7 @@ export const sheetFields = [
     type: "checkbox",
     skeletonClassName: "w-12",
     component: (props) => (
-      <>
-        <span className="text-xs text-muted-foreground">
-          {flags[props.regions[0]]} {regions[props.regions[0]]}
-        </span>{" "}
-        {props.regions[0]}
-      </>
+      <DataTableColumnRegion value={props.regions[0]} reverse showFlag />
     ),
   },
   {

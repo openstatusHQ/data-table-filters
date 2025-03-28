@@ -2,6 +2,7 @@
 
 import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
 import { DataTableColumnTimestamp } from "@/components/data-table/data-table-column/data-table-column-timestamp";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -75,6 +76,10 @@ export const columns: ColumnDef<ColumnType>[] = [
   {
     accessorKey: "region",
     header: "Region",
+    cell: ({ row }) => {
+      const region = row.getValue("region") as ColumnType["region"];
+      return <DataTableColumnRegion value={region} />;
+    },
     enableResizing: false,
     filterFn: "arrIncludesSome",
   },

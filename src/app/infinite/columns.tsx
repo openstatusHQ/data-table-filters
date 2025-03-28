@@ -4,13 +4,13 @@ import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { regions } from "@/constants/region";
 import {
   getTimingColor,
   getTimingLabel,
@@ -180,18 +180,13 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         } else {
           return (
             <div className="whitespace-nowrap">
-              <span>{value}</span>{" "}
-              <span className="text-xs text-muted-foreground">
-                {`${regions[value[0]]}`}
-              </span>
+              <DataTableColumnRegion value={value[0]} />
             </div>
           );
         }
       }
       if (typeof value === "string") {
-        return (
-          <div className="text-muted-foreground">{`${regions[value]}`}</div>
-        );
+        return <DataTableColumnRegion value={value} />;
       }
       return <Minus className="h-4 w-4 text-muted-foreground/50" />;
     },

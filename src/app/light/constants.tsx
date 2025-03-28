@@ -4,6 +4,7 @@ import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-
 import { KVTabs } from "@/components/custom/kv-tabs";
 import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
 import type {
   DataTableFilterField,
@@ -136,6 +137,9 @@ export const sheetFields = [
     id: "region",
     label: "Region",
     type: "checkbox",
+    component: (props) => (
+      <DataTableColumnRegion value={props.region} reverse showFlag />
+    ),
     skeletonClassName: "w-12",
   },
   {
@@ -161,20 +165,15 @@ export const sheetFields = [
     label: "Body",
     type: "readonly",
     condition: (props) => props.body !== undefined,
-    component: (props) => {
-      if (isJSON(props.body)) {
-        return (
-          <CopyToClipboardContainer variant="default" maxHeight={100}>
-            {JSON.stringify(props.body, null, 2)}
-          </CopyToClipboardContainer>
-        );
-      }
-      return (
-        <CopyToClipboardContainer variant="default" maxHeight={100}>
-          {props.body}
-        </CopyToClipboardContainer>
-      );
-    },
+    component: (props) => (
+      <CopyToClipboardContainer
+        key={props.body}
+        variant="default"
+        maxHeight={200}
+      >
+        {isJSON(props.body) ? JSON.stringify(props.body, null, 2) : props.body}
+      </CopyToClipboardContainer>
+    ),
     className: "flex-col items-start w-full gap-1",
   },
 ] satisfies SheetField<ColumnType, unknown>[];

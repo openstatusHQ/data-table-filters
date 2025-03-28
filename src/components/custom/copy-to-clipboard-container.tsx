@@ -91,11 +91,11 @@ export const CopyToClipboardContainer = React.forwardRef<
         )}
       </Button>
       {collapsible && !open ? (
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-gradient-to-b from-background/0 to-background/100">
+        <div className="absolute inset-x-px bottom-px flex items-center justify-center rounded-b-md bg-gradient-to-b from-background/0 to-background/100">
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
+            className="my-1 rounded-full"
             onClick={() => setOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" /> Show content
