@@ -22,6 +22,7 @@ export function Client() {
     isFetching,
     isLoading,
     fetchNextPage,
+    hasNextPage,
     fetchPreviousPage,
     refetch,
   } = useInfiniteQuery(dataOptions(search));
@@ -105,6 +106,7 @@ export function Client() {
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
       fetchPreviousPage={fetchPreviousPage}
       refetch={refetch}
       chartData={chartData}
@@ -124,6 +126,7 @@ export function Client() {
         return <LiveRow />;
       }}
       renderSheetTitle={(props) => props.row?.original.pathname}
+      searchParamsParser={searchParamsParser}
     />
   );
 }
@@ -170,7 +173,7 @@ export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
   return { row: anchorRow, timestamp: liveTimestamp.current };
 }
 
-function getFacetedUniqueValues<TData>(
+export function getFacetedUniqueValues<TData>(
   facets?: Record<string, FacetMetadataSchema>,
 ) {
   return (_: TTable<TData>, columnId: string): Map<string, number> => {
@@ -180,15 +183,15 @@ function getFacetedUniqueValues<TData>(
   };
 }
 
-function getFacetedMinMaxValues<TData>(
+export function getFacetedMinMaxValues<TData>(
   facets?: Record<string, FacetMetadataSchema>,
 ) {
   return (_: TTable<TData>, columnId: string): [number, number] | undefined => {
     const min = facets?.[columnId]?.min;
     const max = facets?.[columnId]?.max;
-    if (min && max) return [min, max];
-    if (min) return [min, min];
-    if (max) return [max, max];
+    if (typeof min === "number" && typeof max === "number") return [min, max];
+    if (typeof min === "number") return [min, min];
+    if (typeof max === "number") return [max, max];
     return undefined;
   };
 }

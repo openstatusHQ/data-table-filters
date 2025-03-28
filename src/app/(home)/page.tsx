@@ -1,4 +1,6 @@
+import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-container";
 import { Link } from "@/components/custom/link";
+import { ShowMoreContainer } from "@/components/custom/show-more-container";
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -80,12 +82,38 @@ export default function Home() {
           </NextLink>
         </div>
       </div>
+      <Test />
       <div className="px-2.5 py-2">
         <Changelog />
       </div>
       <div className="border-b border-dashed border-border" />
       <SocialsFooter />
     </div>
+  );
+}
+
+function Test() {
+  return (
+    // <ShowMoreContainer maxHeight={100}>
+    <CopyToClipboardContainer
+      maxHeight={100}
+      // TODO: instead of background, maybe blur?
+      // className="bg-gradient-to-b from-[hsl(var(--background))] from-70% to-[hsl(var(--muted))] to-100%"
+    >
+      {JSON.stringify(
+        {
+          hello: "world",
+          dis: "is a very long text",
+          and: "should not be like this, instead that could be a body, or a payload",
+          or: "any kind of text that has some new lines",
+          yes: "I want to make it getting bigger",
+          aaaand: "bigger and bigger",
+        },
+        null,
+        2,
+      )}
+    </CopyToClipboardContainer>
+    // </ShowMoreContainer>
   );
 }
 

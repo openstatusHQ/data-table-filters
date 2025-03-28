@@ -51,7 +51,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
-import { useQueryState, useQueryStates } from "nuqs";
+import { useQueryState, useQueryStates, type ParserBuilder } from "nuqs";
 import * as React from "react";
 import { LiveButton } from "./_components/live-button";
 import { RefreshButton } from "./_components/refresh-button";
@@ -90,6 +90,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   chartDataColumnId: string;
   isFetching?: boolean;
   isLoading?: boolean;
+  hasNextPage?: boolean;
   fetchNextPage: (
     options?: FetchNextPageOptions | undefined,
   ) => Promise<unknown>;
@@ -101,6 +102,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   renderSheetTitle: (props: { row?: Row<TData> }) => React.ReactNode;
   // TODO:
   renderChart?: () => React.ReactNode;
+  searchParamsParser: Record<string, ParserBuilder<any>>;
 }
 
 export function DataTableInfinite<TData, TValue, TMeta>({
@@ -117,6 +119,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   isFetching,
   isLoading,
   fetchNextPage,
+  hasNextPage,
   fetchPreviousPage,
   refetch,
   totalRows = 0,
@@ -129,6 +132,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   meta,
   renderLiveRow,
   renderSheetTitle,
+  searchParamsParser,
 }: DataTableInfiniteProps<TData, TValue, TMeta>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -458,8 +462,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                 )}
                 <TableRow className="hover:bg-transparent data-[state=selected]:bg-transparent">
                   <TableCell colSpan={columns.length} className="text-center">
-                    {totalRowsFetched < filterRows ||
-                    !table.getCoreRowModel().rows?.length ? (
+                    {hasNextPage ? (
                       <Button
                         disabled={isFetching || isLoading}
                         onClick={() => fetchNextPage()}

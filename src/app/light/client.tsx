@@ -4,6 +4,10 @@ import { getLevelRowClassName } from "@/lib/request/level";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import * as React from "react";
+import {
+  getFacetedMinMaxValues,
+  getFacetedUniqueValues,
+} from "../infinite/client";
 import { DataTableInfinite } from "../infinite/data-table-infinite";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
@@ -12,7 +16,7 @@ import { searchParamsParser } from "./search-params";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
-  const { data, isFetching, isLoading, fetchNextPage, refetch } =
+  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
     useInfiniteQuery(dataOptions(search));
 
   const flatData = React.useMemo(
@@ -21,8 +25,9 @@ export function Client() {
   );
 
   const lastPage = data?.pages?.[data?.pages.length - 1];
+  const firstPage = data?.pages?.[0];
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
-  const filterDBRowCount = lastPage?.meta?.filterRowCount;
+  const filterDBRowCount = firstPage?.meta?.filterRowCount;
   const metadata = lastPage?.meta?.metadata;
   const chartData = lastPage?.meta?.chart;
   const facets = lastPage?.meta?.facets;
@@ -35,10 +40,26 @@ export function Client() {
       const facet = facets?.[field.value];
       if (facet) {
         // TODO: facets
+        if (["status", "method"].includes(field.value)) {
+          field.options = facet.rows.map((row) => ({
+            value: row.value,
+            label: row.value,
+          }));
+        }
+        if (field.value === "latency") {
+          field.min = facet.min || field.min;
+          field.max = facet.max || field.max;
+          field.options = facet.rows.map((row) => ({
+            value: row.value,
+            label: row.value,
+          }));
+        }
       }
       return field;
     });
   }, [flatData]);
+
+  console.log({ filterFields, facets, pages: data?.pages, hasNextPage });
 
   return (
     <DataTableInfinite
@@ -55,6 +76,9 @@ export function Client() {
         .filter(({ value }) => value ?? undefined)}
       defaultColumnSorting={sort ? [sort] : undefined}
       getRowClassName={(row) => getLevelRowClassName(row.original.level)}
+      getRowId={(row) =>
+        `${row.region}-${row.timestamp}-${row.url}-${row.latency}`
+      }
       meta={metadata}
       chartData={chartData}
       chartDataColumnId="timestamp"
@@ -62,11 +86,15 @@ export function Client() {
       sheetFields={sheetFields}
       isFetching={isFetching}
       isLoading={isLoading}
+      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
       fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
       // NOTE: we are not using live mode
       fetchPreviousPage={undefined}
       refetch={refetch}
       renderSheetTitle={(props) => props.row?.original.url}
+      searchParamsParser={searchParamsParser}
     />
   );
 }

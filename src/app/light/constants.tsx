@@ -10,9 +10,11 @@ import type {
   Option,
   SheetField,
 } from "@/components/data-table/types";
-import { LEVELS } from "@/constants/levels";
+import { _LEVELS, LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { VERCEL_EDGE_REGIONS } from "@/constants/region";
+import { isJSON } from "@/lib/is-json";
+import { getLevelLabel } from "@/lib/request/level";
 import { format } from "date-fns";
 import { type ColumnType } from "./types";
 
@@ -30,6 +32,19 @@ export const filterFields = [
     type: "checkbox",
     defaultOpen: true,
     options: LEVELS.map((level) => ({ value: level, label: level })),
+    component: (props: Option) => (
+      <div className="flex items-center justify-between gap-2 font-mono md:w-[106px]">
+        <div className="flex items-center gap-1">
+          <DataTableColumnLevelIndicator
+            value={props.value as (typeof _LEVELS)[number]}
+          />
+          <div className="capitalize text-foreground/70">{props.value}</div>
+        </div>
+        <div className="text-xs text-muted-foreground/70">
+          {getLevelLabel(props.value as (typeof _LEVELS)[number])}
+        </div>
+      </div>
+    ),
   },
   {
     label: "URL",
@@ -40,21 +55,22 @@ export const filterFields = [
     label: "Status Code",
     value: "status",
     type: "checkbox",
+    // REMINDER: will be injected by the client.tsx
     options: [
       { label: "200", value: 200 },
       { label: "400", value: 400 },
-      { label: "404", value: 404 },
       { label: "500", value: 500 },
-    ], // REMINDER: this is a placeholder to set the type in the client.tsx
+    ],
+    component: (props: Option) => (
+      <DataTableColumnStatusCode value={props.value as number} />
+    ),
   },
   {
     label: "Method",
     value: "method",
     type: "checkbox",
+    // REMINDER: will be injected by the client.tsx
     options: METHODS.map((region) => ({ label: region, value: region })),
-    component: (props: Option) => {
-      return <span className="font-mono">{props.value}</span>;
-    },
   },
   {
     label: "Region",
@@ -64,9 +80,6 @@ export const filterFields = [
       label: region,
       value: region,
     })),
-    component: (props: Option) => {
-      return <span className="font-mono">{props.value}</span>;
-    },
   },
   {
     label: "Latency",
@@ -74,6 +87,8 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
+    // REMINDER: will be injected by the client.tsx
+    options: [{ label: "0", value: 0 }],
   },
 ] satisfies DataTableFilterField<ColumnType>[];
 
@@ -94,7 +109,6 @@ export const sheetFields = [
     id: "timestamp",
     label: "Timestamp",
     type: "timerange",
-    // TODO: check if we can use DataTableColumnTimestamp with disabled hover card instead
     component: (props) =>
       format(new Date(props.timestamp), "LLL dd, y HH:mm:ss"),
     skeletonClassName: "w-36",
@@ -147,11 +161,20 @@ export const sheetFields = [
     label: "Body",
     type: "readonly",
     condition: (props) => props.body !== undefined,
-    component: (props) => (
-      <CopyToClipboardContainer variant="default">
-        {JSON.stringify(props.body, null, 2)}
-      </CopyToClipboardContainer>
-    ),
+    component: (props) => {
+      if (isJSON(props.body)) {
+        return (
+          <CopyToClipboardContainer variant="default" maxHeight={100}>
+            {JSON.stringify(props.body, null, 2)}
+          </CopyToClipboardContainer>
+        );
+      }
+      return (
+        <CopyToClipboardContainer variant="default" maxHeight={100}>
+          {props.body}
+        </CopyToClipboardContainer>
+      );
+    },
     className: "flex-col items-start w-full gap-1",
   },
 ] satisfies SheetField<ColumnType, unknown>[];

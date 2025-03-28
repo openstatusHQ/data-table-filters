@@ -390,18 +390,29 @@ function CommandItemSuggestions<TData>({
 }: {
   field: DataTableFilterField<TData>;
 }) {
+  const { table, getFacetedMinMaxValues, getFacetedUniqueValues } =
+    useDataTable();
+  const value = field.value as string;
   switch (field.type) {
     case "checkbox": {
       return (
         <span className="ml-1 hidden truncate text-muted-foreground/80 group-aria-[selected=true]:block">
-          {field.options?.map(({ value }) => `[${value}]`).join(" ")}
+          {getFacetedUniqueValues
+            ? Array.from(getFacetedUniqueValues(table, value)?.keys() || [])
+                .map((value) => `[${value}]`)
+                .join(" ")
+            : field.options?.map(({ value }) => `[${value}]`).join(" ")}
         </span>
       );
     }
     case "slider": {
+      const [min, max] = getFacetedMinMaxValues?.(table, value) || [
+        field.min,
+        field.max,
+      ];
       return (
         <span className="ml-1 hidden truncate text-muted-foreground/80 group-aria-[selected=true]:block">
-          [{field.min} - {field.max}]
+          [{min} - {max}]
         </span>
       );
     }

@@ -1,5 +1,7 @@
 "use client";
 
+import { Kbd } from "@/components/custom/kbd";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -7,16 +9,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { DataTableViewOptions } from "./data-table-view-options";
-import { Kbd } from "@/components/custom/kbd";
-import { DataTableResetButton } from "./data-table-reset-button";
 import { useHotKey } from "@/hooks/use-hot-key";
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { useControls } from "@/providers/controls";
-import { useMemo } from "react";
 import { formatCompactNumber } from "@/lib/format";
+import { useControls } from "@/providers/controls";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useMemo } from "react";
 import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
+import { DataTableResetButton } from "./data-table-reset-button";
+import { DataTableViewOptions } from "./data-table-view-options";
 
 interface DataTableToolbarProps {
   renderActions?: () => React.ReactNode;
@@ -80,7 +80,10 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
             <span className="font-mono font-medium">
               {formatCompactNumber(rows.filtered)}
             </span>{" "}
-            of <span className="font-mono font-medium">{rows.total}</span>{" "}
+            of{" "}
+            <span className="font-mono font-medium">
+              {formatCompactNumber(rows.total)}
+            </span>{" "}
             row(s) <span className="sr-only sm:not-sr-only">filtered</span>
           </p>
           <p className="block text-sm text-muted-foreground sm:hidden">

@@ -37,14 +37,6 @@ export const columns: ColumnDef<ColumnType>[] = [
     },
     enableResizing: false,
     filterFn: "inDateRange",
-    size: 200,
-    minSize: 200,
-    meta: {
-      headerClassName:
-        "w-[--header-timestamp-size] max-w-[--header-timestamp-size] min-w-[--header-timestamp-size]",
-      cellClassName:
-        "w-[--col-timestamp-size] max-w-[--col-timestamp-size] min-w-[--col-timestamp-size]",
-    },
   },
   {
     accessorKey: "status",

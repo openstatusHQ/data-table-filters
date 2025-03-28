@@ -1,6 +1,6 @@
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
-import { REGIONS } from "@/constants/region";
+import { REGIONS, VERCEL_EDGE_REGIONS } from "@/constants/region";
 // Note: import from 'nuqs/server' to avoid the "use client" directive
 import {
   ARRAY_DELIMITER,
@@ -38,7 +38,10 @@ export const searchParamsParser = {
   level: parseAsArrayOf(parseAsStringLiteral(LEVELS), ARRAY_DELIMITER),
   latency: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   status: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
-  region: parseAsArrayOf(parseAsStringLiteral(REGIONS), ARRAY_DELIMITER),
+  region: parseAsArrayOf(
+    parseAsStringLiteral(VERCEL_EDGE_REGIONS),
+    ARRAY_DELIMITER,
+  ),
   method: parseAsArrayOf(parseAsStringLiteral(METHODS), ARRAY_DELIMITER),
   url: parseAsString,
   timestamp: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER),
