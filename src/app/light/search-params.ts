@@ -1,6 +1,6 @@
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
-import { REGIONS, VERCEL_EDGE_REGIONS } from "@/constants/region";
+import { VERCEL_EDGE_REGIONS } from "@/constants/region";
 // Note: import from 'nuqs/server' to avoid the "use client" directive
 import {
   ARRAY_DELIMITER,
@@ -52,7 +52,7 @@ export const searchParamsParser = {
   cursor: parseAsTimestamp.withDefault(new Date()),
   // live: parseAsBoolean.withDefault(false),
   // REQUIRED FOR SELECTION
-  uuid: parseAsInteger,
+  uuid: parseAsString,
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParser);

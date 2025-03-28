@@ -462,7 +462,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                 )}
                 <TableRow className="hover:bg-transparent data-[state=selected]:bg-transparent">
                   <TableCell colSpan={columns.length} className="text-center">
-                    {hasNextPage ? (
+                    {hasNextPage || isFetching || isLoading ? (
                       <Button
                         disabled={isFetching || isLoading}
                         onClick={() => fetchNextPage()}
