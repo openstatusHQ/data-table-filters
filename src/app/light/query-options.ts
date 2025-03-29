@@ -1,8 +1,8 @@
 import type { InfiniteQueryResponse } from "@/app/infinite/query-options";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 import SuperJSON from "superjson";
+import type { ColumnType } from "./columns";
 import { searchParamsSerializer, type SearchParamsType } from "./search-params";
-import type { ColumnType } from "./types";
 
 export const dataOptions = (search: SearchParamsType) => {
   return infiniteQueryOptions({

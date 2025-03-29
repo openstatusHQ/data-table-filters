@@ -5,8 +5,21 @@ import { DataTableColumnLevelIndicator } from "@/components/data-table/data-tabl
 import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
 import { DataTableColumnTimestamp } from "@/components/data-table/data-table-column/data-table-column-timestamp";
+import { LEVELS } from "@/constants/levels";
+import { VERCEL_EDGE_REGIONS } from "@/constants/region";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ColumnType } from "./types";
+
+export type ColumnType = {
+  level: (typeof LEVELS)[number];
+  url: string;
+  method: string;
+  status: number;
+  latency: number;
+  region: (typeof VERCEL_EDGE_REGIONS)[number];
+  timestamp: number;
+  headers: string;
+  body: string;
+};
 
 export const columns: ColumnDef<ColumnType>[] = [
   {

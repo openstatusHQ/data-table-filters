@@ -6,8 +6,8 @@ import type {
 import { differenceInMinutes } from "date-fns";
 import type { NextRequest } from "next/server";
 import SuperJSON from "superjson";
+import type { ColumnType } from "../columns";
 import { searchParamsCache } from "../search-params";
-import type { ColumnType } from "../types";
 
 type _TemporalFacetsType = {
   facet: string;
@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
     }),
   });
 
+  // TODO: too many requests, especially when scrolling as stats/facets are not cached and are only needed for initial load
   const [dataRes, chartRes, facetsRes] = await Promise.all([
     fetch(`${VERCEL_EDGE_PING_URL}/api/get?${searchParams.toString()}`),
     // TODO: we are missing filter in both, the stats and the facets - nothing urgent

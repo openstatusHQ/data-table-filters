@@ -17,7 +17,7 @@ import { VERCEL_EDGE_REGIONS } from "@/constants/region";
 import { isJSON } from "@/lib/is-json";
 import { getLevelLabel } from "@/lib/request/level";
 import { format } from "date-fns";
-import { type ColumnType } from "./types";
+import type { ColumnType } from "./columns";
 
 export const filterFields = [
   {
