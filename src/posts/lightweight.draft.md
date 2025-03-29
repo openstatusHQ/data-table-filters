@@ -1,12 +1,10 @@
 ### Vercel Edge Ping UI
 
-The first realworld use case of the [logs.run](https://logs.run) project and a not complex showcase of the [data-table-filters](https://github.com/openstatusHQ/data-table-filters) project.
+The first realworld use case of the [logs.run](https://logs.run/light) project and a not complex showcase of the [data-table-filters](https://github.com/openstatusHQ/data-table-filters) project.
 
 A few months ago, we released the [vercel-edge-ping](https://github.com/openstatusHQ/vercel-edge-ping) repository, a lightweight version of OpenStatus, to monitor your http endpoints via vercel's edge regions (see [light.openstatus.dev](https://light.openstatus.dev)). Within 5 minutes, you can define your endpoints and deploy the checker to [Vercel](http://vercel.com/?ref=OpenStatus). We've added support to create dedicated notifiation channels like Slack/Discord/Telegram and get notified whenever >50% of your endpoints are down. We have an extensive [README](https://github.com/openstatusHQ/vercel-edge-ping) guide or you can checkout the [YouTube](https://www.youtube.com/watch?v=cpurWC9Co1U) video how to deploy it. This is an extreme lightweight checker with zero dependencies and allows you to keep full control over it. Extend, improve or suggest features.
 
-<!-- Over the last few days, we've extended the `/api` endpoints to better support filter options via search params. -->
-
-Now, we are happy to announce that we have added a UI support if you are using the Tinybird option to store the ping responses. It's another showcase of the [data-table-filters](https://github.com/openstatusHQ/data-table-filters) project on how to configure the different options/fields to display a fully functional logs data-table.
+Now, we are happy to announce that we have added a UI support if you are using the Tinybird option to store the ping responses. If you already use Tinybird to store your data, you can redeploy the latest changes and include the [pipes](https://github.com/openstatusHQ/vercel-edge-ping/tree/main/tb/pipes) to Tinybird and access the data directly from [logs.run/light](https://logs.run/light) by changing the base url of the API endpoint (left bottom floating button). It will default to our demo values otherwise. (be aware that there is no auth right now)
 
 This is a snapshot of how the **Folder Structure** currently looks like:
 
@@ -35,7 +33,7 @@ Here a quick breakdown:
 - `query-options.ts`: infinite query options used in `client.tsx`
 - `search-params.ts`: nuqs query params configuration
 
-Remember that we improving it over time. While some configs seem to be duplications, the endgoal is to have a signle config file to rule them all and provide you with a best in class experience to build your own infinite logs data-table from front to back.
+Remember that we improving it over time. While some configs seem to be duplications, the endgoal is to have a single config file to rule them all and provide you with a best in class experience to build your own infinite logs data-table from front to back.
 
 We are taking you with through the journey.
 

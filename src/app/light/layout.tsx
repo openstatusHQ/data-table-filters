@@ -1,6 +1,20 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowRight, ChevronRight, Database } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +28,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </Link>
       </Button>
       {children}
+      <div className="fixed bottom-4 left-4 z-50">
+        <APIDialog />
+      </div>
       <div className="fixed bottom-4 right-4 z-50">
         <ButtonPile />
       </div>
@@ -46,5 +63,55 @@ function ButtonPile() {
         </a>
       </Button>
     </div>
+  );
+}
+
+function APIDialog() {
+  const [open, setOpen] = useState(false);
+  const [endpoint, setEndpoint] = useState("https://light.openstatus.dev");
+
+  useEffect(() => {
+    const cookieList = document.cookie.split(";");
+    const tbEndpoint = cookieList.find((cookie) =>
+      cookie.startsWith("tb_endpoint="),
+    );
+    console.log(tbEndpoint);
+    if (tbEndpoint) {
+      setEndpoint(decodeURIComponent(tbEndpoint.split("=")[1]));
+    }
+  }, []);
+
+  const handleSave = () => {
+    document.cookie = `tb_endpoint=${encodeURIComponent(endpoint)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    window.location.reload();
+  };
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="icon">
+          <Database className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Tinybird Pipes</DialogTitle>
+          <DialogDescription>
+            Update the API endpoint to use a different OpenStatus instance.
+            Defaults to <code>https://light.openstatus.dev</code>
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          id="endpoint"
+          placeholder="https://light.openstatus.dev"
+          value={endpoint}
+          onChange={(e) => setEndpoint(e.target.value)}
+        />
+        <DialogFooter>
+          <Button type="submit" onClick={handleSave}>
+            Save changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

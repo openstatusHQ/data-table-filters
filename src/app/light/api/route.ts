@@ -20,6 +20,11 @@ const PAGE_SIZE = 100;
 const VERCEL_EDGE_PING_URL = "https://light.openstatus.dev";
 
 export async function GET(req: NextRequest) {
+  const cookieList = req.cookies.getAll();
+  const tbEndpoint =
+    cookieList.find((cookie) => cookie.name === "tb_endpoint")?.value ??
+    VERCEL_EDGE_PING_URL;
+
   // TODO: we could use a POST request to avoid this
   const _search: Map<string, string> = new Map();
   req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
@@ -78,10 +83,10 @@ export async function GET(req: NextRequest) {
 
   // TODO: too many requests, especially when scrolling as stats/facets are not cached and are only needed for initial load
   const [dataRes, chartRes, facetsRes] = await Promise.all([
-    fetch(`${VERCEL_EDGE_PING_URL}/api/get?${searchParams.toString()}`),
+    fetch(`${tbEndpoint}/api/get?${searchParams.toString()}`),
     // TODO: we are missing filter in both, the stats and the facets - nothing urgent
-    fetch(`${VERCEL_EDGE_PING_URL}/api/stats?${statsParams.toString()}`),
-    fetch(`${VERCEL_EDGE_PING_URL}/api/facets?${facetsParams.toString()}`),
+    fetch(`${tbEndpoint}/api/stats?${statsParams.toString()}`),
+    fetch(`${tbEndpoint}/api/facets?${facetsParams.toString()}`),
   ]);
 
   const { data, rows_before_limit_at_least: filterRowCount } =
