@@ -2,17 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, ChevronRight, Database } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ArrowRight, ChevronRight, Database, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -70,48 +70,51 @@ function APIDialog() {
   const [open, setOpen] = useState(false);
   const [endpoint, setEndpoint] = useState("https://light.openstatus.dev");
 
-  useEffect(() => {
-    const cookieList = document.cookie.split(";");
-    const tbEndpoint = cookieList.find((cookie) =>
-      cookie.startsWith("tb_endpoint="),
-    );
-    console.log(tbEndpoint);
-    if (tbEndpoint) {
-      setEndpoint(decodeURIComponent(tbEndpoint.split("=")[1]));
-    }
-  }, []);
-
   const handleSave = () => {
     document.cookie = `tb_endpoint=${encodeURIComponent(endpoint)}; path=/; max-age=${60 * 60 * 24 * 365}`;
     window.location.reload();
   };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon">
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button size="icon" className="h-8 w-8">
           <Database className="h-4 w-4" />
+          <span className="sr-only">Database connection</span>
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Tinybird Pipes</DialogTitle>
-          <DialogDescription>
-            Update the API endpoint to use a different OpenStatus instance.
-            Defaults to <code>https://light.openstatus.dev</code>
-          </DialogDescription>
-        </DialogHeader>
-        <Input
-          id="endpoint"
-          placeholder="https://light.openstatus.dev"
-          value={endpoint}
-          onChange={(e) => setEndpoint(e.target.value)}
-        />
-        <DialogFooter>
-          <Button type="submit" onClick={handleSave}>
-            Save changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </PopoverTrigger>
+      <PopoverContent side="right" align="end" sideOffset={10} className="w-80">
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <h4 className="font-medium leading-none">Database Viewer</h4>
+            <p className="text-sm text-muted-foreground">
+              Configure the API endpoint for your{" "}
+              <a
+                href="https://github.com/openstatusHQ/vercel-edge-ping"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <code className="rounded-sm bg-muted px-0.5 underline decoration-muted-foreground underline-offset-4 hover:decoration-foreground">
+                  vercel-edge-ping
+                </code>
+              </a>{" "}
+              project.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              id="endpoint"
+              placeholder="https://light.openstatus.dev"
+              value={endpoint}
+              onChange={(e) => setEndpoint(e.target.value)}
+            />
+            <Button onClick={handleSave} size="icon">
+              <Zap className="h-4 w-4" />
+              <span className="sr-only">Save</span>
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
