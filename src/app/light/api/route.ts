@@ -3,7 +3,7 @@ import type {
   BaseChartSchema,
   FacetMetadataSchema,
 } from "@/app/infinite/schema";
-import { differenceInMinutes } from "date-fns";
+import { differenceInMinutes, subDays } from "date-fns";
 import type { NextRequest } from "next/server";
 import SuperJSON from "superjson";
 import type { ColumnType } from "../columns";
@@ -26,8 +26,7 @@ export async function GET(req: NextRequest) {
 
   const search = searchParamsCache.parse(Object.fromEntries(_search));
 
-  const searchParams = new URLSearchParams({
-    pageSize: PAGE_SIZE.toString(),
+  const baseParams = new URLSearchParams({
     ...(search.level?.length && { levels: search.level.join(",") }),
     ...(search.status?.length && { statuses: search.status.join(",") }),
     ...(search.method?.length && { methods: search.method.join(",") }),
@@ -36,7 +35,6 @@ export async function GET(req: NextRequest) {
       latencyStart: search.latency[0].toString(),
       latencyEnd: search.latency[search.latency.length - 1].toString(),
     }),
-    ...(search.cursor && { timestampEnd: search.cursor.getTime().toString() }),
     ...(search.timestamp?.length && {
       timestampStart: search.timestamp[0].getTime().toString(),
       timestampEnd: search.timestamp[search.timestamp.length - 1]
@@ -45,26 +43,38 @@ export async function GET(req: NextRequest) {
     }),
   });
 
-  const facetsParams = new URLSearchParams({
-    ...(search.timestamp?.length
-      ? {
-          timestampStart: search.timestamp[0].getTime().toString(),
-          timestampEnd: search.timestamp[search.timestamp.length - 1]
-            .getTime()
-            .toString(),
-        }
-      : { timestampStart: "0" }),
-  });
+  const searchParams = new URLSearchParams(baseParams);
+  const facetsParams = new URLSearchParams(baseParams);
+  const statsParams = new URLSearchParams(baseParams);
 
-  const statsParams = new URLSearchParams({
-    ...(search.timestamp?.length && {
-      timestampStart: search.timestamp[0].getTime().toString(),
-      timestampEnd: search.timestamp[search.timestamp.length - 1]
-        .getTime()
-        .toString(),
-      interval: evaluateInterval(search.timestamp)?.toString() ?? "1440",
-    }),
-  });
+  // NOTE: search params for get request
+  searchParams.set("pageSize", PAGE_SIZE.toString());
+
+  if (
+    search.cursor &&
+    search.timestamp?.length &&
+    search.cursor.getTime() <=
+      search.timestamp[search.timestamp.length - 1].getTime()
+  ) {
+    searchParams.set("timestampEnd", search.cursor.getTime().toString());
+  } else if (!search.timestamp?.length) {
+    searchParams.set("timestampEnd", search.cursor.getTime().toString());
+  }
+
+  // NOTE: stats params for get request
+  if (search.timestamp?.length) {
+    statsParams.set(
+      "interval",
+      evaluateInterval(search.timestamp)?.toString() ?? "1440",
+    );
+  } else {
+    statsParams.set(
+      "timestampStart",
+      subDays(new Date(), 30).getTime().toString(),
+    );
+    statsParams.set("timestampEnd", new Date().getTime().toString());
+    statsParams.set("interval", "1440");
+  }
 
   // TODO: too many requests, especially when scrolling as stats/facets are not cached and are only needed for initial load
   const [dataRes, chartRes, facetsRes] = await Promise.all([
