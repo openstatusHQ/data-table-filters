@@ -83,14 +83,16 @@ function APIPopover() {
       <PopoverTrigger asChild>
         <Button size="icon" className="h-8 w-8">
           <Database className="h-4 w-4" />
-          <span className="sr-only">Database connection</span>
+          <span className="sr-only">OpenStatus Light Viewer</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent side="right" align="end" sideOffset={10} className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <h4 className="font-medium leading-none">Database Viewer</h4>
+              <h4 className="font-medium leading-none">
+                OpenStatus Light Viewer
+              </h4>
               <Kbd variant="outline">
                 <span className="mr-1">⌘</span>
                 <span>J</span>
