@@ -35,6 +35,7 @@ export function Client() {
 
   const { sort, cursor, direction, uuid, ...filter } = search;
 
+  // TODO: replace completely by facets
   const filterFields = React.useMemo(() => {
     return defaultFilterFields.map((field) => {
       const facet = facets?.[field.value];
@@ -59,6 +60,15 @@ export function Client() {
     });
   }, [flatData]);
 
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({
+        id: key,
+        value,
+      }))
+      .filter(({ value }) => value ?? undefined);
+  }, [filter]);
+
   return (
     <DataTableInfinite
       columns={columns}
@@ -66,12 +76,7 @@ export function Client() {
       totalRows={totalDBRowCount}
       filterRows={filterDBRowCount}
       totalRowsFetched={totalFetched}
-      defaultColumnFilters={Object.entries(filter)
-        .map(([key, value]) => ({
-          id: key,
-          value,
-        }))
-        .filter(({ value }) => value ?? undefined)}
+      defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
       getRowClassName={(row) => getLevelRowClassName(row.original.level)}
       getRowId={(row) =>

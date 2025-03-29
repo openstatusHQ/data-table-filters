@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
       rows_before_limit_at_least: number;
       // ... tb response values
     };
-  const { data: chart } = (await chartRes.json()) as {
+  const { data: chartData } = (await chartRes.json()) as {
     data: BaseChartSchema[];
   };
   const { data: _facets } = (await facetsRes.json()) as {
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
       prevCursor: null,
       nextCursor: isLastPage ? null : lastTimestamp - 1,
       meta: {
-        chartData: chart,
+        chartData,
         facets,
         totalRowCount: facets["level"]?.total ?? 0,
         filterRowCount,
