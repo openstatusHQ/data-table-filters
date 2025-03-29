@@ -1,5 +1,6 @@
 "use client";
 
+import { Kbd } from "@/components/custom/kbd";
 import { Button } from "@/components/ui/button";
 import {
   HoverCard,
@@ -12,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useHotKey } from "@/hooks/use-hot-key";
 import { ArrowRight, ChevronRight, Database, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -69,6 +71,7 @@ function ButtonPile() {
 function APIDialog() {
   const [open, setOpen] = useState(false);
   const [endpoint, setEndpoint] = useState("https://light.openstatus.dev");
+  useHotKey(() => setOpen((prev) => !prev), "j");
 
   const handleSave = () => {
     document.cookie = `tb_endpoint=${encodeURIComponent(endpoint)}; path=/; max-age=${60 * 60 * 24 * 365}`;
@@ -86,7 +89,13 @@ function APIDialog() {
       <PopoverContent side="right" align="end" sideOffset={10} className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Database Viewer</h4>
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="font-medium leading-none">Database Viewer</h4>
+              <Kbd variant="outline">
+                <span className="mr-1">⌘</span>
+                <span>J</span>
+              </Kbd>
+            </div>
             <p className="text-sm text-muted-foreground">
               Configure the API endpoint for your{" "}
               <a
@@ -101,14 +110,16 @@ function APIDialog() {
               project.
             </p>
           </div>
+          {/* TODO: use form */}
           <div className="flex items-center gap-2">
             <Input
               id="endpoint"
               placeholder="https://light.openstatus.dev"
               value={endpoint}
               onChange={(e) => setEndpoint(e.target.value)}
+              className="h-9"
             />
-            <Button onClick={handleSave} size="icon">
+            <Button onClick={handleSave} size="icon" className="h-9">
               <Zap className="h-4 w-4" />
               <span className="sr-only">Save</span>
             </Button>
