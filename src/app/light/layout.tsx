@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </Button>
       {children}
       <div className="fixed bottom-4 left-4 z-50">
-        <APIDialog />
+        <APIPopover />
       </div>
       <div className="fixed bottom-4 right-4 z-50">
         <ButtonPile />
@@ -68,7 +68,7 @@ function ButtonPile() {
   );
 }
 
-function APIDialog() {
+function APIPopover() {
   const [open, setOpen] = useState(false);
   const [endpoint, setEndpoint] = useState("https://light.openstatus.dev");
   useHotKey(() => setOpen((prev) => !prev), "j");
@@ -112,14 +112,16 @@ function APIDialog() {
           </div>
           {/* TODO: use form */}
           <div className="flex items-center gap-2">
-            <Input
-              id="endpoint"
-              placeholder="https://light.openstatus.dev"
-              value={endpoint}
-              onChange={(e) => setEndpoint(e.target.value)}
-              className="h-9"
-            />
-            <Button onClick={handleSave} size="icon" className="h-9">
+            <div className="flex-1">
+              <Input
+                id="endpoint"
+                placeholder="https://light.openstatus.dev"
+                value={endpoint}
+                onChange={(e) => setEndpoint(e.target.value)}
+                className="h-8"
+              />
+            </div>
+            <Button onClick={handleSave} size="icon" className="h-8 w-8">
               <Zap className="h-4 w-4" />
               <span className="sr-only">Save</span>
             </Button>
