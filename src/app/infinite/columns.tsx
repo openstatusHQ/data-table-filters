@@ -29,7 +29,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "level",
     header: "",
     cell: ({ row }) => {
-      const level = row.getValue("level") as ColumnSchema["level"];
+      const level = row.getValue<ColumnSchema["level"]>("level");
       return <DataTableColumnLevelIndicator value={level} />;
     },
     enableHiding: false,
@@ -51,7 +51,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Date" />
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue("date"));
+      const date = new Date(row.getValue<ColumnSchema["date"]>("date"));
       return <HoverCardTimestamp date={date} />;
     },
     filterFn: "inDateRange",
@@ -70,7 +70,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "uuid",
     header: "Request Id",
     cell: ({ row }) => {
-      const value = row.getValue("uuid") as string;
+      const value = row.getValue<ColumnSchema["uuid"]>("uuid");
       return <TextWithTooltip text={value} />;
     },
     size: 130,
@@ -87,7 +87,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const value = row.getValue("status") as number;
+      const value = row.getValue<ColumnSchema["status"]>("status");
       return <DataTableColumnStatusCode value={value} />;
     },
     filterFn: "arrSome",
@@ -120,7 +120,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "host",
     header: "Host",
     cell: ({ row }) => {
-      const value = row.getValue("host") as string;
+      const value = row.getValue<ColumnSchema["host"]>("host");
       return <TextWithTooltip text={value} />;
     },
     size: 125,
@@ -134,7 +134,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "pathname",
     header: "Pathname",
     cell: ({ row }) => {
-      const value = row.getValue("pathname") as string;
+      const value = row.getValue<ColumnSchema["pathname"]>("pathname");
       return <TextWithTooltip text={value} />;
     },
     size: 130,
@@ -153,7 +153,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Latency" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("latency") as number;
+      const value = row.getValue<ColumnSchema["latency"]>("latency");
       return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
@@ -171,7 +171,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "regions",
     header: "Region",
     cell: ({ row }) => {
-      const value = row.getValue("regions");
+      const value = row.getValue<ColumnSchema["regions"]>("regions");
       if (Array.isArray(value)) {
         if (value.length > 1) {
           return (
@@ -206,13 +206,15 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: () => <div className="whitespace-nowrap">Timing Phases</div>,
     cell: ({ row }) => {
       const timing = {
-        "timing.dns": row.getValue("timing.dns") as number,
-        "timing.connection": row.getValue("timing.connection") as number,
-        "timing.tls": row.getValue("timing.tls") as number,
-        "timing.ttfb": row.getValue("timing.ttfb") as number,
-        "timing.transfer": row.getValue("timing.transfer") as number,
+        "timing.dns": row.getValue<ColumnSchema["timing.dns"]>("timing.dns"),
+        "timing.connection":
+          row.getValue<ColumnSchema["timing.connection"]>("timing.connection"),
+        "timing.tls": row.getValue<ColumnSchema["timing.tls"]>("timing.tls"),
+        "timing.ttfb": row.getValue<ColumnSchema["timing.ttfb"]>("timing.ttfb"),
+        "timing.transfer":
+          row.getValue<ColumnSchema["timing.transfer"]>("timing.transfer"),
       };
-      const latency = row.getValue("latency") as number;
+      const latency = row.getValue<ColumnSchema["latency"]>("latency");
       const percentage = getTimingPercentage(timing, latency);
       // TODO: create a separate component for this in _components
       return (
@@ -291,7 +293,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="DNS" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.dns") as number;
+      const value = row.getValue<ColumnSchema["timing.dns"]>("timing.dns");
       return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
@@ -313,7 +315,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Connection" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.connection") as number;
+      const value =
+        row.getValue<ColumnSchema["timing.connection"]>("timing.connection");
       return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
@@ -335,7 +338,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="TLS" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.tls") as number;
+      const value = row.getValue<ColumnSchema["timing.tls"]>("timing.tls");
       return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
@@ -357,7 +360,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="TTFB" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.ttfb") as number;
+      const value = row.getValue<ColumnSchema["timing.ttfb"]>("timing.ttfb");
       return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
@@ -379,7 +382,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Transfer" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.transfer") as number;
+      const value =
+        row.getValue<ColumnSchema["timing.transfer"]>("timing.transfer");
       return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",

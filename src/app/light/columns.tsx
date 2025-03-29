@@ -26,7 +26,7 @@ export const columns: ColumnDef<ColumnType>[] = [
     accessorKey: "level",
     header: "",
     cell: ({ row }) => {
-      const level = row.getValue("level") as ColumnType["level"];
+      const level = row.getValue<ColumnType["level"]>("level");
       return <DataTableColumnLevelIndicator value={level} />;
     },
     enableHiding: false,
@@ -46,7 +46,7 @@ export const columns: ColumnDef<ColumnType>[] = [
     accessorKey: "timestamp",
     header: "Date",
     cell: ({ row }) => {
-      const date = new Date(row.getValue("timestamp"));
+      const date = new Date(row.getValue<ColumnType["timestamp"]>("timestamp"));
       return <DataTableColumnTimestamp date={date} />;
     },
     enableResizing: false,
@@ -56,7 +56,7 @@ export const columns: ColumnDef<ColumnType>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue("status") as ColumnType["status"];
+      const status = row.getValue<ColumnType["status"]>("status");
       return <DataTableColumnStatusCode value={status} />;
     },
     enableResizing: false,
@@ -80,7 +80,7 @@ export const columns: ColumnDef<ColumnType>[] = [
     accessorKey: "latency",
     header: "Latency",
     cell: ({ row }) => {
-      const latency = row.getValue("latency") as ColumnType["latency"];
+      const latency = row.getValue<ColumnType["latency"]>("latency");
       return <DataTableColumnLatency value={latency} />;
     },
     enableResizing: false,
@@ -90,7 +90,7 @@ export const columns: ColumnDef<ColumnType>[] = [
     accessorKey: "region",
     header: "Region",
     cell: ({ row }) => {
-      const region = row.getValue("region") as ColumnType["region"];
+      const region = row.getValue<ColumnType["region"]>("region");
       return <DataTableColumnRegion value={region} />;
     },
     enableResizing: false,
