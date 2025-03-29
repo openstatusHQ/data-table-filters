@@ -1,9 +1,13 @@
+import { InfiniteQueryResponse } from "@/app/infinite/query-options";
+import type {
+  BaseChartSchema,
+  FacetMetadataSchema,
+} from "@/app/infinite/schema";
 import { differenceInMinutes } from "date-fns";
 import type { NextRequest } from "next/server";
 import SuperJSON from "superjson";
-import { InfiniteQueryResponse } from "../query-options";
 import { searchParamsCache } from "../search-params";
-import { BaseChartType, ColumnType, FacetMetadataType } from "../types";
+import type { ColumnType } from "../types";
 
 type _TemporalFacetsType = {
   facet: string;
@@ -22,75 +26,49 @@ export async function GET(req: NextRequest) {
 
   const search = searchParamsCache.parse(Object.fromEntries(_search));
 
-  const searchParams = new URLSearchParams();
-  searchParams.set("pageSize", PAGE_SIZE.toString());
+  const searchParams = new URLSearchParams({
+    pageSize: PAGE_SIZE.toString(),
+    ...(search.level?.length && { levels: search.level.join(",") }),
+    ...(search.status?.length && { statuses: search.status.join(",") }),
+    ...(search.method?.length && { methods: search.method.join(",") }),
+    ...(search.region?.length && { regions: search.region.join(",") }),
+    ...(search.latency?.length && {
+      latencyStart: search.latency[0].toString(),
+      latencyEnd: search.latency[search.latency.length - 1].toString(),
+    }),
+    ...(search.cursor && { timestampEnd: search.cursor.getTime().toString() }),
+    ...(search.timestamp?.length && {
+      timestampStart: search.timestamp[0].getTime().toString(),
+      timestampEnd: search.timestamp[search.timestamp.length - 1]
+        .getTime()
+        .toString(),
+    }),
+  });
 
-  // REMINDER: we need to map the different filters
-  if (search.cursor) {
-    searchParams.set("timestampEnd", search.cursor.getTime().toString());
-  }
-  if (search.timestamp?.length) {
-    searchParams.set(
-      "timestampStart",
-      search.timestamp[0].getTime().toString(),
-    );
-    searchParams.set(
-      "timestampEnd",
-      search.timestamp[search.timestamp.length - 1].getTime().toString(),
-    );
-  }
+  const facetsParams = new URLSearchParams({
+    ...(search.timestamp?.length
+      ? {
+          timestampStart: search.timestamp[0].getTime().toString(),
+          timestampEnd: search.timestamp[search.timestamp.length - 1]
+            .getTime()
+            .toString(),
+        }
+      : { timestampStart: "0" }),
+  });
 
-  if (search.level) {
-    searchParams.set("level", search.level.join(","));
-  }
-  if (search.latency?.length) {
-    searchParams.set("latencyStart", search.latency[0].toString());
-    searchParams.set(
-      "latencyEnd",
-      search.latency[search.latency.length - 1].toString(),
-    );
-  }
-  if (search.status) {
-    searchParams.set("statuses", search.status.join(","));
-  }
-  if (search.method) {
-    searchParams.set("methods", search.method.join(","));
-  }
-  if (search.region) {
-    searchParams.set("regions", search.region.join(","));
-  }
-
-  const facetsParams = new URLSearchParams();
-  if (search.timestamp) {
-    facetsParams.set(
-      "timestampStart",
-      search.timestamp[0].getTime().toString(),
-    );
-    facetsParams.set(
-      "timestampEnd",
-      search.timestamp[search.timestamp.length - 1].getTime().toString(),
-    );
-  } else {
-    facetsParams.set("timestampStart", "0");
-  }
-
-  // REMIDNER: we are not filtering by search params
-  const statsParams = new URLSearchParams();
-  if (search.timestamp) {
-    statsParams.set("timestampStart", search.timestamp[0].getTime().toString());
-    statsParams.set(
-      "timestampEnd",
-      search.timestamp[search.timestamp.length - 1].getTime().toString(),
-    );
-    const interval = evaluateInterval(search.timestamp);
-    if (interval) {
-      statsParams.set("interval", interval.toString());
-    }
-  }
+  const statsParams = new URLSearchParams({
+    ...(search.timestamp?.length && {
+      timestampStart: search.timestamp[0].getTime().toString(),
+      timestampEnd: search.timestamp[search.timestamp.length - 1]
+        .getTime()
+        .toString(),
+      interval: evaluateInterval(search.timestamp)?.toString() ?? "1440",
+    }),
+  });
 
   const [dataRes, chartRes, facetsRes] = await Promise.all([
     fetch(`${VERCEL_EDGE_PING_URL}/api/get?${searchParams.toString()}`),
-    // TODO: we are missing filter in both, the stats and the facets
+    // TODO: we are missing filter in both, the stats and the facets - nothing urgent
     fetch(`${VERCEL_EDGE_PING_URL}/api/stats?${statsParams.toString()}`),
     fetch(`${VERCEL_EDGE_PING_URL}/api/facets?${facetsParams.toString()}`),
   ]);
@@ -98,18 +76,43 @@ export async function GET(req: NextRequest) {
   const { data, rows_before_limit_at_least: filterRowCount } =
     (await dataRes.json()) as {
       data: ColumnType[];
+      // NOTE: automatically added by tb when using LIMIT
       rows_before_limit_at_least: number;
-      rows: number;
-      // ...
+      // ... tb response values
     };
   const { data: chart } = (await chartRes.json()) as {
-    data: BaseChartType[];
+    data: BaseChartSchema[];
   };
   const { data: _facets } = (await facetsRes.json()) as {
     data: _TemporalFacetsType[];
   };
 
-  const facets = _facets.reduce(
+  const facets = transformFacets(_facets);
+
+  const lastTimestamp = data[data.length - 1]?.timestamp;
+  const isLastPage = lastTimestamp && filterRowCount <= PAGE_SIZE;
+
+  return Response.json(
+    SuperJSON.stringify({
+      data,
+      prevCursor: null,
+      nextCursor: isLastPage ? null : lastTimestamp - 1,
+      meta: {
+        chartData: chart,
+        facets,
+        totalRowCount: facets["level"]?.total ?? 0,
+        filterRowCount,
+      },
+    } satisfies InfiniteQueryResponse<ColumnType[]>),
+  );
+}
+
+/** ---------- UTILS ---------- */
+
+function transformFacets(
+  facets: _TemporalFacetsType[],
+): Record<string, FacetMetadataSchema> {
+  return facets.reduce(
     (acc, curr) => {
       const facet = acc[curr.facet] ?? {
         rows: [],
@@ -142,24 +145,7 @@ export async function GET(req: NextRequest) {
       acc[curr.facet] = facet;
       return acc;
     },
-    {} as Record<string, FacetMetadataType>,
-  );
-
-  const lastTimestamp = data[data.length - 1]?.timestamp;
-
-  return Response.json(
-    SuperJSON.stringify({
-      data,
-      prevCursor: null,
-      nextCursor:
-        lastTimestamp && filterRowCount > PAGE_SIZE ? lastTimestamp - 1 : null,
-      meta: {
-        chart,
-        facets,
-        totalRowCount: facets["level"]?.total ?? 0,
-        filterRowCount,
-      },
-    } satisfies InfiniteQueryResponse<ColumnType[]>),
+    {} as Record<string, FacetMetadataSchema>,
   );
 }
 

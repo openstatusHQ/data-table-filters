@@ -2,8 +2,8 @@ import { calculateSpecificPercentile } from "@/lib/request/percentile";
 import { addDays } from "date-fns";
 import { NextRequest } from "next/server";
 import SuperJSON from "superjson";
-import type { InfiniteQueryResponse } from "../query-options";
-import { ColumnSchema } from "../schema";
+import type { InfiniteQueryResponse, LogsMeta } from "../query-options";
+import type { ColumnSchema } from "../schema";
 import { searchParamsCache } from "../search-params";
 import {
   filterData,
@@ -83,6 +83,6 @@ export async function GET(req: NextRequest): Promise<Response> {
       },
       prevCursor,
       nextCursor,
-    } satisfies InfiniteQueryResponse<ColumnSchema[]>),
+    } satisfies InfiniteQueryResponse<ColumnSchema[], LogsMeta>),
   );
 }

@@ -1,22 +1,8 @@
+import type { InfiniteQueryResponse } from "@/app/infinite/query-options";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 import SuperJSON from "superjson";
 import { searchParamsSerializer, type SearchParamsType } from "./search-params";
-import type { BaseChartType, ColumnType, FacetMetadataType } from "./types";
-
-export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
-  totalRowCount: number;
-  filterRowCount: number;
-  facets: Record<string, FacetMetadataType>;
-  chart: BaseChartType[];
-  metadata?: TMeta;
-};
-
-export type InfiniteQueryResponse<TData = ColumnType[]> = {
-  data: TData;
-  meta: InfiniteQueryMeta<unknown>;
-  prevCursor: number | null;
-  nextCursor: number | null;
-};
+import type { ColumnType } from "./types";
 
 export const dataOptions = (search: SearchParamsType) => {
   return infiniteQueryOptions({

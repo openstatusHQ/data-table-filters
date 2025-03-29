@@ -29,7 +29,7 @@ export function Client() {
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
   const filterDBRowCount = firstPage?.meta?.filterRowCount;
   const metadata = lastPage?.meta?.metadata;
-  const chartData = lastPage?.meta?.chart;
+  const chartData = lastPage?.meta?.chartData;
   const facets = lastPage?.meta?.facets;
   const totalFetched = flatData?.length;
 
@@ -58,8 +58,6 @@ export function Client() {
       return field;
     });
   }, [flatData]);
-
-  console.log({ filterFields, facets, pages: data?.pages, hasNextPage });
 
   return (
     <DataTableInfinite
