@@ -8,6 +8,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -70,13 +71,22 @@ function ButtonPile() {
 
 function APIPopover() {
   const [open, setOpen] = useState(false);
-  const [endpoint, setEndpoint] = useState("https://light.openstatus.dev");
+  const [endpoint, setEndpoint] = useState("");
   useHotKey(() => setOpen((prev) => !prev), "j");
 
-  const handleSave = () => {
+  useEffect(() => {
+    const cookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("tb_endpoint="));
+    if (cookie) {
+      setEndpoint(decodeURIComponent(cookie.split("=")[1]));
+    }
+  }, []);
+
+  function handleSubmit(_: React.FormEvent<HTMLFormElement>) {
     document.cookie = `tb_endpoint=${encodeURIComponent(endpoint)}; path=/; max-age=${60 * 60 * 24 * 365}`;
     window.location.reload();
-  };
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -113,21 +123,27 @@ function APIPopover() {
             </p>
           </div>
           {/* TODO: use form */}
-          <div className="flex items-center gap-2">
+          <form className="flex items-center gap-2" onSubmit={handleSubmit}>
             <div className="flex-1">
+              <Label htmlFor="endpoint" className="sr-only">
+                Endpoint
+              </Label>
               <Input
+                type="url"
                 id="endpoint"
+                name="endpoint"
                 placeholder="https://light.openstatus.dev"
+                pattern="https://.*"
                 value={endpoint}
                 onChange={(e) => setEndpoint(e.target.value)}
                 className="h-8"
               />
             </div>
-            <Button onClick={handleSave} size="icon" className="h-8 w-8">
+            <Button type="submit" size="icon" className="h-8 w-8">
               <Zap className="h-4 w-4" />
               <span className="sr-only">Save</span>
             </Button>
-          </div>
+          </form>
         </div>
       </PopoverContent>
     </Popover>

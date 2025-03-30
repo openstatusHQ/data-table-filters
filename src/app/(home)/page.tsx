@@ -81,7 +81,10 @@ export default function Home() {
         </div>
       </div>
       <div className="px-2.5 py-2">
-        <Changelog />
+        <div className="grid gap-8 xl:grid-cols-2 xl:gap-12">
+          <Changelog />
+          <Examples />
+        </div>
       </div>
       <div className="border-b border-dashed border-border" />
       <SocialsFooter />
@@ -356,6 +359,17 @@ const changelog: {
   description: React.ReactNode;
 }[] = [
   {
+    date: new Date("03-30-2025"),
+    description: (
+      <>
+        Blog post about vercel-edge-ping UI:{" "}
+        <Link href="https://www.openstatus.dev/blog/openstatus-light-viewer">
+          OpenStatus Light Viewer
+        </Link>
+      </>
+    ),
+  },
+  {
     date: new Date("03-16-2025"),
     description: (
       <>
@@ -398,6 +412,22 @@ function Changelog() {
             </li>
           );
         })}
+      </ul>
+    </div>
+  );
+}
+
+function Examples() {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="font-medium">More Examples</p>
+      <ul
+        role="list"
+        className="grid list-inside list-disc gap-2 marker:text-muted-foreground"
+      >
+        <li>
+          <Link href="/light">OpenStatus Light Viewer</Link>
+        </li>
       </ul>
     </div>
   );

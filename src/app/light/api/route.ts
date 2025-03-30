@@ -22,7 +22,7 @@ const VERCEL_EDGE_PING_URL = "https://light.openstatus.dev";
 export async function GET(req: NextRequest) {
   const cookieList = req.cookies.getAll();
   const tbEndpoint =
-    cookieList.find((cookie) => cookie.name === "tb_endpoint")?.value ??
+    cookieList.find((cookie) => cookie.name === "tb_endpoint")?.value ||
     VERCEL_EDGE_PING_URL;
 
   // TODO: we could use a POST request to avoid this
