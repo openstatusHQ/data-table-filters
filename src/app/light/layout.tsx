@@ -2,11 +2,6 @@
 
 import { Kbd } from "@/components/custom/kbd";
 import { Button } from "@/components/ui/button";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -83,7 +78,8 @@ function APIPopover() {
     }
   }, []);
 
-  function handleSubmit(_: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     document.cookie = `tb_endpoint=${encodeURIComponent(endpoint)}; path=/; max-age=${60 * 60 * 24 * 365}`;
     window.location.reload();
   }
