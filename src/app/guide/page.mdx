@@ -343,7 +343,7 @@ The timeline chart helps you to visualize the data over time. It utilizes the sh
 ```ts
 type BaseChartSchema = {
     timestamp: number;
-    [key: string]: number;
+    [key: string]: number; // expects "success", "warning", "error" as keys
 }
 
 interface TimelineChartProps<TChart extends BaseChartSchema> = {

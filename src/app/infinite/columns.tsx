@@ -1,10 +1,16 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { Minus } from "lucide-react";
-import type { ColumnSchema } from "./schema";
-import { getStatusColor } from "@/lib/request/status-code";
-import { regions } from "@/constants/region";
+import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
+import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
+import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import {
   getTimingColor,
   getTimingLabel,
@@ -12,25 +18,19 @@ import {
   timingPhases,
 } from "@/lib/request/timing";
 import { cn } from "@/lib/utils";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
-import { HoverCardTimestamp } from "./_components/hover-card-timestamp";
-import { LEVELS } from "@/constants/levels";
 import { HoverCardPortal } from "@radix-ui/react-hover-card";
-import { LevelIndicator } from "./_components/level-indicator";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Minus } from "lucide-react";
+import { HoverCardTimestamp } from "./_components/hover-card-timestamp";
+import type { ColumnSchema } from "./schema";
 
 export const columns: ColumnDef<ColumnSchema>[] = [
   {
     accessorKey: "level",
     header: "",
     cell: ({ row }) => {
-      const value = row.getValue("level") as (typeof LEVELS)[number];
-      return <LevelIndicator level={value} />;
+      const level = row.getValue<ColumnSchema["level"]>("level");
+      return <DataTableColumnLevelIndicator value={level} />;
     },
     enableHiding: false,
     enableResizing: false,
@@ -51,7 +51,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Date" />
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue("date"));
+      const date = new Date(row.getValue<ColumnSchema["date"]>("date"));
       return <HoverCardTimestamp date={date} />;
     },
     filterFn: "inDateRange",
@@ -70,7 +70,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "uuid",
     header: "Request Id",
     cell: ({ row }) => {
-      const value = row.getValue("uuid") as string;
+      const value = row.getValue<ColumnSchema["uuid"]>("uuid");
       return <TextWithTooltip text={value} />;
     },
     size: 130,
@@ -87,15 +87,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const value = row.getValue("status");
-      if (typeof value === "undefined") {
-        return <Minus className="h-4 w-4 text-muted-foreground/50" />;
-      }
-      if (typeof value === "number") {
-        const colors = getStatusColor(value);
-        return <div className={`${colors.text} font-mono`}>{value}</div>;
-      }
-      return <div className="text-muted-foreground">{`${value}`}</div>;
+      const value = row.getValue<ColumnSchema["status"]>("status");
+      return <DataTableColumnStatusCode value={value} />;
     },
     filterFn: "arrSome",
     enableResizing: false,
@@ -127,7 +120,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "host",
     header: "Host",
     cell: ({ row }) => {
-      const value = row.getValue("host") as string;
+      const value = row.getValue<ColumnSchema["host"]>("host");
       return <TextWithTooltip text={value} />;
     },
     size: 125,
@@ -141,7 +134,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "pathname",
     header: "Pathname",
     cell: ({ row }) => {
-      const value = row.getValue("pathname") as string;
+      const value = row.getValue<ColumnSchema["pathname"]>("pathname");
       return <TextWithTooltip text={value} />;
     },
     size: 130,
@@ -160,8 +153,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Latency" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("latency") as number;
-      return <LatencyDisplay value={value} />;
+      const value = row.getValue<ColumnSchema["latency"]>("latency");
+      return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
     enableResizing: false,
@@ -178,7 +171,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     accessorKey: "regions",
     header: "Region",
     cell: ({ row }) => {
-      const value = row.getValue("regions");
+      const value = row.getValue<ColumnSchema["regions"]>("regions");
       if (Array.isArray(value)) {
         if (value.length > 1) {
           return (
@@ -187,18 +180,13 @@ export const columns: ColumnDef<ColumnSchema>[] = [
         } else {
           return (
             <div className="whitespace-nowrap">
-              <span>{value}</span>{" "}
-              <span className="text-muted-foreground text-xs">
-                {`${regions[value[0]]}`}
-              </span>
+              <DataTableColumnRegion value={value[0]} />
             </div>
           );
         }
       }
       if (typeof value === "string") {
-        return (
-          <div className="text-muted-foreground">{`${regions[value]}`}</div>
-        );
+        return <DataTableColumnRegion value={value} />;
       }
       return <Minus className="h-4 w-4 text-muted-foreground/50" />;
     },
@@ -218,19 +206,21 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     header: () => <div className="whitespace-nowrap">Timing Phases</div>,
     cell: ({ row }) => {
       const timing = {
-        "timing.dns": row.getValue("timing.dns") as number,
-        "timing.connection": row.getValue("timing.connection") as number,
-        "timing.tls": row.getValue("timing.tls") as number,
-        "timing.ttfb": row.getValue("timing.ttfb") as number,
-        "timing.transfer": row.getValue("timing.transfer") as number,
+        "timing.dns": row.getValue<ColumnSchema["timing.dns"]>("timing.dns"),
+        "timing.connection":
+          row.getValue<ColumnSchema["timing.connection"]>("timing.connection"),
+        "timing.tls": row.getValue<ColumnSchema["timing.tls"]>("timing.tls"),
+        "timing.ttfb": row.getValue<ColumnSchema["timing.ttfb"]>("timing.ttfb"),
+        "timing.transfer":
+          row.getValue<ColumnSchema["timing.transfer"]>("timing.transfer"),
       };
-      const latency = row.getValue("latency") as number;
+      const latency = row.getValue<ColumnSchema["latency"]>("latency");
       const percentage = getTimingPercentage(timing, latency);
       // TODO: create a separate component for this in _components
       return (
         <HoverCard openDelay={50} closeDelay={50}>
           <HoverCardTrigger
-            className="opacity-70 data-[state=open]:opacity-100 hover:opacity-100"
+            className="opacity-70 hover:opacity-100 data-[state=open]:opacity-100"
             asChild
           >
             <div className="flex">
@@ -239,7 +229,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
                   key={key}
                   className={cn(
                     getTimingColor(key as keyof typeof timing),
-                    "h-4"
+                    "h-4",
                   )}
                   style={{ width: `${(value / latency) * 100}%` }}
                 />
@@ -251,7 +241,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
             <HoverCardContent
               side="bottom"
               align="end"
-              className="p-2 w-auto z-10"
+              className="z-10 w-auto p-2"
             >
               <div className="flex flex-col gap-1">
                 {timingPhases.map((phase) => {
@@ -261,7 +251,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
                     <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
                       <div className="flex items-center gap-2">
                         <div className={cn(color, "h-2 w-2 rounded-full")} />
-                        <div className="uppercase font-mono text-accent-foreground">
+                        <div className="font-mono uppercase text-accent-foreground">
                           {getTimingLabel(phase)}
                         </div>
                       </div>
@@ -303,8 +293,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="DNS" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.dns") as number;
-      return <LatencyDisplay value={value} />;
+      const value = row.getValue<ColumnSchema["timing.dns"]>("timing.dns");
+      return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
     enableResizing: false,
@@ -325,8 +315,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Connection" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.connection") as number;
-      return <LatencyDisplay value={value} />;
+      const value =
+        row.getValue<ColumnSchema["timing.connection"]>("timing.connection");
+      return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
     enableResizing: false,
@@ -347,8 +338,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="TLS" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.tls") as number;
-      return <LatencyDisplay value={value} />;
+      const value = row.getValue<ColumnSchema["timing.tls"]>("timing.tls");
+      return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
     enableResizing: false,
@@ -369,8 +360,8 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="TTFB" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.ttfb") as number;
-      return <LatencyDisplay value={value} />;
+      const value = row.getValue<ColumnSchema["timing.ttfb"]>("timing.ttfb");
+      return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
     enableResizing: false,
@@ -391,8 +382,9 @@ export const columns: ColumnDef<ColumnSchema>[] = [
       <DataTableColumnHeader column={column} title="Transfer" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("timing.transfer") as number;
-      return <LatencyDisplay value={value} />;
+      const value =
+        row.getValue<ColumnSchema["timing.transfer"]>("timing.transfer");
+      return <DataTableColumnLatency value={value} />;
     },
     filterFn: "inNumberRange",
     enableResizing: false,
@@ -407,14 +399,3 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     },
   },
 ];
-
-function LatencyDisplay({ value }: { value: number }) {
-  return (
-    <div className="font-mono">
-      {new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-        value
-      )}
-      <span className="text-muted-foreground">ms</span>
-    </div>
-  );
-}

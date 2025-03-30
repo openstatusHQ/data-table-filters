@@ -1,3 +1,11 @@
+import { REGIONS } from "@/constants/region";
+import { TAGS } from "@/constants/tag";
+// Note: import from 'nuqs/server' to avoid the "use client" directive
+import {
+  ARRAY_DELIMITER,
+  RANGE_DELIMITER,
+  SLIDER_DELIMITER,
+} from "@/lib/delimiters";
 import {
   createParser,
   createSearchParamsCache,
@@ -8,14 +16,6 @@ import {
   parseAsStringLiteral,
   parseAsTimestamp,
 } from "nuqs/server";
-// Note: import from 'nuqs/server' to avoid the "use client" directive
-import {
-  ARRAY_DELIMITER,
-  RANGE_DELIMITER,
-  SLIDER_DELIMITER,
-} from "@/lib/delimiters";
-import { REGIONS } from "@/constants/region";
-import { TAGS } from "@/constants/tag";
 
 export const parseAsSort = createParser({
   parse(queryValue) {
@@ -31,6 +31,7 @@ export const parseAsSort = createParser({
 export const searchParamsParser = {
   // FILTERS
   url: parseAsString,
+  // TODO: limit to two array entries
   p95: parseAsArrayOf(parseAsInteger, SLIDER_DELIMITER),
   public: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
   active: parseAsArrayOf(parseAsBoolean, ARRAY_DELIMITER),
@@ -40,3 +41,5 @@ export const searchParamsParser = {
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParser);
+
+// NOTE: check if `inferParserType` could be useful

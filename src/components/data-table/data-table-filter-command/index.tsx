@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-
+import { Kbd } from "@/components/custom/kbd";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import {
   Command,
   CommandEmpty,
@@ -11,36 +11,34 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { LoaderCircle, Search, X } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-
-import { Kbd } from "@/components/custom/kbd";
-import type { z } from "zod";
-import type { DataTableFilterField } from "../types";
-import { deserialize, serializeColumFilters } from "../utils";
 import { Separator } from "@/components/ui/separator";
+import { useHotKey } from "@/hooks/use-hot-key";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { formatCompactNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
+import { LoaderCircle, Search, X } from "lucide-react";
+import { ParserBuilder } from "nuqs";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import type { DataTableFilterField } from "../types";
 import {
+  columnFiltersParser,
   getFieldOptions,
   getFilterValue,
   getWordByCaretPosition,
   replaceInputByFieldType,
 } from "./utils";
-import { formatDistanceToNow } from "date-fns";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { formatCompactNumber } from "@/lib/format";
 
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
 
-interface DataTableFilterCommandProps<TSchema extends z.AnyZodObject> {
-  schema: TSchema;
+interface DataTableFilterCommandProps {
+  // TODO: maybe use generics for the parser
+  searchParamsParser: Record<string, ParserBuilder<any>>;
 }
 
-export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
-  schema,
-}: DataTableFilterCommandProps<TSchema>) {
+export function DataTableFilterCommand({
+  searchParamsParser,
+}: DataTableFilterCommandProps) {
   const {
     table,
     isLoading,
@@ -55,8 +53,12 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
     () => _filterFields?.filter((i) => !i.commandDisabled),
     [_filterFields],
   );
+  const columnParser = useMemo(
+    () => columnFiltersParser({ searchParamsParser, filterFields }),
+    [searchParamsParser, filterFields],
+  );
   const [inputValue, setInputValue] = useState<string>(
-    serializeColumFilters(columnFilters, filterFields),
+    columnParser.serialize(columnFilters),
   );
   const [lastSearches, setLastSearches] = useLocalStorage<
     {
@@ -73,8 +75,8 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
     // avoid recursion
     if (inputValue.trim() === "" && !open) return;
 
-    // FIXME: that stuff is BAD!
-    const searchParams = deserialize(schema)(inputValue);
+    const searchParams = columnParser.parse(inputValue);
+
     const currentFilters = table.getState().columnFilters;
     const currentEnabledFilters = currentFilters.filter((filter) => {
       const field = _filterFields?.find((field) => field.value === filter.id);
@@ -93,25 +95,24 @@ export function DataTableFilterCommand<TSchema extends z.AnyZodObject>({
       {} as Record<string, unknown>,
     );
 
-    if (searchParams.success) {
-      for (const key of Object.keys(searchParams.data)) {
-        const value = searchParams.data[key as keyof typeof searchParams.data];
-        table.getColumn(key)?.setFilterValue(value);
-      }
-      const currentFiltersToReset = currentEnabledFilters.filter((filter) => {
-        return !(filter.id in searchParams.data);
-      });
-      for (const filter of currentFiltersToReset) {
-        table.getColumn(filter.id)?.setFilterValue(undefined);
-      }
+    for (const key of Object.keys(searchParams)) {
+      const value = searchParams[key as keyof typeof searchParams];
+      table.getColumn(key)?.setFilterValue(value);
     }
+    const currentFiltersToReset = currentEnabledFilters.filter((filter) => {
+      return !(filter.id in searchParams);
+    });
+    for (const filter of currentFiltersToReset) {
+      table.getColumn(filter.id)?.setFilterValue(undefined);
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputValue, open, currentWord]);
 
   useEffect(() => {
     // REMINDER: only update the input value if the command is closed (avoids jumps while open)
     if (!open) {
-      setInputValue(serializeColumFilters(columnFilters, filterFields));
+      setInputValue(columnParser.serialize(columnFilters));
     }
   }, [columnFilters, filterFields, open]);
 
@@ -389,18 +390,29 @@ function CommandItemSuggestions<TData>({
 }: {
   field: DataTableFilterField<TData>;
 }) {
+  const { table, getFacetedMinMaxValues, getFacetedUniqueValues } =
+    useDataTable();
+  const value = field.value as string;
   switch (field.type) {
     case "checkbox": {
       return (
         <span className="ml-1 hidden truncate text-muted-foreground/80 group-aria-[selected=true]:block">
-          {field.options?.map(({ value }) => `[${value}]`).join(" ")}
+          {getFacetedUniqueValues
+            ? Array.from(getFacetedUniqueValues(table, value)?.keys() || [])
+                .map((value) => `[${value}]`)
+                .join(" ")
+            : field.options?.map(({ value }) => `[${value}]`).join(" ")}
         </span>
       );
     }
     case "slider": {
+      const [min, max] = getFacetedMinMaxValues?.(table, value) || [
+        field.min,
+        field.max,
+      ];
       return (
         <span className="ml-1 hidden truncate text-muted-foreground/80 group-aria-[selected=true]:block">
-          [{field.min} - {field.max}]
+          [{min} - {max}]
         </span>
       );
     }

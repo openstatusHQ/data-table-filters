@@ -74,14 +74,17 @@ export default function Home() {
                 </span>{" "}
                 infinite scroll data-table with a{" "}
                 <span className="font-medium text-foreground">server-side</span>{" "}
-                filter and row selection.
+                filter, row selection and live mode.
               </p>
             </div>
           </NextLink>
         </div>
       </div>
       <div className="px-2.5 py-2">
-        <BlogPosts />
+        <div className="grid gap-8 xl:grid-cols-2 xl:gap-12">
+          <Changelog />
+          <Examples />
+        </div>
       </div>
       <div className="border-b border-dashed border-border" />
       <SocialsFooter />
@@ -351,40 +354,82 @@ function Hero() {
   );
 }
 
-function BlogPosts() {
+const changelog: {
+  date: Date;
+  description: React.ReactNode;
+}[] = [
+  {
+    date: new Date("03-30-2025"),
+    description: (
+      <>
+        Blog post about vercel-edge-ping UI:{" "}
+        <Link href="https://www.openstatus.dev/blog/openstatus-light-viewer">
+          OpenStatus Light Viewer
+        </Link>
+      </>
+    ),
+  },
+  {
+    date: new Date("03-16-2025"),
+    description: (
+      <>
+        Blog post about tanstack infinite query usage:{" "}
+        <Link href="https://www.openstatus.dev/blog/live-mode-infinite-query">
+          Live Mode
+        </Link>
+      </>
+    ),
+  },
+  {
+    date: new Date("02-02-2025"),
+    description: (
+      <>
+        Blog post about features and caveats:{" "}
+        <Link href="http://openstatus.dev/blog/data-table-redesign">
+          The React data-table I always wanted
+        </Link>
+      </>
+    ),
+  },
+];
+
+function Changelog() {
   return (
-    <ul className="grid gap-2">
-      <li className="flex flex-col gap-0.5">
-        <time className="font-mono text-sm text-muted-foreground">
-          {new Date("03-16-2025").toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </time>
-        <p className="text-foreground/80">
-          Blog post about tanstack infinite query usage:{" "}
-          <Link href="https://www.openstatus.dev/blog/live-mode-infinite-query">
-            Live Mode
-          </Link>
-        </p>
-      </li>
-      <li className="flex flex-col gap-0.5">
-        <time className="font-mono text-sm text-muted-foreground">
-          {new Date("02-02-2025").toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </time>
-        <p className="text-foreground/80">
-          Blog post about features and caveats:{" "}
-          <Link href="http://openstatus.dev/blog/data-table-redesign">
-            The React data-table I always wanted
-          </Link>
-        </p>
-      </li>
-    </ul>
+    <div className="grid gap-2">
+      <p className="font-medium">Changelog</p>
+      <ul className="grid gap-2">
+        {changelog.map((item, i) => {
+          return (
+            <li key={i} className="flex flex-col gap-0.5">
+              <time className="font-mono text-sm text-muted-foreground">
+                {item.date.toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </time>
+              <p className="text-foreground/80">{item.description}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function Examples() {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="font-medium">More Examples</p>
+      <ul
+        role="list"
+        className="grid list-inside list-disc gap-2 marker:text-muted-foreground"
+      >
+        <li>
+          <Link href="/light">OpenStatus Light Viewer</Link>
+        </li>
+      </ul>
+    </div>
   );
 }
 

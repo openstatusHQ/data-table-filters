@@ -4,17 +4,23 @@ This is a standalone data-table demo that we will be using within the [OpenStatu
 
 ![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
 
+Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn more.
+
 To make it not only more accessible for you to use, but also work on PoC/MVP with data-tables, we have started this repository. We will maintain it and add new examples over time.
 
-It currently includes:
+It currently includes two main concepts:
 
-- [data-table with simple pagination](https://data-table.openstatus.dev/default)
-- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite)
+- [data-table with simple pagination](https://data-table.openstatus.dev/default) (client-side)
+- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite) (server-side)
 
-The examples are heavily inspired by datadog and vercel log tables.
+The UI is heavily inspired by datadog and vercel log tables.
 
 > [!NOTE]
 > We are working on a [Guide](https://data-table.openstatus.dev/guide) to help you get started and not wild guess anymore.
+
+More Examples:
+
+- [OpenStatus Light Viewer](https://data-table.openstatuts.dev/light) (UI for [`vercel-edge-ping`](https://github.com/OpenStatusHQ/vercel-edge-ping))
 
 ## Built With
 
@@ -35,7 +41,7 @@ We will consider making an example with [vitejs](https://vitejs.dev) for all our
 No environment variable required. Run the development server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

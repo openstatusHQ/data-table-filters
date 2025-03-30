@@ -1,16 +1,16 @@
 import { TableCell, TableRow } from "@/components/custom/table";
+import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
 import { columns } from "../columns";
-import { LevelIndicator } from "./level-indicator";
 
 export function LiveRow() {
   return (
     <TableRow>
-      <TableCell className="w-[--header-level-size] max-w-[--header-level-size] min-w-[--header-level-size] border-b border-t border-l border-info border-r border-r-info/50">
-        <LevelIndicator level="info" />
+      <TableCell className="w-[--header-level-size] min-w-[--header-level-size] max-w-[--header-level-size] border-b border-l border-r border-t border-info border-r-info/50">
+        <DataTableColumnLevelIndicator value="info" />
       </TableCell>
       <TableCell
         colSpan={columns.length - 1}
-        className="border-b border-t border-r border-info text-info font-medium"
+        className="border-b border-r border-t border-info font-medium text-info"
       >
         Live Mode
       </TableCell>

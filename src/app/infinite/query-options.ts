@@ -1,12 +1,12 @@
+import type { Percentile } from "@/lib/request/percentile";
+import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
+import SuperJSON from "superjson";
 import type {
+  BaseChartSchema,
   ColumnSchema,
   FacetMetadataSchema,
-  BaseChartSchema,
 } from "./schema";
-import { type SearchParamsType, searchParamsSerializer } from "./search-params";
-import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
-import type { Percentile } from "@/lib/request/percentile";
-import SuperJSON from "superjson";
+import { searchParamsSerializer, type SearchParamsType } from "./search-params";
 
 export type LogsMeta = {
   currentPercentiles: Record<Percentile, number>;
@@ -20,9 +20,9 @@ export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
   metadata?: TMeta;
 };
 
-export type InfiniteQueryResponse<TData = ColumnSchema[]> = {
+export type InfiniteQueryResponse<TData, TMeta = unknown> = {
   data: TData;
-  meta: InfiniteQueryMeta<LogsMeta>;
+  meta: InfiniteQueryMeta<TMeta>;
   prevCursor: number | null;
   nextCursor: number | null;
 };
@@ -45,16 +45,18 @@ export const dataOptions = (search: SearchParamsType) => {
       });
       const response = await fetch(`/infinite/api${serialize}`);
       const json = await response.json();
-      return SuperJSON.parse<InfiniteQueryResponse<ColumnSchema[]>>(json);
+      return SuperJSON.parse<InfiniteQueryResponse<ColumnSchema[], LogsMeta>>(
+        json,
+      );
     },
     initialPageParam: { cursor: new Date().getTime(), direction: "next" },
-    getPreviousPageParam: (firstGroup, _groups) => {
-      if (!firstGroup.prevCursor) return null;
-      return { cursor: firstGroup.prevCursor, direction: "prev" };
+    getPreviousPageParam: (firstPage, _pages) => {
+      if (!firstPage.prevCursor) return null;
+      return { cursor: firstPage.prevCursor, direction: "prev" };
     },
-    getNextPageParam: (lastGroup, _groups) => {
-      if (!lastGroup.nextCursor) return null;
-      return { cursor: lastGroup.nextCursor, direction: "next" };
+    getNextPageParam: (lastPage, _pages) => {
+      if (!lastPage.nextCursor) return null;
+      return { cursor: lastPage.nextCursor, direction: "next" };
     },
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,

@@ -1,3 +1,10 @@
+import { LEVELS } from "@/constants/levels";
+import { REGIONS } from "@/constants/region";
+import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
+import {
+  calculatePercentile,
+  calculateSpecificPercentile,
+} from "@/lib/request/percentile";
 import {
   addDays,
   addMilliseconds,
@@ -5,18 +12,11 @@ import {
   isSameDay,
 } from "date-fns";
 import type {
-  FacetMetadataSchema,
   ColumnSchema,
+  FacetMetadataSchema,
   TimelineChartSchema,
 } from "../schema";
 import type { SearchParamsType } from "../search-params";
-import { isArrayOfDates, isArrayOfNumbers } from "@/lib/is-array";
-import {
-  calculatePercentile,
-  calculateSpecificPercentile,
-} from "@/lib/request/percentile";
-import { REGIONS } from "@/constants/region";
-import { LEVELS } from "@/constants/levels";
 
 export const sliderFilterValues = [
   "latency",
@@ -39,7 +39,7 @@ export const filterValues = [
 
 export function filterData(
   data: ColumnSchema[],
-  search: Partial<SearchParamsType>
+  search: Partial<SearchParamsType>,
 ): ColumnSchema[] {
   const { start, size, sort, ...filters } = search;
   return data.filter((row) => {
@@ -187,7 +187,7 @@ export function getFacetsFromData(data: ColumnSchema[]) {
       });
       const total = Array.from(valueMap.values()).reduce((a, b) => a + b, 0);
       return [key, { rows, total, min, max }];
-    })
+    }),
   );
 
   return facets satisfies Record<string, FacetMetadataSchema>;
@@ -207,7 +207,7 @@ export function getPercentileFromData(data: ColumnSchema[]) {
 
 export function groupChartData(
   data: ColumnSchema[],
-  dates: Date[] | null
+  dates: Date[] | null,
 ): TimelineChartSchema[] {
   if (data?.length === 0 && !dates) return [];
 
@@ -221,7 +221,7 @@ export function groupChartData(
   const interval = evaluateInterval(between);
 
   const duration = Math.abs(
-    between[0].getTime() - between[between.length - 1].getTime()
+    between[0].getTime() - between[between.length - 1].getTime(),
   );
   const steps = Math.floor(duration / interval);
 
@@ -250,7 +250,7 @@ export function groupChartData(
   });
 }
 
-function evaluateInterval(dates: Date[] | null): number {
+export function evaluateInterval(dates: Date[] | null): number {
   if (!dates) return 0;
   if (dates.length < 1 || dates.length > 3) return 0;
 
