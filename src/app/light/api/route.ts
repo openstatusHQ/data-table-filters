@@ -89,6 +89,24 @@ export async function GET(req: NextRequest) {
     fetch(`${tbEndpoint}/api/facets?${facetsParams.toString()}`),
   ]);
 
+  // TODO: we should not return empty data, but we need to handle the error case - ok for now
+  if (!dataRes.ok || !chartRes.ok || !facetsRes.ok) {
+    return Response.json(
+      SuperJSON.stringify({
+        data: [],
+        prevCursor: null,
+        nextCursor: null,
+        meta: {
+          chartData: [],
+          facets: {},
+          totalRowCount: 0,
+          filterRowCount: 0,
+        },
+      } satisfies InfiniteQueryResponse<ColumnType[]>),
+    );
+  }
+
+  // FIXME: too lazy for zod right now
   const { data, rows_before_limit_at_least: filterRowCount } =
     (await dataRes.json()) as {
       data: ColumnType[];
