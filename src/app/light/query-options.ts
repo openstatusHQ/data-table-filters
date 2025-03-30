@@ -19,6 +19,11 @@ export const dataOptions = (search: SearchParamsType) => {
         direction,
       });
       const response = await fetch(`/light/api${serialize}`);
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok, check base URL");
+      }
+
       const json = await response.json();
 
       return SuperJSON.parse<InfiniteQueryResponse<ColumnType[]>>(json);
