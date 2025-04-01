@@ -20,7 +20,7 @@ The UI is heavily inspired by datadog and vercel log tables.
 
 More Examples:
 
-- [OpenStatus Light Viewer](https://data-table.openstatuts.dev/light) (UI for [`vercel-edge-ping`](https://github.com/OpenStatusHQ/vercel-edge-ping))
+- [OpenStatus Light Viewer](https://data-table.openstatus.dev/light) (UI for [`vercel-edge-ping`](https://github.com/OpenStatusHQ/vercel-edge-ping))
 
 ## Built With
 
