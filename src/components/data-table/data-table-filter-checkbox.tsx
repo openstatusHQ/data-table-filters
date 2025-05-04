@@ -58,8 +58,6 @@ export function DataTableFilterCheckbox<TData>({
       </div>
     );
 
-  if (!filterOptions?.length) return null;
-
   return (
     <div className="grid gap-2">
       {options && options.length > 4 ? (
@@ -73,7 +71,7 @@ export function DataTableFilterCheckbox<TData>({
       ) : null}
       {/* FIXME: due to the added max-h and overflow-y-auto, the hover state and border is laying on top of the scroll bar */}
       <div className="max-h-[200px] overflow-y-auto rounded-lg border border-border empty:border-none">
-        {filterOptions
+        {filterOptions!
           // TODO: we shoudn't sort the options here, instead filterOptions should be sorted by default
           // .sort((a, b) => a.label.localeCompare(b.label))
           .map((option, index) => {
@@ -84,7 +82,7 @@ export function DataTableFilterCheckbox<TData>({
                 key={String(option.value)}
                 className={cn(
                   "group relative flex items-center space-x-2 px-2 py-2.5 hover:bg-accent/50",
-                  index !== filterOptions.length - 1 ? "border-b" : undefined,
+                  index !== filterOptions!.length - 1 ? "border-b" : undefined,
                 )}
               >
                 <Checkbox
