@@ -52,6 +52,7 @@ import {
 } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import { useQueryState, useQueryStates, type ParserBuilder } from "nuqs";
+import objectHash from 'object-hash';
 import * as React from "react";
 import { LiveButton } from "./_components/live-button";
 import { RefreshButton } from "./_components/refresh-button";
@@ -61,14 +62,16 @@ import { searchParamsParser } from "./search-params";
 import { TimelineChart } from "./timeline-chart";
 
 /**
- * Creates a simple hash of table state for efficient key generation
+ * Simply hash table using object-hash library
  * 
  * @param tableState - The current table state
  * @returns A hash string representing the table state
  */
 function hashTableState(tableState: any): string {
-  const visibilityHash = Object.keys(tableState.columnVisibility || {}).length;
-  const orderHash = (tableState.columnOrder || []).length;
+  const visibilityHash = objectHash(tableState.columnVisibility || {});
+  const orderHash = objectHash(tableState.columnOrder || []);
+  
+  // Combine hashes for unique table state representation
   return `${visibilityHash}-${orderHash}`;
 }
 
