@@ -60,6 +60,18 @@ import { BaseChartSchema } from "./schema";
 import { searchParamsParser } from "./search-params";
 import { TimelineChart } from "./timeline-chart";
 
+/**
+ * Creates a simple hash of table state for efficient key generation
+ * 
+ * @param tableState - The current table state
+ * @returns A hash string representing the table state
+ */
+function hashTableState(tableState: any): string {
+  const visibilityHash = Object.keys(tableState.columnVisibility || {}).length;
+  const orderHash = (tableState.columnOrder || []).length;
+  return `${visibilityHash}-${orderHash}`;
+}
+
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   columns: ColumnDef<TData, TValue>[];
@@ -438,7 +450,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     // REMINDER: if we want to add arrow navigation https://github.com/TanStack/table/discussions/2752#discussioncomment-192558
-                    <React.Fragment key={`${row.id}-${JSON.stringify(table.getState().columnVisibility)}-${JSON.stringify(table.getState().columnOrder)}`}>
+                    <React.Fragment key={`${row.id}-${hashTableState(table.getState())}`}>
                       {renderLiveRow?.({ row })}
                       <MemoizedRow
                         row={row}
