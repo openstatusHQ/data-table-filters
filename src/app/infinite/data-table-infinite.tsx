@@ -438,7 +438,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     // REMINDER: if we want to add arrow navigation https://github.com/TanStack/table/discussions/2752#discussioncomment-192558
-                    <React.Fragment key={`${row.id}-${JSON.stringify(table.getState().columnVisibility)}`}>
+                    <React.Fragment key={`${row.id}-${JSON.stringify(table.getState().columnVisibility)}-${JSON.stringify(table.getState().columnOrder)}`}>
                       {renderLiveRow?.({ row })}
                       <MemoizedRow
                         row={row}
