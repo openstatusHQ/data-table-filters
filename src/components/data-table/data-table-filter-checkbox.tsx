@@ -58,8 +58,6 @@ export function DataTableFilterCheckbox<TData>({
       </div>
     );
 
-  if (!filterOptions?.length) return null;
-
   return (
     <div className="grid gap-2">
       {options && options.length > 4 ? (
@@ -76,7 +74,7 @@ export function DataTableFilterCheckbox<TData>({
         {filterOptions
           // TODO: we shoudn't sort the options here, instead filterOptions should be sorted by default
           // .sort((a, b) => a.label.localeCompare(b.label))
-          .map((option, index) => {
+          ?.map((option, index) => {
             const checked = filters.includes(option.value);
 
             return (
