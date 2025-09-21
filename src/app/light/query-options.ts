@@ -36,5 +36,6 @@ export const dataOptions = (search: SearchParamsType) => {
     },
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

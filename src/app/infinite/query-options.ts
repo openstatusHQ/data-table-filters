@@ -49,7 +49,7 @@ export const dataOptions = (search: SearchParamsType) => {
         json,
       );
     },
-    initialPageParam: { cursor: new Date().getTime(), direction: "next" },
+    initialPageParam: { cursor: search.cursor.getTime(), direction: "next" },
     getPreviousPageParam: (firstPage, _pages) => {
       if (!firstPage.prevCursor) return null;
       return { cursor: firstPage.prevCursor, direction: "prev" };
@@ -60,5 +60,6 @@ export const dataOptions = (search: SearchParamsType) => {
     },
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
-  });
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
 };

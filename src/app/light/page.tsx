@@ -4,6 +4,7 @@ import * as React from "react";
 import { Client } from "./client";
 import { dataOptions } from "./query-options";
 import { searchParamsCache } from "./search-params";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
 export default async function Page({
   searchParams,
@@ -14,5 +15,11 @@ export default async function Page({
   const queryClient = getQueryClient();
   await queryClient.prefetchInfiniteQuery(dataOptions(search));
 
-  return <Client />;
+  const dehydratedState = dehydrate(queryClient);
+
+  return (
+    <HydrationBoundary state={dehydratedState}>
+      <Client />
+    </HydrationBoundary>
+  );
 }

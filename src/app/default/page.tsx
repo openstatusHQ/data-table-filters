@@ -1,10 +1,8 @@
-import * as React from "react";
-import { columns } from "./columns";
-import { filterFields } from "./constants";
-import { data } from "./data";
-import { DataTable } from "./data-table";
+import { getQueryClient } from "@/providers/get-query-client";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { searchParamsCache } from "./search-params";
-import { Skeleton } from "./skeleton";
+import { dataOptions } from "./query-options";
+import { Client } from "./client";
 
 export default async function Page({
   searchParams,
@@ -12,20 +10,14 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const search = searchParamsCache.parse(await searchParams);
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(dataOptions(search));
+
+  const dehydratedState = dehydrate(queryClient);
 
   return (
-    <React.Suspense fallback={<Skeleton />}>
-      <DataTable
-        columns={columns}
-        data={data}
-        filterFields={filterFields}
-        defaultColumnFilters={Object.entries(search)
-          .map(([key, value]) => ({
-            id: key,
-            value,
-          }))
-          .filter(({ value }) => value ?? undefined)}
-      />
-    </React.Suspense>
+    <HydrationBoundary state={dehydratedState}>
+      <Client />
+    </HydrationBoundary>
   );
 }

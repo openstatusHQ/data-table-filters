@@ -5,7 +5,7 @@ import { getLevelRowClassName } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
-import { useQueryState, useQueryStates } from "nuqs";
+import { useQueryState } from "nuqs";
 import * as React from "react";
 import { LiveRow } from "./_components/live-row";
 import { columns } from "./columns";
@@ -13,10 +13,9 @@ import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
 import type { FacetMetadataSchema } from "./schema";
-import { searchParamsParser } from "./search-params";
+import { searchParamsParser, type SearchParamsType } from "./search-params";
 
-export function Client() {
-  const [search] = useQueryStates(searchParamsParser);
+export function Client({ search }: { search: SearchParamsType }) {
   const {
     data,
     isFetching,
@@ -76,6 +75,15 @@ export function Client() {
     });
   }, [facets]);
 
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({
+        id: key,
+        value,
+      }))
+      .filter(({ value }) => value ?? undefined);
+  }, [filter]);
+
   return (
     <DataTableInfinite
       columns={columns}
@@ -83,12 +91,7 @@ export function Client() {
       totalRows={totalDBRowCount}
       filterRows={filterDBRowCount}
       totalRowsFetched={totalFetched}
-      defaultColumnFilters={Object.entries(filter)
-        .map(([key, value]) => ({
-          id: key,
-          value,
-        }))
-        .filter(({ value }) => value ?? undefined)}
+      defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
       // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`
