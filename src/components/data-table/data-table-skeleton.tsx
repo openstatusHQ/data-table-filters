@@ -1,4 +1,3 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -7,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/custom/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DataTableSkeletonProps {
   /**

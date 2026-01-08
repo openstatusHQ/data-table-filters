@@ -1,5 +1,7 @@
 "use client";
 
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -8,10 +10,6 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { DayFlag, DayPicker, SelectionState, UI } from "react-day-picker";
-
-import { cn } from "@/lib/utils"
-
-import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -32,11 +30,11 @@ export const Calendar = ({
         [UI.CaptionLabel]: "text-sm font-medium",
         [UI.PreviousMonthButton]: cn(
           buttonVariants({ variant: "outline" }),
-          "absolute left-1 top-0 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "absolute left-1 top-0 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
         ),
         [UI.NextMonthButton]: cn(
           buttonVariants({ variant: "outline" }),
-          "absolute right-1 top-0 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "absolute right-1 top-0 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
         ),
         [UI.MonthGrid]: "w-full border-collapse space-y-1",
         [UI.Weekdays]: "flex",
@@ -47,7 +45,7 @@ export const Calendar = ({
           "h-9 w-9 text-center rounded-md text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         [UI.DayButton]: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-primary hover:text-primary-foreground"
+          "h-9 w-9 p-0 font-normal hover:bg-primary hover:text-primary-foreground aria-selected:opacity-100",
         ),
         [SelectionState.range_end]: "day-range-end",
         [SelectionState.selected]:

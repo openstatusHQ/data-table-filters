@@ -5,8 +5,7 @@ import {
   TableRow,
 } from "@/components/custom/table";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { Check } from "lucide-react";
-import { Copy } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 
 interface KeyValueTableProps {
   data: Record<string, string>;
@@ -32,18 +31,18 @@ function RowAction({ label, value }: { label: string; value: string }) {
 
   return (
     <TableRow
-      className="group *:border-border hover:bg-transparent [&>:not(:last-child)]:border-r text-left"
+      className="group text-left *:border-border hover:bg-transparent [&>:not(:last-child)]:border-r"
       onClick={(e) => {
         e.stopPropagation();
         copy(value);
       }}
     >
-      <TableCell className="bg-muted/50 py-1 font-medium font-mono">
+      <TableCell className="bg-muted/50 py-1 font-mono font-medium">
         {label}
       </TableCell>
       <TableCell className="relative py-1 font-mono">
         {value}
-        <div className="absolute top-1.5 right-1.5 invisible group-hover:visible backdrop-blur-sm bg-background p-0.5 rounded-sm border border-border">
+        <div className="invisible absolute right-1.5 top-1.5 rounded-sm border border-border bg-background p-0.5 backdrop-blur-sm group-hover:visible">
           {!isCopied ? (
             <Copy className="h-3 w-3" />
           ) : (

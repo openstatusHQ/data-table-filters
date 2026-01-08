@@ -1,8 +1,5 @@
 "use client";
 
-import * as React from "react";
-import { useTheme } from "next-themes";
-
 import { Button, ButtonProps } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,8 +7,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Laptop, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Laptop, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import * as React from "react";
 
 export function ModeToggle({ className, ...props }: ButtonProps) {
   const { setTheme } = useTheme();

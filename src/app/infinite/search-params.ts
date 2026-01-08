@@ -1,3 +1,13 @@
+import { LEVELS } from "@/constants/levels";
+import { METHODS } from "@/constants/method";
+import { REGIONS } from "@/constants/region";
+// Note: import from 'nuqs/server' to avoid the "use client" directive
+import {
+  ARRAY_DELIMITER,
+  RANGE_DELIMITER,
+  SLIDER_DELIMITER,
+  SORT_DELIMITER,
+} from "@/lib/delimiters";
 import {
   createParser,
   createSearchParamsCache,
@@ -10,16 +20,6 @@ import {
   parseAsTimestamp,
   type inferParserType,
 } from "nuqs/server";
-// Note: import from 'nuqs/server' to avoid the "use client" directive
-import {
-  ARRAY_DELIMITER,
-  RANGE_DELIMITER,
-  SLIDER_DELIMITER,
-  SORT_DELIMITER,
-} from "@/lib/delimiters";
-import { REGIONS } from "@/constants/region";
-import { METHODS } from "@/constants/method";
-import { LEVELS } from "@/constants/levels";
 
 // https://logs.run/i?sort=latency.desc
 

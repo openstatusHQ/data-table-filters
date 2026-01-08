@@ -1,7 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp, X } from "lucide-react";
-import * as React from "react";
+import { Kbd } from "@/components/custom/kbd";
 import {
   Sheet,
   SheetClose,
@@ -10,18 +9,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/custom/sheet";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Kbd } from "@/components/custom/kbd";
 import { cn } from "@/lib/utils";
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown, ChevronUp, X } from "lucide-react";
+import * as React from "react";
 
 export interface DataTableSheetDetailsProps {
   title?: React.ReactNode;

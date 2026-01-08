@@ -4,6 +4,7 @@ import {
   SLIDER_DELIMITER,
 } from "@/lib/delimiters";
 import { isArrayOfDates } from "@/lib/is-array";
+import type { FieldBuilder, SchemaDefinition } from "@/lib/store/schema/types";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import { ParserBuilder } from "nuqs";
 import type { DataTableFilterField } from "../types";
@@ -256,6 +257,71 @@ export function columnFiltersParser<TData>({
         if (commandDisabled || !parser) return prev;
 
         return `${prev}${curr.id}:${parser.serialize(curr.value)} `;
+      }, "");
+
+      return values;
+    },
+  };
+}
+
+/**
+ * Schema-based column filters parser for BYOS
+ *
+ * This parser works with the new schema system instead of nuqs ParserBuilder.
+ */
+export function columnFiltersParserFromSchema<TData>({
+  schema,
+  filterFields,
+}: {
+  schema: SchemaDefinition;
+  filterFields: DataTableFilterField<TData>[];
+}) {
+  return {
+    parse: (inputValue: string) => {
+      const values = inputValue
+        .trim()
+        .split(" ")
+        .reduce(
+          (prev, curr) => {
+            const [name, value] = curr.split(":");
+            if (!value || !name) return prev;
+            prev[name] = value;
+            return prev;
+          },
+          {} as Record<string, string>,
+        );
+
+      const searchParams = Object.entries(values).reduce(
+        (prev, [key, value]) => {
+          const fieldBuilder = schema[key] as FieldBuilder<unknown> | undefined;
+          if (!fieldBuilder) return prev;
+
+          const parsed = fieldBuilder._config.parse(value);
+          if (parsed !== null) {
+            prev[key] = parsed;
+          }
+          return prev;
+        },
+        {} as Record<string, unknown>,
+      );
+
+      return searchParams;
+    },
+    serialize: (columnFilters: ColumnFiltersState) => {
+      const values = columnFilters.reduce((prev, curr) => {
+        const { commandDisabled } = filterFields?.find(
+          (field) => curr.id === field.value,
+        ) || { commandDisabled: true };
+        const fieldBuilder = schema[curr.id] as
+          | FieldBuilder<unknown>
+          | undefined;
+
+        if (commandDisabled || !fieldBuilder) return prev;
+
+        const serialized = fieldBuilder._config.serialize(curr.value);
+        if (!serialized) return prev;
+
+        return `${prev}${curr.id}:${serialized} `;
       }, "");
 
       return values;

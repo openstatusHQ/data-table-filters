@@ -1,19 +1,18 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, ReferenceArea, XAxis } from "recharts";
-
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useMemo, useState } from "react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
 import { getLevelLabel } from "@/lib/request/level";
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { useMemo, useState } from "react";
+import { Bar, BarChart, CartesianGrid, ReferenceArea, XAxis } from "recharts";
+import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
 import { BaseChartSchema, TimelineChartSchema } from "./schema";
 
 export const description = "A stacked bar chart";

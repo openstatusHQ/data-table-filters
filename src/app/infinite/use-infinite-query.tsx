@@ -1,5 +1,5 @@
-import { useQueryStates } from "nuqs";
 import { useInfiniteQuery as useInfiniteTanstackQuery } from "@tanstack/react-query";
+import { useQueryStates } from "nuqs";
 import { dataOptions } from "./query-options";
 import { searchParamsParser } from "./search-params";
 

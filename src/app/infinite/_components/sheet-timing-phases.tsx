@@ -1,12 +1,12 @@
-import { TimingPhase, timingPhases } from "@/lib/request/timing";
-
+import { formatMilliseconds } from "@/lib/format";
 import {
   getTimingColor,
   getTimingLabel,
   getTimingPercentage,
+  TimingPhase,
+  timingPhases,
 } from "@/lib/request/timing";
 import { cn } from "@/lib/utils";
-import { formatMilliseconds } from "@/lib/format";
 
 export function SheetTimingPhases({
   latency,
@@ -19,20 +19,20 @@ export function SheetTimingPhases({
 }) {
   const timingPercentage = getTimingPercentage(timing, latency);
   return (
-    <div className={cn("space-y-1 w-full text-left", className)}>
+    <div className={cn("w-full space-y-1 text-left", className)}>
       {timingPhases.map((phase) => (
         <div
           key={phase}
-          className="grid grid-cols-3 gap-2 text-xs justify-between items-center"
+          className="grid grid-cols-3 items-center justify-between gap-2 text-xs"
         >
-          <div className="text-foreground uppercase truncate font-mono">
+          <div className="truncate font-mono uppercase text-foreground">
             {getTimingLabel(phase)}
           </div>
-          <div className="flex gap-2 col-span-2">
-            <div className="font-mono text-muted-foreground mr-8">
+          <div className="col-span-2 flex gap-2">
+            <div className="mr-8 font-mono text-muted-foreground">
               {timingPercentage[phase]}
             </div>
-            <div className="flex flex-1 gap-2 items-center justify-end">
+            <div className="flex flex-1 items-center justify-end gap-2">
               <div className="font-mono">
                 {formatMilliseconds(timing[phase])}
                 <span className="text-muted-foreground">ms</span>

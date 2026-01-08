@@ -2,7 +2,7 @@ export type Percentile = 50 | 75 | 90 | 95 | 99;
 
 export function calculateSpecificPercentile(
   values: number[],
-  percentile: Percentile
+  percentile: Percentile,
 ) {
   // Step 1: Sort the values in ascending order
   const sortedValues = values.slice().sort((a, b) => a - b);

@@ -1,10 +1,10 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Table } from "@tanstack/react-table";
-import { DataTableSheetRowAction } from "./data-table-sheet-row-action";
+import * as React from "react";
 import { DataTableFilterField, SheetField } from "../types";
+import { DataTableSheetRowAction } from "./data-table-sheet-row-action";
 import { SheetDetailsContentSkeleton } from "./data-table-sheet-skeleton";
 
 interface DataTableSheetContentProps<TData, TMeta>
@@ -47,14 +47,14 @@ export function DataTableSheetContent<TData, TMeta>({
             {field.type === "readonly" ? (
               <div
                 className={cn(
-                  "flex gap-4 my-1 py-1 text-sm justify-between items-center w-full",
-                  field.className
+                  "my-1 flex w-full items-center justify-between gap-4 py-1 text-sm",
+                  field.className,
                 )}
               >
                 <dt className="shrink-0 text-muted-foreground">
                   {field.label}
                 </dt>
-                <dd className="font-mono w-full text-right">
+                <dd className="w-full text-right font-mono">
                   {Component ? (
                     <Component {...data} metadata={metadata} />
                   ) : (
@@ -69,14 +69,14 @@ export function DataTableSheetContent<TData, TMeta>({
                 value={value}
                 table={table}
                 className={cn(
-                  "flex gap-4 my-1 py-1 text-sm justify-between items-center w-full",
-                  field.className
+                  "my-1 flex w-full items-center justify-between gap-4 py-1 text-sm",
+                  field.className,
                 )}
               >
                 <dt className="shrink-0 text-muted-foreground">
                   {field.label}
                 </dt>
-                <dd className="font-mono w-full text-right">
+                <dd className="w-full text-right font-mono">
                   {Component ? (
                     <Component {...data} metadata={metadata} />
                   ) : (
@@ -97,5 +97,5 @@ export const MemoizedDataTableSheetContent = React.memo(
   (prev, next) => {
     // REMINDER: only check if data is the same, rest is useless
     return prev.data === next.data;
-  }
+  },
 ) as typeof DataTableSheetContent;

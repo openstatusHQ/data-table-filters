@@ -22,7 +22,7 @@ export const MemoizedDataTableSheetContent = React.memo(
   (prev, next) => {
     // REMINDER: only check if data is the same, rest is useless
     return prev.data === next.data;
-  }
+  },
 ) as typeof DataTableSheetContent;
 ```
 

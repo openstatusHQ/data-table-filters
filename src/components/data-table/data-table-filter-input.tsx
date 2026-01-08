@@ -1,12 +1,12 @@
 "use client";
 
-import type { DataTableInputFilterField } from "./types";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Label } from "@/components/ui/label";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useDebounce } from "@/hooks/use-debounce";
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import type { DataTableInputFilterField } from "./types";
 
 function getFilter(filterValue: unknown) {
   return typeof filterValue === "string" ? filterValue : null;

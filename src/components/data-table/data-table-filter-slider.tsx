@@ -1,13 +1,13 @@
 "use client";
 
-import type { DataTableSliderFilterField } from "./types";
 import { InputWithAddons } from "@/components/custom/input-with-addons";
-import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/custom/slider";
+import { useDataTable } from "@/components/data-table/data-table-provider";
+import { Label } from "@/components/ui/label";
+import { useDebounce } from "@/hooks/use-debounce";
 import { isArrayOfNumbers } from "@/lib/is-array";
 import { useEffect, useState } from "react";
-import { useDebounce } from "@/hooks/use-debounce";
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import type { DataTableSliderFilterField } from "./types";
 
 function getFilter(filterValue: unknown) {
   return typeof filterValue === "number"

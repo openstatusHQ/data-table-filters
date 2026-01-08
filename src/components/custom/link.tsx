@@ -1,7 +1,7 @@
-import NextLink, { type LinkProps as NextLinkProps } from "next/link";
-import React from "react";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
+import NextLink, { type LinkProps as NextLinkProps } from "next/link";
+import React from "react";
 
 export interface LinkProps extends NextLinkProps {
   className?: string;
@@ -20,9 +20,9 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     return (
       <NextLink
         className={cn(
-          "group text-foreground underline underline-offset-4 decoration-border hover:decoration-foreground",
-          "ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-md",
-          className
+          "group text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground",
+          "rounded-md ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+          className,
         )}
         ref={ref}
         href={href}
@@ -31,11 +31,11 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       >
         {children}
         {!isInternal && !hideArrow ? (
-          <ArrowUpRight className="text-muted-foreground w-4 h-4 inline-block ml-0.5 group-hover:text-foreground group-hover:-translate-y-px group-hover:translate-x-px" />
+          <ArrowUpRight className="ml-0.5 inline-block h-4 w-4 text-muted-foreground group-hover:-translate-y-px group-hover:translate-x-px group-hover:text-foreground" />
         ) : null}
       </NextLink>
     );
-  }
+  },
 );
 
 Link.displayName = "Link";

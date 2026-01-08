@@ -1,27 +1,27 @@
+import { Kbd } from "@/components/custom/kbd";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
   DrawerDescription,
   DrawerFooter,
-  DrawerClose,
+  DrawerHeader,
+  DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Button } from "@/components/ui/button";
-import { FilterIcon } from "lucide-react";
-import { DataTableFilterControls } from "./data-table-filter-controls";
-import { useHotKey } from "@/hooks/use-hot-key";
-import React from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Kbd } from "@/components/custom/kbd";
+import { useHotKey } from "@/hooks/use-hot-key";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { FilterIcon } from "lucide-react";
+import React from "react";
+import { DataTableFilterControls } from "./data-table-filter-controls";
 
 export function DataTableFilterControlsDrawer() {
   const triggerButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -43,7 +43,7 @@ export function DataTableFilterControlsDrawer() {
                 size="icon"
                 className="h-9 w-9"
               >
-                <FilterIcon className="w-4 h-4" />
+                <FilterIcon className="h-4 w-4" />
               </Button>
             </DrawerTrigger>
           </TooltipTrigger>
@@ -65,7 +65,7 @@ export function DataTableFilterControlsDrawer() {
             <DrawerDescription>Adjust your table filters</DrawerDescription>
           </DrawerHeader>
         </VisuallyHidden>
-        <div className="px-4 flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-4">
           <DataTableFilterControls />
         </div>
         <DrawerFooter>

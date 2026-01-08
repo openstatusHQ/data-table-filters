@@ -6,13 +6,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/custom/accordion";
-import type React from "react";
-import { DataTableFilterResetButton } from "./data-table-filter-reset-button";
-import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
-import { DataTableFilterSlider } from "./data-table-filter-slider";
-import { DataTableFilterInput } from "./data-table-filter-input";
-import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 import { useDataTable } from "@/components/data-table/data-table-provider";
+import type React from "react";
+import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
+import { DataTableFilterInput } from "./data-table-filter-input";
+import { DataTableFilterResetButton } from "./data-table-filter-reset-button";
+import { DataTableFilterSlider } from "./data-table-filter-slider";
+import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 
 // FIXME: use @container (especially for the slider element) to restructure elements
 

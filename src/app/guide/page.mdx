@@ -1,6 +1,13 @@
 ## Guide (WIP)
 
-<span className="text-muted-foreground font-medium">As of: {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+<span className="font-medium text-muted-foreground">
+  As of:{" "}
+  {new Date().toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })}
+</span>
 
 This helps you to get started with the data-table and define the columns, filters, search params, sheet fields and more.
 
@@ -9,6 +16,7 @@ This helps you to get started with the data-table and define the columns, filter
 Remember, we are using the shadcn/ui components. Some modifications still live in `src/components/custom/*` but will eventually be migrating back to shadcn/ui to be fully compliant.
 
 The infinite scrollable data-table is mainly composed of the following parts:
+
 - `DataTableFilterControls`: the left sidebar controls
 - `DataTableFilterCommand`: the cmdk input
 - `DataTableInfinite`: the infinite data-table
@@ -80,9 +88,10 @@ We currently memoize with a custom deps function to avoid re-rendering the rows 
 const MemoizedRow = React.memo(
   ({ row, selected }: { row: Row<unknown>; selected: boolean }) => {
     useQueryState("live", searchParamsParser.live);
-    return /* ... */
+    return <TableRow /* ... */ />;
   },
-  (prev, next) => prev.row.id === next.row.id && prev.selected === next.selected
+  (prev, next) =>
+    prev.row.id === next.row.id && prev.selected === next.selected,
 ) as typeof Row;
 ```
 
@@ -90,18 +99,24 @@ The row re-renders only if the `id` or `selected` state of the row changes, and 
 
 > At a certain point we need to think adding `@tanstack/react-virtual` to the mix.
 
-
-
 ## Filters
 
-Right now, we need to define the filters in two places:
+There are two approaches to defining filters:
+
+### Traditional Approach (nuqs-based)
+
+For URL-based state management (like `/infinite` and `/light` routes), define filters in two places:
 
 - `filterFields` in the `constants.tsx` file
 - `searchParams` in the `search-params.ts` file
 
-The main reason for this is that we want to keep the `filterFields` as the source of truth for the filters. The `searchParams` are used to filter the data on the server side and to build the search command. Both are synced.
+The `filterFields` is the source of truth for the UI. The `searchParams` are used to filter the data on the server side and to build the search command. Both must be kept in sync.
 
-> It would be great if we could merge both values, the `filterFields` and the `searchParams` together and have a single source of truth. - Or make both types extend a single type for better type safety. Hopefully, we can achieve this in the future.
+### BYOS Approach (Schema-based)
+
+For client-side state management (like `/default` route), use the [BYOS schema](#byos-bring-your-own-store) to define filters in a single place. The schema acts as the single source of truth for types, serialization, and the filter command.
+
+> **Tip**: If you're building a new data-table, consider using BYOS for simpler filter management with better type safety.
 
 ### filterFields
 
@@ -143,7 +158,7 @@ export type Option = {
 
 #### Input
 
-For the `input` type, there is nothing to define. 
+For the `input` type, there is nothing to define.
 
 Within the Controls sidebar, it will be rendered as a simple text input field. The cmdk input will list all the defined `options` once the value is selected.
 
@@ -204,7 +219,7 @@ export type Timerange = {
 };
 ```
 
-### Search Params
+### Search Params (nuqs approach)
 
 The `searchParams` array within the `search-params.ts` file is what defines the search params that are used to filter the data in the data-table.
 
@@ -212,12 +227,13 @@ It mainly includes the same fields as the `filterFields` array - but defined wit
 
 **Make sure to have both the `filterFields` and the `searchParams` in sync.**
 
+> **Alternative**: With BYOS, you can use a single schema definition instead of maintaining both `filterFields` and `searchParams`. See [BYOS](#byos-bring-your-own-store) for details.
+
 ## Details Sheet
 
 The `sheetFields` array within the `constants.tsx` file is what defines the components inside of the `Sheet` component that is rendered when you select a row in the data-table.
 
 > Yet to be implemented: only trigger a selection if the `sheetFields` is defined.
-
 
 By default, we will wrap every key-value pair with the `DataTableSheetRowAction` component that will allow you to filter the data-table based on the selected row. Based on the `type`, we will support different filter selections.
 
@@ -251,7 +267,7 @@ export type SheetField<TData, TMeta = Record<string, unknown>> = {
         filterRows: number;
         totalRowsFetched: number;
       } & TMeta;
-    }
+    },
   ) => JSX.Element | null | string;
   /**
    * A condition to check if the field should be shown
@@ -276,18 +292,17 @@ To share the same search options between the client and the server, we use the s
 
 It will be up to you to implement the actual API endpoint and query the data from your database.
 
-
 You API has to return the following data:
 
 ```ts
 export async function GET(req: Request) {
-    // ....
-    return Response.json({ data, meta } satisfies {
-        data: ColumnSchema[], // TODO: defined ColumnSchema
-        meta: InfiniteQueryMeta<LogsMeta>,
-        nextCursor: number | null, // timestamp of the last item in the data array
-        prevCursor: number | null, // timestamp of the first item in the data array - used for live mode
-    })
+  // ....
+  return Response.json({ data, meta } satisfies {
+    data: ColumnSchema[]; // TODO: defined ColumnSchema
+    meta: InfiniteQueryMeta<LogsMeta>;
+    nextCursor: number | null; // timestamp of the last item in the data array
+    prevCursor: number | null; // timestamp of the first item in the data array - used for live mode
+  });
 }
 ```
 
@@ -367,7 +382,176 @@ We append the `live` param to the search params parser (**not** the filter field
 
 The `fetchPreviousPage` from the the `useInfiniteQuery` is being used. The newly fetched data will be appended to the beginning of the data array. (contrary to the `fetchNextPage` which appends to the end of the data array)
 
-For the demo, we add some mock data in the future to see the live mode in action. At some point, no more can be fetcheed anymore. You'll need to refresh the page or wait for the cache to miss. 
+For the demo, we add some mock data in the future to see the live mode in action. At some point, no more can be fetcheed anymore. You'll need to refresh the page or wait for the cache to miss.
+
+## BYOS (Bring Your Own Store)
+
+BYOS is an adapter pattern that allows you to use any state management solution for your data-table filters. Instead of being locked into `nuqs` for URL-based state, you can use Zustand, or even create your own custom adapter.
+
+### Why BYOS?
+
+- **SPAs without URL routing**: Not every app needs filter state in the URL
+- **Client-side only state**: Embedded widgets, modals, or dashboards where URL state is undesirable
+- **Flexibility**: Use the state management solution you're already using in your app
+
+### Defining a Schema
+
+The schema is the single source of truth for your filter fields. It defines types, default values, and serialization rules.
+
+```tsx
+// schema.ts
+import { createSchema, field } from "@/lib/store/schema";
+
+export const filterSchema = createSchema({
+  // Text input filter
+  url: field.string(),
+
+  // Slider filter (range)
+  p95: field.array(field.number()).delimiter("-"),
+
+  // Checkbox filters (arrays)
+  public: field.array(field.boolean()).delimiter(","),
+  active: field.array(field.boolean()).delimiter(","),
+  regions: field
+    .array(field.stringLiteral(["ams", "gru", "syd", "iad"]))
+    .delimiter(","),
+  tags: field.array(field.stringLiteral(["api", "web", "app"])).delimiter(","),
+
+  // Date range filter
+  date: field.array(field.timestamp()).delimiter("-"),
+});
+
+// Infer TypeScript types
+export type FilterState = typeof filterSchema._type;
+```
+
+### Field Types
+
+```ts
+// Primitive types
+field.string(); // string | null
+field.number(); // number | null
+field.boolean(); // boolean | null
+field.timestamp(); // Date | null
+
+// Constrained types
+field.stringLiteral(["a", "b", "c"]); // 'a' | 'b' | 'c' | null
+
+// Composite types
+field.array(innerField); // T[]
+
+// Modifiers (chainable)
+field
+  .array(field.string())
+  .default([]) // Set default value
+  .delimiter(","); // Set serialization delimiter
+```
+
+### Using with DataTableFilterCommand
+
+Pass the schema definition to the `DataTableFilterCommand` component:
+
+```tsx
+import { filterSchema } from "./schema";
+
+// In your component JSX:
+<DataTableFilterCommand schema={filterSchema.definition} />;
+```
+
+The command will use the schema to parse and serialize filter values, enabling the text-based filter input to work with your custom schema.
+
+### Creating a Custom Adapter
+
+To create a custom adapter, implement the `DataTableAdapter` interface:
+
+```ts
+interface DataTableAdapter<TState extends Record<string, unknown>> {
+  // Unique identifier for namespacing
+  readonly id: string;
+
+  // Subscribe to state changes (for useSyncExternalStore)
+  subscribe: (onStoreChange: () => void) => () => void;
+
+  // Get current state snapshot
+  getSnapshot: () => TState;
+
+  // Get server-side snapshot (optional, for SSR)
+  getServerSnapshot?: () => TState;
+
+  // Update state (supports partial updates)
+  setState: (
+    partial: Partial<TState> | ((prev: TState) => Partial<TState>),
+  ) => void;
+
+  // Reset state to schema defaults
+  reset: () => void;
+
+  // Cleanup resources
+  destroy: () => void;
+}
+```
+
+**Example: Simple In-Memory Adapter**
+
+```tsx
+import { getSchemaDefaults, Schema } from "@/lib/store/schema";
+
+function createMemoryAdapter<T extends Record<string, unknown>>(
+  schema: Schema<T>,
+  options: { id: string },
+) {
+  let state = getSchemaDefaults(schema.definition);
+  const listeners = new Set<() => void>();
+
+  return {
+    id: options.id,
+
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+
+    getSnapshot: () => state,
+
+    setState: (partial: Partial<T> | ((prev: T) => Partial<T>)) => {
+      const updates = typeof partial === "function" ? partial(state) : partial;
+      state = { ...state, ...updates };
+      listeners.forEach((l) => l());
+    },
+
+    reset: () => {
+      state = getSchemaDefaults(schema.definition);
+      listeners.forEach((l) => l());
+    },
+
+    destroy: () => listeners.clear(),
+  };
+}
+```
+
+### Official Adapters
+
+We provide two official adapters:
+
+1. **nuqs Adapter** (`@/lib/store/adapters/nuqs`) - URL-based state with SSR support
+2. **Zustand Adapter** (`@/lib/store/adapters/zustand`) - Client-side state that integrates with existing Zustand stores
+
+### React Compiler Compatibility
+
+If you're using the React Compiler (`reactCompiler: true` in Next.js), be aware that TanStack Table's `table.getRowModel()` may be incorrectly memoized. Store the result in a variable before using it in JSX:
+
+```tsx
+// ✅ Correct - prevents React Compiler memoization issues
+const rows = table.getRowModel().rows;
+
+return (
+  <TableBody>
+    {rows.map((row) => (
+      <TableRow key={row.id}>...</TableRow>
+    ))}
+  </TableBody>
+);
+```
 
 ## Debugging
 

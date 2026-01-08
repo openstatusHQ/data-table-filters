@@ -1,15 +1,16 @@
 "use client";
-import { ColumnSchema } from "../schema";
-import { FunctionSquare } from "lucide-react";
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { formatCompactNumber, formatMilliseconds } from "@/lib/format";
-import { Percentile, getPercentileColor } from "@/lib/request/percentile";
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { formatCompactNumber, formatMilliseconds } from "@/lib/format";
+import { getPercentileColor, Percentile } from "@/lib/request/percentile";
+import { cn } from "@/lib/utils";
+import { FunctionSquare } from "lucide-react";
+import * as React from "react";
+import { ColumnSchema } from "../schema";
 
 interface PopoverPercentileProps {
   data?: ColumnSchema;
@@ -40,8 +41,8 @@ export function PopoverPercentile({
     <Popover>
       <PopoverTrigger
         className={cn(
-          "font-mono flex items-center gap-1 rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          className
+          "flex items-center gap-1 rounded-md font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          className,
         )}
       >
         <FunctionSquare
@@ -49,18 +50,18 @@ export function PopoverPercentile({
             "h-4 w-4",
             data?.percentile
               ? getPercentileColor(data.percentile).text
-              : "text-muted-foreground"
+              : "text-muted-foreground",
           )}
         />
         {!data?.percentile ? "N/A" : `P${Math.round(data.percentile)}`}
       </PopoverTrigger>
       <PopoverContent
-        className="w-40 flex flex-col gap-2 p-2 text-xs"
+        className="flex w-40 flex-col gap-2 p-2 text-xs"
         align="end"
       >
         <p>
           Calculated from filtered result of{" "}
-          <span className="font-medium font-mono">
+          <span className="font-mono font-medium">
             {formatCompactNumber(filterRows)}
           </span>{" "}
           rows.
@@ -75,16 +76,16 @@ export function PopoverPercentile({
               <div
                 key={`${key}-${value}`}
                 className={cn(
-                  "flex items-center justify-between px-1 py-0.5 rounded-md",
+                  "flex items-center justify-between rounded-md px-1 py-0.5",
                   active && data.percentile
                     ? `border ${getPercentileColor(data.percentile).border}`
-                    : null
+                    : null,
                 )}
               >
                 <div
                   className={cn(
                     "font-mono",
-                    !active && "text-muted-foreground"
+                    !active && "text-muted-foreground",
                   )}
                 >{`P${Math.round(key)}`}</div>
                 <div className="font-mono">

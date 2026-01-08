@@ -1,9 +1,9 @@
 "use client";
 
-import type { DataTableFilterField } from "./types";
+import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import type { DataTableFilterField } from "./types";
 
 export function DataTableFilterResetButton<TData>({
   value: _value,

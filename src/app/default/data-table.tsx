@@ -35,9 +35,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useQueryStates } from "nuqs";
 import * as React from "react";
-import { searchParamsParser } from "./search-params";
+import { filterSchema } from "./schema";
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -62,24 +61,15 @@ export function DataTable<TData, TValue>({
   });
   const [columnVisibility, setColumnVisibility] =
     useLocalStorage<VisibilityState>("data-table-visibility", {});
-  const [_, setSearch] = useQueryStates(searchParamsParser);
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: { columnFilters, sorting, columnVisibility, pagination },
-    onColumnVisibilityChange: setColumnVisibility,
-    onColumnFiltersChange: setColumnFilters,
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-    getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    // REMINDER: it doesn't support array of strings (WARNING: might not work for other types)
-    getFacetedUniqueValues: (table: TTable<TData>, columnId: string) => () => {
+  // Reset pagination when filters change to avoid showing empty pages
+  React.useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [columnFilters]);
+
+  // Custom getFacetedUniqueValues that handles array values
+  const customGetFacetedUniqueValues = React.useCallback(
+    (table: TTable<TData>, columnId: string) => () => {
       const facets = getFacetedUniqueValues<TData>()(table, columnId)();
       const customFacets = new Map();
       for (const [key, value] of facets as any) {
@@ -95,28 +85,41 @@ export function DataTable<TData, TValue>({
       }
       return customFacets;
     },
+    [],
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { columnFilters, sorting, columnVisibility, pagination },
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getSortedRowModel: getSortedRowModel(),
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    getFacetedUniqueValues: customGetFacetedUniqueValues,
+    // Enable global filtering support
+    enableFilters: true,
+    enableColumnFilters: true,
   });
 
-  React.useEffect(() => {
-    const columnFiltersWithNullable = filterFields.map((field) => {
-      const filterValue = columnFilters.find(
-        (filter) => filter.id === field.value,
-      );
-      if (!filterValue) return { id: field.value, value: null };
-      return { id: field.value, value: filterValue.value };
-    });
+  // Wrapper function for the provider (different signature)
+  const getFacetedUniqueValuesForProvider = React.useCallback(
+    (table: TTable<TData>, columnId: string): Map<string, number> => {
+      return customGetFacetedUniqueValues(table, columnId)();
+    },
+    [customGetFacetedUniqueValues],
+  );
 
-    const search = columnFiltersWithNullable.reduce(
-      (prev, curr) => {
-        prev[curr.id as string] = curr.value;
-        return prev;
-      },
-      {} as Record<string, unknown>,
-    );
-
-    setSearch(search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnFilters]);
+  // NOTE: Store rows in a variable to prevent React Compiler from incorrectly
+  // memoizing the getRowModel() call. The compiler assumes the table reference
+  // is stable (it is), but TanStack Table mutates internal state.
+  const rows = table.getRowModel().rows;
 
   return (
     <DataTableProvider
@@ -126,6 +129,7 @@ export function DataTable<TData, TValue>({
       columnFilters={columnFilters}
       sorting={sorting}
       pagination={pagination}
+      getFacetedUniqueValues={getFacetedUniqueValuesForProvider}
     >
       <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
         <div
@@ -137,7 +141,7 @@ export function DataTable<TData, TValue>({
           <DataTableFilterControls />
         </div>
         <div className="flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1">
-          <DataTableFilterCommand searchParamsParser={searchParamsParser} />
+          <DataTableFilterCommand schema={filterSchema.definition} />
           <DataTableToolbar />
           <div className="rounded-md border">
             <Table>
@@ -163,8 +167,8 @@ export function DataTable<TData, TValue>({
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
+                {rows?.length ? (
+                  rows.map((row) => (
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}

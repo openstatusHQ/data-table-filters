@@ -1,12 +1,12 @@
 // TODO: check if we can move to /data-table-filter-command/utils.ts
-import type { ColumnFiltersState } from "@tanstack/react-table";
-import { z } from "zod";
-import type { DataTableFilterField } from "./types";
 import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
 } from "@/lib/delimiters";
+import type { ColumnFiltersState } from "@tanstack/react-table";
+import { z } from "zod";
+import type { DataTableFilterField } from "./types";
 
 export function deserialize<T extends z.AnyZodObject>(schema: T) {
   const castToSchema = z.preprocess((val) => {
@@ -14,12 +14,15 @@ export function deserialize<T extends z.AnyZodObject>(schema: T) {
     return val
       .trim()
       .split(" ")
-      .reduce((prev, curr) => {
-        const [name, value] = curr.split(":");
-        if (!value || !name) return prev;
-        prev[name] = value;
-        return prev;
-      }, {} as Record<string, unknown>);
+      .reduce(
+        (prev, curr) => {
+          const [name, value] = curr.split(":");
+          if (!value || !name) return prev;
+          prev[name] = value;
+          return prev;
+        },
+        {} as Record<string, unknown>,
+      );
   }, schema);
   return (value: string) => castToSchema.safeParse(value);
 }
@@ -40,11 +43,11 @@ export function deserialize<T extends z.AnyZodObject>(schema: T) {
 
 export function serializeColumFilters<TData>(
   columnFilters: ColumnFiltersState,
-  filterFields?: DataTableFilterField<TData>[]
+  filterFields?: DataTableFilterField<TData>[],
 ) {
   return columnFilters.reduce((prev, curr) => {
     const { type, commandDisabled } = filterFields?.find(
-      (field) => curr.id === field.value
+      (field) => curr.id === field.value,
     ) || { commandDisabled: true }; // if column filter is not found, disable the command by default
 
     if (commandDisabled) return prev;

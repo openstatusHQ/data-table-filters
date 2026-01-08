@@ -1,5 +1,5 @@
 export function getStatusColor(
-  value: number
+  value: number,
 ): Record<"text" | "bg" | "border", string> {
   if (value < 100 || value >= 600)
     return {

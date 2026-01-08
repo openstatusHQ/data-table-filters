@@ -2,7 +2,7 @@ import { _LEVELS } from "@/constants/levels";
 import { cn } from "../utils";
 
 export function getLevelColor(
-  value: (typeof _LEVELS)[number]
+  value: (typeof _LEVELS)[number],
 ): Record<"text" | "bg" | "border", string> {
   switch (value) {
     case "success":
@@ -39,18 +39,18 @@ export function getLevelRowClassName(value: (typeof _LEVELS)[number]): string {
       return "";
     case "warning":
       return cn(
-        "bg-warning/5 hover:bg-warning/10 data-[state=selected]:bg-warning/20 focus-visible:bg-warning/10",
-        "dark:bg-warning/10 dark:hover:bg-warning/20 dark:data-[state=selected]:bg-warning/30 dark:focus-visible:bg-warning/20"
+        "bg-warning/5 hover:bg-warning/10 focus-visible:bg-warning/10 data-[state=selected]:bg-warning/20",
+        "dark:bg-warning/10 dark:hover:bg-warning/20 dark:focus-visible:bg-warning/20 dark:data-[state=selected]:bg-warning/30",
       );
     case "error":
       return cn(
-        "bg-error/5 hover:bg-error/10 data-[state=selected]:bg-error/20 focus-visible:bg-error/10",
-        "dark:bg-error/10 dark:hover:bg-error/20 dark:data-[state=selected]:bg-error/30 dark:focus-visible:bg-error/20"
+        "bg-error/5 hover:bg-error/10 focus-visible:bg-error/10 data-[state=selected]:bg-error/20",
+        "dark:bg-error/10 dark:hover:bg-error/20 dark:focus-visible:bg-error/20 dark:data-[state=selected]:bg-error/30",
       );
     case "info":
       return cn(
-        "bg-info/5 hover:bg-info/10 data-[state=selected]:bg-info/20 focus-visible:bg-info/10",
-        "dark:bg-info/10 dark:hover:bg-info/20 dark:data-[state=selected]:bg-info/30 dark:focus-visible:bg-info/20"
+        "bg-info/5 hover:bg-info/10 focus-visible:bg-info/10 data-[state=selected]:bg-info/20",
+        "dark:bg-info/10 dark:hover:bg-info/20 dark:focus-visible:bg-info/20 dark:data-[state=selected]:bg-info/30",
       );
     default:
       return "";

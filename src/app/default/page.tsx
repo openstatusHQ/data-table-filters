@@ -3,29 +3,18 @@ import { columns } from "./columns";
 import { filterFields } from "./constants";
 import { data } from "./data";
 import { DataTable } from "./data-table";
-import { searchParamsCache } from "./search-params";
 import { Skeleton } from "./skeleton";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const search = searchParamsCache.parse(await searchParams);
-
+/**
+ * Default route - uses Zustand for client-side state management
+ *
+ * Note: This route does NOT sync filter state with URL params.
+ * For URL-based state, see the /infinite or /light routes which use nuqs.
+ */
+export default function Page() {
   return (
     <React.Suspense fallback={<Skeleton />}>
-      <DataTable
-        columns={columns}
-        data={data}
-        filterFields={filterFields}
-        defaultColumnFilters={Object.entries(search)
-          .map(([key, value]) => ({
-            id: key,
-            value,
-          }))
-          .filter(({ value }) => value ?? undefined)}
-      />
+      <DataTable columns={columns} data={data} filterFields={filterFields} />
     </React.Suspense>
   );
 }

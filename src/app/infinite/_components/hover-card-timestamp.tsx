@@ -10,8 +10,7 @@ import { cn } from "@/lib/utils";
 import { UTCDate } from "@date-fns/utc";
 import { HoverCardPortal } from "@radix-ui/react-hover-card";
 import { format, formatDistanceToNowStrict } from "date-fns";
-import { Copy } from "lucide-react";
-import { Check } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
 
 type HoverCardContentProps = ComponentPropsWithoutRef<typeof HoverCardContent>;
@@ -38,14 +37,14 @@ export function HoverCardTimestamp({
   return (
     <HoverCard openDelay={0} closeDelay={0}>
       <HoverCardTrigger asChild>
-        <div className={cn("font-mono whitespace-nowrap", className)}>
+        <div className={cn("whitespace-nowrap font-mono", className)}>
           {format(date, "LLL dd, y HH:mm:ss")}
         </div>
       </HoverCardTrigger>
       {/* REMINDER: allows us to port the content to the document.body, which is helpful when using opacity-50 on the row element */}
       <HoverCardPortal>
         <HoverCardContent
-          className="p-2 w-auto z-10"
+          className="z-10 w-auto p-2"
           {...{ side, align, alignOffset, sideOffset }}
         >
           <dl className="flex flex-col gap-1">
@@ -71,14 +70,14 @@ function Row({ value, label }: { value: string; label: string }) {
 
   return (
     <div
-      className="group flex gap-4 text-sm justify-between items-center"
+      className="group flex items-center justify-between gap-4 text-sm"
       onClick={(e) => {
         e.stopPropagation();
         copy(value);
       }}
     >
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-mono truncate flex items-center gap-1">
+      <dd className="flex items-center gap-1 truncate font-mono">
         <span className="invisible group-hover:visible">
           {!isCopied ? (
             <Copy className="h-3 w-3" />

@@ -44,14 +44,14 @@ export function getTimingLabel(timing: TimingPhase) {
 
 export function getTimingPercentage(
   timing: Record<TimingPhase, number>,
-  latency: number
+  latency: number,
 ): Record<TimingPhase, number | string> {
   // const total = Object.values(timing).reduce((acc, curr) => acc + curr, 0);
   const percentage: Record<TimingPhase, number | string> = { ...timing };
   Object.entries(timing).forEach(([key, value]) => {
     const pValue = Math.round((value / latency) * 1000) / 1000;
     percentage[key as keyof typeof timing] = /^0\.00[0-9]+/.test(
-      pValue.toString()
+      pValue.toString(),
     )
       ? "<1%"
       : `${(pValue * 100).toFixed(1)}%`;

@@ -1,15 +1,15 @@
-import { ArrowRight, ChevronRight } from "lucide-react";
 import { Link } from "@/components/custom/link";
+import { ArrowRight, ChevronRight } from "lucide-react";
 
 export function TopBanner() {
   return (
-    <div className="group bg-muted/50 text-foreground border-b">
+    <div className="group border-b bg-muted/50 text-foreground">
       <div className="container mx-auto px-4 py-2 sm:px-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-8">
           <p className="flex items-center justify-center gap-2">
             <Link href="/infinite" className="no-underline">
               <span className="font-semibold">New Example: </span>
-              <span className="underline underline-offset-4 decoration-muted-foreground group-hover:decoration-foreground">
+              <span className="underline decoration-muted-foreground underline-offset-4 group-hover:decoration-foreground">
                 Infinite Scroll
               </span>{" "}
               <span className="mr-1">Now Available, Inspired by Vercel</span>

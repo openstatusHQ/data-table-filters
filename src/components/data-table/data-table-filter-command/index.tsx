@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { formatCompactNumber } from "@/lib/format";
+import type { SchemaDefinition } from "@/lib/store/schema/types";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { LoaderCircle, Search, X } from "lucide-react";
@@ -23,6 +24,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { DataTableFilterField } from "../types";
 import {
   columnFiltersParser,
+  columnFiltersParserFromSchema,
   getFieldOptions,
   getFilterValue,
   getWordByCaretPosition,
@@ -32,12 +34,15 @@ import {
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
 
 interface DataTableFilterCommandProps {
-  // TODO: maybe use generics for the parser
-  searchParamsParser: Record<string, ParserBuilder<any>>;
+  // Either provide searchParamsParser (legacy nuqs approach)
+  searchParamsParser?: Record<string, ParserBuilder<any>>;
+  // Or provide schema (new BYOS approach)
+  schema?: SchemaDefinition;
 }
 
 export function DataTableFilterCommand({
   searchParamsParser,
+  schema,
 }: DataTableFilterCommandProps) {
   const {
     table,
@@ -53,10 +58,21 @@ export function DataTableFilterCommand({
     () => _filterFields?.filter((i) => !i.commandDisabled),
     [_filterFields],
   );
-  const columnParser = useMemo(
-    () => columnFiltersParser({ searchParamsParser, filterFields }),
-    [searchParamsParser, filterFields],
-  );
+  const columnParser = useMemo(() => {
+    // Prefer schema-based parser if schema is provided
+    if (schema) {
+      return columnFiltersParserFromSchema({ schema, filterFields });
+    }
+    // Fallback to legacy nuqs parser
+    if (searchParamsParser) {
+      return columnFiltersParser({ searchParamsParser, filterFields });
+    }
+    // Default no-op parser if neither is provided
+    return {
+      parse: () => ({}),
+      serialize: () => "",
+    };
+  }, [schema, searchParamsParser, filterFields]);
   const [inputValue, setInputValue] = useState<string>(
     columnParser.serialize(columnFilters),
   );

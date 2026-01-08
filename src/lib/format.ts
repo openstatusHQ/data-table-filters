@@ -18,7 +18,7 @@ export function formatLatency(ms: number): string {
 
 export function formatMilliseconds(value: number) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-    value
+    value,
   );
 }
 

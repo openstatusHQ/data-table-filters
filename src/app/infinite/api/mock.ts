@@ -1,7 +1,7 @@
 import { METHODS } from "@/constants/method";
-import { ColumnSchema } from "../schema";
-import { subMinutes } from "date-fns";
 import { REGIONS } from "@/constants/region";
+import { subMinutes } from "date-fns";
+import { ColumnSchema } from "../schema";
 
 const DAYS = 20;
 

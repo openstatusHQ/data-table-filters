@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { formatCompactNumber } from "@/lib/format";
+import type { SchemaDefinition } from "@/lib/store/schema/types";
 import { arrSome, inDateRange } from "@/lib/table/filterfns";
 import { cn } from "@/lib/utils";
 import {
@@ -57,7 +58,7 @@ import { LiveButton } from "./_components/live-button";
 import { RefreshButton } from "./_components/refresh-button";
 import { SocialsFooter } from "./_components/socials-footer";
 import { BaseChartSchema } from "./schema";
-import { searchParamsParser } from "./search-params";
+import { searchParamsParser as defaultSearchParamsParser } from "./search-params";
 import { TimelineChart } from "./timeline-chart";
 
 // TODO: add a possible chartGroupBy
@@ -102,7 +103,9 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   renderSheetTitle: (props: { row?: Row<TData> }) => React.ReactNode;
   // TODO:
   renderChart?: () => React.ReactNode;
-  searchParamsParser: Record<string, ParserBuilder<any>>;
+  // Either provide searchParamsParser (nuqs approach) or schema (BYOS approach)
+  searchParamsParser?: Record<string, ParserBuilder<any>>;
+  schema?: SchemaDefinition;
 }
 
 export function DataTableInfinite<TData, TValue, TMeta>({
@@ -133,6 +136,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   renderLiveRow,
   renderSheetTitle,
   searchParamsParser,
+  schema,
 }: DataTableInfiniteProps<TData, TValue, TMeta>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -152,8 +156,9 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   const topBarRef = React.useRef<HTMLDivElement>(null);
   const tableRef = React.useRef<HTMLTableElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
-  // FIXME: searchParamsParser needs to be passed as property
-  const [_, setSearch] = useQueryStates(searchParamsParser);
+  // Use provided parser or fall back to default
+  const parser = searchParamsParser || defaultSearchParamsParser;
+  const [_, setSearch] = useQueryStates(parser);
 
   const onScroll = React.useCallback(
     (e: React.UIEvent<HTMLElement>) => {
@@ -350,7 +355,10 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               "sticky top-0 z-10 pb-4",
             )}
           >
-            <DataTableFilterCommand searchParamsParser={searchParamsParser} />
+            <DataTableFilterCommand
+              searchParamsParser={parser}
+              schema={schema}
+            />
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
               renderActions={() => [
@@ -536,7 +544,7 @@ function Row<TData>({
 }) {
   // REMINDER: rerender the row when live mode is toggled - used to opacity the row
   // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
-  useQueryState("live", searchParamsParser.live);
+  useQueryState("live", defaultSearchParamsParser.live);
   return (
     <TableRow
       id={row.id}

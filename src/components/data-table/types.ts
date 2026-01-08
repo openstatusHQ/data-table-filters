@@ -83,7 +83,7 @@ export type SheetField<TData, TMeta = Record<string, unknown>> = {
         filterRows: number;
         totalRowsFetched: number;
       } & TMeta;
-    }
+    },
   ) => JSX.Element | null | string;
   condition?: (props: TData) => boolean;
   className?: string;

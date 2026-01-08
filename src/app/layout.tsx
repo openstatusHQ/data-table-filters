@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import PlausibleProvider from "next-plausible";
-import { ReactQueryProvider } from "@/providers/react-query";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
-import { GeistSans } from "geist/font/sans";
+import { ReactQueryProvider } from "@/providers/react-query";
 import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
+import PlausibleProvider from "next-plausible";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const TITLE = "Powerful Data-Table for React | OpenStatus";
 const DESCRIPTION =

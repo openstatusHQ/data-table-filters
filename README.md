@@ -10,8 +10,8 @@ To make it not only more accessible for you to use, but also work on PoC/MVP wit
 
 It currently includes two main concepts:
 
-- [data-table with simple pagination](https://data-table.openstatus.dev/default) (client-side)
-- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite) (server-side)
+- [data-table with simple pagination](https://data-table.openstatus.dev/default) (client-side filtering with zustand client state)
+- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite) (server-side with URL state via nuqs)
 
 The UI is heavily inspired by datadog and vercel log tables.
 
@@ -21,6 +21,34 @@ The UI is heavily inspired by datadog and vercel log tables.
 More Examples:
 
 - [OpenStatus Light Viewer](https://data-table.openstatus.dev/light) (UI for [`vercel-edge-ping`](https://github.com/OpenStatusHQ/vercel-edge-ping))
+
+## BYOS (Bring Your Own Store)
+
+We support a flexible adapter pattern for state management called **BYOS** (Bring Your Own Store). This allows you to:
+
+- Use **URL-based state** with `nuqs` (default for `/infinite` and `/light` routes)
+- Use **client-side state** with Zustand or React state (default for `/default` route)
+- Create **custom adapters** for any state management solution
+
+### Quick Example
+
+```tsx
+import { createSchema, field } from "@/lib/store/schema";
+
+// Define your filter schema
+const filterSchema = createSchema({
+  regions: field
+    .array(field.stringLiteral(["ams", "gru", "syd"]))
+    .delimiter(","),
+  latency: field.array(field.number()).delimiter("-"),
+  active: field.array(field.boolean()).delimiter(","),
+});
+
+// Use with DataTableFilterCommand
+<DataTableFilterCommand schema={filterSchema.definition} />;
+```
+
+See the [Guide](https://data-table.openstatus.dev/guide) for detailed documentation on BYOS, creating custom adapters, and more.
 
 ## Built With
 
