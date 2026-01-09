@@ -1,4 +1,3 @@
-import { Skeleton as DefaultSkeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -7,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/custom/table";
+import { Skeleton as DefaultSkeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export function Skeleton() {
@@ -138,27 +138,27 @@ export function Skeleton() {
                 )}
               >
                 {/* Level */}
-                <TableHead className="w-[27px] max-w-[27px] min-w-[27px] border-b border-border">
+                <TableHead className="w-[27px] min-w-[27px] max-w-[27px] border-b border-border">
                   <DefaultSkeleton className="h-4 w-4" />
                 </TableHead>
                 {/* Date */}
-                <TableHead className="w-[200px] max-w-[200px] min-w-[200px] border-b border-border">
+                <TableHead className="w-[200px] min-w-[200px] max-w-[200px] border-b border-border">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Status */}
-                <TableHead className="w-[60px] max-w-[60px] min-w-[60px] border-b border-border">
+                <TableHead className="w-[60px] min-w-[60px] max-w-[60px] border-b border-border">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Method */}
-                <TableHead className="w-[69px] max-w-[69px] min-w-[69px] border-b border-border">
+                <TableHead className="w-[69px] min-w-[69px] max-w-[69px] border-b border-border">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Host */}
-                <TableHead className="min-w-[125px] w-[125px] border-b border-border">
+                <TableHead className="w-[125px] min-w-[125px] border-b border-border">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Pathname */}
-                <TableHead className="min-w-[130px] w-[130px] border-b border-border">
+                <TableHead className="w-[130px] min-w-[130px] border-b border-border">
                   <DefaultSkeleton className="h-4 w-16" />
                 </TableHead>
                 {/* Latency */}
@@ -176,30 +176,33 @@ export function Skeleton() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <TableRow key={i} className="hover:bg-transparent">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <TableRow
+                  key={i}
+                  className="hover:bg-transparent [&>*]:border-b [&>:not(:last-child)]:border-r"
+                >
                   {/* Level */}
-                  <TableCell className="w-[27px] max-w-[27px] min-w-[27px]">
+                  <TableCell className="w-[27px] min-w-[27px] max-w-[27px]">
                     <DefaultSkeleton className="h-2 w-2 rounded-full" />
                   </TableCell>
                   {/* Date */}
-                  <TableCell className="w-[200px] max-w-[200px] min-w-[200px] font-mono">
+                  <TableCell className="w-[200px] min-w-[200px] max-w-[200px] font-mono">
                     <DefaultSkeleton className="h-4 w-[180px]" />
                   </TableCell>
                   {/* Status */}
-                  <TableCell className="w-[60px] max-w-[60px] min-w-[60px] font-mono">
+                  <TableCell className="w-[60px] min-w-[60px] max-w-[60px] font-mono">
                     <DefaultSkeleton className="h-5 w-8 rounded" />
                   </TableCell>
                   {/* Method */}
-                  <TableCell className="w-[69px] max-w-[69px] min-w-[69px] font-mono">
+                  <TableCell className="w-[69px] min-w-[69px] max-w-[69px] font-mono">
                     <DefaultSkeleton className="h-4 w-10" />
                   </TableCell>
                   {/* Host */}
-                  <TableCell className="min-w-[125px] w-[125px] font-mono">
+                  <TableCell className="w-[125px] min-w-[125px] font-mono">
                     <DefaultSkeleton className="h-4 w-[110px]" />
                   </TableCell>
                   {/* Pathname */}
-                  <TableCell className="min-w-[130px] w-[130px] font-mono">
+                  <TableCell className="w-[130px] min-w-[130px] font-mono">
                     <DefaultSkeleton className="h-4 w-[100px]" />
                   </TableCell>
                   {/* Latency */}

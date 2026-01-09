@@ -122,12 +122,14 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
 export function splitData(data: ColumnSchema[], search: SearchParamsType) {
   let newData: ColumnSchema[] = [];
   const now = new Date();
+  // cursor undefined = "now"
+  const cursorTime = search.cursor?.getTime() ?? now.getTime();
 
   // TODO: write a helper function for this
   data.forEach((item) => {
     if (search.direction === "next") {
       if (
-        item.date.getTime() < search.cursor.getTime() &&
+        item.date.getTime() < cursorTime &&
         newData.length < search.size
       ) {
         newData.push(item);
@@ -139,7 +141,7 @@ export function splitData(data: ColumnSchema[], search: SearchParamsType) {
       }
     } else if (search.direction === "prev") {
       if (
-        item.date.getTime() > search.cursor.getTime() &&
+        item.date.getTime() > cursorTime &&
         // REMINDER: we need to make sure that we don't get items that are in the future which we do with mockLive data
         item.date.getTime() < now.getTime()
       ) {

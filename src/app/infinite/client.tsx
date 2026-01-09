@@ -5,7 +5,7 @@ import { getLevelRowClassName } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
-import { useQueryState } from "nuqs";
+import { useQueryState, useQueryStates } from "nuqs";
 import * as React from "react";
 import { LiveRow } from "./_components/live-row";
 import { columns } from "./columns";
@@ -13,9 +13,10 @@ import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
 import type { FacetMetadataSchema } from "./schema";
-import { searchParamsParser, type SearchParamsType } from "./search-params";
+import { searchParamsParser } from "./search-params";
 
-export function Client({ search }: { search: SearchParamsType }) {
+export function Client() {
+  const [search] = useQueryStates(searchParamsParser);
   const {
     data,
     isFetching,

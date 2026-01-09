@@ -1,8 +1,9 @@
 import {
-  QueryClient,
   defaultShouldDehydrateQuery,
   isServer,
+  QueryClient,
 } from "@tanstack/react-query";
+import SuperJSON from "superjson";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -15,6 +16,12 @@ function makeQueryClient() {
         shouldDehydrateQuery: (query) =>
           defaultShouldDehydrateQuery(query) ||
           query.state.status === "pending",
+        // Use SuperJSON to properly serialize Dates and other complex types
+        serializeData: SuperJSON.serialize,
+      },
+      hydrate: {
+        // Use SuperJSON to properly deserialize Dates and other complex types
+        deserializeData: SuperJSON.deserialize,
       },
     },
   });
