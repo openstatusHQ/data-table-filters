@@ -54,6 +54,8 @@ export function DataTableFilterCommand({
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>("");
+  // Guard to prevent effect cycle when serializing
+  const isSerializingRef = useRef(false);
   const filterFields = useMemo(
     () => _filterFields?.filter((i) => !i.commandDisabled),
     [_filterFields],
@@ -84,6 +86,11 @@ export function DataTableFilterCommand({
   >("data-table-command", []);
 
   useEffect(() => {
+    // Skip if this update came from serialization (prevents infinite loop)
+    if (isSerializingRef.current) {
+      isSerializingRef.current = false;
+      return;
+    }
     // TODO: we could check for ARRAY_DELIMITER or SLIDER_DELIMITER to auto-set filter when typing
     if (currentWord !== "" && open) return;
     // reset
@@ -128,6 +135,8 @@ export function DataTableFilterCommand({
   useEffect(() => {
     // REMINDER: only update the input value if the command is closed (avoids jumps while open)
     if (!open) {
+      // Set flag to prevent the parse effect from running after serialization
+      isSerializingRef.current = true;
       setInputValue(columnParser.serialize(columnFilters));
     }
   }, [columnFilters, filterFields, open]);
@@ -376,6 +385,9 @@ export function DataTableFilterCommand({
                 </span>
                 <span>
                   Range: <Kbd variant="outline">p95:59-340</Kbd>
+                </span>
+                <span>
+                  Spaces: <Kbd variant="outline">name:&quot;a b&quot;</Kbd>
                 </span>
               </div>
               {lastSearches.length ? (

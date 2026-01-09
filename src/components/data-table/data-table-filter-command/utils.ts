@@ -29,6 +29,17 @@ export function getWordByCaretPosition({
   return word;
 }
 
+/**
+ * Quote a value if it contains spaces
+ */
+function quoteIfNeeded(val: string | number | boolean | undefined): string {
+  const str = `${val}`;
+  if (str.includes(" ")) {
+    return `"${str}"`;
+  }
+  return str;
+}
+
 export function replaceInputByFieldType<TData>({
   prev,
   currentWord,
@@ -46,7 +57,7 @@ export function replaceInputByFieldType<TData>({
     case "checkbox": {
       if (currentWord.includes(ARRAY_DELIMITER)) {
         const words = currentWord.split(ARRAY_DELIMITER);
-        words[words.length - 1] = `${optionValue}`;
+        words[words.length - 1] = quoteIfNeeded(optionValue);
         const input = prev.replace(currentWord, words.join(ARRAY_DELIMITER));
         return `${input.trim()} `;
       }
@@ -68,7 +79,12 @@ export function replaceInputByFieldType<TData>({
       }
     }
     default: {
-      const input = prev.replace(currentWord, value);
+      // Quote the value if it contains spaces
+      const quotedValue = quoteIfNeeded(optionValue) || value;
+      const input = prev.replace(
+        currentWord,
+        `${String(field.value)}:${quotedValue}`,
+      );
       return `${input.trim()} `;
     }
   }
@@ -212,6 +228,48 @@ export function notEmpty<TValue>(
   return value !== null && value !== undefined;
 }
 
+/**
+ * Tokenize input string, respecting quoted values
+ *
+ * Examples:
+ * - `name:john regions:ams` → [["name", "john"], ["regions", "ams"]]
+ * - `name:"john doe" regions:ams` → [["name", "john doe"], ["regions", "ams"]]
+ * - `url:"https://example.com/path with spaces"` → [["url", "https://example.com/path with spaces"]]
+ */
+export function tokenizeFilterInput(input: string): Array<[string, string]> {
+  const results: Array<[string, string]> = [];
+  const trimmed = input.trim();
+
+  // Regex to match: key:"quoted value" or key:unquoted_value
+  // This handles:
+  // - key:"value with spaces"
+  // - key:'value with spaces' (single quotes)
+  // - key:valueWithoutSpaces
+  const regex = /(\w+):(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+
+  let match;
+  while ((match = regex.exec(trimmed)) !== null) {
+    const key = match[1];
+    // Value is in group 2 (double quotes), group 3 (single quotes), or group 4 (unquoted)
+    const value = match[2] ?? match[3] ?? match[4];
+    if (key && value !== undefined) {
+      results.push([key, value]);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Serialize a value, adding quotes if it contains spaces
+ */
+export function serializeFilterValue(value: string): string {
+  if (value.includes(" ")) {
+    return `"${value}"`;
+  }
+  return value;
+}
+
 export function columnFiltersParser<TData>({
   searchParamsParser,
   filterFields,
@@ -221,18 +279,15 @@ export function columnFiltersParser<TData>({
 }) {
   return {
     parse: (inputValue: string) => {
-      const values = inputValue
-        .trim()
-        .split(" ")
-        .reduce(
-          (prev, curr) => {
-            const [name, value] = curr.split(":");
-            if (!value || !name) return prev;
-            prev[name] = value;
-            return prev;
-          },
-          {} as Record<string, string>,
-        );
+      // Use tokenizer that respects quoted values
+      const tokens = tokenizeFilterInput(inputValue);
+      const values = tokens.reduce(
+        (prev, [name, value]) => {
+          prev[name] = value;
+          return prev;
+        },
+        {} as Record<string, string>,
+      );
 
       const searchParams = Object.entries(values).reduce(
         (prev, [key, value]) => {
@@ -256,7 +311,10 @@ export function columnFiltersParser<TData>({
 
         if (commandDisabled || !parser) return prev;
 
-        return `${prev}${curr.id}:${parser.serialize(curr.value)} `;
+        const serialized = parser.serialize(curr.value);
+        // Wrap in quotes if value contains spaces
+        const quotedValue = serializeFilterValue(serialized);
+        return `${prev}${curr.id}:${quotedValue} `;
       }, "");
 
       return values;
@@ -278,18 +336,15 @@ export function columnFiltersParserFromSchema<TData>({
 }) {
   return {
     parse: (inputValue: string) => {
-      const values = inputValue
-        .trim()
-        .split(" ")
-        .reduce(
-          (prev, curr) => {
-            const [name, value] = curr.split(":");
-            if (!value || !name) return prev;
-            prev[name] = value;
-            return prev;
-          },
-          {} as Record<string, string>,
-        );
+      // Use tokenizer that respects quoted values
+      const tokens = tokenizeFilterInput(inputValue);
+      const values = tokens.reduce(
+        (prev, [name, value]) => {
+          prev[name] = value;
+          return prev;
+        },
+        {} as Record<string, string>,
+      );
 
       const searchParams = Object.entries(values).reduce(
         (prev, [key, value]) => {
@@ -321,7 +376,9 @@ export function columnFiltersParserFromSchema<TData>({
         const serialized = fieldBuilder._config.serialize(curr.value);
         if (!serialized) return prev;
 
-        return `${prev}${curr.id}:${serialized} `;
+        // Wrap in quotes if value contains spaces
+        const quotedValue = serializeFilterValue(serialized);
+        return `${prev}${curr.id}:${quotedValue} `;
       }, "");
 
       return values;
