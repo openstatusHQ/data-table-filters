@@ -37,7 +37,7 @@ export function DataTableViewOptions() {
       table.getAllColumns().sort((a, b) => {
         return columnOrder.indexOf(a.id) - columnOrder.indexOf(b.id);
       }),
-    [columnOrder],
+    [columnOrder, table],
   );
 
   return (

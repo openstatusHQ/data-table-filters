@@ -56,6 +56,7 @@ export function DataTableProvider<TData, TValue>({
     children: React.ReactNode;
   }) {
   const value = useMemo(
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     () => ({
       ...props,
       columnFilters: props.columnFilters ?? [],

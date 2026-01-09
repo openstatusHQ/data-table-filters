@@ -21,7 +21,7 @@ export function DataTablePagination() {
   const { table, pagination, columnFilters } = useDataTable();
   const pageCount = useMemo(
     () => table.getPageCount(),
-    [columnFilters, pagination.pageSize],
+    [columnFilters, pagination.pageSize, table],
   );
 
   return (

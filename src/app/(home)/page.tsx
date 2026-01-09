@@ -255,13 +255,16 @@ function Toolbar() {
 }
 
 const BARS = 50;
+// Pre-generate heights to avoid Math.random() during render
+const BAR_HEIGHTS = Array.from(
+  { length: BARS },
+  () => ["h-2.5", "h-2", "h-1.5", "h-1"][Math.floor(Math.random() * 4)],
+);
+
 function Timeline() {
   return (
     <div className="flex items-end gap-px">
-      {Array.from({ length: BARS }).map((_, i) => {
-        const height = ["h-2.5", "h-2", "h-1.5", "h-1"][
-          Math.floor(Math.random() * 4)
-        ];
+      {BAR_HEIGHTS.map((height, i) => {
         return (
           <div
             key={i}

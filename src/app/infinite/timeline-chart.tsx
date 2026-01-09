@@ -62,7 +62,7 @@ export function TimelineChart<TChart extends BaseChartSchema>({
         ...item,
         [columnId]: new Date(item.timestamp).toString(),
       })),
-    [data],
+    [data, columnId],
   );
 
   const timerange = useMemo(() => {

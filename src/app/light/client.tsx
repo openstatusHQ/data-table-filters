@@ -36,6 +36,7 @@ export function Client() {
   const { sort, cursor, direction, uuid, ...filter } = search;
 
   // TODO: replace completely by facets
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filterFields = React.useMemo(() => {
     return defaultFilterFields.map((field) => {
       const facet = facets?.[field.value];

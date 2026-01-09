@@ -55,7 +55,7 @@ export interface FieldBuilder<T> {
 }
 
 // Schema definition as a record of field builders
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export type SchemaDefinition = Record<string, FieldBuilder<any>>;
 
 // Infer the TypeScript type from a schema definition

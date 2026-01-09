@@ -33,7 +33,7 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
       total: table.getCoreRowModel().rows.length,
       filtered: table.getFilteredRowModel().rows.length,
     }),
-    [isLoading, columnFilters],
+    [isLoading, columnFilters, table],
   );
 
   return (

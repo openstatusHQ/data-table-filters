@@ -158,6 +158,7 @@ export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
   const anchorRow = React.useMemo(() => {
     if (!live) return undefined;
 
+    // eslint-disable-next-line react-hooks/refs
     const item = data.find((item) => {
       // return first item that is there if not liveTimestamp
       if (!liveTimestamp.current) return true;
@@ -170,6 +171,7 @@ export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
     return item;
   }, [live, data]);
 
+  // eslint-disable-next-line react-hooks/refs
   return { row: anchorRow, timestamp: liveTimestamp.current };
 }
 
