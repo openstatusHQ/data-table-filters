@@ -1,5 +1,8 @@
 "use client";
 
+// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
+"use no memo";
+
 import {
   Table,
   TableBody,
@@ -118,11 +121,6 @@ export function DataTable<TData, TValue>({
     [customGetFacetedUniqueValues],
   );
 
-  // NOTE: Store rows in a variable to prevent React Compiler from incorrectly
-  // memoizing the getRowModel() call. The compiler assumes the table reference
-  // is stable (it is), but TanStack Table mutates internal state.
-  const rows = table.getRowModel().rows;
-
   return (
     <DataTableProvider
       table={table}
@@ -172,8 +170,8 @@ export function DataTable<TData, TValue>({
                 ))}
               </TableHeader>
               <TableBody>
-                {rows?.length ? (
-                  rows.map((row) => (
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
