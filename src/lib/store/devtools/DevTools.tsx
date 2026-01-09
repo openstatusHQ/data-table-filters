@@ -7,16 +7,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-  Bug,
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  Pause,
-  Play,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { Bug, Copy, Pause, Play, RotateCcw, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { StoreContext } from "../context";
 import { useFilterActions } from "../hooks/useFilterActions";

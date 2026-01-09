@@ -6,7 +6,6 @@
 
 import {
   ARRAY_DELIMITER,
-  RANGE_DELIMITER,
   SLIDER_DELIMITER,
   SORT_DELIMITER,
 } from "@/lib/delimiters";

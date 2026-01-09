@@ -12,7 +12,6 @@ import type { StoreApi } from "zustand";
 import type { InternalStoreAdapter } from "../../adapter/types";
 import { getSchemaDefaults } from "../../schema/serialization";
 import type { SchemaDefinition, StoreSnapshot } from "../../schema/types";
-import { getFilterSliceFromState, getFilterSliceKeys } from "./slice";
 import type { ZustandAdapterOptions } from "./types";
 
 export type {
