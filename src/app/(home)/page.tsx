@@ -337,7 +337,7 @@ function Hero() {
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <p className="max-w-[650px] text-lg text-muted-foreground">
+        <p className="max-w-[750px] text-lg text-muted-foreground">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
@@ -346,15 +346,20 @@ function Hero() {
           <Link href="https://ui.shadcn.com" className="text-nowrap">
             shadcn/ui
           </Link>{" "}
-          and search params via <Link href="https://nuqs.47ng.com">nuqs</Link>.
-          Open Source on{" "}
+          and state management via{" "}
+          <Link href="https://nuqs.47ng.com">nuqs</Link> (url-based) or{" "}
+          <Link href="https://zustand.docs.pmnd.rs/getting-started/introduction">
+            zustand
+          </Link>{" "}
+          (client-side). Open Source on{" "}
           <Link href="https://github.com/openstatusHQ/data-table-filters">
             GitHub
           </Link>
           .
         </p>
-        <p className="text-muted-foreground">
-          Learn more in the <Link href="/guide">Guide</Link>.
+        <p className="text-lg text-muted-foreground">
+          Learn more in the <Link href="/guide">Guide</Link>. Extendable with
+          BYOS (Bring Your Own Store).
         </p>
       </div>
       <NextLink
