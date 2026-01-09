@@ -358,6 +358,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             <DataTableFilterCommand
               searchParamsParser={parser}
               schema={schema}
+              tableId="infinite"
             />
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar

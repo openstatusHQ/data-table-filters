@@ -38,11 +38,14 @@ interface DataTableFilterCommandProps {
   searchParamsParser?: Record<string, ParserBuilder<any>>;
   // Or provide schema (new BYOS approach)
   schema?: SchemaDefinition;
+  // Unique ID for this table (used to namespace localStorage)
+  tableId?: string;
 }
 
 export function DataTableFilterCommand({
   searchParamsParser,
   schema,
+  tableId = "default",
 }: DataTableFilterCommandProps) {
   const {
     table,
@@ -83,7 +86,7 @@ export function DataTableFilterCommand({
       search: string;
       timestamp: number;
     }[]
-  >("data-table-command", []);
+  >(`data-table-command-${tableId}`, []);
 
   useEffect(() => {
     // Skip if this update came from serialization (prevents infinite loop)
