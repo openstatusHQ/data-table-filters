@@ -128,10 +128,7 @@ export function splitData(data: ColumnSchema[], search: SearchParamsType) {
   // TODO: write a helper function for this
   data.forEach((item) => {
     if (search.direction === "next") {
-      if (
-        item.date.getTime() < cursorTime &&
-        newData.length < search.size
-      ) {
+      if (item.date.getTime() < cursorTime && newData.length < search.size) {
         newData.push(item);
         // TODO: check how to deal with the cases that there are some items left with the same date
       } else if (

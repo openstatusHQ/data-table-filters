@@ -141,7 +141,10 @@ export function DataTable<TData, TValue>({
           <DataTableFilterControls />
         </div>
         <div className="flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1">
-          <DataTableFilterCommand schema={filterSchema.definition} tableId="default" />
+          <DataTableFilterCommand
+            schema={filterSchema.definition}
+            tableId="default"
+          />
           <DataTableToolbar />
           <div className="rounded-md border">
             <Table>
