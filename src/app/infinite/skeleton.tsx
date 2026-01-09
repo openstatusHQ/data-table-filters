@@ -9,6 +9,10 @@ import {
 import { Skeleton as DefaultSkeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+const chartBarsHeights = Array.from({ length: 40 }).map(
+  () => Math.random() * 30 + 15,
+);
+
 export function Skeleton() {
   return (
     <div
@@ -104,13 +108,11 @@ export function Skeleton() {
             <div className="relative h-full">
               {/* Chart bars area - positioned at top */}
               <div className="absolute inset-x-0 top-0 flex h-[45px] items-end gap-[1px]">
-                {Array.from({ length: 40 }).map((_, i) => (
+                {chartBarsHeights.map((height, i) => (
                   <DefaultSkeleton
                     key={i}
                     className="flex-1 rounded-sm"
-                    style={{
-                      height: `${Math.random() * 30 + 15}%`,
-                    }}
+                    style={{ height: `${height}%` }}
                   />
                 ))}
               </div>
