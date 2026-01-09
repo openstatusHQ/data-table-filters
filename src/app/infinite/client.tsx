@@ -76,6 +76,15 @@ export function Client() {
     });
   }, [facets]);
 
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({
+        id: key,
+        value,
+      }))
+      .filter(({ value }) => value ?? undefined);
+  }, [filter]);
+
   return (
     <DataTableInfinite
       columns={columns}
@@ -83,12 +92,7 @@ export function Client() {
       totalRows={totalDBRowCount}
       filterRows={filterDBRowCount}
       totalRowsFetched={totalFetched}
-      defaultColumnFilters={Object.entries(filter)
-        .map(([key, value]) => ({
-          id: key,
-          value,
-        }))
-        .filter(({ value }) => value ?? undefined)}
+      defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
       // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`

@@ -8,6 +8,12 @@ import type {
 } from "./schema";
 import { searchParamsSerializer, type SearchParamsType } from "./search-params";
 
+function getBaseUrl() {
+  if (typeof window !== "undefined") return ""; // browser should use relative url
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR on Vercel
+  return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR
+}
+
 export type LogsMeta = {
   currentPercentiles: Record<Percentile, number>;
 };
@@ -27,12 +33,24 @@ export type InfiniteQueryResponse<TData, TMeta = unknown> = {
   nextCursor: number | null;
 };
 
+// Query key = filters only (no cursor/pagination state)
+// This ensures server/client keys match regardless of when they run
+function getStableQueryKey(search: SearchParamsType) {
+  return searchParamsSerializer({
+    ...search,
+    uuid: null,
+    live: null,
+    cursor: null,
+    direction: null,
+  });
+}
+
 export const dataOptions = (search: SearchParamsType) => {
+  // cursor undefined = "now", otherwise use the URL value
+  const initialCursor = search.cursor?.getTime() ?? Date.now();
+
   return infiniteQueryOptions({
-    queryKey: [
-      "data-table",
-      searchParamsSerializer({ ...search, uuid: null, live: null }),
-    ], // remove uuid/live as it would otherwise retrigger a fetch
+    queryKey: ["data-table", getStableQueryKey(search)],
     queryFn: async ({ pageParam }) => {
       const cursor = new Date(pageParam.cursor);
       const direction = pageParam.direction as "next" | "prev" | undefined;
@@ -43,13 +61,13 @@ export const dataOptions = (search: SearchParamsType) => {
         uuid: null,
         live: null,
       });
-      const response = await fetch(`/infinite/api${serialize}`);
+      const response = await fetch(`${getBaseUrl()}/infinite/api${serialize}`);
       const json = await response.json();
       return SuperJSON.parse<InfiniteQueryResponse<ColumnSchema[], LogsMeta>>(
         json,
       );
     },
-    initialPageParam: { cursor: new Date().getTime(), direction: "next" },
+    initialPageParam: { cursor: initialCursor, direction: "next" },
     getPreviousPageParam: (firstPage, _pages) => {
       if (!firstPage.prevCursor) return null;
       return { cursor: firstPage.prevCursor, direction: "prev" };
@@ -60,5 +78,6 @@ export const dataOptions = (search: SearchParamsType) => {
     },
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
