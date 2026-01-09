@@ -44,6 +44,7 @@ export interface DataTableProps<TData, TValue> {
   defaultColumnFilters?: ColumnFiltersState;
   // TODO: add sortingColumnFilters
   filterFields?: DataTableFilterField<TData>[];
+  tableId?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -51,6 +52,7 @@ export function DataTable<TData, TValue>({
   data,
   defaultColumnFilters = [],
   filterFields = [],
+  tableId = "default",
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -60,7 +62,7 @@ export function DataTable<TData, TValue>({
     pageSize: 10,
   });
   const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>("data-table-visibility", {});
+    useLocalStorage<VisibilityState>(`data-table-visibility-${tableId}`, {});
 
   // Reset pagination when filters change to avoid showing empty pages
   React.useEffect(() => {

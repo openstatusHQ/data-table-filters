@@ -106,6 +106,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   // Either provide searchParamsParser (nuqs approach) or schema (BYOS approach)
   searchParamsParser?: Record<string, ParserBuilder<any>>;
   schema?: SchemaDefinition;
+  tableId?: string;
 }
 
 export function DataTableInfinite<TData, TValue, TMeta>({
@@ -137,6 +138,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   renderSheetTitle,
   searchParamsParser,
   schema,
+  tableId = "infinite",
 }: DataTableInfiniteProps<TData, TValue, TMeta>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -145,12 +147,12 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   const [rowSelection, setRowSelection] =
     React.useState<RowSelectionState>(defaultRowSelection);
   const [columnOrder, setColumnOrder] = useLocalStorage<string[]>(
-    "data-table-column-order",
+    `data-table-column-order-${tableId}`,
     [],
   );
   const [columnVisibility, setColumnVisibility] =
     useLocalStorage<VisibilityState>(
-      "data-table-visibility",
+      `data-table-visibility-${tableId}`,
       defaultColumnVisibility,
     );
   const topBarRef = React.useRef<HTMLDivElement>(null);

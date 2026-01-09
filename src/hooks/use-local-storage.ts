@@ -1,45 +1,42 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
-function getItemFromLocalStorage(key: string) {
-  const item = window?.localStorage.getItem(key);
-  if (item) return JSON.parse(item);
-
-  return null;
+function getItemFromLocalStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 export function useLocalStorage<T>(
   key: string,
   initialValue: T,
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const [storedValue, setStoredValue] = useState(initialValue);
-
-  useEffect(() => {
-    // initialize
-    if (typeof window !== "undefined") {
-      const stored = getItemFromLocalStorage(key);
-      if (stored !== null) setStoredValue(stored);
-    }
-  }, [key]);
+  // Initialize directly from localStorage to avoid hydration mismatch
+  const [storedValue, setStoredValue] = useState<T>(() =>
+    getItemFromLocalStorage(key, initialValue),
+  );
 
   const setValue: React.Dispatch<React.SetStateAction<T>> = useCallback(
     (value) => {
-      if (value instanceof Function) {
-        setStoredValue((prev: T) => {
-          const newValue = value(prev);
-          // Save to localStorage
-          window.localStorage.setItem(key, JSON.stringify(newValue));
-          return newValue;
+      setStoredValue((prev) => {
+        const newValue = value instanceof Function ? value(prev) : value;
+        // Save to localStorage asynchronously to avoid blocking UI
+        queueMicrotask(() => {
+          try {
+            window.localStorage.setItem(key, JSON.stringify(newValue));
+          } catch {
+            // Ignore localStorage errors (quota exceeded, etc.)
+          }
         });
-      } else {
-        setStoredValue(value);
-        // Save to localStorage
-        window.localStorage.setItem(key, JSON.stringify(value));
-      }
-      return setStoredValue;
+        return newValue;
+      });
     },
-    [key, setStoredValue],
+    [key],
   );
 
   return [storedValue, setValue];
