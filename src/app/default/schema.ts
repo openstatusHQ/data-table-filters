@@ -15,6 +15,7 @@ import { createSchema, field } from "@/lib/store/schema";
 export const filterSchema = createSchema({
   // Text input filter
   url: field.string(),
+  name: field.string(),
 
   // Slider filter (range)
   p95: field.array(field.number()).delimiter("-"),

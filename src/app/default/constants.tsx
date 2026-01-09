@@ -19,6 +19,12 @@ export const filterFields = [
     commandDisabled: true,
   },
   {
+    label: "Name",
+    value: "name",
+    type: "input",
+    options: data.map(({ name }) => ({ label: name, value: name })),
+  },
+  {
     label: "URL",
     value: "url",
     type: "input",
