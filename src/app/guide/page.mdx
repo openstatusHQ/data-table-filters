@@ -384,6 +384,70 @@ The `fetchPreviousPage` from the the `useInfiniteQuery` is being used. The newly
 
 For the demo, we add some mock data in the future to see the live mode in action. At some point, no more can be fetcheed anymore. You'll need to refresh the page or wait for the cache to miss.
 
+### Server Prefetch & Loading States
+
+The `/infinite` route supports server-side prefetching with React Query's `HydrationBoundary`. This can be toggled via a cookie-based flag, allowing you to compare the UX between server prefetch (with skeleton) and client-only fetching (with loading spinner).
+
+#### Prefetch Toggle
+
+The prefetch behavior is controlled by the `data-table-prefetch` cookie. When enabled, the server prefetches the initial data and streams it to the client with a `Skeleton` fallback during the loading state.
+
+```tsx
+// page.tsx
+import { PREFETCH_COOKIE_NAME } from "@/lib/constants/cookies";
+
+export default async function Page({ searchParams }) {
+  const cookieStore = await cookies();
+  const prefetchEnabled =
+    cookieStore.get(PREFETCH_COOKIE_NAME)?.value === "true";
+
+  if (prefetchEnabled) {
+    return (
+      <Suspense fallback={<Skeleton />}>
+        <PrefetchedContent search={search} />
+      </Suspense>
+    );
+  }
+
+  // No prefetch: render client directly without Suspense/skeleton
+  return (
+    <HydrationBoundary state={dehydrate(getQueryClient())}>
+      <Client />
+    </HydrationBoundary>
+  );
+}
+```
+
+The `DataTableInfinite` component accepts a `showPrefetchToggle` prop to render a toggle button in the toolbar:
+
+```tsx
+<DataTableInfinite
+  // ... other props
+  showPrefetchToggle // Shows the prefetch toggle in toolbar
+/>
+```
+
+#### Skeleton Component
+
+The `Skeleton` component (`skeleton.tsx`) provides a loading state that matches the layout of the data-table. It includes:
+
+- Left sidebar filter controls skeleton
+- Command palette skeleton
+- Toolbar skeleton
+- Timeline chart skeleton with animated bars
+- Table header and rows skeleton
+
+This approach replaces the traditional `loading.tsx` file, giving you conditional control over when to show the skeleton based on the prefetch state.
+
+#### When to Use Each Approach
+
+| Approach              | Use Case                                                      |
+| --------------------- | ------------------------------------------------------------- |
+| **Prefetch enabled**  | Fast API responses, SEO-critical pages, avoid layout shift    |
+| **Prefetch disabled** | Slow API responses, better perceived performance with spinner |
+
+> **Note**: The prefetch toggle is only available on the `/infinite` route for demonstration purposes. The `/light` route never prefetches.
+
 ## BYOS (Bring Your Own Store)
 
 BYOS is an adapter pattern that allows you to use any state management solution for your data-table filters. Instead of being locked into `nuqs` for URL-based state, you can use Zustand, or even create your own custom adapter.
