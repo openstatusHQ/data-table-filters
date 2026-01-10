@@ -80,6 +80,12 @@ export function useZustandAdapter<
 
   const versionRef = useRef(0);
 
+  // Cache server snapshot to avoid infinite loop with useSyncExternalStore
+  const serverSnapshotRef = useRef<StoreSnapshot<TFilters>>({
+    state: { ...defaults, ...initialState } as TFilters,
+    version: 0,
+  });
+
   const adapter = useMemo<InternalStoreAdapter<TFilters>>(() => {
     const storeApi = useStore as unknown as StoreApi<TStore>;
 
@@ -100,12 +106,9 @@ export function useZustandAdapter<
         };
       },
 
-      // Zustand adapter is client-only, no SSR support
+      // Zustand adapter is client-only, return cached snapshot for SSR
       getServerSnapshot(): StoreSnapshot<TFilters> {
-        return {
-          state: { ...defaults, ...initialState } as TFilters,
-          version: 0,
-        };
+        return serverSnapshotRef.current;
       },
 
       setState(partial: Partial<TFilters>) {

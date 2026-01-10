@@ -6,6 +6,7 @@ import {
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
 } from "@/lib/delimiters";
+import { createSchema, field } from "@/lib/store/schema";
 import { z } from "zod";
 
 // https://github.com/colinhacks/zod/issues/2985#issue-2008642190
@@ -137,3 +138,25 @@ export const timelineChartSchema = z.object({
 }) satisfies z.ZodType<BaseChartSchema>;
 
 export type TimelineChartSchema = z.infer<typeof timelineChartSchema>;
+
+// BYOS filter schema
+export const filterSchema = createSchema({
+  // Filters
+  level: field.array(field.stringLiteral(LEVELS)),
+  method: field.array(field.stringLiteral(METHODS)),
+  host: field.string(),
+  pathname: field.string(),
+  latency: field.array(field.number()).delimiter(SLIDER_DELIMITER),
+  "timing.dns": field.array(field.number()).delimiter(SLIDER_DELIMITER),
+  "timing.connection": field.array(field.number()).delimiter(SLIDER_DELIMITER),
+  "timing.tls": field.array(field.number()).delimiter(SLIDER_DELIMITER),
+  "timing.ttfb": field.array(field.number()).delimiter(SLIDER_DELIMITER),
+  "timing.transfer": field.array(field.number()).delimiter(SLIDER_DELIMITER),
+  status: field.array(field.number()).delimiter(ARRAY_DELIMITER),
+  regions: field.array(field.stringLiteral(REGIONS)),
+  date: field.array(field.timestamp()).delimiter(RANGE_DELIMITER),
+  // Sorting
+  sort: field.sort(),
+  // Selection
+  uuid: field.string(),
+});

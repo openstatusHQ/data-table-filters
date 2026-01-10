@@ -2,6 +2,8 @@
 
 import { useHotKey } from "@/hooks/use-hot-key";
 import { getLevelRowClassName } from "@/lib/request/level";
+import { DataTableStoreProvider } from "@/lib/store";
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
@@ -13,10 +15,12 @@ import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
 import type { FacetMetadataSchema } from "./schema";
+import { filterSchema } from "./schema";
 import { searchParamsParser } from "./search-params";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "infinite" });
   const {
     data,
     isFetching,
@@ -86,53 +90,55 @@ export function Client() {
   }, [filter]);
 
   return (
-    <DataTableInfinite
-      columns={columns}
-      data={flatData}
-      totalRows={totalDBRowCount}
-      filterRows={filterDBRowCount}
-      totalRowsFetched={totalFetched}
-      defaultColumnFilters={defaultColumnFilters}
-      defaultColumnSorting={sort ? [sort] : undefined}
-      defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
-      // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`
-      defaultColumnVisibility={{
-        uuid: false,
-        "timing.dns": false,
-        "timing.connection": false,
-        "timing.tls": false,
-        "timing.ttfb": false,
-        "timing.transfer": false,
-      }}
-      meta={metadata}
-      filterFields={filterFields}
-      sheetFields={sheetFields}
-      isFetching={isFetching}
-      isLoading={isLoading}
-      fetchNextPage={fetchNextPage}
-      hasNextPage={hasNextPage}
-      fetchPreviousPage={fetchPreviousPage}
-      refetch={refetch}
-      chartData={chartData}
-      chartDataColumnId="date"
-      getRowClassName={(row) => {
-        const rowTimestamp = row.original.date.getTime();
-        const isPast = rowTimestamp <= (liveMode.timestamp || -1);
-        const levelClassName = getLevelRowClassName(row.original.level);
-        return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
-      }}
-      getRowId={(row) => row.uuid}
-      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
-      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
-      renderLiveRow={(props) => {
-        if (!liveMode.timestamp) return null;
-        if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
-        return <LiveRow />;
-      }}
-      renderSheetTitle={(props) => props.row?.original.pathname}
-      searchParamsParser={searchParamsParser}
-      showPrefetchToggle
-    />
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableInfinite
+        columns={columns}
+        data={flatData}
+        totalRows={totalDBRowCount}
+        filterRows={filterDBRowCount}
+        totalRowsFetched={totalFetched}
+        defaultColumnFilters={defaultColumnFilters}
+        defaultColumnSorting={sort ? [sort] : undefined}
+        defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
+        // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`
+        defaultColumnVisibility={{
+          uuid: false,
+          "timing.dns": false,
+          "timing.connection": false,
+          "timing.tls": false,
+          "timing.ttfb": false,
+          "timing.transfer": false,
+        }}
+        meta={metadata}
+        filterFields={filterFields}
+        sheetFields={sheetFields}
+        isFetching={isFetching}
+        isLoading={isLoading}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        fetchPreviousPage={fetchPreviousPage}
+        refetch={refetch}
+        chartData={chartData}
+        chartDataColumnId="date"
+        getRowClassName={(row) => {
+          const rowTimestamp = row.original.date.getTime();
+          const isPast = rowTimestamp <= (liveMode.timestamp || -1);
+          const levelClassName = getLevelRowClassName(row.original.level);
+          return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
+        }}
+        getRowId={(row) => row.uuid}
+        getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+        getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+        renderLiveRow={(props) => {
+          if (!liveMode.timestamp) return null;
+          if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
+          return <LiveRow />;
+        }}
+        renderSheetTitle={(props) => props.row?.original.pathname}
+        searchParamsParser={searchParamsParser}
+        showPrefetchToggle
+      />
+    </DataTableStoreProvider>
   );
 }
 

@@ -598,23 +598,6 @@ We provide two official adapters:
 1. **nuqs Adapter** (`@/lib/store/adapters/nuqs`) - URL-based state with SSR support
 2. **Zustand Adapter** (`@/lib/store/adapters/zustand`) - Client-side state that integrates with existing Zustand stores
 
-### React Compiler Compatibility
-
-If you're using the React Compiler (`reactCompiler: true` in Next.js), be aware that TanStack Table's `table.getRowModel()` may be incorrectly memoized. Store the result in a variable before using it in JSX:
-
-```tsx
-// ✅ Correct - prevents React Compiler memoization issues
-const rows = table.getRowModel().rows;
-
-return (
-  <TableBody>
-    {rows.map((row) => (
-      <TableRow key={row.id}>...</TableRow>
-    ))}
-  </TableBody>
-);
-```
-
 ## Debugging
 
 We use `react-scan` to for performance debugging. It will show you the components that are being re-rendered. You can enable it by setting the `NEXT_PUBLIC_REACT_SCAN` environment variable to `true` and is automatically enabled in the development environment.

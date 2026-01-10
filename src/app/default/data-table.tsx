@@ -19,6 +19,8 @@ import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import type { DataTableFilterField } from "@/components/data-table/types";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { getColumnVisibilityKey } from "@/lib/constants/local-storage";
+import { DataTableStoreProvider } from "@/lib/store";
+import { useZustandAdapter } from "@/lib/store/adapters/zustand";
 import { cn } from "@/lib/utils";
 import type {
   ColumnDef,
@@ -41,6 +43,7 @@ import {
 } from "@tanstack/react-table";
 import * as React from "react";
 import { filterSchema } from "./schema";
+import { useFilterStore } from "./store";
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -58,6 +61,9 @@ export function DataTable<TData, TValue>({
   filterFields = [],
   tableId = "default",
 }: DataTableProps<TData, TValue>) {
+  const adapter = useZustandAdapter(useFilterStore, filterSchema.definition, {
+    id: tableId,
+  });
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -123,86 +129,88 @@ export function DataTable<TData, TValue>({
   );
 
   return (
-    <DataTableProvider
-      table={table}
-      columns={columns}
-      filterFields={filterFields}
-      columnFilters={columnFilters}
-      sorting={sorting}
-      pagination={pagination}
-      getFacetedUniqueValues={getFacetedUniqueValuesForProvider}
-    >
-      <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
-        <div
-          className={cn(
-            "hidden w-full p-1 sm:block sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
-            "group-data-[expanded=false]/controls:hidden",
-          )}
-        >
-          <DataTableFilterControls />
-        </div>
-        <div className="flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1">
-          <DataTableFilterCommand
-            schema={filterSchema.definition}
-            tableId="default"
-          />
-          <DataTableToolbar />
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow
-                    key={headerGroup.id}
-                    className="hover:bg-transparent"
-                  >
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableProvider
+        table={table}
+        columns={columns}
+        filterFields={filterFields}
+        columnFilters={columnFilters}
+        sorting={sorting}
+        pagination={pagination}
+        getFacetedUniqueValues={getFacetedUniqueValuesForProvider}
+      >
+        <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
+          <div
+            className={cn(
+              "hidden w-full p-1 sm:block sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
+              "group-data-[expanded=false]/controls:hidden",
+            )}
+          >
+            <DataTableFilterControls />
           </div>
-          <DataTablePagination />
+          <div className="flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1">
+            <DataTableFilterCommand
+              schema={filterSchema.definition}
+              tableId="default"
+            />
+            <DataTableToolbar />
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow
+                      key={headerGroup.id}
+                      className="hover:bg-transparent"
+                    >
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <DataTablePagination />
+          </div>
         </div>
-      </div>
-    </DataTableProvider>
+      </DataTableProvider>
+    </DataTableStoreProvider>
   );
 }

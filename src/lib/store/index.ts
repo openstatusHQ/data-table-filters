@@ -80,3 +80,7 @@ export { useReactTableSync } from "./hooks/useReactTableSync";
 
 // Context (for advanced use cases)
 export { StoreContext, type StoreContextValue } from "./context";
+
+// Text Parser
+export { createTextParser } from "./parser";
+export type { TextParser, TextParserOptions } from "./parser";

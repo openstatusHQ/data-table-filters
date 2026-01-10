@@ -1,6 +1,8 @@
 "use client";
 
 import { getLevelRowClassName } from "@/lib/request/level";
+import { DataTableStoreProvider } from "@/lib/store";
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import * as React from "react";
@@ -12,10 +14,12 @@ import { DataTableInfinite } from "../infinite/data-table-infinite";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { dataOptions } from "./query-options";
+import { filterSchema } from "./schema";
 import { searchParamsParser } from "./search-params";
 
 export function Client() {
   const [search] = useQueryStates(searchParamsParser);
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "light" });
   const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
     useInfiniteQuery(dataOptions(search));
 
@@ -71,35 +75,37 @@ export function Client() {
   }, [filter]);
 
   return (
-    <DataTableInfinite
-      columns={columns}
-      data={flatData}
-      totalRows={totalDBRowCount}
-      filterRows={filterDBRowCount}
-      totalRowsFetched={totalFetched}
-      defaultColumnFilters={defaultColumnFilters}
-      defaultColumnSorting={sort ? [sort] : undefined}
-      getRowClassName={(row) => getLevelRowClassName(row.original.level)}
-      getRowId={(row) =>
-        `${row.region}-${row.timestamp}-${row.url}-${row.latency}`
-      }
-      meta={metadata}
-      chartData={chartData}
-      chartDataColumnId="timestamp"
-      filterFields={filterFields}
-      sheetFields={sheetFields}
-      isFetching={isFetching}
-      isLoading={isLoading}
-      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
-      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
-      fetchNextPage={fetchNextPage}
-      hasNextPage={hasNextPage}
-      // NOTE: we are not using live mode
-      fetchPreviousPage={undefined}
-      refetch={refetch}
-      renderSheetTitle={(props) => props.row?.original.url}
-      searchParamsParser={searchParamsParser}
-      tableId="light"
-    />
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableInfinite
+        columns={columns}
+        data={flatData}
+        totalRows={totalDBRowCount}
+        filterRows={filterDBRowCount}
+        totalRowsFetched={totalFetched}
+        defaultColumnFilters={defaultColumnFilters}
+        defaultColumnSorting={sort ? [sort] : undefined}
+        getRowClassName={(row) => getLevelRowClassName(row.original.level)}
+        getRowId={(row) =>
+          `${row.region}-${row.timestamp}-${row.url}-${row.latency}`
+        }
+        meta={metadata}
+        chartData={chartData}
+        chartDataColumnId="timestamp"
+        filterFields={filterFields}
+        sheetFields={sheetFields}
+        isFetching={isFetching}
+        isLoading={isLoading}
+        getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+        getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        // NOTE: we are not using live mode
+        fetchPreviousPage={undefined}
+        refetch={refetch}
+        renderSheetTitle={(props) => props.row?.original.url}
+        searchParamsParser={searchParamsParser}
+        tableId="light"
+      />
+    </DataTableStoreProvider>
   );
 }

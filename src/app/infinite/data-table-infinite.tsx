@@ -59,7 +59,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
-import { useQueryState, useQueryStates, type ParserBuilder } from "nuqs";
+import { useQueryState, type ParserBuilder } from "nuqs";
 import * as React from "react";
 import { LiveButton } from "./_components/live-button";
 import { PrefetchToggle } from "./_components/prefetch-toggle";
@@ -170,9 +170,6 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   const topBarRef = React.useRef<HTMLDivElement>(null);
   const tableRef = React.useRef<HTMLTableElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
-  // Use provided parser or fall back to default
-  const parser = searchParamsParser || defaultSearchParamsParser;
-  const [_, setSearch] = useQueryStates(parser);
 
   const onScroll = React.useCallback(
     (e: React.UIEvent<HTMLElement>) => {
@@ -231,31 +228,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
     meta: { getRowClassName },
   });
 
-  React.useEffect(() => {
-    const columnFiltersWithNullable = filterFields.map((field) => {
-      const filterValue = columnFilters.find(
-        (filter) => filter.id === field.value,
-      );
-      if (!filterValue) return { id: field.value, value: null };
-      return { id: field.value, value: filterValue.value };
-    });
-
-    const search = columnFiltersWithNullable.reduce(
-      (prev, curr) => {
-        prev[curr.id as string] = curr.value;
-        return prev;
-      },
-      {} as Record<string, unknown>,
-    );
-
-    setSearch(search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnFilters]);
-
-  React.useEffect(() => {
-    setSearch({ sort: sorting?.[0] || null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sorting]);
+  // NOTE: Filter, sort, and selection syncing is now handled by DataTableStoreSync
 
   const selectedRow = React.useMemo(() => {
     if ((isLoading || isFetching) && !data.length) return;
@@ -265,16 +238,12 @@ export function DataTableInfinite<TData, TValue, TMeta>({
       .flatRows.find((row) => row.id === selectedRowKey);
   }, [rowSelection, table, isLoading, isFetching, data]);
 
-  // TODO: can only share uuid within the first batch
+  // Reset row selection if selected row is no longer in data
   React.useEffect(() => {
     if (isLoading || isFetching) return;
     if (Object.keys(rowSelection)?.length && !selectedRow) {
-      setSearch({ uuid: null });
       setRowSelection({});
-    } else {
-      setSearch({ uuid: Object.keys(rowSelection)?.[0] || null });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowSelection, selectedRow, isLoading, isFetching]);
 
   /**
@@ -385,7 +354,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             )}
           >
             <DataTableFilterCommand
-              searchParamsParser={parser}
+              searchParamsParser={searchParamsParser}
               schema={schema}
               tableId={tableId}
             />

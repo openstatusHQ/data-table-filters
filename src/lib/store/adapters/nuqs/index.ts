@@ -71,6 +71,12 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
   const pausedRef = useRef(false);
   const pendingStateRef = useRef<Partial<T> | null>(null);
 
+  // Cache server snapshot to avoid infinite loop with useSyncExternalStore
+  const serverSnapshotRef = useRef<StoreSnapshot<T>>({
+    state: { ...defaults, ...initialState } as T,
+    version: 0,
+  });
+
   // Sync nuqs state to our state ref
   useEffect(() => {
     const validated = validateState(schema, nuqsState) as T;
@@ -98,11 +104,8 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
       },
 
       getServerSnapshot(): StoreSnapshot<T> {
-        // For SSR, return defaults merged with initial state
-        return {
-          state: { ...defaults, ...initialState } as T,
-          version: 0,
-        };
+        // Return cached snapshot to avoid infinite loop with useSyncExternalStore
+        return serverSnapshotRef.current;
       },
 
       setState(partial: Partial<T>) {
