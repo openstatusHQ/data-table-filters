@@ -25,6 +25,10 @@ import type {
 import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import {
+  getColumnOrderKey,
+  getColumnVisibilityKey,
+} from "@/lib/constants/local-storage";
 import { formatCompactNumber } from "@/lib/format";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import { arrSome, inDateRange } from "@/lib/table/filterfns";
@@ -58,6 +62,7 @@ import { LoaderCircle } from "lucide-react";
 import { useQueryState, useQueryStates, type ParserBuilder } from "nuqs";
 import * as React from "react";
 import { LiveButton } from "./_components/live-button";
+import { PrefetchToggle } from "./_components/prefetch-toggle";
 import { RefreshButton } from "./_components/refresh-button";
 import { SocialsFooter } from "./_components/socials-footer";
 import { BaseChartSchema } from "./schema";
@@ -150,12 +155,12 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   const [rowSelection, setRowSelection] =
     React.useState<RowSelectionState>(defaultRowSelection);
   const [columnOrder, setColumnOrder] = useLocalStorage<string[]>(
-    `data-table-column-order-${tableId}`,
+    getColumnOrderKey(tableId),
     [],
   );
   const [columnVisibility, setColumnVisibility] =
     useLocalStorage<VisibilityState>(
-      `data-table-visibility-${tableId}`,
+      getColumnVisibilityKey(tableId),
       defaultColumnVisibility,
     );
   const topBarRef = React.useRef<HTMLDivElement>(null);
@@ -383,6 +388,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
               renderActions={() => [
+                <PrefetchToggle key="prefetch" />,
                 <RefreshButton key="refresh" onClick={refetch} />,
                 fetchPreviousPage ? (
                   <LiveButton

@@ -18,6 +18,7 @@ import { DataTableProvider } from "@/components/data-table/data-table-provider";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import type { DataTableFilterField } from "@/components/data-table/types";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { getColumnVisibilityKey } from "@/lib/constants/local-storage";
 import { cn } from "@/lib/utils";
 import type {
   ColumnDef,
@@ -65,7 +66,7 @@ export function DataTable<TData, TValue>({
     pageSize: 10,
   });
   const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>(`data-table-visibility-${tableId}`, {});
+    useLocalStorage<VisibilityState>(getColumnVisibilityKey(tableId), {});
 
   // Reset pagination when filters change to avoid showing empty pages
   React.useEffect(() => {

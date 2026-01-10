@@ -14,6 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { getCommandHistoryKey } from "@/lib/constants/local-storage";
 import { formatCompactNumber } from "@/lib/format";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import { cn } from "@/lib/utils";
@@ -86,7 +87,7 @@ export function DataTableFilterCommand({
       search: string;
       timestamp: number;
     }[]
-  >(`data-table-command-${tableId}`, []);
+  >(getCommandHistoryKey(tableId), []);
 
   useEffect(() => {
     // Skip if this update came from serialization (prevents infinite loop)

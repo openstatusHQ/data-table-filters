@@ -1,4 +1,5 @@
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { CONTROLS_KEY } from "@/lib/constants/local-storage";
 import { createContext, useContext } from "react";
 
 interface ControlsContextType {
@@ -9,7 +10,7 @@ interface ControlsContextType {
 export const ControlsContext = createContext<ControlsContextType | null>(null);
 
 export function ControlsProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useLocalStorage("data-table-controls", true);
+  const [open, setOpen] = useLocalStorage(CONTROLS_KEY, true);
 
   return (
     <ControlsContext.Provider value={{ open, setOpen }}>
