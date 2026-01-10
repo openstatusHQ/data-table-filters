@@ -1,5 +1,8 @@
 "use client";
 
+// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
+"use no memo";
+
 import {
   Table,
   TableBody,
@@ -295,6 +298,21 @@ export function DataTableInfinite<TData, TValue, TMeta>({
     setColumnVisibility(defaultColumnVisibility);
   }, "u");
 
+  // Memoize column state as strings for efficient row memoization comparison
+  const visibleColumnIds = React.useMemo(
+    () =>
+      table
+        .getVisibleLeafColumns()
+        .map((c) => c.id)
+        .join(","),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [table.getState().columnVisibility],
+  );
+  const columnOrderString = React.useMemo(
+    () => columnOrder.join(","),
+    [columnOrder],
+  );
+
   return (
     <DataTableProvider
       table={table}
@@ -455,6 +473,8 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                         row={row}
                         table={table}
                         selected={row.getIsSelected()}
+                        visibleColumnIds={visibleColumnIds}
+                        columnOrder={columnOrderString}
                       />
                     </React.Fragment>
                   ))
@@ -539,11 +559,16 @@ function Row<TData>({
   row,
   table,
   selected,
+  visibleColumnIds,
+  columnOrder,
 }: {
   row: Row<TData>;
   table: TTable<TData>;
   // REMINDER: row.getIsSelected(); - just for memoization
   selected?: boolean;
+  // REMINDER: for memoization - triggers re-render when columns change
+  visibleColumnIds: string;
+  columnOrder: string;
 }) {
   // REMINDER: rerender the row when live mode is toggled - used to opacity the row
   // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
@@ -584,5 +609,8 @@ function Row<TData>({
 const MemoizedRow = React.memo(
   Row,
   (prev, next) =>
-    prev.row.id === next.row.id && prev.selected === next.selected,
+    prev.row.id === next.row.id &&
+    prev.selected === next.selected &&
+    prev.visibleColumnIds === next.visibleColumnIds &&
+    prev.columnOrder === next.columnOrder,
 ) as typeof Row;
