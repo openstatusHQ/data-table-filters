@@ -114,7 +114,10 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   // Either provide searchParamsParser (nuqs approach) or schema (BYOS approach)
   searchParamsParser?: Record<string, ParserBuilder<any>>;
   schema?: SchemaDefinition;
+  // Used to store column order and visibility in local storage for specific data-table namespace
   tableId?: string;
+  // Show the prefetch toggle button in the toolbar
+  showPrefetchToggle?: boolean;
 }
 
 export function DataTableInfinite<TData, TValue, TMeta>({
@@ -147,6 +150,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   searchParamsParser,
   schema,
   tableId = "infinite",
+  showPrefetchToggle = false,
 }: DataTableInfiniteProps<TData, TValue, TMeta>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -383,12 +387,12 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             <DataTableFilterCommand
               searchParamsParser={parser}
               schema={schema}
-              tableId="infinite"
+              tableId={tableId}
             />
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
               renderActions={() => [
-                <PrefetchToggle key="prefetch" />,
+                showPrefetchToggle ? <PrefetchToggle key="prefetch" /> : null,
                 <RefreshButton key="refresh" onClick={refetch} />,
                 fetchPreviousPage ? (
                   <LiveButton

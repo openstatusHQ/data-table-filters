@@ -131,6 +131,7 @@ export function Client() {
       }}
       renderSheetTitle={(props) => props.row?.original.pathname}
       searchParamsParser={searchParamsParser}
+      showPrefetchToggle
     />
   );
 }

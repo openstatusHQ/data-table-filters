@@ -99,6 +99,7 @@ export function Client() {
       refetch={refetch}
       renderSheetTitle={(props) => props.row?.original.url}
       searchParamsParser={searchParamsParser}
+      tableId="light"
     />
   );
 }
