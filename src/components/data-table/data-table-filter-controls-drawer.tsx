@@ -34,7 +34,7 @@ export function DataTableFilterControlsDrawer() {
   return (
     <Drawer>
       <TooltipProvider>
-        <Tooltip>
+        <Tooltip delayDuration={100}>
           <TooltipTrigger asChild>
             <DrawerTrigger asChild>
               <Button

@@ -35,7 +35,7 @@ export function PrefetchToggle() {
 
   return (
     <TooltipProvider>
-      <Tooltip delayDuration={0}>
+      <Tooltip delayDuration={100}>
         <TooltipTrigger asChild>
           <Toggle
             size="sm"
@@ -54,9 +54,9 @@ export function PrefetchToggle() {
           </Toggle>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>
+          <p className="text-muted-foreground">
             Server prefetch:{" "}
-            <strong className="font-medium">
+            <strong className="font-medium text-foreground">
               {enabled ? "enabled" : "disabled"}
             </strong>
           </p>

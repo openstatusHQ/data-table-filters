@@ -18,7 +18,7 @@ export function DataTableResetButton() {
 
   return (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip delayDuration={100}>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"

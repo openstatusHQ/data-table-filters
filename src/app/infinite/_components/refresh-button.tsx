@@ -22,6 +22,7 @@ export function RefreshButton({ onClick }: RefreshButtonProps) {
       ) : (
         <RefreshCcw className="h-4 w-4" />
       )}
+      <span className="sr-only">Refresh data</span>
     </Button>
   );
 }
