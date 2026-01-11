@@ -121,6 +121,11 @@ export type AdapterFactory<T extends Record<string, unknown>> = (
 ) => StoreAdapter<T>;
 
 /**
+ * Available adapter types
+ */
+export type AdapterType = "nuqs" | "zustand";
+
+/**
  * Internal adapter with additional methods for providers
  * @internal
  */

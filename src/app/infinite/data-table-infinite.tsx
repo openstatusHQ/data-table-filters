@@ -30,6 +30,8 @@ import {
   getColumnVisibilityKey,
 } from "@/lib/constants/local-storage";
 import { formatCompactNumber } from "@/lib/format";
+import type { AdapterType } from "@/lib/store";
+import { useFilterState } from "@/lib/store";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import { arrSome, inDateRange } from "@/lib/table/filterfns";
 import { cn } from "@/lib/utils";
@@ -58,11 +60,10 @@ import {
   getFacetedUniqueValues as getTTableFacetedUniqueValues,
   useReactTable,
 } from "@tanstack/react-table";
-import { useFilterState } from "@/lib/store";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
+import { ConfigurationDropdown } from "./_components/configuration-dropdown";
 import { LiveButton } from "./_components/live-button";
-import { PrefetchToggle } from "./_components/prefetch-toggle";
 import { RefreshButton } from "./_components/refresh-button";
 import { SocialsFooter } from "./_components/socials-footer";
 import { BaseChartSchema } from "./schema";
@@ -115,7 +116,10 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   // Used to store column order and visibility in local storage for specific data-table namespace
   tableId?: string;
   // Show the prefetch toggle button in the toolbar
-  showPrefetchToggle?: boolean;
+  showConfigurationDropdown?: boolean;
+  // Adapter toggle and prefetch toggle (for demo purposes)
+  adapterType?: AdapterType;
+  prefetchEnabled?: boolean;
 }
 
 export function DataTableInfinite<TData, TValue, TMeta>({
@@ -147,7 +151,9 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   renderSheetTitle,
   schema,
   tableId = "infinite",
-  showPrefetchToggle = false,
+  showConfigurationDropdown = false,
+  adapterType = "nuqs",
+  prefetchEnabled = false,
 }: DataTableInfiniteProps<TData, TValue, TMeta>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -354,7 +360,13 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
               renderActions={() => [
-                showPrefetchToggle ? <PrefetchToggle key="prefetch" /> : null,
+                showConfigurationDropdown ? (
+                  <ConfigurationDropdown
+                    key="configuration"
+                    prefetchEnabled={prefetchEnabled}
+                    adapterType={adapterType}
+                  />
+                ) : null,
                 <RefreshButton key="refresh" onClick={refetch} />,
                 fetchPreviousPage ? (
                   <LiveButton

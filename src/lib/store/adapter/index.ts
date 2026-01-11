@@ -7,4 +7,5 @@ export type {
   CreateAdapterOptions,
   AdapterFactory,
   InternalStoreAdapter,
+  AdapterType,
 } from "./types";

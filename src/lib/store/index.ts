@@ -66,6 +66,7 @@ export type {
   StoreAdapter,
   CreateAdapterOptions,
   AdapterFactory,
+  AdapterType,
 } from "./adapter";
 
 // Provider

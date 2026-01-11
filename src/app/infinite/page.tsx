@@ -1,4 +1,8 @@
-import { PREFETCH_COOKIE_NAME } from "@/lib/constants/cookies";
+import {
+  ADAPTER_COOKIE_NAME,
+  PREFETCH_COOKIE_NAME,
+} from "@/lib/constants/cookies";
+import type { AdapterType } from "@/lib/store";
 import { getQueryClient } from "@/providers/get-query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { cookies } from "next/headers";
@@ -21,12 +25,18 @@ export default async function Page({
   // but we can enable it any time we want by toggling the cookie value
   const prefetchEnabled =
     cookieStore.get(PREFETCH_COOKIE_NAME)?.value === "true";
+  const adapterType =
+    (cookieStore.get(ADAPTER_COOKIE_NAME)?.value as AdapterType) || "nuqs";
 
   if (prefetchEnabled) {
     // Same as loading.tsx except that we *only** render the Skeleton based on the prefetch state
     return (
       <Suspense fallback={<Skeleton />}>
-        <PrefetchedContent search={search} />
+        <PrefetchedContent
+          search={search}
+          defaultAdapterType={adapterType}
+          defaultPrefetchEnabled={prefetchEnabled}
+        />
       </Suspense>
     );
   }
@@ -34,18 +44,26 @@ export default async function Page({
   // No prefetch: render client directly without Suspense/skeleton
   return (
     <HydrationBoundary state={dehydrate(getQueryClient())}>
-      <Client />
+      <Client defaultAdapterType={adapterType} defaultPrefetchEnabled={prefetchEnabled} />
     </HydrationBoundary>
   );
 }
 
-async function PrefetchedContent({ search }: { search: SearchParamsType }) {
+async function PrefetchedContent({
+  search,
+  defaultAdapterType,
+  defaultPrefetchEnabled,
+}: {
+  search: SearchParamsType;
+  defaultAdapterType: AdapterType;
+  defaultPrefetchEnabled: boolean;
+}) {
   const queryClient = getQueryClient();
   await queryClient.prefetchInfiniteQuery(dataOptions(search));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Client />
+      <Client defaultAdapterType={defaultAdapterType} defaultPrefetchEnabled={defaultPrefetchEnabled} />
     </HydrationBoundary>
   );
 }

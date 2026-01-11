@@ -1,9 +1,15 @@
 "use client";
 
 import { useHotKey } from "@/hooks/use-hot-key";
+import { ADAPTER_COOKIE_NAME } from "@/lib/constants/cookies";
 import { getLevelRowClassName } from "@/lib/request/level";
-import { DataTableStoreProvider, useFilterState } from "@/lib/store";
+import {
+  DataTableStoreProvider,
+  useFilterState,
+  type AdapterType,
+} from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import { useZustandAdapter } from "@/lib/store/adapters/zustand";
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
@@ -13,22 +19,61 @@ import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
-import type { ColumnSchema, FacetMetadataSchema, FilterState } from "./schema";
+import type { FacetMetadataSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
+import { useFilterStore } from "./store";
 
-export function Client() {
-  const adapter = useNuqsAdapter(filterSchema.definition, { id: "infinite" });
+export function Client({
+  defaultAdapterType = "nuqs",
+  defaultPrefetchEnabled = false,
+}: {
+  defaultAdapterType?: AdapterType;
+  defaultPrefetchEnabled?: boolean;
+}) {
   useResetFocus();
+
+  // Key forces remount when adapter changes, ensuring clean state
+  return (
+    <React.Fragment>
+      {defaultAdapterType === "nuqs" ? (
+        <NuqsClient prefetchEnabled={defaultPrefetchEnabled} />
+      ) : (
+        <ZustandClient prefetchEnabled={defaultPrefetchEnabled} />
+      )}
+    </React.Fragment>
+  );
+}
+
+function NuqsClient({ prefetchEnabled }: { prefetchEnabled: boolean }) {
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "infinite" });
 
   return (
     <DataTableStoreProvider adapter={adapter}>
-      <ClientInner />
+      <ClientInner adapterType="nuqs" prefetchEnabled={prefetchEnabled} />
+    </DataTableStoreProvider>
+  );
+}
+
+function ZustandClient({ prefetchEnabled }: { prefetchEnabled: boolean }) {
+  const adapter = useZustandAdapter(useFilterStore, filterSchema.definition, {
+    id: "infinite",
+  });
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <ClientInner adapterType="zustand" prefetchEnabled={prefetchEnabled} />
     </DataTableStoreProvider>
   );
 }
 
 // Inner component that can use BYOS hooks (inside provider context)
-function ClientInner() {
+function ClientInner({
+  adapterType,
+  prefetchEnabled,
+}: {
+  adapterType: AdapterType;
+  prefetchEnabled: boolean;
+}) {
   // Read full state from adapter for data fetching
   const search = useFilterState<FilterState>();
 
@@ -149,7 +194,9 @@ function ClientInner() {
       }}
       renderSheetTitle={(props) => props.row?.original.pathname}
       schema={filterSchema.definition}
-      showPrefetchToggle
+      adapterType={adapterType}
+      prefetchEnabled={prefetchEnabled}
+      showConfigurationDropdown
     />
   );
 }
