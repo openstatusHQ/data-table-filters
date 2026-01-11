@@ -33,9 +33,7 @@ export async function GET(req: NextRequest) {
 
   // Filter arrays to remove null values for type safety
   const validLatency = search.latency?.filter((l): l is number => l !== null);
-  const validTimestamp = search.timestamp?.filter(
-    (t): t is Date => t !== null,
-  );
+  const validTimestamp = search.timestamp?.filter((t): t is Date => t !== null);
 
   const baseParams = new URLSearchParams({
     ...(search.level?.length && { levels: search.level.join(",") }),

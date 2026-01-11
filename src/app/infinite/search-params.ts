@@ -7,10 +7,7 @@ import { filterSchema } from "./schema";
 
 // Create search params utilities from BYOS schema (single source of truth)
 // All fields including pagination are now defined in the schema
-export const {
-  searchParamsParser,
-  searchParamsCache,
-  searchParamsSerializer,
-} = createNuqsSearchParams(filterSchema.definition);
+export const { searchParamsParser, searchParamsCache, searchParamsSerializer } =
+  createNuqsSearchParams(filterSchema.definition);
 
 export type SearchParamsType = inferParserType<typeof searchParamsParser>;

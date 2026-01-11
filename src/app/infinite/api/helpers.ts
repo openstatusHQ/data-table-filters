@@ -232,7 +232,11 @@ export function groupChartData(
   const _dates = dates?.length === 1 ? [dates[0], addDays(dates[0], 1)] : dates;
 
   const between =
-    (_dates && _dates.length > 0) ? _dates : (data?.length ? [data[data.length - 1].date, data[0].date] : []);
+    _dates && _dates.length > 0
+      ? _dates
+      : data?.length
+        ? [data[data.length - 1].date, data[0].date]
+        : [];
 
   if (!between.length) return [];
   const interval = evaluateInterval(between);

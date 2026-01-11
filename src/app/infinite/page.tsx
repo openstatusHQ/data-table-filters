@@ -44,7 +44,10 @@ export default async function Page({
   // No prefetch: render client directly without Suspense/skeleton
   return (
     <HydrationBoundary state={dehydrate(getQueryClient())}>
-      <Client defaultAdapterType={adapterType} defaultPrefetchEnabled={prefetchEnabled} />
+      <Client
+        defaultAdapterType={adapterType}
+        defaultPrefetchEnabled={prefetchEnabled}
+      />
     </HydrationBoundary>
   );
 }
@@ -63,7 +66,10 @@ async function PrefetchedContent({
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Client defaultAdapterType={defaultAdapterType} defaultPrefetchEnabled={defaultPrefetchEnabled} />
+      <Client
+        defaultAdapterType={defaultAdapterType}
+        defaultPrefetchEnabled={defaultPrefetchEnabled}
+      />
     </HydrationBoundary>
   );
 }
