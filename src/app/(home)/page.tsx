@@ -19,7 +19,7 @@ export default function Home() {
             variant="outline"
             className="absolute -top-3 right-3 border-dashed border-border bg-background px-1.5 font-mono"
           >
-            zustand
+            nuqs | zustand
           </Badge>
           <NextLink href="/default" className="group flex flex-col gap-2.5">
             <div className="flex flex-col justify-center rounded-lg border border-border/70 bg-muted/40 px-5 py-6 group-hover:border-border group-hover:bg-muted/50 md:px-10 md:py-12 xl:aspect-video">
@@ -58,7 +58,7 @@ export default function Home() {
             variant="outline"
             className="absolute -top-3 right-3 border-dashed border-border bg-background px-1.5 font-mono"
           >
-            nuqs
+            nuqs | zustand
           </Badge>
           <NextLink href="/infinite" className="group flex flex-col gap-2.5">
             <div className="flex flex-col justify-center rounded-lg border border-border/70 bg-muted/40 px-5 py-6 group-hover:border-border group-hover:bg-muted/50 md:px-10 md:py-12 xl:aspect-video">
