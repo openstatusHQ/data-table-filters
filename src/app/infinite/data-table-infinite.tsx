@@ -62,7 +62,6 @@ import {
 } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
-import { ConfigurationDropdown } from "./_components/configuration-dropdown";
 import { LiveButton } from "./_components/live-button";
 import { RefreshButton } from "./_components/refresh-button";
 import { SocialsFooter } from "./_components/socials-footer";
@@ -339,7 +338,11 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             <DataTableFilterControls />
           </div>
           <div className="border-t border-border bg-background p-4 md:sticky md:bottom-0">
-            <SocialsFooter />
+            <SocialsFooter
+              showConfigurationDropdown={showConfigurationDropdown}
+              prefetchEnabled={prefetchEnabled}
+              adapterType={adapterType}
+            />
           </div>
         </div>
         <div
@@ -360,13 +363,6 @@ export function DataTableInfinite<TData, TValue, TMeta>({
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
               renderActions={() => [
-                showConfigurationDropdown ? (
-                  <ConfigurationDropdown
-                    key="configuration"
-                    prefetchEnabled={prefetchEnabled}
-                    adapterType={adapterType}
-                  />
-                ) : null,
                 <RefreshButton key="refresh" onClick={refetch} />,
                 fetchPreviousPage ? (
                   <LiveButton
