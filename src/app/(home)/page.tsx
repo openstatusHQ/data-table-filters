@@ -17,7 +17,7 @@ export default function Home() {
         <div className="relative">
           <Badge
             variant="outline"
-            className="absolute -top-3 right-3 border-dashed border-border bg-background pr-1.5"
+            className="absolute -top-3 right-3 border-dashed border-border bg-background px-1.5 font-mono"
           >
             zustand
           </Badge>
@@ -56,7 +56,7 @@ export default function Home() {
         <div className="relative">
           <Badge
             variant="outline"
-            className="absolute -top-3 right-3 border-dashed border-border bg-background pr-1.5"
+            className="absolute -top-3 right-3 border-dashed border-border bg-background px-1.5 font-mono"
           >
             nuqs
           </Badge>

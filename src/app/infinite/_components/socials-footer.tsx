@@ -159,9 +159,9 @@ function ConfigurationDropdown({
     // Set cookie with 1 year expiry
     document.cookie = `${PREFETCH_COOKIE_NAME}=${enabled}; path=/; max-age=31536000`;
     setPrefetchEnabled(enabled);
-    // Refresh to apply the change
+    // Refresh to apply the change (clear search params to reset state)
     if (typeof window !== "undefined") {
-      window.location.reload();
+      window.location.href = window.location.pathname;
     }
   };
 
@@ -170,9 +170,9 @@ function ConfigurationDropdown({
     // Set cookie with 1 year expiry
     document.cookie = `${ADAPTER_COOKIE_NAME}=${adapter}; path=/; max-age=31536000`;
     setAdapterType(adapter);
-    // Refresh to apply the change
+    // Refresh to apply the change (clear search params to reset state)
     if (typeof window !== "undefined") {
-      window.location.reload();
+      window.location.href = window.location.pathname;
     }
   };
 
