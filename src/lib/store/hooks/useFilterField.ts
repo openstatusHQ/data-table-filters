@@ -6,8 +6,8 @@
 
 "use client";
 
-import { useCallback, useContext, useMemo, useSyncExternalStore } from "react";
-import { StoreContext } from "../context";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useStoreContext } from "../context";
 
 /**
  * Return type for useFilterField
@@ -50,7 +50,7 @@ export function useFilterField<
   T extends Record<string, unknown>,
   K extends keyof T,
 >(key: K): FilterFieldResult<T[K]> {
-  const context = useContext(StoreContext);
+  const context = useStoreContext();
 
   if (!context) {
     throw new Error(

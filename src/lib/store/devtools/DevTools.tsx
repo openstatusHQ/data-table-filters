@@ -9,7 +9,7 @@
 import { cn } from "@/lib/utils";
 import { Bug, Copy, Pause, Play, RotateCcw, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
-import { StoreContext } from "../context";
+import { useStoreContext } from "../context";
 import { useFilterActions } from "../hooks/useFilterActions";
 import { useFilterState } from "../hooks/useFilterState";
 import { HistoryPanel, type HistoryEntry } from "./HistoryPanel";
@@ -109,7 +109,7 @@ function DevToolsContent({
   setCopied: (copied: boolean) => void;
   position: DevToolsProps["position"];
 }) {
-  const context = React.useContext(StoreContext);
+  const context = useStoreContext();
 
   // Return early if no context (not wrapped in provider)
   if (!context) {
@@ -166,7 +166,7 @@ function DevToolsWithContext({
 }) {
   const state = useFilterState<Record<string, unknown>>();
   const { resetAllFilters, pause, resume, isPaused } = useFilterActions();
-  const context = React.useContext(StoreContext);
+  const context = useStoreContext();
   const defaults = context?.adapter.getDefaults() as Record<string, unknown>;
   const tableId = context?.tableId || "unknown";
   const paused = isPaused();

@@ -1,238 +1,248 @@
 "use client";
 
 /**
- * DataTableStoreSync - Syncs React Table state to BYOS adapter
+ * DataTableStoreSync - Syncs React Table state to BYOS adapter (ONE-WAY)
  *
  * This component syncs changes from React Table's state (columnFilters, sorting,
  * rowSelection) to the BYOS adapter. Filter components update the table directly
  * via column.setFilterValue(), and this component propagates those changes
  * to the BYOS adapter for URL sync (nuqs) or state persistence (Zustand).
+ *
+ * IMPORTANT: This sync is ONE-WAY (Table → BYOS). We use refs to track what
+ * we've sent to avoid depending on BYOS state, which would cause infinite loops.
  */
-import { StoreContext, useFilterActions, useFilterState } from "@/lib/store";
-import { useContext, useEffect, useRef } from "react";
+import { useFilterActions, useStoreContext } from "@/lib/store";
+import { useEffect, useRef } from "react";
 import { useDataTable } from "./data-table-provider";
 
 export function DataTableStoreSync() {
-  const context = useContext(StoreContext);
+  const context = useStoreContext();
   const { table, filterFields, sorting, rowSelection } = useDataTable();
   const { setFilters } = useFilterActions();
-  const filterState = useFilterState<Record<string, unknown>>();
+
+  // Track what we've sent to avoid re-sending the same values
+  const lastSentFiltersRef = useRef<string>("");
+  const lastSentSortRef = useRef<string>("");
+  const lastSentUuidRef = useRef<string>("");
   const isInitialMount = useRef(true);
-  const isSyncingRef = useRef(false);
 
   // Get current state from table
   const columnFilters = table.getState().columnFilters;
 
-  // Sync column filters
+  // Sync column filters (Table → URL)
   useEffect(() => {
     if (!context) return;
-    if (isSyncingRef.current) return;
     if (isInitialMount.current) {
+      // On initial mount, just capture current state without syncing
       isInitialMount.current = false;
+
+      // Initialize refs with current state
+      const filterFieldKeys = new Set(
+        filterFields?.map((f) => f.value as string) || [],
+      );
+      const currentFilters: Record<string, unknown> = {};
+      for (const filter of columnFilters) {
+        if (filterFieldKeys.has(filter.id)) {
+          currentFilters[filter.id] = filter.value;
+        }
+      }
+      lastSentFiltersRef.current = JSON.stringify(currentFilters);
+      lastSentSortRef.current = JSON.stringify(sorting?.[0] || null);
+      const selectedKeys = Object.keys(rowSelection || {});
+      lastSentUuidRef.current = selectedKeys.length > 0 ? selectedKeys[0] : "";
       return;
     }
 
-    const updates: Record<string, unknown> = {};
     const filterFieldKeys = new Set(
       filterFields?.map((f) => f.value as string) || [],
     );
 
-    let hasChanges = false;
-
+    // Build current filter state
+    const currentFilters: Record<string, unknown> = {};
     for (const filter of columnFilters) {
       if (filterFieldKeys.has(filter.id)) {
-        const currentValue = filterState[filter.id];
-        if (!isEqual(currentValue, filter.value)) {
-          updates[filter.id] = filter.value;
-          hasChanges = true;
-        }
+        currentFilters[filter.id] = filter.value;
       }
     }
 
-    for (const key of filterFieldKeys) {
-      const hasFilter = columnFilters.some((f) => f.id === key);
-      if (!hasFilter) {
-        const currentValue = filterState[key];
-        if (currentValue !== null && currentValue !== undefined) {
+    // Check if filters have actually changed from what we last sent
+    const currentFiltersJson = JSON.stringify(currentFilters);
+    if (currentFiltersJson === lastSentFiltersRef.current) {
+      return; // No change, skip
+    }
+
+    // Calculate what needs to be updated (including nulls for removed filters)
+    const updates: Record<string, unknown> = { ...currentFilters };
+
+    // Check for removed filters (keys that were in last sent but not in current)
+    try {
+      const lastSent = JSON.parse(lastSentFiltersRef.current || "{}");
+      for (const key of Object.keys(lastSent)) {
+        if (!(key in currentFilters)) {
           updates[key] = null;
-          hasChanges = true;
         }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+
+    // Also check filterFieldKeys for nulls (filter was cleared)
+    for (const key of filterFieldKeys) {
+      if (!(key in currentFilters)) {
+        updates[key] = null;
       }
     }
 
-    if (hasChanges) {
-      isSyncingRef.current = true;
-      setFilters(updates);
-      queueMicrotask(() => {
-        isSyncingRef.current = false;
-      });
-    }
-  }, [columnFilters, context, filterFields, filterState, setFilters]);
+    // Update ref BEFORE calling setFilters to prevent re-entry
+    lastSentFiltersRef.current = currentFiltersJson;
 
-  // Sync sorting
+    // Send updates
+    setFilters(updates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnFilters, context, filterFields, setFilters]);
+
+  // Sync sorting (Table → URL)
   useEffect(() => {
     if (!context) return;
-    if (isSyncingRef.current) return;
+    if (isInitialMount.current) return; // Skip initial mount (handled above)
 
-    const currentSort = filterState.sort as
-      | { id: string; desc: boolean }
-      | null
-      | undefined;
     const newSort = sorting?.[0] || null;
+    const newSortJson = JSON.stringify(newSort);
 
-    if (!isEqual(currentSort, newSort)) {
-      isSyncingRef.current = true;
-      setFilters({ sort: newSort });
-      queueMicrotask(() => {
-        isSyncingRef.current = false;
-      });
+    if (newSortJson === lastSentSortRef.current) {
+      return; // No change, skip
     }
-  }, [sorting, context, filterState.sort, setFilters]);
 
-  // Sync row selection (uuid)
+    lastSentSortRef.current = newSortJson;
+    setFilters({ sort: newSort });
+  }, [sorting, context, setFilters]);
+
+  // Sync row selection/uuid (Table → URL)
   useEffect(() => {
     if (!context) return;
-    if (isSyncingRef.current) return;
+    if (isInitialMount.current) return; // Skip initial mount (handled above)
 
-    const currentUuid = filterState.uuid as string | null | undefined;
     const selectedKeys = Object.keys(rowSelection || {});
     const newUuid = selectedKeys.length > 0 ? selectedKeys[0] : null;
+    const newUuidStr = newUuid || "";
 
-    if (currentUuid !== newUuid) {
-      isSyncingRef.current = true;
-      setFilters({ uuid: newUuid });
-      queueMicrotask(() => {
-        isSyncingRef.current = false;
-      });
+    if (newUuidStr === lastSentUuidRef.current) {
+      return; // No change, skip
     }
-  }, [rowSelection, context, filterState.uuid, setFilters]);
+
+    lastSentUuidRef.current = newUuidStr;
+    setFilters({ uuid: newUuid });
+  }, [rowSelection, context, setFilters]);
 
   return null;
-}
-
-/**
- * Simple equality check for filter values
- */
-function isEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a == null && b == null) return true;
-  if (a == null || b == null) return false;
-
-  // Array comparison
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((val, idx) => isEqual(val, b[idx]));
-  }
-
-  // Object comparison (shallow)
-  if (typeof a === "object" && typeof b === "object") {
-    const aKeys = Object.keys(a as object);
-    const bKeys = Object.keys(b as object);
-    if (aKeys.length !== bKeys.length) return false;
-    return aKeys.every((key) =>
-      isEqual(
-        (a as Record<string, unknown>)[key],
-        (b as Record<string, unknown>)[key],
-      ),
-    );
-  }
-
-  return false;
 }
 
 /**
  * Hook version for more control - syncs filters, sorting, and selection
  */
 export function useDataTableStoreSync() {
-  const context = useContext(StoreContext);
+  const context = useStoreContext();
   const { table, filterFields, sorting, rowSelection } = useDataTable();
   const { setFilters } = useFilterActions();
-  const filterState = useFilterState<Record<string, unknown>>();
+
+  const lastSentFiltersRef = useRef<string>("");
+  const lastSentSortRef = useRef<string>("");
+  const lastSentUuidRef = useRef<string>("");
   const isInitialMount = useRef(true);
-  const isSyncingRef = useRef(false);
 
   const columnFilters = table.getState().columnFilters;
 
   // Sync column filters
   useEffect(() => {
     if (!context) return;
-    if (isSyncingRef.current) return;
     if (isInitialMount.current) {
       isInitialMount.current = false;
+      const filterFieldKeys = new Set(
+        filterFields?.map((f) => f.value as string) || [],
+      );
+      const currentFilters: Record<string, unknown> = {};
+      for (const filter of columnFilters) {
+        if (filterFieldKeys.has(filter.id)) {
+          currentFilters[filter.id] = filter.value;
+        }
+      }
+      lastSentFiltersRef.current = JSON.stringify(currentFilters);
+      lastSentSortRef.current = JSON.stringify(sorting?.[0] || null);
+      const selectedKeys = Object.keys(rowSelection || {});
+      lastSentUuidRef.current = selectedKeys.length > 0 ? selectedKeys[0] : "";
       return;
     }
 
-    const updates: Record<string, unknown> = {};
     const filterFieldKeys = new Set(
       filterFields?.map((f) => f.value as string) || [],
     );
-    let hasChanges = false;
 
+    const currentFilters: Record<string, unknown> = {};
     for (const filter of columnFilters) {
       if (filterFieldKeys.has(filter.id)) {
-        const currentValue = filterState[filter.id];
-        if (!isEqual(currentValue, filter.value)) {
-          updates[filter.id] = filter.value;
-          hasChanges = true;
+        currentFilters[filter.id] = filter.value;
+      }
+    }
+
+    const currentFiltersJson = JSON.stringify(currentFilters);
+    if (currentFiltersJson === lastSentFiltersRef.current) {
+      return;
+    }
+
+    const updates: Record<string, unknown> = { ...currentFilters };
+
+    try {
+      const lastSent = JSON.parse(lastSentFiltersRef.current || "{}");
+      for (const key of Object.keys(lastSent)) {
+        if (!(key in currentFilters)) {
+          updates[key] = null;
         }
       }
+    } catch {
+      // Ignore parse errors
     }
 
     for (const key of filterFieldKeys) {
-      const hasFilter = columnFilters.some((f) => f.id === key);
-      if (!hasFilter) {
-        const currentValue = filterState[key];
-        if (currentValue !== null && currentValue !== undefined) {
-          updates[key] = null;
-          hasChanges = true;
-        }
+      if (!(key in currentFilters)) {
+        updates[key] = null;
       }
     }
 
-    if (hasChanges) {
-      isSyncingRef.current = true;
-      setFilters(updates);
-      queueMicrotask(() => {
-        isSyncingRef.current = false;
-      });
-    }
-  }, [columnFilters, context, filterFields, filterState, setFilters]);
+    lastSentFiltersRef.current = currentFiltersJson;
+    setFilters(updates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnFilters, context, filterFields, setFilters]);
 
   // Sync sorting
   useEffect(() => {
     if (!context) return;
-    if (isSyncingRef.current) return;
+    if (isInitialMount.current) return;
 
-    const currentSort = filterState.sort as
-      | { id: string; desc: boolean }
-      | null
-      | undefined;
     const newSort = sorting?.[0] || null;
+    const newSortJson = JSON.stringify(newSort);
 
-    if (!isEqual(currentSort, newSort)) {
-      isSyncingRef.current = true;
-      setFilters({ sort: newSort });
-      queueMicrotask(() => {
-        isSyncingRef.current = false;
-      });
+    if (newSortJson === lastSentSortRef.current) {
+      return;
     }
-  }, [sorting, context, filterState.sort, setFilters]);
 
-  // Sync row selection (uuid)
+    lastSentSortRef.current = newSortJson;
+    setFilters({ sort: newSort });
+  }, [sorting, context, setFilters]);
+
+  // Sync row selection
   useEffect(() => {
     if (!context) return;
-    if (isSyncingRef.current) return;
+    if (isInitialMount.current) return;
 
-    const currentUuid = filterState.uuid as string | null | undefined;
     const selectedKeys = Object.keys(rowSelection || {});
     const newUuid = selectedKeys.length > 0 ? selectedKeys[0] : null;
+    const newUuidStr = newUuid || "";
 
-    if (currentUuid !== newUuid) {
-      isSyncingRef.current = true;
-      setFilters({ uuid: newUuid });
-      queueMicrotask(() => {
-        isSyncingRef.current = false;
-      });
+    if (newUuidStr === lastSentUuidRef.current) {
+      return;
     }
-  }, [rowSelection, context, filterState.uuid, setFilters]);
+
+    lastSentUuidRef.current = newUuidStr;
+    setFilters({ uuid: newUuid });
+  }, [rowSelection, context, setFilters]);
 }

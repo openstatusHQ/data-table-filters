@@ -19,8 +19,11 @@ import { filterSchema } from "./schema";
 import { searchParamsParser } from "./search-params";
 
 export function Client() {
-  const [search] = useQueryStates(searchParamsParser);
-  const adapter = useNuqsAdapter(filterSchema.definition, { id: "infinite" });
+  const [search] = useQueryStates(searchParamsParser, { throttleMs: 300 });
+  const adapter = useNuqsAdapter(filterSchema.definition, {
+    id: "infinite",
+    throttleMs: 300,
+  });
   const {
     data,
     isFetching,

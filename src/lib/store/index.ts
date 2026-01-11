@@ -79,7 +79,11 @@ export { useFilterField, type FilterFieldResult } from "./hooks/useFilterField";
 export { useReactTableSync } from "./hooks/useReactTableSync";
 
 // Context (for advanced use cases)
-export { StoreContext, type StoreContextValue } from "./context";
+export {
+  StoreContext,
+  useStoreContext,
+  type StoreContextValue,
+} from "./context";
 
 // Text Parser
 export { createTextParser } from "./parser";

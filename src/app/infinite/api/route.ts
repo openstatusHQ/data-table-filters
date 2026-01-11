@@ -26,10 +26,12 @@ export async function GET(req: NextRequest): Promise<Response> {
   const search = searchParamsCache.parse(Object.fromEntries(_search));
   const totalData = [...mockLive, ...mock];
 
+  // Filter out null values from date array and handle single date expansion
+  const validDates = search.date?.filter((d): d is Date => d !== null) ?? null;
   const _date =
-    search.date?.length === 1
-      ? [search.date[0], addDays(search.date[0], 1)]
-      : search.date;
+    validDates?.length === 1
+      ? [validDates[0], addDays(validDates[0], 1)]
+      : validDates;
 
   // REMINDER: we need to filter out the slider values because they are not part of the search params
   const _rest = Object.fromEntries(

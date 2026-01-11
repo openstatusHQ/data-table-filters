@@ -15,7 +15,20 @@ import {
   parseAsTimestamp,
   type ParserBuilder,
 } from "nuqs/server";
-import type { FieldConfig, SchemaDefinition } from "../../schema/types";
+import type {
+  FieldBuilder,
+  FieldConfig,
+  SchemaDefinition,
+} from "../../schema/types";
+
+/**
+ * Type mapping: Schema field type → nuqs ParserBuilder type
+ */
+export type SchemaToNuqsParsers<T extends SchemaDefinition> = {
+  [K in keyof T]: T[K] extends FieldBuilder<infer U>
+    ? ParserBuilder<U>
+    : ParserBuilder<unknown>;
+};
 
 /**
  * Convert a single field config to a nuqs parser
@@ -105,10 +118,21 @@ function applyDefault(
 
 /**
  * Convert a schema definition to nuqs parsers
+ *
+ * @example
+ * ```typescript
+ * const schema = createSchema({
+ *   level: field.array(field.string()),
+ *   latency: field.number(),
+ * });
+ *
+ * // Type is inferred: { level: ParserBuilder<string[]>, latency: ParserBuilder<number> }
+ * const parsers = schemaToNuqsParsers(schema.definition);
+ * ```
  */
-export function schemaToNuqsParsers(
-  schema: SchemaDefinition,
-): Record<string, ParserBuilder<unknown>> {
+export function schemaToNuqsParsers<T extends SchemaDefinition>(
+  schema: T,
+): SchemaToNuqsParsers<T> {
   const parsers: Record<string, ParserBuilder<unknown>> = {};
 
   for (const [key, fieldBuilder] of Object.entries(schema)) {
@@ -118,7 +142,7 @@ export function schemaToNuqsParsers(
     parsers[key] = parser;
   }
 
-  return parsers;
+  return parsers as SchemaToNuqsParsers<T>;
 }
 
 /**

@@ -6,8 +6,8 @@
 
 "use client";
 
-import { useCallback, useContext, useMemo } from "react";
-import { StoreContext } from "../context";
+import { useCallback, useMemo } from "react";
+import { useStoreContext } from "../context";
 
 /**
  * Actions returned by useFilterActions
@@ -73,7 +73,7 @@ export interface FilterActions<T extends Record<string, unknown>> {
 export function useFilterActions<
   T extends Record<string, unknown>,
 >(): FilterActions<T> {
-  const context = useContext(StoreContext);
+  const context = useStoreContext();
 
   if (!context) {
     throw new Error(

@@ -6,8 +6,8 @@
 
 "use client";
 
-import { useCallback, useContext, useSyncExternalStore } from "react";
-import { StoreContext } from "../context";
+import { useCallback, useSyncExternalStore } from "react";
+import { useStoreContext } from "../context";
 
 /**
  * Hook to read filter state from the adapter
@@ -24,7 +24,7 @@ import { StoreContext } from "../context";
 export function useFilterState<T extends Record<string, unknown>, R = T>(
   selector?: (state: T) => R,
 ): R {
-  const context = useContext(StoreContext);
+  const context = useStoreContext();
 
   if (!context) {
     throw new Error(

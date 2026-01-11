@@ -31,18 +31,24 @@ export async function GET(req: NextRequest) {
 
   const search = searchParamsCache.parse(Object.fromEntries(_search));
 
+  // Filter arrays to remove null values for type safety
+  const validLatency = search.latency?.filter((l): l is number => l !== null);
+  const validTimestamp = search.timestamp?.filter(
+    (t): t is Date => t !== null,
+  );
+
   const baseParams = new URLSearchParams({
     ...(search.level?.length && { levels: search.level.join(",") }),
     ...(search.status?.length && { statuses: search.status.join(",") }),
     ...(search.method?.length && { methods: search.method.join(",") }),
     ...(search.region?.length && { regions: search.region.join(",") }),
-    ...(search.latency?.length && {
-      latencyStart: search.latency[0].toString(),
-      latencyEnd: search.latency[search.latency.length - 1].toString(),
+    ...(validLatency?.length && {
+      latencyStart: validLatency[0].toString(),
+      latencyEnd: validLatency[validLatency.length - 1].toString(),
     }),
-    ...(search.timestamp?.length && {
-      timestampStart: search.timestamp[0].getTime().toString(),
-      timestampEnd: search.timestamp[search.timestamp.length - 1]
+    ...(validTimestamp?.length && {
+      timestampStart: validTimestamp[0].getTime().toString(),
+      timestampEnd: validTimestamp[validTimestamp.length - 1]
         .getTime()
         .toString(),
     }),
@@ -57,20 +63,23 @@ export async function GET(req: NextRequest) {
 
   if (
     search.cursor &&
-    search.timestamp?.length &&
+    validTimestamp?.length &&
     search.cursor.getTime() <=
-      search.timestamp[search.timestamp.length - 1].getTime()
+      validTimestamp[validTimestamp.length - 1].getTime()
   ) {
     searchParams.set("timestampEnd", search.cursor.getTime().toString());
-  } else if (!search.timestamp?.length) {
-    searchParams.set("timestampEnd", search.cursor.getTime().toString());
+  } else if (!validTimestamp?.length) {
+    searchParams.set(
+      "timestampEnd",
+      search.cursor?.getTime().toString() ?? new Date().getTime().toString(),
+    );
   }
 
   // NOTE: stats params for get request
-  if (search.timestamp?.length) {
+  if (validTimestamp?.length) {
     statsParams.set(
       "interval",
-      evaluateInterval(search.timestamp)?.toString() ?? "1440",
+      evaluateInterval(validTimestamp)?.toString() ?? "1440",
     );
   } else {
     statsParams.set(

@@ -4,7 +4,7 @@
 
 "use client";
 
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 import type { StoreAdapter } from "./adapter/types";
 import type { SchemaDefinition } from "./schema/types";
 
@@ -24,3 +24,19 @@ export interface StoreContextValue<T extends Record<string, unknown>> {
 export const StoreContext = createContext<StoreContextValue<
   Record<string, unknown>
 > | null>(null);
+
+/**
+ * Hook to access the store context
+ * Returns null if used outside of DataTableStoreProvider
+ */
+export function useStoreContext<
+  T extends Record<string, unknown> = Record<string, unknown>,
+>(): StoreContextValue<T> {
+  const context = useContext(StoreContext) as StoreContextValue<T> | null;
+  if (!context) {
+    throw new Error(
+      "useStoreContext must be used within a DataTableStoreProvider",
+    );
+  }
+  return context;
+}
