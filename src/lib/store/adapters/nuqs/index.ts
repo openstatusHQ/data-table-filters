@@ -77,7 +77,14 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
     version: 0,
   });
 
-  // Sync nuqs state to our state ref
+  // Sync nuqs state to our state ref synchronously (needed for first render)
+  const validated = validateState(schema, nuqsState) as T;
+  const currentState = { ...defaults, ...initialState, ...validated };
+  if (stateRef.current !== currentState) {
+    stateRef.current = currentState;
+  }
+
+  // Also update via effect to trigger listeners on subsequent changes
   useEffect(() => {
     const validated = validateState(schema, nuqsState) as T;
     const merged = { ...defaults, ...initialState, ...validated };

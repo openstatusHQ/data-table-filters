@@ -4,12 +4,26 @@ import SuperJSON from "superjson";
 import type { ColumnType } from "./columns";
 import { searchParamsSerializer, type SearchParamsType } from "./search-params";
 
+// Normalize state to ensure consistent query keys between server and client
+// Server (nuqs parse) returns null for arrays, client (schema defaults) returns []
+function getStableQueryKey(search: SearchParamsType) {
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(search)) {
+    if (Array.isArray(value) && value.length === 0) {
+      normalized[key] = null;
+    } else {
+      normalized[key] = value;
+    }
+  }
+  return searchParamsSerializer({
+    ...normalized,
+    uuid: null,
+  } as SearchParamsType);
+}
+
 export const dataOptions = (search: SearchParamsType) => {
   return infiniteQueryOptions({
-    queryKey: [
-      "data-table-light",
-      searchParamsSerializer({ ...search, uuid: null }),
-    ],
+    queryKey: ["data-table-light", getStableQueryKey(search)],
     queryFn: async ({ pageParam }) => {
       const cursor = new Date(pageParam.cursor);
       const direction = pageParam.direction as "next" | "prev" | undefined;

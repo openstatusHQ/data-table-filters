@@ -35,14 +35,25 @@ export type InfiniteQueryResponse<TData, TMeta = unknown> = {
 
 // Query key = filters only (no cursor/pagination state)
 // This ensures server/client keys match regardless of when they run
+// We normalize empty arrays to null to ensure consistent serialization
+// between server (where nuqs returns null) and client (where schema defaults to [])
 function getStableQueryKey(search: SearchParamsType) {
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(search)) {
+    // Normalize empty arrays to null for consistent serialization
+    if (Array.isArray(value) && value.length === 0) {
+      normalized[key] = null;
+    } else {
+      normalized[key] = value;
+    }
+  }
   return searchParamsSerializer({
-    ...search,
+    ...normalized,
     uuid: null,
     live: null,
     cursor: null,
     direction: null,
-  });
+  } as SearchParamsType);
 }
 
 export const dataOptions = (search: SearchParamsType) => {

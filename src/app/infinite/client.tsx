@@ -5,54 +5,33 @@ import { getLevelRowClassName } from "@/lib/request/level";
 import { DataTableStoreProvider, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { cn } from "@/lib/utils";
-import {
-  useInfiniteQuery,
-  type InfiniteData,
-  type UseInfiniteQueryResult,
-} from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
-import { useQueryStates } from "nuqs";
 import * as React from "react";
 import { LiveRow } from "./_components/live-row";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { DataTableInfinite } from "./data-table-infinite";
-import {
-  dataOptions,
-  type InfiniteQueryResponse,
-  type LogsMeta,
-} from "./query-options";
+import { dataOptions } from "./query-options";
 import type { ColumnSchema, FacetMetadataSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
-import {
-  searchParamsParser,
-  type SearchParamsType,
-} from "./search-params";
 
 export function Client() {
-  // NOTE: useQueryStates is still needed for data fetching (includes pagination params)
-  const [search] = useQueryStates(searchParamsParser);
   const adapter = useNuqsAdapter(filterSchema.definition, { id: "infinite" });
-  const query = useInfiniteQuery(dataOptions(search));
   useResetFocus();
 
   return (
     <DataTableStoreProvider adapter={adapter}>
-      <ClientInner query={query} search={search} />
+      <ClientInner />
     </DataTableStoreProvider>
   );
 }
 
 // Inner component that can use BYOS hooks (inside provider context)
-function ClientInner({
-  query,
-  search,
-}: {
-  query: UseInfiniteQueryResult<
-    InfiniteData<InfiniteQueryResponse<ColumnSchema[], LogsMeta>>
-  >;
-  search: SearchParamsType;
-}) {
+function ClientInner() {
+  // Read full state from adapter for data fetching
+  const search = useFilterState<FilterState>();
+
   const {
     data,
     isFetching,
@@ -61,7 +40,7 @@ function ClientInner({
     hasNextPage,
     fetchPreviousPage,
     refetch,
-  } = query;
+  } = useInfiniteQuery(dataOptions(search));
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
@@ -117,7 +96,11 @@ function ClientInner({
         id: key,
         value,
       }))
-      .filter(({ value }) => value ?? undefined);
+      .filter(({ value }) => {
+        if (value === null || value === undefined) return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        return true;
+      });
   }, [filter]);
 
   return (

@@ -42,11 +42,26 @@ export function filterData(
   search: Partial<SearchParamsType>,
 ): ColumnSchema[] {
   // Only iterate over actual filter fields (exclude pagination, sorting, selection, live mode)
-  const filterKeys = ["level", "method", "host", "pathname", "latency", "timing.dns", "timing.connection", "timing.tls", "timing.ttfb", "timing.transfer", "status", "regions", "date"] as const;
+  const filterKeys = [
+    "level",
+    "method",
+    "host",
+    "pathname",
+    "latency",
+    "timing.dns",
+    "timing.connection",
+    "timing.tls",
+    "timing.ttfb",
+    "timing.transfer",
+    "status",
+    "regions",
+    "date",
+  ] as const;
   return data.filter((row) => {
     for (const key of filterKeys) {
       const filter = search[key];
       if (filter === undefined || filter === null) continue;
+      if (Array.isArray(filter) && filter.length === 0) continue; // Skip empty arrays
       if (
         (key === "latency" ||
           key === "timing.dns" ||
@@ -126,10 +141,11 @@ export function splitData(data: ColumnSchema[], search: SearchParamsType) {
   // cursor undefined = "now"
   const cursorTime = search.cursor?.getTime() ?? now.getTime();
   const size = search.size ?? 40; // Default page size
+  const direction = search.direction ?? "next"; // Default direction
 
   // TODO: write a helper function for this
   data.forEach((item) => {
-    if (search.direction === "next") {
+    if (direction === "next") {
       if (item.date.getTime() < cursorTime && newData.length < size) {
         newData.push(item);
         // TODO: check how to deal with the cases that there are some items left with the same date
@@ -138,7 +154,7 @@ export function splitData(data: ColumnSchema[], search: SearchParamsType) {
       ) {
         newData.push(item);
       }
-    } else if (search.direction === "prev") {
+    } else if (direction === "prev") {
       if (
         item.date.getTime() > cursorTime &&
         // REMINDER: we need to make sure that we don't get items that are in the future which we do with mockLive data
@@ -216,7 +232,7 @@ export function groupChartData(
   const _dates = dates?.length === 1 ? [dates[0], addDays(dates[0], 1)] : dates;
 
   const between =
-    _dates || (data?.length ? [data[data.length - 1].date, data[0].date] : []);
+    (_dates && _dates.length > 0) ? _dates : (data?.length ? [data[data.length - 1].date, data[0].date] : []);
 
   if (!between.length) return [];
   const interval = evaluateInterval(between);
