@@ -188,3 +188,7 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
 
 // Re-export parser bridge utilities for advanced use cases
 export { schemaToNuqsParsers, createSchemaSerializer } from "./parser-bridge";
+
+// Re-export nuqs types for components that need them
+// This allows components to import from the adapter layer instead of nuqs directly
+export type { ParserBuilder } from "nuqs";

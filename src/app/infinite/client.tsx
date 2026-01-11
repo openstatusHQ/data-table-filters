@@ -2,28 +2,57 @@
 
 import { useHotKey } from "@/hooks/use-hot-key";
 import { getLevelRowClassName } from "@/lib/request/level";
-import { DataTableStoreProvider } from "@/lib/store";
+import { DataTableStoreProvider, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { cn } from "@/lib/utils";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  type InfiniteData,
+  type UseInfiniteQueryResult,
+} from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
-import { useQueryState, useQueryStates } from "nuqs";
+import { useQueryStates } from "nuqs";
 import * as React from "react";
 import { LiveRow } from "./_components/live-row";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { DataTableInfinite } from "./data-table-infinite";
-import { dataOptions } from "./query-options";
-import type { FacetMetadataSchema } from "./schema";
+import {
+  dataOptions,
+  type InfiniteQueryResponse,
+  type LogsMeta,
+} from "./query-options";
+import type { ColumnSchema, FacetMetadataSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
-import { searchParamsParser } from "./search-params";
+import {
+  searchParamsParser,
+  type SearchParamsType,
+} from "./search-params";
 
 export function Client() {
-  const [search] = useQueryStates(searchParamsParser, { throttleMs: 300 });
-  const adapter = useNuqsAdapter(filterSchema.definition, {
-    id: "infinite",
-    throttleMs: 300,
-  });
+  // NOTE: useQueryStates is still needed for data fetching (includes pagination params)
+  const [search] = useQueryStates(searchParamsParser);
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "infinite" });
+  const query = useInfiniteQuery(dataOptions(search));
+  useResetFocus();
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <ClientInner query={query} search={search} />
+    </DataTableStoreProvider>
+  );
+}
+
+// Inner component that can use BYOS hooks (inside provider context)
+function ClientInner({
+  query,
+  search,
+}: {
+  query: UseInfiniteQueryResult<
+    InfiniteData<InfiniteQueryResponse<ColumnSchema[], LogsMeta>>
+  >;
+  search: SearchParamsType;
+}) {
   const {
     data,
     isFetching,
@@ -32,8 +61,7 @@ export function Client() {
     hasNextPage,
     fetchPreviousPage,
     refetch,
-  } = useInfiniteQuery(dataOptions(search));
-  useResetFocus();
+  } = query;
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
@@ -93,55 +121,53 @@ export function Client() {
   }, [filter]);
 
   return (
-    <DataTableStoreProvider adapter={adapter}>
-      <DataTableInfinite
-        columns={columns}
-        data={flatData}
-        totalRows={totalDBRowCount}
-        filterRows={filterDBRowCount}
-        totalRowsFetched={totalFetched}
-        defaultColumnFilters={defaultColumnFilters}
-        defaultColumnSorting={sort ? [sort] : undefined}
-        defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
-        // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`
-        defaultColumnVisibility={{
-          uuid: false,
-          "timing.dns": false,
-          "timing.connection": false,
-          "timing.tls": false,
-          "timing.ttfb": false,
-          "timing.transfer": false,
-        }}
-        meta={metadata}
-        filterFields={filterFields}
-        sheetFields={sheetFields}
-        isFetching={isFetching}
-        isLoading={isLoading}
-        fetchNextPage={fetchNextPage}
-        hasNextPage={hasNextPage}
-        fetchPreviousPage={fetchPreviousPage}
-        refetch={refetch}
-        chartData={chartData}
-        chartDataColumnId="date"
-        getRowClassName={(row) => {
-          const rowTimestamp = row.original.date.getTime();
-          const isPast = rowTimestamp <= (liveMode.timestamp || -1);
-          const levelClassName = getLevelRowClassName(row.original.level);
-          return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
-        }}
-        getRowId={(row) => row.uuid}
-        getFacetedUniqueValues={getFacetedUniqueValues(facets)}
-        getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
-        renderLiveRow={(props) => {
-          if (!liveMode.timestamp) return null;
-          if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
-          return <LiveRow />;
-        }}
-        renderSheetTitle={(props) => props.row?.original.pathname}
-        searchParamsParser={searchParamsParser}
-        showPrefetchToggle
-      />
-    </DataTableStoreProvider>
+    <DataTableInfinite
+      columns={columns}
+      data={flatData}
+      totalRows={totalDBRowCount}
+      filterRows={filterDBRowCount}
+      totalRowsFetched={totalFetched}
+      defaultColumnFilters={defaultColumnFilters}
+      defaultColumnSorting={sort ? [sort] : undefined}
+      defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
+      // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`
+      defaultColumnVisibility={{
+        uuid: false,
+        "timing.dns": false,
+        "timing.connection": false,
+        "timing.tls": false,
+        "timing.ttfb": false,
+        "timing.transfer": false,
+      }}
+      meta={metadata}
+      filterFields={filterFields}
+      sheetFields={sheetFields}
+      isFetching={isFetching}
+      isLoading={isLoading}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
+      fetchPreviousPage={fetchPreviousPage}
+      refetch={refetch}
+      chartData={chartData}
+      chartDataColumnId="date"
+      getRowClassName={(row) => {
+        const rowTimestamp = row.original.date.getTime();
+        const isPast = rowTimestamp <= (liveMode.timestamp || -1);
+        const levelClassName = getLevelRowClassName(row.original.level);
+        return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
+      }}
+      getRowId={(row) => row.uuid}
+      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+      renderLiveRow={(props) => {
+        if (!liveMode.timestamp) return null;
+        if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
+        return <LiveRow />;
+      }}
+      renderSheetTitle={(props) => props.row?.original.pathname}
+      schema={filterSchema.definition}
+      showPrefetchToggle
+    />
   );
 }
 
@@ -157,8 +183,9 @@ function useResetFocus() {
 }
 
 // TODO: make a BaseObject (incl. date and uuid e.g. for every upcoming branch of infinite table)
+// NOTE: Must be called inside DataTableStoreProvider context
 export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
-  const [live] = useQueryState("live", searchParamsParser.live);
+  const live = useFilterState<FilterState, FilterState["live"]>((s) => s.live);
   // REMINDER: used to capture the live mode on timestamp
   const liveTimestamp = React.useRef<number | undefined>(
     live ? new Date().getTime() : undefined,

@@ -58,15 +58,14 @@ import {
   getFacetedUniqueValues as getTTableFacetedUniqueValues,
   useReactTable,
 } from "@tanstack/react-table";
+import { useFilterState } from "@/lib/store";
 import { LoaderCircle } from "lucide-react";
-import { useQueryState, type ParserBuilder } from "nuqs";
 import * as React from "react";
 import { LiveButton } from "./_components/live-button";
 import { PrefetchToggle } from "./_components/prefetch-toggle";
 import { RefreshButton } from "./_components/refresh-button";
 import { SocialsFooter } from "./_components/socials-footer";
 import { BaseChartSchema } from "./schema";
-import { searchParamsParser as defaultSearchParamsParser } from "./search-params";
 import { TimelineChart } from "./timeline-chart";
 
 // TODO: add a possible chartGroupBy
@@ -111,9 +110,8 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   renderSheetTitle: (props: { row?: Row<TData> }) => React.ReactNode;
   // TODO:
   renderChart?: () => React.ReactNode;
-  // Either provide searchParamsParser (nuqs approach) or schema (BYOS approach)
-  searchParamsParser?: Record<string, ParserBuilder<any>>;
-  schema?: SchemaDefinition;
+  // Schema definition for BYOS filter command
+  schema: SchemaDefinition;
   // Used to store column order and visibility in local storage for specific data-table namespace
   tableId?: string;
   // Show the prefetch toggle button in the toolbar
@@ -147,7 +145,6 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   meta,
   renderLiveRow,
   renderSheetTitle,
-  searchParamsParser,
   schema,
   tableId = "infinite",
   showPrefetchToggle = false,
@@ -353,11 +350,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               "sticky top-0 z-10 pb-4",
             )}
           >
-            <DataTableFilterCommand
-              searchParamsParser={searchParamsParser}
-              schema={schema}
-              tableId={tableId}
-            />
+            <DataTableFilterCommand schema={schema} tableId={tableId} />
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
               renderActions={() => [
@@ -551,7 +544,7 @@ function Row<TData>({
 }) {
   // REMINDER: rerender the row when live mode is toggled - used to opacity the row
   // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
-  useQueryState("live", defaultSearchParamsParser.live);
+  useFilterState((s) => s.live);
   return (
     <TableRow
       id={row.id}

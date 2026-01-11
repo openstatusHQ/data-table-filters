@@ -2,7 +2,7 @@ import { PREFETCH_COOKIE_NAME } from "@/lib/constants/cookies";
 import { getQueryClient } from "@/providers/get-query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { cookies } from "next/headers";
-import { SearchParams } from "nuqs";
+import type { SearchParams } from "nuqs";
 import { Suspense } from "react";
 import { Client } from "./client";
 import { dataOptions } from "./query-options";

@@ -18,11 +18,8 @@ import { filterSchema } from "./schema";
 import { searchParamsParser } from "./search-params";
 
 export function Client() {
-  const [search] = useQueryStates(searchParamsParser, { throttleMs: 300 });
-  const adapter = useNuqsAdapter(filterSchema.definition, {
-    id: "light",
-    throttleMs: 300,
-  });
+  const [search] = useQueryStates(searchParamsParser);
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "light" });
   const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
     useInfiniteQuery(dataOptions(search));
 
@@ -106,7 +103,7 @@ export function Client() {
         fetchPreviousPage={undefined}
         refetch={refetch}
         renderSheetTitle={(props) => props.row?.original.url}
-        searchParamsParser={searchParamsParser}
+        schema={filterSchema.definition}
         tableId="light"
       />
     </DataTableStoreProvider>

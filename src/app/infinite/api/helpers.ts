@@ -41,10 +41,11 @@ export function filterData(
   data: ColumnSchema[],
   search: Partial<SearchParamsType>,
 ): ColumnSchema[] {
-  const { start, size, sort, ...filters } = search;
+  // Only iterate over actual filter fields (exclude pagination, sorting, selection, live mode)
+  const filterKeys = ["level", "method", "host", "pathname", "latency", "timing.dns", "timing.connection", "timing.tls", "timing.ttfb", "timing.transfer", "status", "regions", "date"] as const;
   return data.filter((row) => {
-    for (const key in filters) {
-      const filter = filters[key as keyof typeof filters];
+    for (const key of filterKeys) {
+      const filter = search[key];
       if (filter === undefined || filter === null) continue;
       if (
         (key === "latency" ||
@@ -124,11 +125,12 @@ export function splitData(data: ColumnSchema[], search: SearchParamsType) {
   const now = new Date();
   // cursor undefined = "now"
   const cursorTime = search.cursor?.getTime() ?? now.getTime();
+  const size = search.size ?? 40; // Default page size
 
   // TODO: write a helper function for this
   data.forEach((item) => {
     if (search.direction === "next") {
-      if (item.date.getTime() < cursorTime && newData.length < search.size) {
+      if (item.date.getTime() < cursorTime && newData.length < size) {
         newData.push(item);
         // TODO: check how to deal with the cases that there are some items left with the same date
       } else if (

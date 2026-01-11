@@ -1,12 +1,11 @@
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { VERCEL_EDGE_REGIONS } from "@/constants/region";
-import {
-  ARRAY_DELIMITER,
-  RANGE_DELIMITER,
-  SLIDER_DELIMITER,
-} from "@/lib/delimiters";
+import { RANGE_DELIMITER, SLIDER_DELIMITER } from "@/lib/delimiters";
 import { createSchema, field } from "@/lib/store/schema";
+
+// Direction type for pagination
+const DIRECTIONS = ["prev", "next"] as const;
 
 // BYOS filter schema
 export const filterSchema = createSchema({
@@ -22,4 +21,7 @@ export const filterSchema = createSchema({
   sort: field.sort(),
   // Selection
   uuid: field.string(),
+  // Pagination
+  direction: field.stringLiteral(DIRECTIONS).default("next"),
+  cursor: field.timestamp(), // null = "now" (handled in query-options)
 });

@@ -20,11 +20,9 @@ import type { SchemaDefinition } from "@/lib/store/schema/types";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { LoaderCircle, Search, X } from "lucide-react";
-import { ParserBuilder } from "nuqs";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { DataTableFilterField } from "../types";
 import {
-  columnFiltersParser,
   columnFiltersParserFromSchema,
   getFieldOptions,
   getFilterValue,
@@ -35,16 +33,13 @@ import {
 // FIXME: there is an issue on cmdk if I wanna only set a single slider value...
 
 interface DataTableFilterCommandProps {
-  // Either provide searchParamsParser (legacy nuqs approach)
-  searchParamsParser?: Record<string, ParserBuilder<any>>;
-  // Or provide schema (new BYOS approach)
-  schema?: SchemaDefinition;
+  // Schema definition for parsing/serializing filter values (BYOS)
+  schema: SchemaDefinition;
   // Unique ID for this table (used to namespace localStorage)
   tableId?: string;
 }
 
 export function DataTableFilterCommand({
-  searchParamsParser,
   schema,
   tableId = "default",
 }: DataTableFilterCommandProps) {
@@ -64,21 +59,10 @@ export function DataTableFilterCommand({
     () => _filterFields?.filter((i) => !i.commandDisabled),
     [_filterFields],
   );
-  const columnParser = useMemo(() => {
-    // Prefer schema-based parser if schema is provided
-    if (schema) {
-      return columnFiltersParserFromSchema({ schema, filterFields });
-    }
-    // Fallback to legacy nuqs parser
-    if (searchParamsParser) {
-      return columnFiltersParser({ searchParamsParser, filterFields });
-    }
-    // Default no-op parser if neither is provided
-    return {
-      parse: () => ({}),
-      serialize: () => "",
-    };
-  }, [schema, searchParamsParser, filterFields]);
+  const columnParser = useMemo(
+    () => columnFiltersParserFromSchema({ schema, filterFields }),
+    [schema, filterFields],
+  );
   const [inputValue, setInputValue] = useState<string>(
     columnParser.serialize(columnFilters),
   );

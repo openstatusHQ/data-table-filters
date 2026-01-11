@@ -3,14 +3,14 @@
 import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
+import { useFilterActions, useFilterState } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { FetchPreviousPageOptions } from "@tanstack/react-query";
 import { CirclePause, CirclePlay } from "lucide-react";
-import { useQueryStates } from "nuqs";
 import * as React from "react";
-import { searchParamsParser } from "../search-params";
+import type { FilterState } from "../schema";
 
-const REFRESH_INTERVAL = 4_000;
+const REFRESH_INTERVAL = 5_000;
 
 interface LiveButtonProps {
   fetchPreviousPage?: (
@@ -19,7 +19,10 @@ interface LiveButtonProps {
 }
 
 export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
-  const [{ live, date, sort }, setSearch] = useQueryStates(searchParamsParser);
+  const live = useFilterState<FilterState, FilterState["live"]>((s) => s.live);
+  const date = useFilterState<FilterState, FilterState["date"]>((s) => s.date);
+  const sort = useFilterState<FilterState, FilterState["sort"]>((s) => s.sort);
+  const { setFilters } = useFilterActions<FilterState>();
   const { table } = useDataTable();
   useHotKey(handleClick, "j");
 
@@ -43,20 +46,21 @@ export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
   }, [live, fetchPreviousPage]);
 
   // REMINDER: make sure to reset live when date is set
-  // TODO: test properly
+  // NOTE: live is intentionally NOT in deps - we only want to reset live when date/sort changes,
+  // not when live itself changes (which would cause immediate reset on toggle)
   React.useEffect(() => {
-    if ((date || sort) && live) {
-      setSearch((prev) => ({ ...prev, live: null }));
+    const reset = ((date?.length && date.length > 0) || sort) && live;
+    if (reset) {
+      setFilters({ live: undefined });
     }
-  }, [date, sort]);
+  }, [date, sort, live, setFilters]);
 
   function handleClick() {
-    setSearch((prev) => ({
-      ...prev,
-      live: !prev.live,
-      date: null,
-      sort: null,
-    }));
+    setFilters({
+      live: !live,
+      date: undefined,
+      sort: undefined,
+    });
     table.getColumn("date")?.setFilterValue(undefined);
     table.resetSorting();
   }

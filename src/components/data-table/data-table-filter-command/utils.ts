@@ -5,8 +5,7 @@ import {
 } from "@/lib/delimiters";
 import { isArrayOfDates } from "@/lib/is-array";
 import type { FieldBuilder, SchemaDefinition } from "@/lib/store/schema/types";
-import { ColumnFiltersState } from "@tanstack/react-table";
-import { ParserBuilder } from "nuqs";
+import type { ColumnFiltersState } from "@tanstack/react-table";
 import type { DataTableFilterField } from "../types";
 
 /**
@@ -268,58 +267,6 @@ export function serializeFilterValue(value: string): string {
     return `"${value}"`;
   }
   return value;
-}
-
-export function columnFiltersParser<TData>({
-  searchParamsParser,
-  filterFields,
-}: {
-  searchParamsParser: Record<string, ParserBuilder<any>>;
-  filterFields: DataTableFilterField<TData>[];
-}) {
-  return {
-    parse: (inputValue: string) => {
-      // Use tokenizer that respects quoted values
-      const tokens = tokenizeFilterInput(inputValue);
-      const values = tokens.reduce(
-        (prev, [name, value]) => {
-          prev[name] = value;
-          return prev;
-        },
-        {} as Record<string, string>,
-      );
-
-      const searchParams = Object.entries(values).reduce(
-        (prev, [key, value]) => {
-          const parser = searchParamsParser[key];
-          if (!parser) return prev;
-
-          prev[key] = parser.parse(value);
-          return prev;
-        },
-        {} as Record<string, unknown>,
-      );
-
-      return searchParams;
-    },
-    serialize: (columnFilters: ColumnFiltersState) => {
-      const values = columnFilters.reduce((prev, curr) => {
-        const { commandDisabled } = filterFields?.find(
-          (field) => curr.id === field.value,
-        ) || { commandDisabled: true }; // if column filter is not found, disable the command by default
-        const parser = searchParamsParser[curr.id];
-
-        if (commandDisabled || !parser) return prev;
-
-        const serialized = parser.serialize(curr.value);
-        // Wrap in quotes if value contains spaces
-        const quotedValue = serializeFilterValue(serialized);
-        return `${prev}${curr.id}:${quotedValue} `;
-      }, "");
-
-      return values;
-    },
-  };
 }
 
 /**
