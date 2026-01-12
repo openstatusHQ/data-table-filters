@@ -1,7 +1,6 @@
 "use client";
 
 import { useHotKey } from "@/hooks/use-hot-key";
-import { ADAPTER_COOKIE_NAME } from "@/lib/constants/cookies";
 import { getLevelRowClassName } from "@/lib/request/level";
 import {
   DataTableStoreProvider,
