@@ -20,7 +20,7 @@ import {
   PREFETCH_COOKIE_NAME,
 } from "@/lib/constants/cookies";
 import type { AdapterType } from "@/lib/store";
-import { Book, Command, Plug } from "lucide-react";
+import { Book, Cog, Command } from "lucide-react";
 import NextLink from "next/link";
 import { useState } from "react";
 
@@ -184,7 +184,7 @@ function ConfigurationDropdown({
           size="icon"
           className="h-8 w-8 px-0 [&>svg]:h-4 [&>svg]:w-4"
         >
-          <Plug className="h-4 w-4" />
+          <Cog className="h-4 w-4" />
           <span className="sr-only">Open configuration dropdown</span>
         </Button>
       </DropdownMenuTrigger>
