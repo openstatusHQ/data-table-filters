@@ -6,13 +6,19 @@ import { KVTable } from "./kv-table";
 interface KVTabsProps {
   data: Record<string, string>;
   className?: string;
+  label?: string;
 }
 
-export function KVTabs({ data, className }: KVTabsProps) {
+export function KVTabs({ data, className, label }: KVTabsProps) {
   return (
     <Tabs defaultValue="table" className={className}>
-      <div className="flex items-center justify-end">
-        <TabsList className="h-auto gap-1 bg-background px-0 py-0">
+      <div className="flex items-center justify-between">
+        {label && (
+          <span className="text-sm font-medium text-muted-foreground">
+            {label}
+          </span>
+        )}
+        <TabsList className="h-auto gap-1 bg-background px-0 py-0 ml-auto">
           <TabsTrigger
             value="table"
             className="px-0 py-0 text-muted-foreground/70 data-[state=active]:text-foreground data-[state=active]:shadow-none"

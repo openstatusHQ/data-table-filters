@@ -249,13 +249,12 @@ export const sheetFields = [
   },
   {
     id: "headers",
-    label: "Headers",
+    label: "",
     type: "readonly",
     component: (props) => (
-      // REMINDER: negative margin to make it look like the header is on the same level of the tab triggers
-      <KVTabs data={props.headers} className="-mt-[22px]" />
+      <KVTabs label="Headers" data={props.headers} />
     ),
-    className: "flex-col items-start w-full gap-1",
+    className: "w-full",
   },
   {
     id: "message",

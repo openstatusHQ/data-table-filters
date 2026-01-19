@@ -28,20 +28,20 @@ export function SheetTimingPhases({
           <div className="truncate font-mono uppercase text-foreground">
             {getTimingLabel(phase)}
           </div>
-          <div className="col-span-2 flex gap-2">
-            <div className="mr-8 font-mono text-muted-foreground">
+          <div className="flex flex-1 gap-2 items-center justify-end">
+            <div className="font-mono text-[10px] text-muted-foreground tabular-nums">
               {timingPercentage[phase]}
             </div>
-            <div className="flex flex-1 items-center justify-end gap-2">
-              <div className="font-mono">
-                {formatMilliseconds(timing[phase])}
-                <span className="text-muted-foreground">ms</span>
-              </div>
+            <div className="font-mono tabular-nums">
+              {formatMilliseconds(timing[phase])}
+              <span className="text-muted-foreground ml-0.5">ms</span>
             </div>
-            <div
-              className={cn(getTimingColor(phase), "h-4")}
-              style={{ width: `${(timing[phase] / latency) * 100}%` }}
-            />
+            <div className="w-16 flex justify-end">
+              <div
+                className={cn(getTimingColor(phase), "h-1.5 rounded-full")}
+                style={{ width: `${(timing[phase] / latency) * 100}%` }}
+              />
+            </div>
           </div>
         </div>
       ))}

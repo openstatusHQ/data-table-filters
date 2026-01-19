@@ -12,8 +12,8 @@ interface KVTableProps {
 }
 export function KVTable({ data }: KVTableProps) {
   return (
-    <div className="mx-auto max-w-lg">
-      <div className="overflow-hidden rounded-lg border border-border bg-background">
+    <div className="mx-auto w-full">
+      <div className="overflow-hidden">
         <Table>
           <TableBody>
             {Object.entries(data).map(([key, value]) => {
@@ -43,10 +43,10 @@ function RowAction({
         copy(value.toString());
       }}
     >
-      <TableCell className="bg-muted/50 py-1 font-mono font-medium">
+      <TableCell className="bg-muted/50 py-2 font-mono font-medium">
         {label}
       </TableCell>
-      <TableCell className="relative py-1 font-mono">
+      <TableCell className="relative py-2 font-mono">
         {value}
         <div className="invisible absolute right-1.5 top-1.5 rounded-sm border border-border bg-background p-0.5 backdrop-blur-sm group-hover:visible">
           {!isCopied ? (

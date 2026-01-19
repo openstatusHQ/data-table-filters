@@ -47,14 +47,16 @@ export function DataTableSheetContent<TData, TMeta>({
             {field.type === "readonly" ? (
               <div
                 className={cn(
-                  "my-1 flex w-full items-center justify-between gap-4 py-1 text-sm",
-                  field.className,
+                  "flex gap-4 py-3 text-sm justify-between items-center w-full",
+                  field.className
                 )}
               >
-                <dt className="shrink-0 text-muted-foreground">
-                  {field.label}
-                </dt>
-                <dd className="w-full text-right font-mono">
+                {field.label && (
+                  <dt className="shrink-0 text-muted-foreground">
+                    {field.label}
+                  </dt>
+                )}
+                <dd className={cn("font-mono w-full text-right", !field.label && "text-left")}>
                   {Component ? (
                     <Component {...data} metadata={metadata} />
                   ) : (
@@ -69,14 +71,16 @@ export function DataTableSheetContent<TData, TMeta>({
                 value={value}
                 table={table}
                 className={cn(
-                  "my-1 flex w-full items-center justify-between gap-4 py-1 text-sm",
-                  field.className,
+                  "flex gap-4 py-3 text-sm justify-between items-center w-full",
+                  field.className
                 )}
               >
-                <dt className="shrink-0 text-muted-foreground">
-                  {field.label}
-                </dt>
-                <dd className="w-full text-right font-mono">
+                {field.label && (
+                  <dt className="shrink-0 text-muted-foreground">
+                    {field.label}
+                  </dt>
+                )}
+                <dd className={cn("font-mono w-full text-right", !field.label && "text-left")}>
                   {Component ? (
                     <Component {...data} metadata={metadata} />
                   ) : (
