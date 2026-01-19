@@ -105,6 +105,7 @@ export const sheetFields = [
       </div>
     ),
     skeletonClassName: "w-2.5",
+    section: "Metadata",
   },
   {
     id: "timestamp",
@@ -113,6 +114,7 @@ export const sheetFields = [
     component: (props) =>
       format(new Date(props.timestamp), "LLL dd, y HH:mm:ss"),
     skeletonClassName: "w-36",
+    section: "Metadata",
   },
   {
     id: "status",
@@ -120,18 +122,21 @@ export const sheetFields = [
     type: "checkbox",
     component: (props) => <DataTableColumnStatusCode value={props.status} />,
     skeletonClassName: "w-12",
+    section: "Request",
   },
   {
     id: "method",
     label: "Method",
     type: "checkbox",
     skeletonClassName: "w-10",
+    section: "Request",
   },
   {
     id: "url",
     label: "URL",
     type: "input",
     skeletonClassName: "w-24",
+    section: "Request",
   },
   {
     id: "region",
@@ -141,6 +146,7 @@ export const sheetFields = [
       <DataTableColumnRegion value={props.region} reverse showFlag />
     ),
     skeletonClassName: "w-12",
+    section: "Request",
   },
   {
     id: "latency",
@@ -148,6 +154,7 @@ export const sheetFields = [
     type: "slider",
     component: (props) => <DataTableColumnLatency value={props.latency} />,
     skeletonClassName: "w-16",
+    section: "Request",
   },
   {
     id: "headers",
@@ -158,6 +165,7 @@ export const sheetFields = [
       <KVTabs label="Headers" data={JSON.parse(props.headers)} />
     ),
     className: "w-full",
+    section: "Attributes",
   },
   {
     id: "body",
@@ -173,6 +181,7 @@ export const sheetFields = [
         {isJSON(props.body) ? JSON.stringify(props.body, null, 2) : props.body}
       </CopyToClipboardContainer>
     ),
-    className: "flex-col items-start w-full gap-1",
+    className: "w-full",
+    section: "Attributes",
   },
 ] satisfies SheetField<ColumnType, unknown>[];

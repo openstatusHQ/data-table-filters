@@ -34,6 +34,8 @@ export function DataTableSheetContent<TData, TMeta>({
 }: DataTableSheetContentProps<TData, TMeta>) {
   if (!data) return <SheetDetailsContentSkeleton fields={fields} />;
 
+  let currentSection: string | undefined = undefined;
+
   return (
     <dl className={cn("divide-y", className)} {...props}>
       {fields.map((field) => {
@@ -42,54 +44,61 @@ export function DataTableSheetContent<TData, TMeta>({
         const Component = field.component;
         const value = String(data[field.id]);
 
-        return (
-          <div key={field.id.toString()}>
-            {field.type === "readonly" ? (
-              <div
-                className={cn(
-                  "flex gap-4 py-3 text-sm justify-between items-center w-full",
-                  field.className
-                )}
-              >
-                {field.label && (
-                  <dt className="shrink-0 text-muted-foreground">
-                    {field.label}
-                  </dt>
-                )}
-                <dd className={cn("font-mono w-full text-right", !field.label && "text-left")}>
-                  {Component ? (
-                    <Component {...data} metadata={metadata} />
-                  ) : (
-                    value
-                  )}
-                </dd>
-              </div>
-            ) : (
-              <DataTableSheetRowAction
-                fieldValue={field.id}
-                filterFields={filterFields}
-                value={value}
-                table={table}
-                className={cn(
-                  "flex gap-4 py-3 text-sm justify-between items-center w-full",
-                  field.className
-                )}
-              >
-                {field.label && (
-                  <dt className="shrink-0 text-muted-foreground">
-                    {field.label}
-                  </dt>
-                )}
-                <dd className={cn("font-mono w-full text-right", !field.label && "text-left")}>
-                  {Component ? (
-                    <Component {...data} metadata={metadata} />
-                  ) : (
-                    value
-                  )}
-                </dd>
-              </DataTableSheetRowAction>
+        const showSection = field.section && field.section !== currentSection;
+        if (showSection) {
+          currentSection = field.section;
+        }
+
+        const rowContent = (
+          <>
+            {field.label && (
+              <dt className="shrink-0 text-muted-foreground font-medium">
+                {field.label}
+              </dt>
             )}
-          </div>
+            <dd className={cn("font-mono truncate", !field.label && "col-span-2 text-left", field.label && "text-right")}>
+              {Component ? (
+                <Component {...data} metadata={metadata} />
+              ) : (
+                value
+              )}
+            </dd>
+          </>
+        );
+
+        return (
+          <React.Fragment key={field.id.toString()}>
+            {showSection && (
+              <div className="bg-muted/30 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 first:rounded-t-md">
+                {field.section}
+              </div>
+            )}
+            <div className="px-4">
+              {field.type === "readonly" ? (
+                <div
+                  className={cn(
+                    "grid grid-cols-[120px_1fr] gap-4 py-3 text-sm items-center w-full",
+                    field.className
+                  )}
+                >
+                  {rowContent}
+                </div>
+              ) : (
+                <DataTableSheetRowAction
+                  fieldValue={field.id}
+                  filterFields={filterFields}
+                  value={value}
+                  table={table}
+                  className={cn(
+                    "grid grid-cols-[120px_1fr] gap-4 py-3 text-sm items-center w-full",
+                    field.className
+                  )}
+                >
+                  {rowContent}
+                </DataTableSheetRowAction>
+              )}
+            </div>
+          </React.Fragment>
         );
       })}
     </dl>

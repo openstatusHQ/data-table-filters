@@ -159,6 +159,7 @@ export const sheetFields = [
     label: "Request ID",
     type: "readonly",
     skeletonClassName: "w-64",
+    section: "Metadata",
   },
   {
     id: "date",
@@ -166,6 +167,7 @@ export const sheetFields = [
     type: "timerange",
     component: (props) => format(new Date(props.date), "LLL dd, y HH:mm:ss"),
     skeletonClassName: "w-36",
+    section: "Metadata",
   },
   {
     id: "status",
@@ -179,6 +181,7 @@ export const sheetFields = [
       );
     },
     skeletonClassName: "w-12",
+    section: "Request",
   },
   {
     id: "method",
@@ -188,18 +191,21 @@ export const sheetFields = [
       return <span className="font-mono">{props.method}</span>;
     },
     skeletonClassName: "w-10",
+    section: "Request",
   },
   {
     id: "host",
     label: "Host",
     type: "input",
     skeletonClassName: "w-24",
+    section: "Request",
   },
   {
     id: "pathname",
     label: "Pathname",
     type: "input",
     skeletonClassName: "w-56",
+    section: "Request",
   },
   {
     id: "regions",
@@ -209,6 +215,7 @@ export const sheetFields = [
     component: (props) => (
       <DataTableColumnRegion value={props.regions[0]} reverse showFlag />
     ),
+    section: "Request",
   },
   {
     id: "latency",
@@ -221,6 +228,7 @@ export const sheetFields = [
       </>
     ),
     skeletonClassName: "w-16",
+    section: "Request",
   },
   {
     id: "percentile",
@@ -237,6 +245,7 @@ export const sheetFields = [
       );
     },
     skeletonClassName: "w-12",
+    section: "Request",
   },
   {
     id: "timing.dns", // REMINDER: cannot be 'timing' as it is a property of the object
@@ -245,7 +254,8 @@ export const sheetFields = [
     component: (props) => (
       <SheetTimingPhases latency={props.latency} timing={props} />
     ),
-    className: "flex-col items-start w-full gap-1",
+    className: "w-full",
+    section: "Timing",
   },
   {
     id: "headers",
@@ -255,6 +265,7 @@ export const sheetFields = [
       <KVTabs label="Headers" data={props.headers} />
     ),
     className: "w-full",
+    section: "Attributes",
   },
   {
     id: "message",
@@ -266,6 +277,7 @@ export const sheetFields = [
         {JSON.stringify(props.message, null, 2)}
       </CopyToClipboardContainer>
     ),
-    className: "flex-col items-start w-full gap-1",
+    className: "w-full",
+    section: "Attributes",
   },
 ] satisfies SheetField<ColumnSchema, LogsMeta>[];
