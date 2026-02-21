@@ -44,6 +44,7 @@ export type ColConfig = {
   arrayItem?: ColConfig;
   optional: boolean;
   label: string;
+  description?: string;
   display: DisplayConfig;
   size?: number;
   hidden: boolean;
@@ -56,6 +57,7 @@ export interface ColBuilder<T> {
   readonly _config: ColConfig;
 
   label(text: string): ColBuilder<T>;
+  description(text: string): ColBuilder<T>;
 
   display(type: "text" | "code" | "boolean" | "badge" | "timestamp"): ColBuilder<T>;
   display(type: "number", options?: { unit?: string }): ColBuilder<T>;
@@ -86,6 +88,44 @@ export interface ColBuilder<T> {
 }
 
 export type TableSchemaDefinition = Record<string, ColBuilder<unknown>>;
+
+// ── Serializable descriptors (function-free) ────────────────────────────────
+
+export type FilterDescriptor = {
+  type: "input" | "checkbox" | "slider" | "timerange";
+  defaultOpen: boolean;
+  commandDisabled: boolean;
+  options?: Array<{ label: string; value: string | number | boolean }>;
+  min?: number;
+  max?: number;
+};
+
+export type SheetDescriptor = {
+  label?: string;
+  className?: string;
+  skeletonClassName?: string;
+};
+
+export type ColumnDescriptor = {
+  key: string;
+  label: string;
+  description?: string;
+  dataType: ColKind;
+  enumValues?: readonly string[];
+  arrayItemType?: { dataType: ColKind; enumValues?: readonly string[] };
+  optional: boolean;
+  hidden: boolean;
+  sortable: boolean;
+  size?: number;
+  /** "custom" means a developer-supplied renderer exists; not reconstructable from JSON. */
+  display: { type: string; unit?: string };
+  filter: FilterDescriptor | null;
+  sheet: SheetDescriptor | null;
+};
+
+export type SchemaJSON = {
+  columns: ColumnDescriptor[];
+};
 
 // Infer the data row type from a table schema definition
 export type InferTableType<T extends TableSchemaDefinition> = {

@@ -16,6 +16,10 @@ function createColBuilder<T>(config: ColConfig): ColBuilder<T> {
       return createColBuilder<T>({ ...config, label: text });
     },
 
+    description(text: string): ColBuilder<T> {
+      return createColBuilder<T>({ ...config, description: text });
+    },
+
     display(
       type: string,
       options?: Record<string, unknown>,
