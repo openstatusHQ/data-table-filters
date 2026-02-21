@@ -1,5 +1,44 @@
-export { col } from "./col";
+import { col as _col } from "./col";
+import { presets } from "./presets";
 import { deserializeSchema, serializeSchema } from "./serialize";
+
+/**
+ * Column builder factories and presets for defining table schemas.
+ *
+ * **Primitive factories** — choose based on the data type of the column:
+ * - `col.string()` — text data (`string`)
+ * - `col.number()` — numeric data (`number`)
+ * - `col.boolean()` — boolean data (`boolean`)
+ * - `col.timestamp()` — date/time data (`Date`)
+ * - `col.enum(values)` — string union (`T[number]`)
+ * - `col.array(item)` — array of values (`U[]`)
+ * - `col.record()` — key-value map (`Record<string, string>`)
+ *
+ * **Presets** — pre-configured builders for common log table patterns:
+ * - `col.presets.logLevel(values)` — severity levels
+ * - `col.presets.httpMethod(values)` — HTTP verbs
+ * - `col.presets.httpStatus(codes?)` — HTTP status codes
+ * - `col.presets.duration(unit?, slider?)` — timing / latency
+ * - `col.presets.timestamp()` — sortable timestamp with timerange filter
+ * - `col.presets.traceId()` — trace / request ID (code display, not filterable)
+ * - `col.presets.pathname()` — URL path with text search
+ *
+ * @example
+ * ```ts
+ * import { col, createTableSchema } from "@/lib/table-schema";
+ *
+ * export const tableSchema = createTableSchema({
+ *   level:   col.presets.logLevel(LEVELS).description("Log severity"),
+ *   date:    col.presets.timestamp().label("Date").size(200).sheet(),
+ *   latency: col.presets.duration("ms").label("Latency").sortable().size(110).sheet(),
+ *   status:  col.presets.httpStatus().label("Status").size(60),
+ *   method:  col.presets.httpMethod(METHODS).size(69),
+ *   host:    col.string().label("Host").size(125).sheet(),
+ *   headers: col.record().label("Headers").hidden().sheet(),
+ * });
+ * ```
+ */
+export const col = { ..._col, presets };
 export type {
   ColBuilder,
   ColConfig,
