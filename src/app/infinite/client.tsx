@@ -9,18 +9,36 @@ import {
 } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { useZustandAdapter } from "@/lib/store/adapters/zustand";
+import {
+  generateColumns,
+  generateFilterFields,
+  generateSheetFields,
+  getDefaultColumnVisibility,
+} from "@/lib/table-schema";
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
 import * as React from "react";
+import { timingPhasesColumn } from "./_components/timing-phases-column";
 import { LiveRow } from "./_components/live-row";
-import { columns } from "./columns";
-import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
-import type { FacetMetadataSchema, FilterState } from "./schema";
+import type { ColumnSchema, FacetMetadataSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
+import type { LogsMeta } from "./query-options";
+import { tableSchema } from "./table-schema";
 import { useFilterStore } from "./store";
+
+// Generated from tableSchema — stable references (defined at module level to
+// avoid recreating on every render)
+const columns = [
+  ...generateColumns<ColumnSchema>(tableSchema.definition),
+  timingPhasesColumn,
+];
+
+const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
+const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
+const defaultColumnVisibility = getDefaultColumnVisibility(tableSchema.definition);
 
 export function Client({
   defaultAdapterType = "nuqs",
@@ -107,9 +125,9 @@ function ClientInner({
 
   // REMINDER: this is currently needed for the cmdk search
   // TODO: auto search via API when the user changes the filter instead of hardcoded
-  const filterFields = React.useMemo(() => {
-    return defaultFilterFields.map((field) => {
-      const facetsField = facets?.[field.value];
+  const dynamicFilterFields = React.useMemo(() => {
+    return filterFields.map((field) => {
+      const facetsField = facets?.[field.value as string];
       if (!facetsField) return field;
       if (field.options && field.options.length > 0) return field;
 
@@ -157,17 +175,9 @@ function ClientInner({
       defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
-      // FIXME: make it configurable - TODO: use `columnHidden: boolean` in `filterFields`
-      defaultColumnVisibility={{
-        uuid: false,
-        "timing.dns": false,
-        "timing.connection": false,
-        "timing.tls": false,
-        "timing.ttfb": false,
-        "timing.transfer": false,
-      }}
-      meta={metadata}
-      filterFields={filterFields}
+      defaultColumnVisibility={defaultColumnVisibility}
+      meta={metadata ?? {}}
+      filterFields={dynamicFilterFields}
       sheetFields={sheetFields}
       isFetching={isFetching}
       isLoading={isLoading}
@@ -189,7 +199,7 @@ function ClientInner({
       renderLiveRow={(props) => {
         if (!liveMode.timestamp) return null;
         if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
-        return <LiveRow />;
+        return <LiveRow colSpan={columns.length - 1} />;
       }}
       renderSheetTitle={(props) => props.row?.original.pathname}
       schema={filterSchema.definition}

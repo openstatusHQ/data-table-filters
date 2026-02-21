@@ -66,6 +66,9 @@ export type TimelineChartSchema = z.infer<typeof timelineChartSchema>;
 const DIRECTIONS = ["prev", "next"] as const;
 
 // BYOS filter schema
+// NOTE: Column filter fields are kept explicit here for TypeScript inference.
+// The field builders match the output of generateFilterSchema(tableSchema.definition)
+// from src/app/infinite/table-schema.tsx — any schema change must be reflected in both.
 export const filterSchema = createSchema({
   // Filters
   level: field.array(field.stringLiteral(LEVELS)),
