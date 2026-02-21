@@ -3,37 +3,43 @@ import type {
   ColConfig,
   DisplayConfig,
   FilterConfig,
+  FilterType,
   SheetConfig,
 } from "./types";
 
-function createColBuilder<T>(config: ColConfig): ColBuilder<T> {
-  const builder: ColBuilder<T> = {
+function createColBuilder<T, F extends FilterType = FilterType>(
+  config: ColConfig,
+): ColBuilder<T, F> {
+  // The implementation uses loose parameter types to satisfy all overload
+  // signatures at once. TypeScript enforces the constraints at call sites
+  // via the ColBuilder<T, F> interface overloads, not here.
+  const builder = {
     get _config() {
       return config;
     },
 
-    label(text: string): ColBuilder<T> {
-      return createColBuilder<T>({ ...config, label: text });
+    label(text: string): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, label: text });
     },
 
-    description(text: string): ColBuilder<T> {
-      return createColBuilder<T>({ ...config, description: text });
+    description(text: string): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, description: text });
     },
 
     display(
       type: string,
       options?: Record<string, unknown>,
-    ): ColBuilder<T> {
+    ): ColBuilder<T, F> {
       const displayConfig = options
         ? ({ type, ...options } as DisplayConfig)
         : ({ type } as DisplayConfig);
-      return createColBuilder<T>({ ...config, display: displayConfig });
+      return createColBuilder<T, F>({ ...config, display: displayConfig });
     },
 
     filterable(
       type?: string,
       options?: Record<string, unknown>,
-    ): ColBuilder<T> {
+    ): ColBuilder<T, F> {
       const filterType = (
         type || config.filter?.type || "input"
       ) as FilterConfig["type"];
@@ -44,55 +50,55 @@ function createColBuilder<T>(config: ColConfig): ColBuilder<T> {
         commandDisabled: existing?.commandDisabled ?? false,
         ...(options ?? {}),
       };
-      return createColBuilder<T>({ ...config, filter: newFilter });
+      return createColBuilder<T, F>({ ...config, filter: newFilter });
     },
 
-    notFilterable(): ColBuilder<T> {
-      return createColBuilder<T>({ ...config, filter: null });
+    notFilterable(): ColBuilder<T, never> {
+      return createColBuilder<T, never>({ ...config, filter: null });
     },
 
-    defaultOpen(): ColBuilder<T> {
-      if (!config.filter) return createColBuilder<T>(config);
-      return createColBuilder<T>({
+    defaultOpen(): ColBuilder<T, F> {
+      if (!config.filter) return createColBuilder<T, F>(config);
+      return createColBuilder<T, F>({
         ...config,
         filter: { ...config.filter, defaultOpen: true },
       });
     },
 
-    commandDisabled(): ColBuilder<T> {
-      if (!config.filter) return createColBuilder<T>(config);
-      return createColBuilder<T>({
+    commandDisabled(): ColBuilder<T, F> {
+      if (!config.filter) return createColBuilder<T, F>(config);
+      return createColBuilder<T, F>({
         ...config,
         filter: { ...config.filter, commandDisabled: true },
       });
     },
 
-    hidden(): ColBuilder<T> {
-      return createColBuilder<T>({ ...config, hidden: true });
+    hidden(): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, hidden: true });
     },
 
-    size(px: number): ColBuilder<T> {
-      return createColBuilder<T>({ ...config, size: px });
+    size(px: number): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, size: px });
     },
 
-    sortable(): ColBuilder<T> {
-      return createColBuilder<T>({ ...config, sortable: true });
+    sortable(): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, sortable: true });
     },
 
-    optional(): ColBuilder<T | undefined> {
-      return createColBuilder<T | undefined>({ ...config, optional: true });
+    optional(): ColBuilder<T | undefined, F> {
+      return createColBuilder<T | undefined, F>({ ...config, optional: true });
     },
 
-    sheet(sheetConfig?: SheetConfig): ColBuilder<T> {
-      return createColBuilder<T>({ ...config, sheet: sheetConfig ?? {} });
+    sheet(sheetConfig?: SheetConfig): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, sheet: sheetConfig ?? {} });
     },
-  };
+  } as ColBuilder<T, F>;
 
   return builder;
 }
 
-function string(): ColBuilder<string> {
-  return createColBuilder<string>({
+function string(): ColBuilder<string, "input"> {
+  return createColBuilder<string, "input">({
     kind: "string",
     optional: false,
     label: "",
@@ -104,8 +110,8 @@ function string(): ColBuilder<string> {
   });
 }
 
-function number(): ColBuilder<number> {
-  return createColBuilder<number>({
+function number(): ColBuilder<number, "input" | "slider" | "checkbox"> {
+  return createColBuilder<number, "input" | "slider" | "checkbox">({
     kind: "number",
     optional: false,
     label: "",
@@ -117,8 +123,8 @@ function number(): ColBuilder<number> {
   });
 }
 
-function boolean(): ColBuilder<boolean> {
-  return createColBuilder<boolean>({
+function boolean(): ColBuilder<boolean, "checkbox"> {
+  return createColBuilder<boolean, "checkbox">({
     kind: "boolean",
     optional: false,
     label: "",
@@ -138,8 +144,8 @@ function boolean(): ColBuilder<boolean> {
   });
 }
 
-function timestamp(): ColBuilder<Date> {
-  return createColBuilder<Date>({
+function timestamp(): ColBuilder<Date, "timerange"> {
+  return createColBuilder<Date, "timerange">({
     kind: "timestamp",
     optional: false,
     label: "",
@@ -153,8 +159,8 @@ function timestamp(): ColBuilder<Date> {
 
 function colEnum<T extends readonly string[]>(
   values: T,
-): ColBuilder<T[number]> {
-  return createColBuilder<T[number]>({
+): ColBuilder<T[number], "checkbox"> {
+  return createColBuilder<T[number], "checkbox">({
     kind: "enum",
     enumValues: values,
     optional: false,
@@ -167,8 +173,9 @@ function colEnum<T extends readonly string[]>(
   });
 }
 
-function array<U>(itemBuilder: ColBuilder<U>): ColBuilder<U[]> {
-  return createColBuilder<U[]>({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function array<U>(itemBuilder: ColBuilder<U, any>): ColBuilder<U[], "checkbox"> {
+  return createColBuilder<U[], "checkbox">({
     kind: "array",
     arrayItem: itemBuilder._config,
     optional: false,
@@ -181,8 +188,8 @@ function array<U>(itemBuilder: ColBuilder<U>): ColBuilder<U[]> {
   });
 }
 
-function record(): ColBuilder<Record<string, string>> {
-  return createColBuilder<Record<string, string>>({
+function record(): ColBuilder<Record<string, string>, never> {
+  return createColBuilder<Record<string, string>, never>({
     kind: "record",
     optional: false,
     label: "",

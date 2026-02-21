@@ -10,6 +10,9 @@ export type ColKind =
   | "array"
   | "record";
 
+/** The set of filter UI types. Used as the F generic on ColBuilder<T, F>. */
+export type FilterType = "input" | "checkbox" | "slider" | "timerange";
+
 export type DisplayConfig =
   | { type: "text" }
   | { type: "code" }
@@ -20,7 +23,7 @@ export type DisplayConfig =
   | { type: "custom"; cell: (value: unknown, row: unknown) => JSX.Element | null };
 
 export type FilterConfig = {
-  type: "input" | "checkbox" | "slider" | "timerange";
+  type: FilterType;
   defaultOpen: boolean;
   commandDisabled: boolean;
   options?: Option[];
@@ -53,46 +56,77 @@ export type ColConfig = {
   sheet: SheetConfig | null;
 };
 
-export interface ColBuilder<T> {
+/**
+ * A fluent builder for a single table column.
+ *
+ * `T` is the TypeScript type of the column's data value.
+ * `F` is the union of filter UI types this column supports (constrained per col kind):
+ *   - col.string()    → F = "input"
+ *   - col.number()    → F = "input" | "slider" | "checkbox"
+ *   - col.boolean()   → F = "checkbox"
+ *   - col.timestamp() → F = "timerange"
+ *   - col.enum()      → F = "checkbox"
+ *   - col.array()     → F = "checkbox"
+ *   - col.record()    → F = never  (not filterable)
+ *
+ * Calling `filterable(type)` with a type not in F is a compile-time error.
+ */
+export interface ColBuilder<T, F extends FilterType = FilterType> {
   readonly _config: ColConfig;
 
-  label(text: string): ColBuilder<T>;
-  description(text: string): ColBuilder<T>;
+  label(text: string): ColBuilder<T, F>;
+  description(text: string): ColBuilder<T, F>;
 
-  display(type: "text" | "code" | "boolean" | "badge" | "timestamp"): ColBuilder<T>;
-  display(type: "number", options?: { unit?: string }): ColBuilder<T>;
+  display(type: "text" | "code" | "boolean" | "badge" | "timestamp"): ColBuilder<T, F>;
+  display(type: "number", options?: { unit?: string }): ColBuilder<T, F>;
   display(
     type: "custom",
     options: { cell: (value: unknown, row: unknown) => JSX.Element | null },
-  ): ColBuilder<T>;
+  ): ColBuilder<T, F>;
 
-  filterable(): ColBuilder<T>;
-  filterable(type: "input" | "timerange"): ColBuilder<T>;
+  /**
+   * Enable filtering using the column's default filter type.
+   * For col.record() (F = never) this is a compile-time error.
+   */
+  filterable(...args: [F] extends [never] ? [never] : []): ColBuilder<T, F>;
+  /**
+   * Enable filtering with an explicit filter type.
+   * Only filter types in F are accepted — mismatches are compile-time errors.
+   */
+  filterable(type: F & ("input" | "timerange")): ColBuilder<T, F>;
   filterable(
-    type: "checkbox",
+    type: F & "checkbox",
     options?: {
       options?: Option[];
       component?: (props: Option) => JSX.Element | null;
     },
-  ): ColBuilder<T>;
-  filterable(type: "slider", options: { min: number; max: number }): ColBuilder<T>;
+  ): ColBuilder<T, F>;
+  filterable(type: F & "slider", options: { min: number; max: number }): ColBuilder<T, F>;
 
-  notFilterable(): ColBuilder<T>;
-  defaultOpen(): ColBuilder<T>;
-  commandDisabled(): ColBuilder<T>;
-  hidden(): ColBuilder<T>;
-  size(px: number): ColBuilder<T>;
-  sortable(): ColBuilder<T>;
-  optional(): ColBuilder<T | undefined>;
-  sheet(config?: SheetConfig): ColBuilder<T>;
+  /** Remove filtering. Subsequent `.filterable()` calls are compile-time errors. */
+  notFilterable(): ColBuilder<T, never>;
+  defaultOpen(): ColBuilder<T, F>;
+  commandDisabled(): ColBuilder<T, F>;
+  hidden(): ColBuilder<T, F>;
+  size(px: number): ColBuilder<T, F>;
+  sortable(): ColBuilder<T, F>;
+  optional(): ColBuilder<T | undefined, F>;
+  sheet(config?: SheetConfig): ColBuilder<T, F>;
 }
 
-export type TableSchemaDefinition = Record<string, ColBuilder<unknown>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type TableSchemaDefinition = Record<string, ColBuilder<unknown, any>>;
+
+// Infer the data row type from a table schema definition
+export type InferTableType<T extends TableSchemaDefinition> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]: T[K] extends ColBuilder<infer U, any> ? U : never;
+};
 
 // ── Serializable descriptors (function-free) ────────────────────────────────
 
 export type FilterDescriptor = {
-  type: "input" | "checkbox" | "slider" | "timerange";
+  type: FilterType;
   defaultOpen: boolean;
   commandDisabled: boolean;
   options?: Array<{ label: string; value: string | number | boolean }>;
@@ -125,9 +159,4 @@ export type ColumnDescriptor = {
 
 export type SchemaJSON = {
   columns: ColumnDescriptor[];
-};
-
-// Infer the data row type from a table schema definition
-export type InferTableType<T extends TableSchemaDefinition> = {
-  [K in keyof T]: T[K] extends ColBuilder<infer U> ? U : never;
 };

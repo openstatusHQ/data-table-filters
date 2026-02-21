@@ -1,5 +1,6 @@
 import { col } from "./col";
 import type {
+  ColBuilder,
   ColConfig,
   ColKind,
   ColumnDescriptor,
@@ -103,8 +104,12 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
   const definition: TableSchemaDefinition = {};
 
   for (const col_ of json.columns) {
-    // 1. Pick the right col.* factory
-    let builder =
+    // 1. Pick the right col.* factory.
+    // F is typed as `any` on the variable so we can call filterable() dynamically
+    // without knowing the col kind at compile time — this is intentional since
+    // deserializeSchema is a runtime operation reading from JSON.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let builder: ColBuilder<unknown, any> =
       col_.dataType === "enum" && col_.enumValues
         ? col.enum(col_.enumValues as readonly string[])
         : col_.dataType === "array" &&

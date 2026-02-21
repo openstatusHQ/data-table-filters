@@ -8,6 +8,7 @@ export type {
   DisplayConfig,
   FilterConfig,
   FilterDescriptor,
+  FilterType,
   InferTableType,
   SchemaJSON,
   SheetConfig,
@@ -66,7 +67,7 @@ export function getDefaultColumnVisibility(
  * ```
  */
 export function createTableSchema<
-  T extends Record<string, import("./types").ColBuilder<unknown>>,
+  T extends import("./types").TableSchemaDefinition,
 >(definition: T): { definition: T; toJSON(): import("./types").SchemaJSON } {
   return {
     definition,
