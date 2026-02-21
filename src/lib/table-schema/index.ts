@@ -1,6 +1,7 @@
 import { col as _col } from "./col";
 import { presets } from "./presets";
 import { deserializeSchema, serializeSchema } from "./serialize";
+import { validateSchema } from "./validate";
 
 /**
  * Column builder factories and presets for defining table schemas.
@@ -108,6 +109,7 @@ export function getDefaultColumnVisibility(
 export function createTableSchema<
   T extends import("./types").TableSchemaDefinition,
 >(definition: T): { definition: T; toJSON(): import("./types").SchemaJSON } {
+  validateSchema(definition);
   return {
     definition,
     toJSON() {
