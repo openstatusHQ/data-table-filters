@@ -4,7 +4,6 @@
 "use no memo";
 
 import { DataTableInfinite } from "@/app/infinite/data-table-infinite";
-import type { SheetField } from "@/components/data-table/types";
 import { DataTableStoreProvider } from "@/lib/store";
 import type { InternalStoreAdapter } from "@/lib/store/adapter/types";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
@@ -13,27 +12,12 @@ import {
   generateColumns,
   generateFilterFields,
   generateFilterSchema,
+  generateSheetFields,
 } from "@/lib/table-schema";
-import type { SchemaJSON, TableSchemaDefinition } from "@/lib/table-schema";
+import type { SchemaJSON } from "@/lib/table-schema";
 import * as React from "react";
 
 type BuilderRow = Record<string, unknown>;
-
-function generateBuilderSheetFields(
-  definition: TableSchemaDefinition,
-): SheetField<BuilderRow>[] {
-  return Object.entries(definition).map(([key, builder]) => ({
-    id: key as keyof BuilderRow,
-    label: builder._config.label,
-    type: "readonly" as const,
-    component: (props: BuilderRow) => {
-      const val = props[key];
-      if (val === null || val === undefined) return String(val);
-      if (typeof val === "object") return JSON.stringify(val);
-      return String(val);
-    },
-  }));
-}
 
 interface BuilderTableProps {
   data: Record<string, unknown>[];
@@ -93,7 +77,7 @@ function BuilderTableInner({
   );
 
   const sheetFields = React.useMemo(
-    () => generateBuilderSheetFields(definition),
+    () => generateSheetFields<BuilderRow>(definition),
     [definition],
   );
 

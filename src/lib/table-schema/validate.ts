@@ -25,7 +25,21 @@ export function validateSchema(definition: TableSchemaDefinition): void {
       );
     }
 
-    // 2. Slider bounds must be valid — type system requires { min, max } to be
+    // 2. Number checkbox filter requires explicit options — the number factory
+    //    has no value list to auto-derive from, so an empty options list would
+    //    render a filter with no checkboxes (a silent no-op in the UI).
+    if (
+      c.kind === "number" &&
+      c.filter?.type === "checkbox" &&
+      (!c.filter.options || c.filter.options.length === 0)
+    ) {
+      throw new Error(
+        `[createTableSchema] Column "${key}": checkbox filter on a number column requires explicit options.\n` +
+          `  Fix: .filterable("checkbox", { options: [{ label: "200", value: 200 }, ...] })`,
+      );
+    }
+
+    // 3. Slider bounds must be valid — type system requires { min, max } to be
     //    passed but cannot enforce min < max
     if (c.filter?.type === "slider") {
       const { min, max } = c.filter;

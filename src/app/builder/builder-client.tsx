@@ -122,7 +122,7 @@ export function BuilderClient() {
   return (
     <div className="flex h-screen max-h-screen w-full max-w-full flex-row">
       {/* Left panel */}
-      <div className="flex max-w-[300px] shrink-0 flex-col gap-3 overflow-y-auto p-2">
+      <div className="flex w-[380px] shrink-0 flex-col gap-3 overflow-y-auto p-2">
         <Tabs defaultValue="data" className="flex flex-col gap-3">
           <TabsList className="w-full">
             <TabsTrigger value="data" className="flex-1">
@@ -179,10 +179,22 @@ export function BuilderClient() {
 
           {/* AI tab (stub) */}
           <TabsContent value="ai" className="mt-0">
-            <div className="flex flex-col gap-2 rounded-md border border-dashed border-border p-3">
-              <Input placeholder="Describe your table…" disabled />
+            <div className="flex flex-col gap-3 rounded-md border border-dashed border-border p-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-medium">AI Schema Generation</p>
+                <p className="text-xs text-muted-foreground">
+                  Describe your data in plain English and get a schema generated
+                  automatically — no JSON needed.
+                </p>
+              </div>
+              <Input
+                placeholder="e.g. A table of HTTP logs with method, status, latency and timestamp…"
+                disabled
+              />
               <p className="text-xs text-muted-foreground">
-                AI-powered schema generation coming soon.
+                Coming soon. Until then, use the{" "}
+                <strong className="font-medium text-foreground">Data</strong>{" "}
+                tab to paste JSON and infer a schema automatically.
               </p>
             </div>
           </TabsContent>

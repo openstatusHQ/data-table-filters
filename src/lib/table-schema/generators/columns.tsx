@@ -30,9 +30,7 @@ function getFilterFn(config: ColConfig): string | undefined {
     case "slider":
       return "inNumberRange"; // TanStack built-in
     case "input":
-      if (kind === "string") return "includesString"; // TanStack built-in
-      if (kind === "number") return "equals"; // TanStack built-in
-      return undefined;
+      return "includesString"; // TanStack built-in; works for strings and numbers (via toString)
     case "checkbox":
       // Array columns use arrIncludesSome (checks row's array for filter values)
       if (kind === "array") return "arrIncludesSome"; // TanStack built-in

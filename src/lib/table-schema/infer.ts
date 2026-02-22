@@ -181,7 +181,14 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
     });
   }
 
-  // Fallback
+  // Fallback: mixed or unrecognised types — warn and treat as string
+  const types = [
+    ...new Set(nonNull.map((v) => (Array.isArray(v) ? "array" : typeof v))),
+  ];
+  console.warn(
+    `[inferSchemaFromJSON] Column "${key}" has mixed or ambiguous types (${types.join(", ")}). ` +
+      `Falling back to string input filter.`,
+  );
   return makeDescriptor(key, label, "string", {
     type: "input",
     defaultOpen: false,

@@ -41,10 +41,14 @@ function createColBuilder<T, F extends FilterType = FilterType>(
         config.filter?.type ||
         "input") as FilterConfig["type"];
       const existing = config.filter;
+      const sameType = filterType === existing?.type;
       const newFilter: FilterConfig = {
         type: filterType,
         defaultOpen: existing?.defaultOpen ?? false,
         commandDisabled: existing?.commandDisabled ?? false,
+        // Preserve auto-derived options when filter type stays the same
+        // and no explicit options are provided by the caller.
+        ...(sameType && existing?.options ? { options: existing.options } : {}),
         ...(options ?? {}),
       };
       return createColBuilder<T, F>({ ...config, filter: newFilter });
@@ -207,19 +211,20 @@ function timestamp(): ColBuilder<Date, "timerange"> {
  *
  * - Data type: `T[number]` (union of the provided string literals)
  * - Default display: `"badge"` (colored chip)
- * - Default filter: `"checkbox"`
+ * - Default filter: `"checkbox"` with options auto-derived from `values`
  * - Allowed filters: `"checkbox"`
  *
- * Checkbox options are NOT auto-derived from `values` — provide them via
- * `.filterable("checkbox", { options: [...] })` or use `col.presets.logLevel()`
- * which handles option mapping automatically.
+ * Checkbox options are auto-derived from `values` by default. Override them via
+ * `.filterable("checkbox", { options: [...] })` when you need custom labels,
+ * icons, or a subset of values.
  *
  * @param values - `as const` array of allowed string values
  *
  * @example
+ * col.enum(LEVELS).label("Level").defaultOpen()
  * col.enum(LEVELS).label("Level").filterable("checkbox", {
- *   options: LEVELS.map(v => ({ label: v, value: v })),
- * }).defaultOpen()
+ *   options: LEVELS.map(v => ({ label: v, value: v })), // override labels
+ * })
  */
 function colEnum<T extends readonly string[]>(
   values: T,
@@ -232,7 +237,12 @@ function colEnum<T extends readonly string[]>(
     display: { type: "badge" },
     hidden: false,
     sortable: false,
-    filter: { type: "checkbox", defaultOpen: false, commandDisabled: false },
+    filter: {
+      type: "checkbox",
+      defaultOpen: false,
+      commandDisabled: false,
+      options: Array.from(values).map((v) => ({ label: v, value: v })),
+    },
     sheet: null,
   });
 }
