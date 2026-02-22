@@ -91,20 +91,28 @@ export function replaceInputByFieldType<TData>({
 
 export function getFieldOptions<TData>({
   field,
+  facetedValue,
 }: {
   field: DataTableFilterField<TData>;
+  facetedValue?: Map<unknown, number>;
 }) {
   switch (field.type) {
     case "slider": {
-      return field.options?.length
-        ? field.options
-            .map(({ value }) => value)
-            .sort((a, b) => Number(a) - Number(b))
-            .filter(notEmpty)
-        : Array.from(
-            { length: field.max - field.min + 1 },
-            (_, i) => field.min + i,
-          ) || [];
+      if (field.options?.length) {
+        return field.options
+          .map(({ value }) => value)
+          .sort((a, b) => Number(a) - Number(b))
+          .filter(notEmpty);
+      }
+      // Use only the values that actually exist in the data to avoid
+      // generating thousands of intermediate integers (e.g. salary 58k-155k).
+      if (facetedValue?.size) {
+        return Array.from(facetedValue.keys())
+          .map(Number)
+          .filter((n) => !isNaN(n))
+          .sort((a, b) => a - b);
+      }
+      return [];
     }
     default: {
       return field.options?.map(({ value }) => value).filter(notEmpty) || [];

@@ -262,7 +262,7 @@ export function DataTableFilterCommand({
                     getFacetedUniqueValues?.(table, field.value) ||
                     column?.getFacetedUniqueValues();
 
-                  const options = getFieldOptions({ field });
+                  const options = getFieldOptions({ field, facetedValue });
 
                   return options.map((optionValue) => {
                     return (

@@ -98,13 +98,15 @@ export function generateColumns<TData>(
     const isDotted = key.includes(".");
     const filterFn = getFilterFn(config);
 
-    const header = config.sortable
-      ? ({
-          column,
-        }: {
-          column: Parameters<typeof DataTableColumnHeader>[0]["column"];
-        }) => <DataTableColumnHeader column={column} title={config.label} />
-      : config.label;
+    const header = config.hideHeader
+      ? () => null
+      : config.sortable
+        ? ({
+            column,
+          }: {
+            column: Parameters<typeof DataTableColumnHeader>[0]["column"];
+          }) => <DataTableColumnHeader column={column} title={config.label} />
+        : config.label;
 
     const cell = ({
       getValue,
@@ -122,9 +124,13 @@ export function generateColumns<TData>(
     const base = {
       header,
       cell,
+      enableResizing: config.resizable,
       ...(filterFn ? { filterFn } : {}),
       ...(config.size !== undefined
-        ? { size: config.size, minSize: config.size }
+        ? {
+            size: config.size,
+            ...(config.resizable ? {} : { minSize: config.size }),
+          }
         : {}),
       meta,
     };

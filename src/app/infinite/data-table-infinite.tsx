@@ -402,6 +402,14 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                       return (
                         <TableHead
                           key={header.id}
+                          style={
+                            header.column.getCanResize()
+                              ? {
+                                  width: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                  minWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                }
+                              : undefined
+                          }
                           className={cn(
                             "relative select-none truncate border-b border-border [&>.cursor-col-resize]:last:opacity-0",
                             header.column.columnDef.meta?.headerClassName,
@@ -576,6 +584,14 @@ function Row<TData>({
       {row.getVisibleCells().map((cell) => (
         <TableCell
           key={cell.id}
+          style={
+            cell.column.getCanResize()
+              ? {
+                  width: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                  maxWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                }
+              : undefined
+          }
           className={cn(
             "truncate border-b border-border",
             cell.column.columnDef.meta?.cellClassName,

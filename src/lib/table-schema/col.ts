@@ -78,6 +78,14 @@ function createColBuilder<T, F extends FilterType = FilterType>(
       return createColBuilder<T, F>({ ...config, hidden: true });
     },
 
+    hideHeader(): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, hideHeader: true });
+    },
+
+    resizable(): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, resizable: true });
+    },
+
     size(px: number): ColBuilder<T, F> {
       return createColBuilder<T, F>({ ...config, size: px });
     },
@@ -117,6 +125,8 @@ function string(): ColBuilder<string, "input"> {
     label: "",
     display: { type: "text" },
     hidden: false,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: { type: "input", defaultOpen: false, commandDisabled: false },
     sheet: null,
@@ -144,6 +154,8 @@ function number(): ColBuilder<number, "input" | "slider" | "checkbox"> {
     label: "",
     display: { type: "number" },
     hidden: false,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: { type: "input", defaultOpen: false, commandDisabled: false },
     sheet: null,
@@ -168,6 +180,8 @@ function boolean(): ColBuilder<boolean, "checkbox"> {
     label: "",
     display: { type: "boolean" },
     hidden: false,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: {
       type: "checkbox",
@@ -200,6 +214,8 @@ function timestamp(): ColBuilder<Date, "timerange"> {
     label: "",
     display: { type: "timestamp" },
     hidden: false,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: { type: "timerange", defaultOpen: false, commandDisabled: false },
     sheet: null,
@@ -236,6 +252,8 @@ function colEnum<T extends readonly string[]>(
     label: "",
     display: { type: "badge" },
     hidden: false,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: {
       type: "checkbox",
@@ -275,6 +293,8 @@ function array<U>(
     label: "",
     display: { type: "badge" },
     hidden: false,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: { type: "checkbox", defaultOpen: false, commandDisabled: false },
     sheet: null,
@@ -304,6 +324,8 @@ function record(): ColBuilder<Record<string, string>, never> {
     label: "",
     display: { type: "text" },
     hidden: false,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: null,
     sheet: null,

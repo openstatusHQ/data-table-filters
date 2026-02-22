@@ -32,7 +32,7 @@ export type Slider = {
   type: "slider";
   min: number;
   max: number;
-  // if options is undefined, we will provide all the steps between min and max
+  // if options is undefined, faceted unique values from the data are used in the command
   options?: Option[];
 };
 

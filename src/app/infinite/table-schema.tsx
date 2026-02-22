@@ -29,6 +29,7 @@ export const tableSchema = createTableSchema({
   level: col
     .enum(LEVELS)
     .label("Level")
+    .hideHeader()
     .display("custom", {
       cell: (value) => (
         <DataTableColumnLevelIndicator
@@ -139,12 +140,14 @@ export const tableSchema = createTableSchema({
     .string()
     .label("Host")
     .size(125)
+    .resizable()
     .sheet({ skeletonClassName: "w-24" }),
 
   pathname: col
     .string()
     .label("Pathname")
     .size(130)
+    .resizable()
     .sheet({ skeletonClassName: "w-56" }),
 
   latency: col

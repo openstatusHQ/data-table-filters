@@ -54,6 +54,8 @@ export type ColConfig = {
   display: DisplayConfig;
   size?: number;
   hidden: boolean;
+  hideHeader: boolean;
+  resizable: boolean;
   sortable: boolean;
   filter: FilterConfig | null;
   sheet: SheetConfig | null;
@@ -209,9 +211,31 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
   hidden(): ColBuilder<T, F>;
 
   /**
+   * Hides the column header label in the table while keeping the column visible.
+   *
+   * The label is still used in the filter sidebar and other UI elements.
+   *
+   * @example
+   * col.enum(LEVELS).label("Level").hideHeader()
+   */
+  hideHeader(): ColBuilder<T, F>;
+
+  /**
+   * Enables column resizing via a drag handle in the header.
+   *
+   * Without this, `size` locks the column to a fixed width (`minSize === size`).
+   * With this, the column can be freely resized; `size` becomes the initial width only.
+   *
+   * @example
+   * col.string().label("Host").size(125).resizable()
+   */
+  resizable(): ColBuilder<T, F>;
+
+  /**
    * Sets a fixed column width in pixels.
    *
-   * Both `size` and `minSize` are set to this value, preventing resizing below it.
+   * Without `.resizable()`, both `size` and `minSize` are set to this value.
+   * With `.resizable()`, only `size` is set (initial width), allowing free resizing.
    *
    * @example
    * col.enum(LEVELS).label("Level").size(27)
