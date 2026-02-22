@@ -452,6 +452,9 @@ function Examples() {
         <li>
           <Link href="/light">OpenStatus Light Viewer</Link>
         </li>
+        <li>
+          <Link href="/builder">Table Builder</Link>
+        </li>
       </ul>
     </div>
   );

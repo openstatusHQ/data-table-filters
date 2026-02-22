@@ -1,0 +1,173 @@
+export interface PlaceholderRow extends Record<string, unknown> {
+  name: string;
+  age: number;
+  department: string;
+  salary: number;
+  active: boolean;
+  score: number;
+}
+
+export const PLACEHOLDER_DATA: PlaceholderRow[] = [
+  {
+    name: "Alice Johnson",
+    age: 30,
+    department: "Engineering",
+    salary: 95000,
+    active: true,
+    score: 88,
+  },
+  {
+    name: "Bob Martinez",
+    age: 25,
+    department: "Design",
+    salary: 72000,
+    active: false,
+    score: 74,
+  },
+  {
+    name: "Charlie Lee",
+    age: 35,
+    department: "Engineering",
+    salary: 110000,
+    active: true,
+    score: 92,
+  },
+  {
+    name: "Diana Patel",
+    age: 28,
+    department: "Marketing",
+    salary: 68000,
+    active: true,
+    score: 81,
+  },
+  {
+    name: "Ethan Kim",
+    age: 42,
+    department: "Management",
+    salary: 145000,
+    active: true,
+    score: 95,
+  },
+  {
+    name: "Fiona Chen",
+    age: 31,
+    department: "Engineering",
+    salary: 98000,
+    active: true,
+    score: 87,
+  },
+  {
+    name: "George Okafor",
+    age: 27,
+    department: "Sales",
+    salary: 61000,
+    active: false,
+    score: 65,
+  },
+  {
+    name: "Hannah Müller",
+    age: 33,
+    department: "HR",
+    salary: 71000,
+    active: true,
+    score: 78,
+  },
+  {
+    name: "Ivan Petrov",
+    age: 38,
+    department: "Engineering",
+    salary: 120000,
+    active: true,
+    score: 90,
+  },
+  {
+    name: "Julia Santos",
+    age: 24,
+    department: "Design",
+    salary: 65000,
+    active: true,
+    score: 72,
+  },
+  {
+    name: "Kevin Nguyen",
+    age: 45,
+    department: "Management",
+    salary: 155000,
+    active: false,
+    score: 91,
+  },
+  {
+    name: "Laura Beck",
+    age: 29,
+    department: "Marketing",
+    salary: 70000,
+    active: true,
+    score: 83,
+  },
+  {
+    name: "Marcus Hill",
+    age: 36,
+    department: "Sales",
+    salary: 78000,
+    active: true,
+    score: 77,
+  },
+  {
+    name: "Nina Johansson",
+    age: 32,
+    department: "Engineering",
+    salary: 105000,
+    active: true,
+    score: 89,
+  },
+  {
+    name: "Oscar Tremblay",
+    age: 40,
+    department: "Finance",
+    salary: 130000,
+    active: false,
+    score: 84,
+  },
+  {
+    name: "Priya Sharma",
+    age: 26,
+    department: "Engineering",
+    salary: 88000,
+    active: true,
+    score: 86,
+  },
+  {
+    name: "Quinn Adeyemi",
+    age: 34,
+    department: "HR",
+    salary: 74000,
+    active: true,
+    score: 79,
+  },
+  {
+    name: "Rachel Wong",
+    age: 39,
+    department: "Finance",
+    salary: 125000,
+    active: true,
+    score: 93,
+  },
+  {
+    name: "Sam Torres",
+    age: 23,
+    department: "Design",
+    salary: 58000,
+    active: false,
+    score: 68,
+  },
+  {
+    name: "Tina Eriksson",
+    age: 44,
+    department: "Management",
+    salary: 148000,
+    active: true,
+    score: 94,
+  },
+];
+
+export const PLACEHOLDER_DATA_JSON = JSON.stringify(PLACEHOLDER_DATA, null, 2);

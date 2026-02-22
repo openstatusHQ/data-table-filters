@@ -95,7 +95,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   totalRowsFetched?: number;
   meta: TMeta;
   chartData?: BaseChartSchema[];
-  chartDataColumnId: string;
+  chartDataColumnId?: string;
   isFetching?: boolean;
   isLoading?: boolean;
   hasNextPage?: boolean;
@@ -373,11 +373,13 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               ]}
             />
             {/* TODO: move up to client component */}
-            <TimelineChart
-              data={chartData}
-              className="-mb-2"
-              columnId={chartDataColumnId}
-            />
+            {chartDataColumnId ? (
+              <TimelineChart
+                data={chartData}
+                className="-mb-2"
+                columnId={chartDataColumnId}
+              />
+            ) : null}
           </div>
           <div className="z-0">
             <Table
