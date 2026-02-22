@@ -264,7 +264,8 @@ describe(".filterable() option preservation", () => {
     const c = col
       .string()
       .label("Level")
-      .filterable("input", { options } as any)
+      // @ts-expect-error - we're testing option preservation
+      .filterable("input", { options })
       .filterable("input"); // no options — should preserve
     expect((c._config.filter as any).options).toEqual(options);
   });
