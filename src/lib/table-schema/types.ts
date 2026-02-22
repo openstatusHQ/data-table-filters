@@ -1,5 +1,5 @@
-import type { JSX } from "react";
 import type { DatePreset, Option } from "@/components/data-table/types";
+import type { JSX } from "react";
 
 export type ColKind =
   | "string"
@@ -20,7 +20,10 @@ export type DisplayConfig =
   | { type: "badge" }
   | { type: "timestamp" }
   | { type: "number"; unit?: string }
-  | { type: "custom"; cell: (value: unknown, row: unknown) => JSX.Element | null };
+  | {
+      type: "custom";
+      cell: (value: unknown, row: unknown) => JSX.Element | null;
+    };
 
 export type FilterConfig = {
   type: FilterType;
@@ -116,7 +119,9 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * col.number().display("number", { unit: "ms" })
    * col.enum(LEVELS).display("custom", { cell: (value) => <LevelBadge value={value} /> })
    */
-  display(type: "text" | "code" | "boolean" | "badge" | "timestamp"): ColBuilder<T, F>;
+  display(
+    type: "text" | "code" | "boolean" | "badge" | "timestamp",
+  ): ColBuilder<T, F>;
   display(type: "number", options?: { unit?: string }): ColBuilder<T, F>;
   display(
     type: "custom",
@@ -154,7 +159,10 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
       component?: (props: Option) => JSX.Element | null;
     },
   ): ColBuilder<T, F>;
-  filterable(type: F & "slider", options: { min: number; max: number }): ColBuilder<T, F>;
+  filterable(
+    type: F & "slider",
+    options: { min: number; max: number },
+  ): ColBuilder<T, F>;
 
   /**
    * Removes filtering from this column.

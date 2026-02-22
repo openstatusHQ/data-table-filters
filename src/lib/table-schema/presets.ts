@@ -42,7 +42,9 @@ export const presets = {
    *   .size(27)
    * ```
    */
-  logLevel<T extends readonly string[]>(values: T): ColBuilder<T[number], "checkbox"> {
+  logLevel<T extends readonly string[]>(
+    values: T,
+  ): ColBuilder<T[number], "checkbox"> {
     return col
       .enum(values)
       .label("Level")
@@ -65,7 +67,9 @@ export const presets = {
    * col.presets.httpMethod(METHODS).size(69)
    * ```
    */
-  httpMethod<T extends readonly string[]>(values: T): ColBuilder<T[number], "checkbox"> {
+  httpMethod<T extends readonly string[]>(
+    values: T,
+  ): ColBuilder<T[number], "checkbox"> {
     return col
       .enum(values)
       .label("Method")
@@ -94,12 +98,15 @@ export const presets = {
   httpStatus(
     codes?: number[],
   ): ColBuilder<number, "input" | "slider" | "checkbox"> {
-    return col.number().label("Status").filterable("checkbox", {
-      options: (codes ?? DEFAULT_HTTP_STATUS_CODES).map((code) => ({
-        label: String(code),
-        value: code,
-      })),
-    });
+    return col
+      .number()
+      .label("Status")
+      .filterable("checkbox", {
+        options: (codes ?? DEFAULT_HTTP_STATUS_CODES).map((code) => ({
+          label: String(code),
+          value: code,
+        })),
+      });
   },
 
   /**

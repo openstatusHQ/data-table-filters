@@ -26,10 +26,7 @@ function createColBuilder<T, F extends FilterType = FilterType>(
       return createColBuilder<T, F>({ ...config, description: text });
     },
 
-    display(
-      type: string,
-      options?: Record<string, unknown>,
-    ): ColBuilder<T, F> {
+    display(type: string, options?: Record<string, unknown>): ColBuilder<T, F> {
       const displayConfig = options
         ? ({ type, ...options } as DisplayConfig)
         : ({ type } as DisplayConfig);
@@ -40,9 +37,9 @@ function createColBuilder<T, F extends FilterType = FilterType>(
       type?: string,
       options?: Record<string, unknown>,
     ): ColBuilder<T, F> {
-      const filterType = (
-        type || config.filter?.type || "input"
-      ) as FilterConfig["type"];
+      const filterType = (type ||
+        config.filter?.type ||
+        "input") as FilterConfig["type"];
       const existing = config.filter;
       const newFilter: FilterConfig = {
         type: filterType,
@@ -258,7 +255,9 @@ function colEnum<T extends readonly string[]>(
  * })
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function array<U>(itemBuilder: ColBuilder<U, any>): ColBuilder<U[], "checkbox"> {
+function array<U>(
+  itemBuilder: ColBuilder<U, any>,
+): ColBuilder<U[], "checkbox"> {
   return createColBuilder<U[], "checkbox">({
     kind: "array",
     arrayItem: itemBuilder._config,

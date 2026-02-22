@@ -1,6 +1,5 @@
 "use client";
 
-import type { JSX } from "react";
 import {
   DataTableCellBadge,
   DataTableCellBoolean,
@@ -11,6 +10,7 @@ import {
 } from "@/components/data-table/data-table-cell";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { JSX } from "react";
 import type { ColConfig, DisplayConfig, TableSchemaDefinition } from "../types";
 
 /**
@@ -101,9 +101,11 @@ export function generateColumns<TData>(
     const filterFn = getFilterFn(config);
 
     const header = config.sortable
-      ? ({ column }: { column: Parameters<typeof DataTableColumnHeader>[0]["column"] }) => (
-          <DataTableColumnHeader column={column} title={config.label} />
-        )
+      ? ({
+          column,
+        }: {
+          column: Parameters<typeof DataTableColumnHeader>[0]["column"];
+        }) => <DataTableColumnHeader column={column} title={config.label} />
       : config.label;
 
     const cell = ({
@@ -133,8 +135,7 @@ export function generateColumns<TData>(
       return {
         ...base,
         id: key,
-        accessorFn: (row: TData) =>
-          (row as Record<string, unknown>)[key],
+        accessorFn: (row: TData) => (row as Record<string, unknown>)[key],
       } as ColumnDef<TData>;
     }
 

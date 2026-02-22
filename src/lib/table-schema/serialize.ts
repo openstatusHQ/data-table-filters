@@ -36,7 +36,8 @@ function serializeSheet(sheet: ColConfig["sheet"]): SheetDescriptor | null {
   const descriptor: SheetDescriptor = {};
   if (sheet.label) descriptor.label = sheet.label;
   if (sheet.className) descriptor.className = sheet.className;
-  if (sheet.skeletonClassName) descriptor.skeletonClassName = sheet.skeletonClassName;
+  if (sheet.skeletonClassName)
+    descriptor.skeletonClassName = sheet.skeletonClassName;
   // sheet.component and sheet.condition are functions — stripped
   return descriptor;
 }
@@ -64,7 +65,9 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
       if (c.arrayItem) {
         descriptor.arrayItemType = {
           dataType: c.arrayItem.kind,
-          ...(c.arrayItem.enumValues ? { enumValues: c.arrayItem.enumValues } : {}),
+          ...(c.arrayItem.enumValues
+            ? { enumValues: c.arrayItem.enumValues }
+            : {}),
         };
       }
       if (c.size !== undefined) descriptor.size = c.size;
@@ -115,7 +118,9 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
         : col_.dataType === "array" &&
             col_.arrayItemType?.dataType === "enum" &&
             col_.arrayItemType.enumValues
-          ? col.array(col.enum(col_.arrayItemType.enumValues as readonly string[]))
+          ? col.array(
+              col.enum(col_.arrayItemType.enumValues as readonly string[]),
+            )
           : col_.dataType === "boolean"
             ? col.boolean()
             : col_.dataType === "timestamp"

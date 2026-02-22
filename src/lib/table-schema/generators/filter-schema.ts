@@ -1,6 +1,10 @@
+import {
+  ARRAY_DELIMITER,
+  RANGE_DELIMITER,
+  SLIDER_DELIMITER,
+} from "@/lib/delimiters";
 import { createSchema, field } from "@/lib/store/schema";
 import type { SchemaDefinition } from "@/lib/store/schema";
-import { ARRAY_DELIMITER, RANGE_DELIMITER, SLIDER_DELIMITER } from "@/lib/delimiters";
 import type { TableSchemaDefinition } from "../types";
 
 /**
@@ -50,7 +54,9 @@ export function generateFilterSchema(
       }
       case "checkbox": {
         if (kind === "enum" && enumValues) {
-          definition[key] = field.array(field.stringLiteral(enumValues as readonly string[]));
+          definition[key] = field.array(
+            field.stringLiteral(enumValues as readonly string[]),
+          );
         } else if (kind === "number") {
           definition[key] = field
             .array(field.number())

@@ -120,6 +120,9 @@ export function createTableSchema<
 
 createTableSchema.fromJSON = (
   json: import("./types").SchemaJSON,
-): { definition: import("./types").TableSchemaDefinition; toJSON(): import("./types").SchemaJSON } => {
+): {
+  definition: import("./types").TableSchemaDefinition;
+  toJSON(): import("./types").SchemaJSON;
+} => {
   return createTableSchema(deserializeSchema(json));
 };
