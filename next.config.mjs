@@ -23,6 +23,11 @@ const nextConfig = {
         destination: "/infinite",
         permanent: true,
       },
+      {
+        source: "/b",
+        destination: "/builder",
+        permanent: true,
+      },
     ];
   },
 };
