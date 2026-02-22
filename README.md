@@ -27,7 +27,7 @@ More Examples:
 We support a flexible adapter pattern for state management called **BYOS** (Bring Your Own Store). This allows you to:
 
 - Use **URL-based state** with `nuqs` (default for `/infinite` and `/light` routes)
-- Use **client-side state** with Zustand or React state (default for `/default` route)
+- Use **client-side state** with `zustand` or React state (default for `/default` route)
 - Create **custom adapters** for any state management solution
 
 ### Quick Example
