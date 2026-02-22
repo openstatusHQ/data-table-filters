@@ -28,11 +28,11 @@ export const columnSchema = z
     status: z.number(),
     regions: z.enum(REGIONS).array(),
     date: z.date(),
-    headers: z.record(z.string()),
+    headers: z.record(z.string(), z.string()),
     message: z.string().optional(),
     percentile: z.number().optional(),
   })
-  .merge(timingSchema);
+  .extend(timingSchema.shape);
 
 export type ColumnSchema = z.infer<typeof columnSchema>;
 export type TimingSchema = z.infer<typeof timingSchema>;
