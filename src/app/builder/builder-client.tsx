@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "@/components/custom/link";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -177,8 +178,15 @@ export function BuilderClient() {
   return (
     <div className="flex h-screen max-h-screen w-full max-w-full flex-row">
       {/* Left panel */}
-      <div className="flex w-[380px] shrink-0 flex-col gap-4 overflow-y-auto p-2">
-        <Tabs defaultValue="data" className="flex flex-col gap-3">
+      <div className="flex w-[288px] shrink-0 flex-col gap-2 overflow-y-auto">
+        <div className="border-b border-border bg-background px-4 py-2">
+          <div className="flex h-[46px] items-center justify-start gap-3">
+            <Link href="/" className="font-medium text-foreground">
+              Back
+            </Link>
+          </div>
+        </div>
+        <Tabs defaultValue="data" className="flex flex-col gap-3 px-4 py-2">
           <TabsList className="w-full">
             <TabsTrigger value="data" className="flex-1">
               Data
@@ -273,7 +281,7 @@ export function BuilderClient() {
         <Separator />
 
         {/* Schema editor — always visible below tabs */}
-        <form onSubmit={handleApply} className="flex flex-col gap-2">
+        <form onSubmit={handleApply} className="flex flex-col gap-2 px-4 py-2">
           <Controller
             name="schema"
             control={schemaForm.control}
@@ -315,6 +323,7 @@ export function BuilderClient() {
             type="submit"
             disabled={!schemaForm.formState.isValid}
             size="sm"
+            variant="secondary"
             className="w-full"
           >
             Apply

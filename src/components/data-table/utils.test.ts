@@ -6,7 +6,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import type { DataTableFilterField } from "./types";
-import { deserialize, serializeColumFilters } from "./utils";
+import { deserialize, serializeColumnFilters } from "./utils";
 
 // ── deserialize ──────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ describe("deserialize", () => {
   });
 });
 
-// ── serializeColumFilters ────────────────────────────────────────────────────
+// ── serializeColumnFilters ────────────────────────────────────────────────────
 
 type Row = {
   status: number;
@@ -112,13 +112,13 @@ const filterFields: DataTableFilterField<Row>[] = [
   { label: "Latency", value: "latency", type: "slider", min: 0, max: 5000 },
 ];
 
-describe("serializeColumFilters", () => {
+describe("serializeColumnFilters", () => {
   it("returns an empty string when columnFilters is empty", () => {
-    expect(serializeColumFilters([], filterFields)).toBe("");
+    expect(serializeColumnFilters([], filterFields)).toBe("");
   });
 
   it("serializes a plain (non-array) filter value", () => {
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "host", value: "example.com" }],
       filterFields,
     );
@@ -126,7 +126,7 @@ describe("serializeColumFilters", () => {
   });
 
   it("serializes a checkbox array filter with ARRAY_DELIMITER", () => {
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "level", value: ["error", "warn"] }],
       filterFields,
     );
@@ -134,7 +134,7 @@ describe("serializeColumFilters", () => {
   });
 
   it("serializes a slider array filter with SLIDER_DELIMITER", () => {
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "latency", value: [0, 500] }],
       filterFields,
     );
@@ -142,7 +142,7 @@ describe("serializeColumFilters", () => {
   });
 
   it("serializes a timerange array filter with RANGE_DELIMITER", () => {
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "date", value: ["2024-01-01", "2024-01-31"] }],
       filterFields,
     );
@@ -153,7 +153,7 @@ describe("serializeColumFilters", () => {
     const fields: DataTableFilterField<Row>[] = [
       { label: "Host", value: "host", type: "input", commandDisabled: true },
     ];
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "host", value: "example.com" }],
       fields,
     );
@@ -161,7 +161,7 @@ describe("serializeColumFilters", () => {
   });
 
   it("skips a filter not found in filterFields (defaults to commandDisabled)", () => {
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "unknown" as keyof Row, value: "foo" }],
       filterFields,
     );
@@ -169,7 +169,7 @@ describe("serializeColumFilters", () => {
   });
 
   it("serializes multiple filters concatenated with trailing spaces", () => {
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [
         { id: "host", value: "example.com" },
         { id: "level", value: ["error"] },
@@ -184,7 +184,7 @@ describe("serializeColumFilters", () => {
       { label: "Host", value: "host", type: "input", commandDisabled: true },
       { label: "Level", value: "level", type: "checkbox" },
     ];
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [
         { id: "host", value: "example.com" },
         { id: "level", value: ["error"] },
@@ -196,7 +196,7 @@ describe("serializeColumFilters", () => {
 
   it("returns an empty string when filterFields is undefined (all skipped)", () => {
     // No field found → commandDisabled defaults to true → all skipped
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "host", value: "example.com" }],
       undefined,
     );
@@ -204,7 +204,7 @@ describe("serializeColumFilters", () => {
   });
 
   it("serializes a status checkbox array filter with ARRAY_DELIMITER", () => {
-    const result = serializeColumFilters(
+    const result = serializeColumnFilters(
       [{ id: "status", value: [200, 404] }],
       filterFields,
     );

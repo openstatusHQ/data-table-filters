@@ -60,6 +60,7 @@ export function replaceInputByFieldType<TData>({
         const input = prev.replace(currentWord, words.join(ARRAY_DELIMITER));
         return `${input.trim()} `;
       }
+      break;
     }
     case "slider": {
       if (currentWord.includes(SLIDER_DELIMITER)) {
@@ -68,6 +69,7 @@ export function replaceInputByFieldType<TData>({
         const input = prev.replace(currentWord, words.join(SLIDER_DELIMITER));
         return `${input.trim()} `;
       }
+      break;
     }
     case "timerange": {
       if (currentWord.includes(RANGE_DELIMITER)) {
@@ -76,17 +78,17 @@ export function replaceInputByFieldType<TData>({
         const input = prev.replace(currentWord, words.join(RANGE_DELIMITER));
         return `${input.trim()} `;
       }
-    }
-    default: {
-      // Quote the value if it contains spaces
-      const quotedValue = quoteIfNeeded(optionValue) || value;
-      const input = prev.replace(
-        currentWord,
-        `${String(field.value)}:${quotedValue}`,
-      );
-      return `${input.trim()} `;
+      break;
     }
   }
+
+  // Default: set a fresh filter value, quoting if it contains spaces
+  const quotedValue = quoteIfNeeded(optionValue) || value;
+  const input = prev.replace(
+    currentWord,
+    `${String(field.value)}:${quotedValue}`,
+  );
+  return `${input.trim()} `;
 }
 
 export function getFieldOptions<TData>({
