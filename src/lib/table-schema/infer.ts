@@ -48,7 +48,7 @@ function makeDescriptor(
     sortable: false,
     display: { type: displayMap[dataType] ?? "text" },
     filter,
-    sheet: null,
+    sheet: {},
   };
 }
 
@@ -138,7 +138,7 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
             commandDisabled: false,
             options: enumValues.map((v) => ({ label: v, value: v })),
           },
-          sheet: null,
+          sheet: {},
         };
       }
     }
@@ -171,7 +171,7 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
           commandDisabled: false,
           options: enumValues.map((v) => ({ label: v, value: v })),
         },
-        sheet: null,
+        sheet: {},
       };
     }
     return makeDescriptor(key, label, "string", {

@@ -54,12 +54,12 @@ Use `next/link` for internal navigation instead of `<a>` tags.
 
 ```tsx
 // Bad: Plain anchor tag
-<a href="/about">About</a>
+<a href="/about">About</a>;
 
 // Good: Next.js Link
-import Link from 'next/link'
+import Link from "next/link";
 
-<Link href="/about">About</Link>
+<Link href="/about">About</Link>;
 ```
 
 Active link styling:

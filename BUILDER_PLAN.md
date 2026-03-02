@@ -1,6 +1,7 @@
 # Plan: Enrich Builder Example Datasets
 
 ## Context
+
 The builder's example datasets are all visually generic and the sheet panel is always empty. The `inferSchemaFromJSON` function sets `sheet: null` on every column it infers, so `generateSheetFields` skips them all. Additionally each dataset lacks uniqueness — they all look the same once loaded. The goal is to make each dataset feel distinct through row-level color cues, richer data fields, and per-dataset sheet titles.
 
 ---
@@ -17,16 +18,16 @@ The builder's example datasets are all visually generic and the sheet panel is a
 
 New fields must be chosen so the auto-infer logic produces interesting column types (enum badge, slider, timestamp, input). All 8 datasets get 1–2 new fields:
 
-| Dataset | New field(s) | Inferred as |
-|---|---|---|
-| **Employees** | `level` (Junior/Mid/Senior/Lead/Principal), `joined` (ISO date) | enum badge, timestamp |
-| **HTTP Logs** | `host` (3 distinct domains) | enum checkbox |
-| **Notes** | `word_count` (number 5–120) | slider |
-| **Auction Bids** | `bid_count` (number 1–45), `ending_at` (ISO date) | slider, timestamp |
-| **Orders** | `total` (price × quantity, pre-computed number) | slider |
-| **Issues** | `estimate` (number of hours, 1–20) | slider |
-| **Movies** | `director` (>10 distinct strings) | input text |
-| **Locations** | `rating` (number 1.0–5.0) | slider |
+| Dataset          | New field(s)                                                    | Inferred as           |
+| ---------------- | --------------------------------------------------------------- | --------------------- |
+| **Employees**    | `level` (Junior/Mid/Senior/Lead/Principal), `joined` (ISO date) | enum badge, timestamp |
+| **HTTP Logs**    | `host` (3 distinct domains)                                     | enum checkbox         |
+| **Notes**        | `word_count` (number 5–120)                                     | slider                |
+| **Auction Bids** | `bid_count` (number 1–45), `ending_at` (ISO date)               | slider, timestamp     |
+| **Orders**       | `total` (price × quantity, pre-computed number)                 | slider                |
+| **Issues**       | `estimate` (number of hours, 1–20)                              | slider                |
+| **Movies**       | `director` (>10 distinct strings)                               | input text            |
+| **Locations**    | `rating` (number 1.0–5.0)                                       | slider                |
 
 ---
 
@@ -37,12 +38,15 @@ A single exported map keyed by dataset label. Each entry has optional `getRowCla
 ```ts
 export type BuilderDatasetConfig = {
   getRowClassName?: (row: { original: Record<string, unknown> }) => string;
-  renderSheetTitle?: (props: { row?: { original: Record<string, unknown> } }) => string;
+  renderSheetTitle?: (props: {
+    row?: { original: Record<string, unknown> };
+  }) => string;
 };
 
 export const BUILDER_DATASET_CONFIGS: Record<string, BuilderDatasetConfig> = {
   Employees: {
-    getRowClassName: (row) => (row.original.active === false ? "opacity-60" : ""),
+    getRowClassName: (row) =>
+      row.original.active === false ? "opacity-60" : "",
     renderSheetTitle: ({ row }) =>
       row ? `${row.original.name} · ${row.original.department}` : "",
   },
@@ -100,6 +104,7 @@ export const BUILDER_DATASET_CONFIGS: Record<string, BuilderDatasetConfig> = {
 ## 4. Thread config into the table — `src/app/builder/builder-table.tsx`
 
 Add two optional props to `BuilderTableProps` and `BuilderTableInner`:
+
 - `getRowClassName?: (row: { original: Record<string, unknown> }) => string`
 - `renderSheetTitle?: (props: { row?: { original: Record<string, unknown> } }) => string`
 
@@ -133,20 +138,20 @@ const datasetConfig = BUILDER_DATASET_CONFIGS[currentDatasetLabel] ?? {};
   schemaVersion={schemaVersion}
   getRowClassName={datasetConfig.getRowClassName}
   renderSheetTitle={datasetConfig.renderSheetTitle}
-/>
+/>;
 ```
 
 ---
 
 ## Files to change
 
-| File | Change |
-|---|---|
-| `src/lib/table-schema/infer.ts` | `sheet: null` → `sheet: {}` (4 occurrences) |
-| `src/app/builder/placeholder-data.ts` | Add new fields to all 8 datasets |
-| `src/app/builder/builder-configs.ts` | **New file** — per-dataset config map |
-| `src/app/builder/builder-table.tsx` | Add + forward `getRowClassName`, `renderSheetTitle` props |
-| `src/app/builder/builder-client.tsx` | Import config map, derive + pass to `BuilderTable` |
+| File                                  | Change                                                    |
+| ------------------------------------- | --------------------------------------------------------- |
+| `src/lib/table-schema/infer.ts`       | `sheet: null` → `sheet: {}` (4 occurrences)               |
+| `src/app/builder/placeholder-data.ts` | Add new fields to all 8 datasets                          |
+| `src/app/builder/builder-configs.ts`  | **New file** — per-dataset config map                     |
+| `src/app/builder/builder-table.tsx`   | Add + forward `getRowClassName`, `renderSheetTitle` props |
+| `src/app/builder/builder-client.tsx`  | Import config map, derive + pass to `BuilderTable`        |
 
 ---
 
