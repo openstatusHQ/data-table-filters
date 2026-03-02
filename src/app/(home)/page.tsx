@@ -409,7 +409,7 @@ const changelog: {
     description: (
       <>
         Blog post about features and caveats:{" "}
-        <Link href="http://openstatus.dev/blog/data-table-redesign">
+        <Link href="https://openstatus.dev/blog/data-table-redesign">
           The React data-table I always wanted
         </Link>
       </>
