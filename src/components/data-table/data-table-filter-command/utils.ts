@@ -308,8 +308,19 @@ export function columnFiltersParserFromSchema<TData>({
           const fieldBuilder = schema[key] as FieldBuilder<unknown> | undefined;
           if (!fieldBuilder) return prev;
 
-          const parsed = fieldBuilder._config.parse(value);
+          let parsed = fieldBuilder._config.parse(value);
           if (parsed !== null) {
+            // Slider fields expect [min, max] for inNumberRange — if a single
+            // value is provided (e.g. "amount:1800"), duplicate it so the range
+            // becomes [1800, 1800] (exact match).
+            const field = filterFields?.find((f) => f.value === key);
+            if (
+              field?.type === "slider" &&
+              Array.isArray(parsed) &&
+              parsed.length === 1
+            ) {
+              parsed = [parsed[0], parsed[0]];
+            }
             prev[key] = parsed;
           }
           return prev;

@@ -332,7 +332,7 @@ export function BuilderClient() {
       </div>
 
       {/* Right panel — live table */}
-      <div className="min-w-0 flex-1 overflow-auto border-l">
+      <div className="min-w-0 flex-1 overflow-hidden border-l">
         {schemaJson && parsedData.length > 0 ? (
           <BuilderTable
             data={parsedData}

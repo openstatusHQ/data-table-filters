@@ -30,8 +30,6 @@ import {
   replaceInputByFieldType,
 } from "./utils";
 
-// FIXME: there is an issue on cmdk if I wanna only set a single slider value...
-
 interface DataTableFilterCommandProps {
   // Schema definition for parsing/serializing filter values (BYOS)
   schema: SchemaDefinition;
