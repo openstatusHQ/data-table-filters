@@ -292,6 +292,10 @@ export function BuilderClient() {
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
+                    <FieldDescription className="text-sm">
+                      Paste JSON to generate a live table with an auto-inferred
+                      schema.
+                    </FieldDescription>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -301,16 +305,16 @@ export function BuilderClient() {
                     />
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Upload className="mr-1 h-3 w-3" />
-                      Upload CSV
+                      Transform CSV
                     </Button>
-                    <FieldDescription>
-                      Paste JSON or upload a CSV to generate a live table with
-                      an auto-inferred schema.
+                    <FieldDescription className="text-sm">
+                      Or transform a CSV to a JSON array. The CSV is not
+                      uploaded to a server.
                     </FieldDescription>
                   </Field>
                 )}

@@ -17,14 +17,11 @@ function isUnixMs(value: number): boolean {
   );
 }
 
-/** Convert camelCase, snake_case, or kebab-case key to a Title Case label. */
+/** Convert camelCase, snake_case, or kebab-case key to a human-readable label. */
 function keyToLabel(key: string): string {
   let label = key.replace(/[-_]/g, " ");
   label = label.replace(/([a-z])([A-Z])/g, "$1 $2");
-  return label
-    .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function makeDescriptor(

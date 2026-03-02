@@ -218,3 +218,99 @@ describe("inferSchemaFromJSON — record inference", () => {
     expect(columns[0]?.filter).toBeNull();
   });
 });
+
+// ── label derivation: kebab-case ─────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — label derivation (extended)", () => {
+  it("converts kebab-case keys to space-separated labels", () => {
+    const data = [{ "content-type": "application/json" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.label).toBe("Content type");
+  });
+});
+
+// ── mixed types fallback ─────────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — mixed types fallback", () => {
+  it("falls back to string/input for columns with mixed types", () => {
+    const data = [{ value: "hello" }, { value: 42 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.dataType).toBe("string");
+    expect(columns[0]?.filter?.type).toBe("input");
+  });
+});
+
+// ── nullable values ──────────────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — nullable values", () => {
+  it("ignores nulls and infers type from remaining values", () => {
+    const data = [{ status: null }, { status: "active" }, { status: "inactive" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.dataType).toBe("enum");
+    expect(columns[0]?.filter?.type).toBe("checkbox");
+  });
+
+  it("ignores undefined and infers type from remaining values", () => {
+    const data = [{ count: undefined }, { count: 1 }, { count: 5 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.dataType).toBe("number");
+  });
+});
+
+// ── array edge cases ─────────────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — array edge cases", () => {
+  it("handles rows with empty arrays", () => {
+    const data = [{ tags: [] }, { tags: ["foo", "bar"] }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.dataType).toBe("array");
+    expect(columns[0]?.filter?.type).toBe("checkbox");
+  });
+
+  it("sets arrayItemType for enum arrays", () => {
+    const data = [{ tags: ["foo", "bar"] }, { tags: ["baz"] }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect((columns[0] as any)?.arrayItemType).toEqual({
+      dataType: "enum",
+      enumValues: expect.arrayContaining(["foo", "bar", "baz"]),
+    });
+  });
+});
+
+// ── default column properties ────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — default column properties", () => {
+  it("sets default optional, hidden, sortable, and sheet fields", () => {
+    const data = [{ name: "Alice" }];
+    const { columns } = inferSchemaFromJSON(data);
+    const col = columns[0];
+    expect(col?.optional).toBe(false);
+    expect(col?.hidden).toBe(false);
+    expect(col?.sortable).toBe(false);
+    expect(col?.sheet).toEqual({});
+  });
+
+  it("sets display type to 'number' for number columns", () => {
+    const data = [{ latency: 100 }, { latency: 200 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "number" });
+  });
+
+  it("sets display type to 'badge' for enum columns", () => {
+    const data = [{ level: "error" }, { level: "warn" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "badge" });
+  });
+
+  it("sets display type to 'timestamp' for timestamp columns", () => {
+    const data = [{ createdAt: "2024-01-01T00:00:00Z" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "timestamp" });
+  });
+
+  it("sets display type to 'text' for record columns", () => {
+    const data = [{ meta: { a: 1 } }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "text" });
+  });
+});
