@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { parseCSV } from "@/lib/csv-parser";
 import { type SchemaJSON } from "@/lib/table-schema";
 import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
 import { deserializeSchema } from "@/lib/table-schema/serialize";
@@ -20,7 +21,7 @@ import { schemaToTypeScript } from "@/lib/table-schema/to-typescript";
 import { validateSchema } from "@/lib/table-schema/validate";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Shuffle, Sparkle } from "lucide-react";
+import { Shuffle, Sparkle, Upload } from "lucide-react";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
@@ -29,7 +30,7 @@ import {
   EXAMPLE_DATASETS,
   PLACEHOLDER_DATA,
   PLACEHOLDER_DATA_JSON,
-} from "./placeholder-data";
+} from "./datasets";
 
 const INITIAL_SCHEMA = inferSchemaFromJSON(PLACEHOLDER_DATA);
 
@@ -79,8 +80,7 @@ type DataFormValues = z.infer<typeof dataFormSchema>;
 type SchemaFormValues = z.infer<typeof schemaFormSchema>;
 
 export function BuilderClient() {
-  const [parsedData, setParsedData] =
-    React.useState<Record<string, unknown>[]>(PLACEHOLDER_DATA);
+  const [dataId, setDataId] = React.useState<string | null>(null);
   const [schemaJson, setSchemaJson] = React.useState<SchemaJSON | null>(
     INITIAL_SCHEMA,
   );
@@ -90,6 +90,32 @@ export function BuilderClient() {
   const [currentDatasetLabel, setCurrentDatasetLabel] = React.useState(
     EXAMPLE_DATASETS[0].label,
   );
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const csvHeaderMapRef = React.useRef<Record<string, string> | null>(null);
+
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      const { data, headerMap } = parseCSV(text);
+      if (data.length === 0) {
+        dataForm.setError("json", {
+          message: "CSV file is empty or has no data rows.",
+        });
+        return;
+      }
+      csvHeaderMapRef.current = headerMap;
+      dataForm.setValue("json", JSON.stringify(data, null, 2), {
+        shouldValidate: true,
+      });
+    };
+    reader.readAsText(file);
+    // Reset so the same file can be re-uploaded
+    e.target.value = "";
+  };
 
   const dataForm = useForm<DataFormValues>({
     resolver: zodResolver(dataFormSchema),
@@ -117,8 +143,21 @@ export function BuilderClient() {
           dataForm.setError("json", { message: err.error ?? "Request failed" });
           return;
         }
-        const { schema } = (await res.json()) as { schema: SchemaJSON };
-        setParsedData(data);
+        const { schema, dataId: newDataId } = (await res.json()) as {
+          schema: SchemaJSON;
+          dataId: string;
+        };
+        // Patch labels with original CSV headings if available
+        const headerMap = csvHeaderMapRef.current;
+        if (headerMap) {
+          for (const col of schema.columns) {
+            if (headerMap[col.key]) {
+              col.label = headerMap[col.key];
+            }
+          }
+          csvHeaderMapRef.current = null;
+        }
+        setDataId(newDataId);
         setSchemaJson(schema);
         schemaForm.setValue("schema", JSON.stringify(schema, null, 2), {
           shouldValidate: true,
@@ -134,6 +173,12 @@ export function BuilderClient() {
     },
     [dataForm, schemaForm],
   );
+
+  // Store initial placeholder data on mount
+  React.useEffect(() => {
+    generateSchema(PLACEHOLDER_DATA);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRandom = async () => {
     const current = EXAMPLE_DATASETS.findIndex(
@@ -155,11 +200,21 @@ export function BuilderClient() {
   });
 
   // Apply edited schema text
-  const handleApply = schemaForm.handleSubmit(({ schema }) => {
+  const handleApply = schemaForm.handleSubmit(async ({ schema }) => {
     try {
       const parsed = JSON.parse(schema) as SchemaJSON;
       const definition = deserializeSchema(parsed);
       validateSchema(definition);
+
+      // Update server-side schema
+      if (dataId) {
+        await fetch("/api/builder", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataId, schema: parsed }),
+        });
+      }
+
       setSchemaJson(parsed);
       setSchemaVersion((v) => v + 1);
     } catch (e) {
@@ -237,9 +292,25 @@ export function BuilderClient() {
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv"
+                      className="hidden"
+                      onChange={handleCSVUpload}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="mr-1 h-3 w-3" />
+                      Upload CSV
+                    </Button>
                     <FieldDescription>
-                      Paste your JSON data here to generate a live table with an
-                      auto-inferred schema.
+                      Paste JSON or upload a CSV to generate a live table with
+                      an auto-inferred schema.
                     </FieldDescription>
                   </Field>
                 )}
@@ -333,9 +404,9 @@ export function BuilderClient() {
 
       {/* Right panel — live table */}
       <div className="min-w-0 flex-1 overflow-hidden border-l">
-        {schemaJson && parsedData.length > 0 ? (
+        {schemaJson && dataId ? (
           <BuilderTable
-            data={parsedData}
+            dataId={dataId}
             schemaJson={schemaJson}
             schemaVersion={schemaVersion}
           />

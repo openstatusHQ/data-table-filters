@@ -3,9 +3,18 @@
 // REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
 "use no memo";
 
+import {
+  getFacetedMinMaxValues,
+  getFacetedUniqueValues,
+} from "@/app/infinite/client";
 import { DataTableInfinite } from "@/app/infinite/data-table-infinite";
-import { DataTableStoreProvider } from "@/lib/store";
-import type { InternalStoreAdapter } from "@/lib/store/adapter/types";
+import type { FacetMetadataSchema } from "@/app/infinite/schema";
+import type {
+  DataTableFilterField,
+  SheetField,
+} from "@/components/data-table/types";
+import { DataTableStoreProvider, useFilterState } from "@/lib/store";
+import { useMemoryAdapter } from "@/lib/store/adapters/memory";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import {
   createTableSchema,
@@ -15,45 +24,21 @@ import {
   generateSheetFields,
 } from "@/lib/table-schema";
 import type { SchemaJSON } from "@/lib/table-schema";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
+import { builderDataOptions } from "./query-options";
 
 type BuilderRow = Record<string, unknown>;
 
 interface BuilderTableProps {
-  data: Record<string, unknown>[];
+  dataId: string;
   schemaJson: SchemaJSON;
   schemaVersion: number;
 }
 
-/**
- * Minimal no-op adapter for the builder. The builder manages all filtering
- * state inside React Table itself — no URL sync or persistence needed.
- */
-function useNoopAdapter(
-  schema: SchemaDefinition,
-): InternalStoreAdapter<Record<string, unknown>> {
-  return React.useMemo(
-    () => ({
-      subscribe: () => () => {},
-      getSnapshot: () => ({ state: {}, version: 0 }),
-      getServerSnapshot: () => ({ state: {}, version: 0 }),
-      setState: () => {},
-      setField: () => {},
-      reset: () => {},
-      pause: () => {},
-      resume: () => {},
-      isPaused: () => false,
-      destroy: () => {},
-      getTableId: () => "builder",
-      getSchema: () => schema,
-      getDefaults: () => ({}),
-    }),
-    [schema],
-  );
-}
-
 function BuilderTableInner({
-  data,
+  dataId,
   schemaJson,
 }: Omit<BuilderTableProps, "schemaVersion">) {
   const { definition } = React.useMemo(
@@ -81,31 +66,116 @@ function BuilderTableInner({
     [definition],
   );
 
-  const noopAdapter = useNoopAdapter(filterSchema.definition);
+  const memoryAdapter = useMemoryAdapter(filterSchema.definition);
 
   return (
-    <DataTableStoreProvider adapter={noopAdapter}>
-      <DataTableInfinite
+    <DataTableStoreProvider adapter={memoryAdapter}>
+      <BuilderTableQuery
+        dataId={dataId}
         columns={columns}
-        data={data}
         filterFields={filterFields}
         sheetFields={sheetFields}
-        totalRows={data.length}
-        filterRows={data.length}
-        totalRowsFetched={data.length}
-        hasNextPage={false}
-        fetchNextPage={() => Promise.resolve()}
-        refetch={() => {}}
-        meta={{}}
-        chartData={[]}
-        chartDataColumnId={undefined}
-        renderSheetTitle={({ row }) =>
-          row ? String(Object.values(row.original)[0] ?? "") : ""
-        }
         schema={filterSchema.definition}
-        tableId="builder"
       />
     </DataTableStoreProvider>
+  );
+}
+
+/**
+ * Inner component that lives inside DataTableStoreProvider so it can use
+ * useFilterState to read filter/sort state from the memory adapter.
+ */
+function BuilderTableQuery({
+  dataId,
+  columns,
+  filterFields,
+  sheetFields,
+  schema,
+}: {
+  dataId: string;
+  columns: ColumnDef<BuilderRow, unknown>[];
+  filterFields: DataTableFilterField<BuilderRow>[];
+  sheetFields: SheetField<BuilderRow>[];
+  schema: SchemaDefinition;
+}) {
+  const search = useFilterState<Record<string, unknown>>();
+
+  // Extract sort from filter state
+  const sort = (search.sort as { id: string; desc: boolean } | null) ?? null;
+
+  // Build filter object excluding non-filter keys
+  const filters = React.useMemo(() => {
+    const { sort: _sort, ...rest } = search;
+    return rest;
+  }, [search]);
+
+  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
+    useInfiniteQuery(builderDataOptions(dataId, filters, sort));
+
+  const flatData = React.useMemo(
+    () =>
+      data?.pages?.flatMap((page) => (page.data ?? []) as BuilderRow[]) ?? [],
+    [data?.pages],
+  );
+
+  const lastPage = data?.pages?.[data.pages.length - 1];
+  const totalDBRowCount = lastPage?.meta?.totalRowCount;
+  const filterDBRowCount = lastPage?.meta?.filterRowCount;
+  const facets = lastPage?.meta?.facets as
+    | Record<string, FacetMetadataSchema>
+    | undefined;
+  const totalFetched = flatData.length;
+
+  // Build dynamic filter fields from facets (same pattern as infinite client)
+  const dynamicFilterFields = React.useMemo(() => {
+    return filterFields.map((field) => {
+      const facetsField = facets?.[field.value as string];
+      if (!facetsField) return field;
+      if (field.options && field.options.length > 0) return field;
+
+      const options = facetsField.rows.map(({ value }) => ({
+        label: `${value}`,
+        value,
+      }));
+
+      if (field.type === "slider") {
+        return {
+          ...field,
+          min: facetsField.min ?? field.min,
+          max: facetsField.max ?? field.max,
+          options,
+        };
+      }
+
+      return { ...field, options };
+    });
+  }, [filterFields, facets]);
+
+  return (
+    <DataTableInfinite
+      columns={columns}
+      data={flatData}
+      filterFields={dynamicFilterFields}
+      sheetFields={sheetFields}
+      totalRows={totalDBRowCount}
+      filterRows={filterDBRowCount}
+      totalRowsFetched={totalFetched}
+      hasNextPage={hasNextPage}
+      fetchNextPage={fetchNextPage}
+      refetch={refetch}
+      isFetching={isFetching}
+      isLoading={isLoading}
+      meta={{}}
+      chartData={[]}
+      chartDataColumnId={undefined}
+      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+      renderSheetTitle={({ row }) =>
+        row ? String(Object.values(row.original)[0] ?? "") : ""
+      }
+      schema={schema}
+      tableId="builder"
+    />
   );
 }
 
@@ -117,14 +187,14 @@ function BuilderTableInner({
  * schema changes, resetting all table state.
  */
 export function BuilderTable({
-  data,
+  dataId,
   schemaJson,
   schemaVersion,
 }: BuilderTableProps) {
   return (
     <BuilderTableInner
       key={schemaVersion}
-      data={data}
+      dataId={dataId}
       schemaJson={schemaJson}
     />
   );
