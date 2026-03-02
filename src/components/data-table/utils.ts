@@ -8,7 +8,7 @@ import type { ColumnFiltersState } from "@tanstack/react-table";
 import { z } from "zod";
 import type { DataTableFilterField } from "./types";
 
-export function deserialize<T extends z.AnyZodObject>(schema: T) {
+export function deserialize<T extends z.ZodObject>(schema: T) {
   const castToSchema = z.preprocess((val) => {
     if (typeof val !== "string") return val;
     return val
