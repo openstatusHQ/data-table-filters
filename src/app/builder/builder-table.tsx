@@ -14,7 +14,7 @@ import type {
   SheetField,
 } from "@/components/data-table/types";
 import { DataTableStoreProvider, useFilterState } from "@/lib/store";
-import { useMemoryAdapter } from "@/lib/store/adapters/memory";
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import {
   createTableSchema,
@@ -66,10 +66,12 @@ function BuilderTableInner({
     [definition],
   );
 
-  const memoryAdapter = useMemoryAdapter(filterSchema.definition);
+  const nuqsAdapter = useNuqsAdapter(filterSchema.definition, {
+    id: "builder",
+  });
 
   return (
-    <DataTableStoreProvider adapter={memoryAdapter}>
+    <DataTableStoreProvider adapter={nuqsAdapter}>
       <BuilderTableQuery
         dataId={dataId}
         columns={columns}

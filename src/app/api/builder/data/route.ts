@@ -46,8 +46,8 @@ export async function POST(request: Request) {
     // Apply filtering
     const filteredData = filterGenericData(allData, filters ?? {}, schema);
 
-    // Compute facets from filtered data
-    const facets = getGenericFacets(filteredData, schema);
+    // Row counts from filtered data, min/max from full dataset
+    const facets = getGenericFacets(filteredData, allData, schema);
 
     // Apply sorting
     const sortedData = sortGenericData(filteredData, sort ?? null);

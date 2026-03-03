@@ -83,8 +83,8 @@ describe("serializeSchema", () => {
     expect(c.display).toEqual({ type: "boolean" });
     expect(c.filter?.type).toBe("checkbox");
     expect(c.filter?.options).toEqual([
-      { label: "Yes", value: true },
-      { label: "No", value: false },
+      { label: "true", value: true },
+      { label: "false", value: false },
     ]);
   });
 

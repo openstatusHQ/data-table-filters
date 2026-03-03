@@ -47,14 +47,18 @@ export function filterGenericData(
           if (!Array.isArray(filterValue) || filterValue.length === 0) continue;
           // Handle array column values (e.g., regions)
           if (Array.isArray(cellValue)) {
-            const hasMatch = cellValue.some((v) =>
-              filterValue.includes(typeof v === "string" ? v : String(v)),
+            const hasMatch = cellValue.some(
+              (v) => filterValue.includes(v) || filterValue.includes(String(v)),
             );
             if (!hasMatch) return false;
           } else {
-            const cellStr =
-              typeof cellValue === "string" ? cellValue : String(cellValue);
-            if (!filterValue.includes(cellStr)) return false;
+            // Check both typed and stringified value to handle
+            // boolean/number filter values from nuqs
+            if (
+              !filterValue.includes(cellValue) &&
+              !filterValue.includes(String(cellValue))
+            )
+              return false;
           }
           break;
         }
@@ -120,24 +124,35 @@ export function sortGenericData(
 }
 
 /**
- * Compute facets (value counts + min/max) from data for all filterable columns.
+ * Compute facets from data for all filterable columns.
+ *
+ * - Row counts are derived from `filteredData` so they reflect active filters.
+ * - Min/max are derived from `allData` so slider ranges stay stable.
  */
 export function getGenericFacets(
-  data: Record<string, unknown>[],
+  filteredData: Record<string, unknown>[],
+  allData: Record<string, unknown>[],
   schema: TableSchemaDefinition,
 ): Record<string, FacetMetadataSchema> {
-  const filterableKeys = Object.entries(schema)
-    .filter(([, builder]) => builder._config.filter !== null)
-    .map(([key]) => key);
+  const filterableEntries = Object.entries(schema).filter(
+    ([, builder]) => builder._config.filter !== null,
+  );
+  const filterableKeys = filterableEntries.map(([key]) => key);
 
+  // Track which columns are booleans so we can preserve their type
+  const booleanKeys = new Set(
+    filterableEntries
+      .filter(([, builder]) => builder._config.kind === "boolean")
+      .map(([key]) => key),
+  );
+
+  // Count values from filtered data
   const valuesMap = new Map<string, Map<string, number>>();
-
-  for (const row of data) {
+  for (const row of filteredData) {
     for (const key of filterableKeys) {
       const rawValue = row[key];
       if (rawValue === undefined || rawValue === null) continue;
 
-      // Convert array values to individual strings
       const values = Array.isArray(rawValue)
         ? rawValue.map(String)
         : [String(rawValue)];
@@ -153,29 +168,51 @@ export function getGenericFacets(
     }
   }
 
+  // Compute min/max from full dataset so slider ranges stay stable
+  const minMaxMap = new Map<string, { min: number; max: number }>();
+  for (const row of allData) {
+    for (const key of filterableKeys) {
+      const rawValue = row[key];
+      if (rawValue === undefined || rawValue === null) continue;
+      const numVal = Number(rawValue);
+      if (isNaN(numVal)) continue;
+
+      const existing = minMaxMap.get(key);
+      if (existing) {
+        if (numVal < existing.min) existing.min = numVal;
+        if (numVal > existing.max) existing.max = numVal;
+      } else {
+        minMaxMap.set(key, { min: numVal, max: numVal });
+      }
+    }
+  }
+
   const facets: Record<string, FacetMetadataSchema> = {};
 
   for (const [key, valueMap] of valuesMap.entries()) {
-    let min: number | undefined;
-    let max: number | undefined;
-    const rows: { value: string | number; total: number }[] = [];
+    const rows: { value: string | number | boolean; total: number }[] = [];
+    const isBoolean = booleanKeys.has(key);
 
     for (const [value, total] of valueMap.entries()) {
-      const numVal = Number(value);
-      if (!isNaN(numVal) && value !== "") {
-        if (min === undefined || numVal < min) min = numVal;
-        if (max === undefined || numVal > max) max = numVal;
-        rows.push({ value: numVal, total });
+      if (isBoolean) {
+        rows.push({ value: value === "true", total });
       } else {
-        rows.push({ value, total });
+        const numVal = Number(value);
+        if (!isNaN(numVal) && value !== "") {
+          rows.push({ value: numVal, total });
+        } else {
+          rows.push({ value, total });
+        }
       }
     }
+
+    const fullRange = minMaxMap.get(key);
 
     facets[key] = {
       rows,
       total: rows.reduce((sum, r) => sum + r.total, 0),
-      min,
-      max,
+      min: fullRange?.min,
+      max: fullRange?.max,
     };
   }
 

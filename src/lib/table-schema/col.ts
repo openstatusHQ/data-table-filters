@@ -167,7 +167,7 @@ function number(): ColBuilder<number, "input" | "slider" | "checkbox"> {
  *
  * - Data type: `boolean`
  * - Default display: `"boolean"` (checkmark / dash icon)
- * - Default filter: `"checkbox"` with `Yes` / `No` options pre-wired
+ * - Default filter: `"checkbox"` with `true` / `false` options pre-wired
  * - Allowed filters: `"checkbox"`
  *
  * @example
@@ -188,8 +188,8 @@ function boolean(): ColBuilder<boolean, "checkbox"> {
       defaultOpen: false,
       commandDisabled: false,
       options: [
-        { label: "Yes", value: true },
-        { label: "No", value: false },
+        { label: "true", value: true },
+        { label: "false", value: false },
       ],
     },
     sheet: null,
@@ -217,7 +217,7 @@ function timestamp(): ColBuilder<Date, "timerange"> {
     hideHeader: false,
     resizable: false,
     sortable: false,
-    filter: { type: "timerange", defaultOpen: false, commandDisabled: false },
+    filter: { type: "timerange", defaultOpen: false, commandDisabled: true },
     sheet: null,
   });
 }

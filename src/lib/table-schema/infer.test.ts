@@ -244,7 +244,11 @@ describe("inferSchemaFromJSON — mixed types fallback", () => {
 
 describe("inferSchemaFromJSON — nullable values", () => {
   it("ignores nulls and infers type from remaining values", () => {
-    const data = [{ status: null }, { status: "active" }, { status: "inactive" }];
+    const data = [
+      { status: null },
+      { status: "active" },
+      { status: "inactive" },
+    ];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.dataType).toBe("enum");
     expect(columns[0]?.filter?.type).toBe("checkbox");

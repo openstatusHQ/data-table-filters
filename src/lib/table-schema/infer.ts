@@ -69,7 +69,7 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
     return makeDescriptor(key, label, "timestamp", {
       type: "timerange",
       defaultOpen: false,
-      commandDisabled: false,
+      commandDisabled: true,
     });
   }
 
@@ -78,7 +78,7 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
     return makeDescriptor(key, label, "timestamp", {
       type: "timerange",
       defaultOpen: false,
-      commandDisabled: false,
+      commandDisabled: true,
     });
   }
 

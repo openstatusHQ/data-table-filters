@@ -157,11 +157,11 @@ describe("col.boolean()", () => {
     expect(col.boolean()._config.display).toEqual({ type: "boolean" });
   });
 
-  it("pre-wires Yes/No checkbox options", () => {
+  it("pre-wires true/false checkbox options", () => {
     const c = col.boolean();
     expect((c._config.filter as any).options).toEqual([
-      { label: "Yes", value: true },
-      { label: "No", value: false },
+      { label: "true", value: true },
+      { label: "false", value: false },
     ]);
   });
 });
