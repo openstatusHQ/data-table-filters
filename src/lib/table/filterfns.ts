@@ -1,5 +1,5 @@
 import { FilterFn } from "@tanstack/react-table";
-import { isAfter, isBefore, isSameDay } from "date-fns";
+import { isSameDay } from "date-fns";
 import { isArrayOfDates } from "../is-array";
 
 export const inDateRange: FilterFn<unknown> = (row, columnId, value) => {
@@ -11,7 +11,8 @@ export const inDateRange: FilterFn<unknown> = (row, columnId, value) => {
   // if no end date, check if it's the same day
   if (!end) return isSameDay(date, start);
 
-  return isAfter(date, start) && isBefore(date, end);
+  // Inclusive bounds to match server-side filtering
+  return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
 };
 
 inDateRange.autoRemove = (val: unknown) =>

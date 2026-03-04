@@ -13,7 +13,7 @@ import type {
   DataTableFilterField,
   SheetField,
 } from "@/components/data-table/types";
-import { DataTableStoreProvider, useFilterState } from "@/lib/store";
+import { DataTableStoreProvider, field, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import {
@@ -57,7 +57,16 @@ function BuilderTableInner({
   );
 
   const filterSchema = React.useMemo(
-    () => generateFilterSchema(definition),
+    () => {
+      const generated = generateFilterSchema(definition);
+      return {
+        ...generated,
+        definition: {
+          ...generated.definition,
+          sort: field.sort(),
+        },
+      };
+    },
     [definition],
   );
 
