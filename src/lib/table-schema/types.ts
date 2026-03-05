@@ -164,7 +164,11 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * col.enum(LEVELS).filterable("checkbox", { options: LEVELS.map(v => ({ label: v, value: v })) })
    * col.number().filterable("slider", { min: 0, max: 5000 })
    */
-  filterable(type: F & ("input" | "timerange")): ColBuilder<T, F>;
+  filterable(type: F & "input"): ColBuilder<T, F>;
+  filterable(
+    type: F & "timerange",
+    options?: { presets?: DatePreset[] },
+  ): ColBuilder<T, F>;
   filterable(
     type: F & "checkbox",
     options?: {

@@ -57,11 +57,19 @@ describe("builder cache", () => {
       const newSchema: SchemaJSON = {
         columns: [
           {
-            id: "name",
-            kind: "string",
+            key: "name",
+            dataType: "string",
             label: "Full Name",
-            filter: { type: "input" },
+            optional: false,
+            hidden: false,
+            sortable: false,
+            filter: {
+              type: "input",
+              defaultOpen: false,
+              commandDisabled: false,
+            },
             display: { type: "text" },
+            sheet: null,
           },
         ],
       };
