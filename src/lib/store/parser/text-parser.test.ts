@@ -132,7 +132,11 @@ describe("createTextParser", () => {
 
     it("replaces at end of input", () => {
       const parser = createTextParser(schema);
-      const { newInput } = parser.replaceWordAtCaret("level:error pat", 15, "path:test");
+      const { newInput } = parser.replaceWordAtCaret(
+        "level:error pat",
+        15,
+        "path:test",
+      );
       expect(newInput).toBe("level:error path:test");
     });
   });

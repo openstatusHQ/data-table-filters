@@ -12,7 +12,9 @@ export function storeBuilderData(
   schemaJson: SchemaJSON,
 ): string {
   const dataId = crypto.randomUUID();
-  cache.set(dataId, { data, schemaJson });
+  // Stamp each row with a stable ID based on its original index
+  const stamped = data.map((row, i) => ({ ...row, __rowId: `${i}` }));
+  cache.set(dataId, { data: stamped, schemaJson });
   return dataId;
 }
 

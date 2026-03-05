@@ -101,6 +101,15 @@ function createColBuilder<T, F extends FilterType = FilterType>(
     sheet(sheetConfig?: SheetConfig): ColBuilder<T, F> {
       return createColBuilder<T, F>({ ...config, sheet: sheetConfig ?? {} });
     },
+
+    sheetOnly(): ColBuilder<T, never> {
+      return createColBuilder<T, never>({
+        ...config,
+        hidden: true,
+        filter: null,
+        enableHiding: false,
+      });
+    },
   } as ColBuilder<T, F>;
 
   return builder;
@@ -125,6 +134,7 @@ function string(): ColBuilder<string, "input"> {
     label: "",
     display: { type: "text" },
     hidden: false,
+    enableHiding: true,
     hideHeader: false,
     resizable: false,
     sortable: false,
@@ -154,6 +164,7 @@ function number(): ColBuilder<number, "input" | "slider" | "checkbox"> {
     label: "",
     display: { type: "number" },
     hidden: false,
+    enableHiding: true,
     hideHeader: false,
     resizable: false,
     sortable: false,
@@ -180,6 +191,7 @@ function boolean(): ColBuilder<boolean, "checkbox"> {
     label: "",
     display: { type: "boolean" },
     hidden: false,
+    enableHiding: true,
     hideHeader: false,
     resizable: false,
     sortable: false,
@@ -214,6 +226,7 @@ function timestamp(): ColBuilder<Date, "timerange"> {
     label: "",
     display: { type: "timestamp" },
     hidden: false,
+    enableHiding: true,
     hideHeader: false,
     resizable: false,
     sortable: false,
@@ -252,6 +265,7 @@ function colEnum<T extends readonly string[]>(
     label: "",
     display: { type: "badge" },
     hidden: false,
+    enableHiding: true,
     hideHeader: false,
     resizable: false,
     sortable: false,
@@ -293,6 +307,7 @@ function array<U>(
     label: "",
     display: { type: "badge" },
     hidden: false,
+    enableHiding: true,
     hideHeader: false,
     resizable: false,
     sortable: false,
@@ -324,6 +339,7 @@ function record(): ColBuilder<Record<string, string>, never> {
     label: "",
     display: { type: "text" },
     hidden: false,
+    enableHiding: true,
     hideHeader: false,
     resizable: false,
     sortable: false,

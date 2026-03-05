@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLevelColor, getLevelRowClassName, getLevelLabel } from "./level";
+import { getLevelColor, getLevelLabel, getLevelRowClassName } from "./level";
 
 describe("getLevelColor", () => {
   it("returns muted for success", () => {

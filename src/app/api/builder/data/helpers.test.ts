@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { col } from "@/lib/table-schema/col";
 import type { TableSchemaDefinition } from "@/lib/table-schema";
+import { col } from "@/lib/table-schema/col";
+import { describe, expect, it } from "vitest";
 import {
   filterGenericData,
-  sortGenericData,
   getGenericFacets,
+  sortGenericData,
   splitGenericData,
 } from "./helpers";
 
@@ -16,10 +16,16 @@ const REGIONS = ["us-east", "us-west", "eu-west"] as const;
 /** Schema covering all filter types */
 const schema: TableSchemaDefinition = {
   level: col.enum(LEVELS).label("Level").filterable("checkbox"),
-  status: col.number().label("Status").filterable("checkbox", {
-    options: [200, 404, 500].map((c) => ({ label: String(c), value: c })),
-  }),
-  latency: col.number().label("Latency").filterable("slider", { min: 0, max: 5000 }),
+  status: col
+    .number()
+    .label("Status")
+    .filterable("checkbox", {
+      options: [200, 404, 500].map((c) => ({ label: String(c), value: c })),
+    }),
+  latency: col
+    .number()
+    .label("Latency")
+    .filterable("slider", { min: 0, max: 5000 }),
   path: col.string().label("Path").filterable("input"),
   date: col.timestamp().label("Date").filterable("timerange"),
   active: col.boolean().label("Active").filterable("checkbox"),
@@ -28,10 +34,46 @@ const schema: TableSchemaDefinition = {
 };
 
 const DATA = [
-  { level: "error", status: 500, latency: 3000, path: "/api/users", date: "2024-01-15T10:00:00Z", active: true, regions: ["us-east", "eu-west"], host: "a.com" },
-  { level: "warn", status: 404, latency: 150, path: "/api/orders", date: "2024-01-16T12:00:00Z", active: false, regions: ["us-west"], host: "b.com" },
-  { level: "info", status: 200, latency: 50, path: "/api/health", date: "2024-01-17T08:00:00Z", active: true, regions: ["us-east", "us-west"], host: "c.com" },
-  { level: "debug", status: 200, latency: 10, path: "/api/debug", date: "2024-01-18T15:00:00Z", active: false, regions: ["eu-west"], host: "d.com" },
+  {
+    level: "error",
+    status: 500,
+    latency: 3000,
+    path: "/api/users",
+    date: "2024-01-15T10:00:00Z",
+    active: true,
+    regions: ["us-east", "eu-west"],
+    host: "a.com",
+  },
+  {
+    level: "warn",
+    status: 404,
+    latency: 150,
+    path: "/api/orders",
+    date: "2024-01-16T12:00:00Z",
+    active: false,
+    regions: ["us-west"],
+    host: "b.com",
+  },
+  {
+    level: "info",
+    status: 200,
+    latency: 50,
+    path: "/api/health",
+    date: "2024-01-17T08:00:00Z",
+    active: true,
+    regions: ["us-east", "us-west"],
+    host: "c.com",
+  },
+  {
+    level: "debug",
+    status: 200,
+    latency: 10,
+    path: "/api/debug",
+    date: "2024-01-18T15:00:00Z",
+    active: false,
+    regions: ["eu-west"],
+    host: "d.com",
+  },
 ];
 
 // ── filterGenericData ────────────────────────────────────────────────────────
@@ -67,7 +109,11 @@ describe("filterGenericData", () => {
   });
 
   it("checkbox: filters by multiple enum values (OR within column)", () => {
-    const result = filterGenericData(DATA, { level: ["error", "warn"] }, schema);
+    const result = filterGenericData(
+      DATA,
+      { level: ["error", "warn"] },
+      schema,
+    );
     expect(result).toHaveLength(2);
   });
 
@@ -99,7 +145,9 @@ describe("filterGenericData", () => {
 
   it("checkbox: excludes rows where array column has no intersection", () => {
     const result = filterGenericData(DATA, { regions: ["eu-west"] }, schema);
-    expect(result.every((r) => (r.regions as string[]).includes("eu-west"))).toBe(true);
+    expect(
+      result.every((r) => (r.regions as string[]).includes("eu-west")),
+    ).toBe(true);
   });
 
   // -- slider --
@@ -117,7 +165,11 @@ describe("filterGenericData", () => {
 
   it("slider: excludes NaN values", () => {
     const dataWithNaN = [...DATA, { ...DATA[0], latency: "not-a-number" }];
-    const result = filterGenericData(dataWithNaN, { latency: [0, 5000] }, schema);
+    const result = filterGenericData(
+      dataWithNaN,
+      { latency: [0, 5000] },
+      schema,
+    );
     expect(result).toHaveLength(4); // original 4 pass, NaN excluded
   });
 
@@ -173,7 +225,11 @@ describe("filterGenericData", () => {
     const dataWithBadDate = [{ ...DATA[0], date: "not-a-date" }];
     const start = new Date("2024-01-01T00:00:00Z");
     const end = new Date("2024-12-31T23:59:59Z");
-    const result = filterGenericData(dataWithBadDate, { date: [start, end] }, schema);
+    const result = filterGenericData(
+      dataWithBadDate,
+      { date: [start, end] },
+      schema,
+    );
     expect(result).toHaveLength(0);
   });
 
@@ -257,10 +313,10 @@ describe("sortGenericData", () => {
       { latency: undefined },
       { latency: 50 },
     ];
-    const result = sortGenericData(
-      dataWithNull as Record<string, unknown>[],
-      { id: "latency", desc: false },
-    );
+    const result = sortGenericData(dataWithNull as Record<string, unknown>[], {
+      id: "latency",
+      desc: false,
+    });
     // null/undefined sort before real values in ascending
     expect(result.map((r) => r.latency)).toEqual([null, undefined, 50, 100]);
   });
@@ -272,10 +328,10 @@ describe("sortGenericData", () => {
       { latency: undefined },
       { latency: 50 },
     ];
-    const result = sortGenericData(
-      dataWithNull as Record<string, unknown>[],
-      { id: "latency", desc: true },
-    );
+    const result = sortGenericData(dataWithNull as Record<string, unknown>[], {
+      id: "latency",
+      desc: true,
+    });
     // null/undefined sort after real values in descending
     expect(result.map((r) => r.latency)).toEqual([100, 50, null, undefined]);
   });
@@ -357,7 +413,16 @@ describe("getGenericFacets", () => {
 
   it("skips null/undefined values in rows", () => {
     const dataWithNull = [
-      { level: null, status: 200, latency: 50, path: "/test", date: "2024-01-15T10:00:00Z", active: true, regions: ["us-east"], host: "x.com" },
+      {
+        level: null,
+        status: 200,
+        latency: 50,
+        path: "/test",
+        date: "2024-01-15T10:00:00Z",
+        active: true,
+        regions: ["us-east"],
+        host: "x.com",
+      },
     ];
     const facets = getGenericFacets(dataWithNull, dataWithNull, schema);
     // level is null, so no facet row for level
@@ -370,12 +435,15 @@ describe("getGenericFacets", () => {
   });
 
   it("handles min/max when all values are the same", () => {
-    const sameData = [
-      { latency: 100 },
-      { latency: 100 },
-    ] as Record<string, unknown>[];
+    const sameData = [{ latency: 100 }, { latency: 100 }] as Record<
+      string,
+      unknown
+    >[];
     const numSchema: TableSchemaDefinition = {
-      latency: col.number().label("Latency").filterable("slider", { min: 0, max: 5000 }),
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 0, max: 5000 }),
     };
     const facets = getGenericFacets(sameData, sameData, numSchema);
     expect(facets.latency.min).toBe(100);

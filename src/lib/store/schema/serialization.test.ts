@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { field } from "./field";
 import {
   getSchemaDefaults,
-  serializeState,
-  parseState,
-  validateState,
-  mergeWithDefaults,
   isStateEqual,
+  mergeWithDefaults,
+  parseState,
+  serializeState,
   stateToSearchString,
+  validateState,
 } from "./serialization";
 
 const schema = {
@@ -160,7 +160,12 @@ describe("isStateEqual", () => {
   it("compares Date arrays", () => {
     const d1 = new Date("2024-01-01");
     const d2 = new Date("2024-01-31");
-    expect(isStateEqual({ a: [d1, d2] }, { a: [new Date(d1.getTime()), new Date(d2.getTime())] })).toBe(true);
+    expect(
+      isStateEqual(
+        { a: [d1, d2] },
+        { a: [new Date(d1.getTime()), new Date(d2.getTime())] },
+      ),
+    ).toBe(true);
   });
 
   it("compares nested objects (sort field)", () => {
@@ -193,7 +198,10 @@ describe("stateToSearchString", () => {
   });
 
   it("generates URL search string", () => {
-    const result = stateToSearchString(schema, { path: "test", level: ["error"] });
+    const result = stateToSearchString(schema, {
+      path: "test",
+      level: ["error"],
+    });
     expect(result).toContain("?");
     expect(result).toContain("path=test");
     expect(result).toContain("level=error");

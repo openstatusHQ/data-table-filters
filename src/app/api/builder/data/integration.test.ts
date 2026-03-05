@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
 import { createTableSchema } from "@/lib/table-schema";
+import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
+import { describe, expect, it } from "vitest";
 import {
   filterGenericData,
-  sortGenericData,
   getGenericFacets,
+  sortGenericData,
   splitGenericData,
 } from "./helpers";
 
@@ -16,12 +16,48 @@ import {
  */
 describe("builder pipeline integration", () => {
   const RAW_DATA = [
-    { timestamp: "2024-03-01T08:00:00Z", method: "GET", status: 200, latency: 45, path: "/api/users" },
-    { timestamp: "2024-03-01T08:01:00Z", method: "POST", status: 201, latency: 120, path: "/api/users" },
-    { timestamp: "2024-03-01T08:02:00Z", method: "GET", status: 404, latency: 30, path: "/api/orders" },
-    { timestamp: "2024-03-01T08:03:00Z", method: "DELETE", status: 500, latency: 5000, path: "/api/users/1" },
-    { timestamp: "2024-03-01T08:04:00Z", method: "GET", status: 200, latency: 60, path: "/api/health" },
-    { timestamp: "2024-03-01T08:05:00Z", method: "PUT", status: 200, latency: 95, path: "/api/users/2" },
+    {
+      timestamp: "2024-03-01T08:00:00Z",
+      method: "GET",
+      status: 200,
+      latency: 45,
+      path: "/api/users",
+    },
+    {
+      timestamp: "2024-03-01T08:01:00Z",
+      method: "POST",
+      status: 201,
+      latency: 120,
+      path: "/api/users",
+    },
+    {
+      timestamp: "2024-03-01T08:02:00Z",
+      method: "GET",
+      status: 404,
+      latency: 30,
+      path: "/api/orders",
+    },
+    {
+      timestamp: "2024-03-01T08:03:00Z",
+      method: "DELETE",
+      status: 500,
+      latency: 5000,
+      path: "/api/users/1",
+    },
+    {
+      timestamp: "2024-03-01T08:04:00Z",
+      method: "GET",
+      status: 200,
+      latency: 60,
+      path: "/api/health",
+    },
+    {
+      timestamp: "2024-03-01T08:05:00Z",
+      method: "PUT",
+      status: 200,
+      latency: 95,
+      path: "/api/users/2",
+    },
   ];
 
   function inferDefinition(data: unknown[]) {
@@ -31,7 +67,11 @@ describe("builder pipeline integration", () => {
 
   it("infers schema and filters by checkbox (method)", () => {
     const definition = inferDefinition(RAW_DATA);
-    const filtered = filterGenericData(RAW_DATA, { method: ["GET"] }, definition);
+    const filtered = filterGenericData(
+      RAW_DATA,
+      { method: ["GET"] },
+      definition,
+    );
 
     expect(filtered).toHaveLength(3);
     expect(filtered.every((r) => r.method === "GET")).toBe(true);
@@ -45,7 +85,11 @@ describe("builder pipeline integration", () => {
     expect(latencyConfig?.kind).toBe("number");
     expect(latencyConfig?.filter?.type).toBe("slider");
 
-    const filtered = filterGenericData(RAW_DATA, { latency: [0, 100] }, definition);
+    const filtered = filterGenericData(
+      RAW_DATA,
+      { latency: [0, 100] },
+      definition,
+    );
     expect(filtered).toHaveLength(4); // 45, 30, 60, 95
     expect(filtered.every((r) => (r.latency as number) <= 100)).toBe(true);
   });
@@ -54,7 +98,11 @@ describe("builder pipeline integration", () => {
     const definition = inferDefinition(RAW_DATA);
 
     // Filter to GET requests only
-    const filtered = filterGenericData(RAW_DATA, { method: ["GET"] }, definition);
+    const filtered = filterGenericData(
+      RAW_DATA,
+      { method: ["GET"] },
+      definition,
+    );
     // Sort by latency ascending
     const sorted = sortGenericData(filtered, { id: "latency", desc: false });
 
@@ -64,7 +112,11 @@ describe("builder pipeline integration", () => {
 
   it("computes facets from filtered data with min/max from full data", () => {
     const definition = inferDefinition(RAW_DATA);
-    const filtered = filterGenericData(RAW_DATA, { method: ["GET"] }, definition);
+    const filtered = filterGenericData(
+      RAW_DATA,
+      { method: ["GET"] },
+      definition,
+    );
 
     const facets = getGenericFacets(filtered, RAW_DATA, definition);
 
@@ -88,7 +140,11 @@ describe("builder pipeline integration", () => {
     const definition = inferDefinition(RAW_DATA);
 
     // Filter: only GET method (checkbox filter)
-    const filtered = filterGenericData(RAW_DATA, { method: ["GET"] }, definition);
+    const filtered = filterGenericData(
+      RAW_DATA,
+      { method: ["GET"] },
+      definition,
+    );
     expect(filtered).toHaveLength(3); // GET rows
 
     // Sort: by latency descending

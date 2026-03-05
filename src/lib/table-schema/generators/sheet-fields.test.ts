@@ -23,8 +23,16 @@ describe("generateSheetFields", () => {
   it("derives type from filter type", () => {
     const schema: TableSchemaDefinition = {
       path: col.string().label("Path").filterable("input").sheet(),
-      level: col.enum(["a", "b"] as const).label("Level").filterable("checkbox").sheet(),
-      latency: col.number().label("Latency").filterable("slider", { min: 0, max: 100 }).sheet(),
+      level: col
+        .enum(["a", "b"] as const)
+        .label("Level")
+        .filterable("checkbox")
+        .sheet(),
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 0, max: 100 })
+        .sheet(),
       date: col.timestamp().label("Date").filterable("timerange").sheet(),
     };
     const fields = generateSheetFields(schema);
@@ -83,5 +91,56 @@ describe("generateSheetFields", () => {
     };
     const fields = generateSheetFields(schema);
     expect(fields.map((f) => f.id)).toEqual(["id", "path"]);
+  });
+
+  it("includes display descriptor with number unit", () => {
+    const schema: TableSchemaDefinition = {
+      latency: col
+        .number()
+        .label("Latency")
+        .display("number", { unit: "ms" })
+        .sheet(),
+    };
+    const [field] = generateSheetFields(schema);
+    expect(field.display).toEqual({ type: "number", unit: "ms" });
+  });
+
+  it("includes display descriptor for timestamp", () => {
+    const schema: TableSchemaDefinition = {
+      date: col.timestamp().label("Date").sheet(),
+    };
+    const [field] = generateSheetFields(schema);
+    expect(field.display).toEqual({ type: "timestamp" });
+  });
+
+  it("includes display descriptor for enum (badge)", () => {
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["a"] as const)
+        .label("Level")
+        .sheet(),
+    };
+    const [field] = generateSheetFields(schema);
+    expect(field.display).toEqual({ type: "badge" });
+  });
+
+  it("includes display descriptor for boolean", () => {
+    const schema: TableSchemaDefinition = {
+      active: col.boolean().label("Active").sheet(),
+    };
+    const [field] = generateSheetFields(schema);
+    expect(field.display).toEqual({ type: "boolean" });
+  });
+
+  it("falls back to kind-default display for custom display type", () => {
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["a"] as const)
+        .label("Level")
+        .display("custom", { cell: () => null })
+        .sheet(),
+    };
+    const [field] = generateSheetFields(schema);
+    expect(field.display).toEqual({ type: "badge" });
   });
 });

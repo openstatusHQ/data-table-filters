@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { SchemaJSON, ColumnDescriptor } from "./types";
 import { schemaToTypeScript } from "./to-typescript";
+import type { ColumnDescriptor, SchemaJSON } from "./types";
 
 function makeCol(overrides: Partial<ColumnDescriptor>): ColumnDescriptor {
   return {
@@ -21,7 +21,9 @@ describe("schemaToTypeScript", () => {
   it("generates valid import and createTableSchema wrapper", () => {
     const json: SchemaJSON = { columns: [] };
     const ts = schemaToTypeScript(json);
-    expect(ts).toContain('import { createTableSchema, col } from "@/lib/table-schema"');
+    expect(ts).toContain(
+      'import { createTableSchema, col } from "@/lib/table-schema"',
+    );
     expect(ts).toContain("export const schema = createTableSchema({");
     expect(ts).toContain("});");
   });
@@ -31,7 +33,7 @@ describe("schemaToTypeScript", () => {
       columns: [makeCol({ key: "path", label: "Path", dataType: "string" })],
     };
     const ts = schemaToTypeScript(json);
-    expect(ts).toContain('col.string()');
+    expect(ts).toContain("col.string()");
     expect(ts).toContain('.label("Path")');
     expect(ts).toContain('.filterable("input")');
   });
@@ -44,11 +46,17 @@ describe("schemaToTypeScript", () => {
           label: "Level",
           dataType: "enum",
           enumValues: ["error", "warn", "info"],
-          filter: { type: "checkbox", defaultOpen: false, commandDisabled: false },
+          display: { type: "badge" },
+          filter: {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+          },
         }),
       ],
     };
     const ts = schemaToTypeScript(json);
+    // badge + checkbox + !defaultOpen doesn't match any preset → generic enum
     expect(ts).toContain('col.enum(["error", "warn", "info"])');
     expect(ts).toContain('.filterable("checkbox")');
   });
@@ -62,7 +70,11 @@ describe("schemaToTypeScript", () => {
           dataType: "array",
           arrayItemType: { dataType: "enum", enumValues: ["us", "eu"] },
           display: { type: "badge" },
-          filter: { type: "checkbox", defaultOpen: false, commandDisabled: false },
+          filter: {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+          },
         }),
       ],
     };
@@ -78,7 +90,13 @@ describe("schemaToTypeScript", () => {
           label: "Latency",
           dataType: "number",
           display: { type: "text" },
-          filter: { type: "slider", min: 0, max: 5000, defaultOpen: false, commandDisabled: false },
+          filter: {
+            type: "slider",
+            min: 0,
+            max: 5000,
+            defaultOpen: false,
+            commandDisabled: false,
+          },
         }),
       ],
     };
@@ -90,13 +108,17 @@ describe("schemaToTypeScript", () => {
     const json: SchemaJSON = {
       columns: [
         makeCol({
-          key: "status",
-          label: "Status",
-          dataType: "number",
-          display: { type: "number" },
+          key: "level",
+          label: "Level",
+          dataType: "enum",
+          enumValues: ["high", "low"],
+          display: { type: "badge" },
           filter: {
             type: "checkbox",
-            options: [{ label: "200", value: 200 }, { label: "404", value: 404 }],
+            options: [
+              { label: "High", value: "high" },
+              { label: "Low", value: "low" },
+            ],
             defaultOpen: false,
             commandDisabled: false,
           },
@@ -105,14 +127,12 @@ describe("schemaToTypeScript", () => {
     };
     const ts = schemaToTypeScript(json);
     expect(ts).toContain('.filterable("checkbox", { options: [');
-    expect(ts).toContain('{ label: "200", value: 200 }');
+    expect(ts).toContain('{ label: "High", value: "high" }');
   });
 
   it("generates notFilterable for null filter", () => {
     const json: SchemaJSON = {
-      columns: [
-        makeCol({ key: "id", label: "ID", filter: null }),
-      ],
+      columns: [makeCol({ key: "id", label: "ID", filter: null })],
     };
     const ts = schemaToTypeScript(json);
     expect(ts).toContain(".notFilterable()");
@@ -169,7 +189,9 @@ describe("schemaToTypeScript", () => {
       ],
     };
     const ts = schemaToTypeScript(json);
-    expect(ts).toContain('.sheet({ label: "Request ID", className: "font-mono" })');
+    expect(ts).toContain(
+      '.sheet({ label: "Request ID", className: "font-mono" })',
+    );
   });
 
   it("emits .defaultOpen() when filter has defaultOpen=true", () => {
@@ -178,7 +200,11 @@ describe("schemaToTypeScript", () => {
         makeCol({
           key: "level",
           label: "Level",
-          filter: { type: "checkbox", defaultOpen: true, commandDisabled: false },
+          filter: {
+            type: "checkbox",
+            defaultOpen: true,
+            commandDisabled: false,
+          },
         }),
       ],
     };
@@ -192,7 +218,11 @@ describe("schemaToTypeScript", () => {
         makeCol({
           key: "date",
           label: "Date",
-          filter: { type: "timerange", defaultOpen: false, commandDisabled: true },
+          filter: {
+            type: "timerange",
+            defaultOpen: false,
+            commandDisabled: true,
+          },
         }),
       ],
     };
@@ -229,7 +259,11 @@ describe("schemaToTypeScript", () => {
           dataType: "timestamp",
           sortable: true,
           display: { type: "timestamp" },
-          filter: { type: "timerange", defaultOpen: false, commandDisabled: false },
+          filter: {
+            type: "timerange",
+            defaultOpen: false,
+            commandDisabled: false,
+          },
         }),
       ],
     };
@@ -246,7 +280,13 @@ describe("schemaToTypeScript", () => {
           label: "Latency",
           dataType: "number",
           display: { type: "number", unit: "ms" },
-          filter: { type: "slider", min: 0, max: 5000, defaultOpen: false, commandDisabled: false },
+          filter: {
+            type: "slider",
+            min: 0,
+            max: 5000,
+            defaultOpen: false,
+            commandDisabled: false,
+          },
         }),
       ],
     };
@@ -262,7 +302,13 @@ describe("schemaToTypeScript", () => {
           label: "Latency",
           dataType: "number",
           display: { type: "number", unit: "s" },
-          filter: { type: "slider", min: 0, max: 60, defaultOpen: false, commandDisabled: false },
+          filter: {
+            type: "slider",
+            min: 0,
+            max: 60,
+            defaultOpen: false,
+            commandDisabled: false,
+          },
         }),
       ],
     };
@@ -272,7 +318,9 @@ describe("schemaToTypeScript", () => {
 
   it("skips default text display for strings", () => {
     const json: SchemaJSON = {
-      columns: [makeCol({ key: "name", label: "Name", display: { type: "text" } })],
+      columns: [
+        makeCol({ key: "name", label: "Name", display: { type: "text" } }),
+      ],
     };
     const ts = schemaToTypeScript(json);
     expect(ts).not.toContain('.display("text")');
@@ -281,10 +329,114 @@ describe("schemaToTypeScript", () => {
   it("emits non-default display types", () => {
     const json: SchemaJSON = {
       columns: [
-        makeCol({ key: "level", label: "Level", dataType: "enum", enumValues: ["a"], display: { type: "badge" } }),
+        makeCol({
+          key: "level",
+          label: "Level",
+          dataType: "enum",
+          enumValues: ["a"],
+          display: { type: "badge" },
+        }),
       ],
     };
     const ts = schemaToTypeScript(json);
     expect(ts).toContain('.display("badge")');
+  });
+
+  // -- new preset detection --
+
+  it("detects logLevel preset (enum + badge + checkbox + defaultOpen)", () => {
+    const json: SchemaJSON = {
+      columns: [
+        makeCol({
+          key: "level",
+          label: "Level",
+          dataType: "enum",
+          enumValues: ["error", "warn", "info"],
+          display: { type: "badge" },
+          filter: {
+            type: "checkbox",
+            defaultOpen: true,
+            commandDisabled: false,
+          },
+        }),
+      ],
+    };
+    const ts = schemaToTypeScript(json);
+    expect(ts).toContain('col.presets.logLevel(["error", "warn", "info"])');
+    expect(ts).not.toContain('.display("badge")');
+    expect(ts).not.toContain('.filterable("checkbox")');
+  });
+
+  it("detects httpMethod preset (enum + text + checkbox + !defaultOpen)", () => {
+    const json: SchemaJSON = {
+      columns: [
+        makeCol({
+          key: "method",
+          label: "Method",
+          dataType: "enum",
+          enumValues: ["GET", "POST", "PUT"],
+          display: { type: "text" },
+          filter: {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+          },
+        }),
+      ],
+    };
+    const ts = schemaToTypeScript(json);
+    expect(ts).toContain('col.presets.httpMethod(["GET", "POST", "PUT"])');
+    expect(ts).not.toContain('.display("text")');
+    expect(ts).not.toContain('.filterable("checkbox")');
+  });
+
+  it("detects httpStatus preset (number + number display + checkbox + numeric options)", () => {
+    const json: SchemaJSON = {
+      columns: [
+        makeCol({
+          key: "status",
+          label: "Status",
+          dataType: "number",
+          display: { type: "number" },
+          filter: {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+            options: [
+              { label: "200", value: 200 },
+              { label: "404", value: 404 },
+              { label: "500", value: 500 },
+            ],
+          },
+        }),
+      ],
+    };
+    const ts = schemaToTypeScript(json);
+    expect(ts).toContain("col.presets.httpStatus([200, 404, 500])");
+    expect(ts).not.toContain('.display("number")');
+    expect(ts).not.toContain('.filterable("checkbox"');
+  });
+
+  it("does NOT match logLevel when defaultOpen is false (falls through)", () => {
+    const json: SchemaJSON = {
+      columns: [
+        makeCol({
+          key: "level",
+          label: "Level",
+          dataType: "enum",
+          enumValues: ["error", "warn"],
+          display: { type: "badge" },
+          filter: {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+          },
+        }),
+      ],
+    };
+    const ts = schemaToTypeScript(json);
+    expect(ts).not.toContain("col.presets.logLevel");
+    // Should fall through to httpMethod? No — badge != text, so it falls to generic enum
+    expect(ts).toContain('col.enum(["error", "warn"])');
   });
 });

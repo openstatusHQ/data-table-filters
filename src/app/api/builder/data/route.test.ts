@@ -1,6 +1,6 @@
+import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
 import { describe, expect, it } from "vitest";
 import { storeBuilderData } from "../cache";
-import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
 import { POST } from "./route";
 import type { BuilderDataResponse } from "./route";
 
@@ -150,9 +150,7 @@ describe("POST /api/builder/data", () => {
 
   it("defaults offset to 0 and size to 40 when not provided", async () => {
     const { dataId } = setup();
-    const res = await POST(
-      makeRequest({ dataId, filters: {}, sort: null }),
-    );
+    const res = await POST(makeRequest({ dataId, filters: {}, sort: null }));
     expect(res.status).toBe(200);
     const json: BuilderDataResponse = await res.json();
     expect(json.data).toHaveLength(5);

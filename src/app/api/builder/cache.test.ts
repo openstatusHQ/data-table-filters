@@ -1,10 +1,20 @@
-import { describe, expect, it } from "vitest";
-import { storeBuilderData, getBuilderData, updateBuilderSchema } from "./cache";
 import type { SchemaJSON } from "@/lib/table-schema";
+import { describe, expect, it } from "vitest";
+import { getBuilderData, storeBuilderData, updateBuilderSchema } from "./cache";
 
 const SAMPLE_SCHEMA: SchemaJSON = {
   columns: [
-    { key: "name", dataType: "string", label: "Name", optional: false, hidden: false, sortable: false, filter: { type: "input", defaultOpen: false, commandDisabled: false }, display: { type: "text" }, sheet: null },
+    {
+      key: "name",
+      dataType: "string",
+      label: "Name",
+      optional: false,
+      hidden: false,
+      sortable: false,
+      filter: { type: "input", defaultOpen: false, commandDisabled: false },
+      display: { type: "text" },
+      sheet: null,
+    },
   ],
 };
 
@@ -30,7 +40,9 @@ describe("builder cache", () => {
       const id = storeBuilderData(SAMPLE_DATA, SAMPLE_SCHEMA);
       const entry = getBuilderData(id);
       expect(entry).toBeDefined();
-      expect(entry!.data).toEqual(SAMPLE_DATA);
+      expect(entry!.data).toEqual(
+        SAMPLE_DATA.map((row, i) => ({ ...row, __rowId: `${i}` })),
+      );
       expect(entry!.schemaJson).toEqual(SAMPLE_SCHEMA);
     });
 
@@ -44,7 +56,13 @@ describe("builder cache", () => {
       const id = storeBuilderData(SAMPLE_DATA, SAMPLE_SCHEMA);
       const newSchema: SchemaJSON = {
         columns: [
-          { id: "name", kind: "string", label: "Full Name", filter: { type: "input" }, display: { type: "text" } },
+          {
+            id: "name",
+            kind: "string",
+            label: "Full Name",
+            filter: { type: "input" },
+            display: { type: "text" },
+          },
         ],
       };
       const result = updateBuilderSchema(id, newSchema);
@@ -56,7 +74,9 @@ describe("builder cache", () => {
       const id = storeBuilderData(SAMPLE_DATA, SAMPLE_SCHEMA);
       const newSchema: SchemaJSON = { columns: [] };
       updateBuilderSchema(id, newSchema);
-      expect(getBuilderData(id)!.data).toEqual(SAMPLE_DATA);
+      expect(getBuilderData(id)!.data).toEqual(
+        SAMPLE_DATA.map((row, i) => ({ ...row, __rowId: `${i}` })),
+      );
     });
 
     it("returns false for unknown dataId", () => {

@@ -295,7 +295,7 @@ describe("inferSchemaFromJSON — default column properties", () => {
   });
 
   it("sets display type to 'number' for number columns", () => {
-    const data = [{ latency: 100 }, { latency: 200 }];
+    const data = [{ score: 100 }, { score: 200 }];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({ type: "number" });
   });
@@ -316,5 +316,232 @@ describe("inferSchemaFromJSON — default column properties", () => {
     const data = [{ meta: { a: 1 } }];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({ type: "text" });
+  });
+});
+
+// ── smart display enhancement ────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — smart display enhancement", () => {
+  it("sets 'code' display for ID-like columns (camelCase)", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      userId: `usr_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+    expect(columns[0]?.sortable).toBe(false);
+  });
+
+  it("sets 'code' display for ID-like columns (snake_case)", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      request_id: `req_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+    expect(columns[0]?.sortable).toBe(false);
+  });
+
+  it("sets 'code' display for uuid columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      uuid: `550e8400-e29b-41d4-a716-${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+
+  it("sets 'code' display for path-like columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      path: `/api/v1/resource/${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+
+  it("sets 'code' display for host columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      host: `server-${i}.example.com`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+
+  it("sets number display with 'ms' unit for latency columns", () => {
+    const data = [{ latency: 100 }, { latency: 200 }, { latency: 300 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sets number display with 'ms' unit for duration columns", () => {
+    const data = [{ duration: 50 }, { duration: 150 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sets number display with 'ms' unit for responseTime (compound word)", () => {
+    const data = [{ responseTime: 80 }, { responseTime: 120 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sets number display with 'B' unit for size columns", () => {
+    const data = [{ fileSize: 1024 }, { fileSize: 2048 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "number", unit: "B" });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sets sortable for timestamp columns", () => {
+    const data = [
+      { createdAt: "2024-01-01T00:00:00Z" },
+      { createdAt: "2024-06-15T12:30:00Z" },
+    ];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sets sortable for generic number columns", () => {
+    const data = [{ score: 10 }, { score: 90 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("does not set sortable for boolean columns", () => {
+    const data = [{ active: true }, { active: false }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.sortable).toBe(false);
+  });
+
+  it("does not match partial words (e.g. 'hidden' does not match 'id')", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      hidden: `value_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "text" });
+  });
+});
+
+// ── column sizing defaults ───────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — column sizing defaults", () => {
+  it("sets size 100 for boolean columns", () => {
+    const data = [{ active: true }, { active: false }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.size).toBe(100);
+  });
+
+  it("sets size 180 for timestamp columns", () => {
+    const data = [{ createdAt: "2024-01-01T00:00:00Z" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.size).toBe(180);
+  });
+
+  it("sets size 120 for number columns", () => {
+    const data = [{ score: 10 }, { score: 90 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.size).toBe(120);
+  });
+
+  it("sets size 130 for enum columns", () => {
+    const data = [{ level: "error" }, { level: "warn" }, { level: "info" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.size).toBe(130);
+  });
+
+  it("does not set size for string columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      message: `msg_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.size).toBeUndefined();
+  });
+});
+
+// ── preset-aware enhancement ─────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — preset-aware enhancement", () => {
+  it("sets defaultOpen for 'level' enum columns (matches col.presets.logLevel)", () => {
+    const data = [
+      { level: "error" },
+      { level: "warn" },
+      { level: "info" },
+      { level: "debug" },
+    ];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.dataType).toBe("enum");
+    expect(columns[0]?.filter?.defaultOpen).toBe(true);
+  });
+
+  it("sets defaultOpen for 'severity' enum columns", () => {
+    const data = [
+      { severity: "critical" },
+      { severity: "high" },
+      { severity: "low" },
+    ];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.filter?.defaultOpen).toBe(true);
+  });
+
+  it("sets defaultOpen for 'logLevel' camelCase enum columns", () => {
+    const data = [
+      { logLevel: "error" },
+      { logLevel: "warn" },
+      { logLevel: "info" },
+    ];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.filter?.defaultOpen).toBe(true);
+  });
+
+  it("does not set defaultOpen for non-level enum columns", () => {
+    const data = [{ status: "active" }, { status: "inactive" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.filter?.defaultOpen).toBe(false);
+  });
+
+  it("hides traceId columns and removes filter (matches col.presets.traceId)", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      traceId: `trace_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+    expect(columns[0]?.hidden).toBe(true);
+    expect(columns[0]?.filter).toBeNull();
+  });
+
+  it("hides requestId columns and removes filter", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      requestId: `req_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.hidden).toBe(true);
+    expect(columns[0]?.filter).toBeNull();
+  });
+
+  it("hides span_id columns (snake_case)", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      span_id: `span_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.hidden).toBe(true);
+    expect(columns[0]?.filter).toBeNull();
+  });
+
+  it("does NOT hide generic ID columns like userId", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      userId: `usr_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+    expect(columns[0]?.hidden).toBe(false);
+    expect(columns[0]?.filter).not.toBeNull();
+  });
+
+  it("does NOT hide plain 'id' columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      id: `item_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.hidden).toBe(false);
   });
 });

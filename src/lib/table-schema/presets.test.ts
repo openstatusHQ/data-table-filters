@@ -178,7 +178,8 @@ describe("col.presets", () => {
   // -- chainability --
 
   it("presets are chainable (can override defaults)", () => {
-    const builder = col.presets.logLevel(["error", "warn"] as const)
+    const builder = col.presets
+      .logLevel(["error", "warn"] as const)
       .label("Severity")
       .size(100);
     expect(builder._config.label).toBe("Severity");

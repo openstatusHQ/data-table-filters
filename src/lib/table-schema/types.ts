@@ -20,6 +20,8 @@ export type DisplayConfig =
   | { type: "badge" }
   | { type: "timestamp" }
   | { type: "number"; unit?: string }
+  | { type: "status-code" }
+  | { type: "level-indicator" }
   | {
       type: "custom";
       cell: (value: unknown, row: unknown) => JSX.Element | null;
@@ -33,6 +35,7 @@ export type FilterConfig = {
   component?: (props: Option) => JSX.Element | null;
   min?: number;
   max?: number;
+  unit?: string;
   presets?: DatePreset[];
 };
 
@@ -54,6 +57,7 @@ export type ColConfig = {
   display: DisplayConfig;
   size?: number;
   hidden: boolean;
+  enableHiding: boolean;
   hideHeader: boolean;
   resizable: boolean;
   sortable: boolean;
@@ -122,7 +126,14 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * col.enum(LEVELS).display("custom", { cell: (value) => <LevelBadge value={value} /> })
    */
   display(
-    type: "text" | "code" | "boolean" | "badge" | "timestamp",
+    type:
+      | "text"
+      | "code"
+      | "boolean"
+      | "badge"
+      | "timestamp"
+      | "status-code"
+      | "level-indicator",
   ): ColBuilder<T, F>;
   display(type: "number", options?: { unit?: string }): ColBuilder<T, F>;
   display(
@@ -163,7 +174,7 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
   ): ColBuilder<T, F>;
   filterable(
     type: F & "slider",
-    options: { min: number; max: number },
+    options: { min: number; max: number; unit?: string },
   ): ColBuilder<T, F>;
 
   /**
@@ -282,6 +293,18 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * })
    */
   sheet(config?: SheetConfig): ColBuilder<T, F>;
+
+  /**
+   * Marks the column as sheet-only: hidden, not filterable, and excluded
+   * from the column visibility dropdown (`enableHiding: false`).
+   *
+   * Convenience for `.hidden().notFilterable()` + `enableHiding: false`.
+   *
+   * @example
+   * col.record().label("Headers").sheetOnly().sheet({ ... })
+   * col.string().optional().label("Message").sheetOnly().sheet({ ... })
+   */
+  sheetOnly(): ColBuilder<T, never>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -319,6 +342,7 @@ export type ColumnDescriptor = {
   arrayItemType?: { dataType: ColKind; enumValues?: readonly string[] };
   optional: boolean;
   hidden: boolean;
+  enableHiding?: boolean;
   sortable: boolean;
   size?: number;
   /** `"custom"` means a developer-supplied renderer exists; not reconstructable from JSON. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { POST, PATCH } from "./route";
 import { getBuilderData } from "./cache";
+import { PATCH, POST } from "./route";
 
 function makeRequest(body: unknown): Request {
   return new Request("http://localhost/api/builder", {
@@ -50,7 +50,9 @@ describe("POST /api/builder", () => {
 
     const entry = getBuilderData(dataId);
     expect(entry).toBeDefined();
-    expect(entry!.data).toEqual(SAMPLE_DATA);
+    expect(entry!.data).toEqual(
+      SAMPLE_DATA.map((row, i) => ({ ...row, __rowId: `${i}` })),
+    );
   });
 
   it("infers correct column data types", async () => {
@@ -99,7 +101,9 @@ describe("PATCH /api/builder", () => {
       ),
     };
 
-    const patchRes = await PATCH(makePatchRequest({ dataId, schema: updatedSchema }));
+    const patchRes = await PATCH(
+      makePatchRequest({ dataId, schema: updatedSchema }),
+    );
     expect(patchRes.status).toBe(200);
 
     const json = await patchRes.json();

@@ -23,7 +23,6 @@ import { LiveRow } from "./_components/live-row";
 import { timingPhasesColumn } from "./_components/timing-phases-column";
 import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
-import type { LogsMeta } from "./query-options";
 import type { ColumnSchema, FacetMetadataSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
 import { useFilterStore } from "./store";

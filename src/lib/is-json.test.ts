@@ -7,7 +7,7 @@ describe("isJSON", () => {
   });
 
   it("returns true for valid JSON array", () => {
-    expect(isJSON('[1, 2, 3]')).toBe(true);
+    expect(isJSON("[1, 2, 3]")).toBe(true);
   });
 
   it("returns true for JSON string", () => {

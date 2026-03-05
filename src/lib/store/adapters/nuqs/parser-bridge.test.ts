@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { field } from "../../schema/field";
-import { schemaToNuqsParsers, createSchemaSerializer } from "./parser-bridge";
+import { createSchemaSerializer, schemaToNuqsParsers } from "./parser-bridge";
 
 describe("schemaToNuqsParsers", () => {
   it("creates parsers for all schema fields", () => {

@@ -323,6 +323,20 @@ describe("deserializeSchema", () => {
     expect(out.columns[0]?.display.type).toBe("badge");
   });
 
+  it("round-trips a column with status-code display", () => {
+    const def = {
+      status: col.number().label("Status").display("status-code"),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips a column with level-indicator display", () => {
+    const def = {
+      level: col.string().label("Level").display("level-indicator"),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
   it("falls back to 'text' display for string when JSON has display.type 'custom'", () => {
     const json: SchemaJSON = {
       columns: [

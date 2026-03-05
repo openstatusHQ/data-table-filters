@@ -71,6 +71,7 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
         };
       }
       if (c.size !== undefined) descriptor.size = c.size;
+      if (c.enableHiding === false) descriptor.enableHiding = false;
       return descriptor;
     },
   );
@@ -147,7 +148,9 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
       displayType === "code" ||
       displayType === "boolean" ||
       displayType === "badge" ||
-      displayType === "timestamp"
+      displayType === "timestamp" ||
+      displayType === "status-code" ||
+      displayType === "level-indicator"
     ) {
       builder = builder.display(displayType);
     }
@@ -173,7 +176,11 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     }
 
     // 5. Structural modifiers
-    if (col_.hidden) builder = builder.hidden();
+    if (col_.enableHiding === false) {
+      builder = builder.sheetOnly();
+    } else if (col_.hidden) {
+      builder = builder.hidden();
+    }
     if (col_.sortable) builder = builder.sortable();
     if (col_.optional) builder = builder.optional();
     if (col_.size !== undefined) builder = builder.size(col_.size);

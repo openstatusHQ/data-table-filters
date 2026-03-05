@@ -56,19 +56,16 @@ function BuilderTableInner({
     [definition],
   );
 
-  const filterSchema = React.useMemo(
-    () => {
-      const generated = generateFilterSchema(definition);
-      return {
-        ...generated,
-        definition: {
-          ...generated.definition,
-          sort: field.sort(),
-        },
-      };
-    },
-    [definition],
-  );
+  const filterSchema = React.useMemo(() => {
+    const generated = generateFilterSchema(definition);
+    return {
+      ...generated,
+      definition: {
+        ...generated.definition,
+        sort: field.sort(),
+      },
+    };
+  }, [definition]);
 
   const sheetFields = React.useMemo(
     () => generateSheetFields<BuilderRow>(definition),
@@ -186,6 +183,7 @@ function BuilderTableQuery({
       }
       schema={schema}
       tableId="builder"
+      getRowId={(row) => (row as Record<string, unknown>).__rowId as string}
     />
   );
 }

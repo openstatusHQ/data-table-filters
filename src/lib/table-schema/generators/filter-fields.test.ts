@@ -48,7 +48,10 @@ describe("generateFilterFields", () => {
 
   it("generates slider filter field with min/max", () => {
     const schema: TableSchemaDefinition = {
-      latency: col.number().label("Latency").filterable("slider", { min: 0, max: 5000 }),
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 0, max: 5000 }),
     };
     const [field] = generateFilterFields(schema);
     expect(field.type).toBe("slider");
@@ -61,7 +64,10 @@ describe("generateFilterFields", () => {
   it("slider defaults to min=0, max=100 when not specified in config", () => {
     // Create a schema where slider bounds come from filter config
     const schema: TableSchemaDefinition = {
-      score: col.number().label("Score").filterable("slider", { min: 0, max: 100 }),
+      score: col
+        .number()
+        .label("Score")
+        .filterable("slider", { min: 0, max: 100 }),
     };
     const [field] = generateFilterFields(schema);
     if (field.type === "slider") {
@@ -103,7 +109,10 @@ describe("generateFilterFields", () => {
   it("auto-derives checkbox options from col.array(col.enum(values))", () => {
     const REGIONS = ["us-east", "us-west", "eu-west"] as const;
     const schema: TableSchemaDefinition = {
-      regions: col.array(col.enum(REGIONS)).label("Regions").filterable("checkbox"),
+      regions: col
+        .array(col.enum(REGIONS))
+        .label("Regions")
+        .filterable("checkbox"),
     };
     const [field] = generateFilterFields(schema);
     expect(field.type).toBe("checkbox");
@@ -118,12 +127,15 @@ describe("generateFilterFields", () => {
 
   it("uses explicit options when provided for checkbox", () => {
     const schema: TableSchemaDefinition = {
-      status: col.number().label("Status").filterable("checkbox", {
-        options: [
-          { label: "OK", value: 200 },
-          { label: "Not Found", value: 404 },
-        ],
-      }),
+      status: col
+        .number()
+        .label("Status")
+        .filterable("checkbox", {
+          options: [
+            { label: "OK", value: 200 },
+            { label: "Not Found", value: 404 },
+          ],
+        }),
     };
     const [field] = generateFilterFields(schema);
     if (field.type === "checkbox") {
@@ -136,7 +148,11 @@ describe("generateFilterFields", () => {
 
   it("preserves defaultOpen flag", () => {
     const schema: TableSchemaDefinition = {
-      level: col.enum(["error", "warn"] as const).label("Level").filterable("checkbox").defaultOpen(),
+      level: col
+        .enum(["error", "warn"] as const)
+        .label("Level")
+        .filterable("checkbox")
+        .defaultOpen(),
     };
     const [field] = generateFilterFields(schema);
     expect(field.defaultOpen).toBe(true);
@@ -144,7 +160,11 @@ describe("generateFilterFields", () => {
 
   it("preserves commandDisabled flag", () => {
     const schema: TableSchemaDefinition = {
-      date: col.timestamp().label("Date").filterable("timerange").commandDisabled(),
+      date: col
+        .timestamp()
+        .label("Date")
+        .filterable("timerange")
+        .commandDisabled(),
     };
     const [field] = generateFilterFields(schema);
     expect(field.commandDisabled).toBe(true);
@@ -153,8 +173,14 @@ describe("generateFilterFields", () => {
   it("preserves schema definition order", () => {
     const schema: TableSchemaDefinition = {
       alpha: col.string().label("Alpha").filterable("input"),
-      beta: col.number().label("Beta").filterable("slider", { min: 0, max: 100 }),
-      gamma: col.enum(["a", "b"] as const).label("Gamma").filterable("checkbox"),
+      beta: col
+        .number()
+        .label("Beta")
+        .filterable("slider", { min: 0, max: 100 }),
+      gamma: col
+        .enum(["a", "b"] as const)
+        .label("Gamma")
+        .filterable("checkbox"),
     };
     const fields = generateFilterFields(schema);
     expect(fields.map((f) => f.value)).toEqual(["alpha", "beta", "gamma"]);

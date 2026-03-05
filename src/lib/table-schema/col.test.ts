@@ -106,6 +106,16 @@ describe("col.string()", () => {
     expect(c._config.filter?.commandDisabled).toBe(true);
     expect(c._config.sheet).toEqual({});
   });
+
+  it('.display("status-code") sets display config', () => {
+    const c = col.string().label("Status").display("status-code");
+    expect(c._config.display).toEqual({ type: "status-code" });
+  });
+
+  it('.display("level-indicator") sets display config', () => {
+    const c = col.string().label("Level").display("level-indicator");
+    expect(c._config.display).toEqual({ type: "level-indicator" });
+  });
 });
 
 // ── col.number() ──────────────────────────────────────────────────────────────

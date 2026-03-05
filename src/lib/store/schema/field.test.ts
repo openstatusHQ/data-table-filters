@@ -191,7 +191,9 @@ describe("field builders", () => {
     });
 
     it("serializes sort object to string", () => {
-      expect(f._config.serialize({ id: "latency", desc: true })).toBe("latency.desc");
+      expect(f._config.serialize({ id: "latency", desc: true })).toBe(
+        "latency.desc",
+      );
       expect(f._config.serialize({ id: "name", desc: false })).toBe("name.asc");
     });
 
@@ -200,7 +202,10 @@ describe("field builders", () => {
     });
 
     it("parses sort string", () => {
-      expect(f._config.parse("latency.desc")).toEqual({ id: "latency", desc: true });
+      expect(f._config.parse("latency.desc")).toEqual({
+        id: "latency",
+        desc: true,
+      });
       expect(f._config.parse("name.asc")).toEqual({ id: "name", desc: false });
     });
 

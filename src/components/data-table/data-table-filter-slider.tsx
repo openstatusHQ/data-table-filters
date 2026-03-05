@@ -24,6 +24,7 @@ export function DataTableFilterSlider<TData>({
   value: _value,
   min: defaultMin,
   max: defaultMax,
+  unit,
 }: DataTableSliderFilterField<TData>) {
   const value = _value as string;
   const { table, columnFilters, getFacetedMinMaxValues } = useDataTable();
@@ -66,7 +67,7 @@ export function DataTableFilterSlider<TData>({
           </Label>
           <InputWithAddons
             placeholder="from"
-            trailing="ms"
+            trailing={unit}
             containerClassName="mb-2 h-9 rounded-lg"
             type="number"
             name={`min-${value}`}
@@ -88,7 +89,7 @@ export function DataTableFilterSlider<TData>({
           </Label>
           <InputWithAddons
             placeholder="to"
-            trailing="ms"
+            trailing={unit}
             containerClassName="mb-2 h-9 rounded-lg"
             type="number"
             name={`max-${value}`}

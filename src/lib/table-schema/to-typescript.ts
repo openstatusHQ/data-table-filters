@@ -61,6 +61,56 @@ function detectPreset(c: ColumnDescriptor): PresetMatch | null {
     };
   }
 
+  // logLevel: enum + badge + checkbox + defaultOpen
+  if (
+    c.dataType === "enum" &&
+    c.enumValues &&
+    c.filter?.type === "checkbox" &&
+    c.filter?.defaultOpen &&
+    c.display.type === "badge"
+  ) {
+    const vals = c.enumValues.map((v) => JSON.stringify(v)).join(", ");
+    return {
+      factory: `col.presets.logLevel([${vals}])`,
+      skipDisplay: true,
+      skipFilter: true,
+      skipSortable: false,
+    };
+  }
+
+  // httpStatus: number + number display + checkbox with all-numeric options
+  if (
+    c.dataType === "number" &&
+    c.display.type === "number" &&
+    c.filter?.type === "checkbox" &&
+    c.filter?.options?.every((o) => typeof o.value === "number")
+  ) {
+    const codes = c.filter.options!.map((o) => o.value);
+    return {
+      factory: `col.presets.httpStatus([${codes.join(", ")}])`,
+      skipDisplay: true,
+      skipFilter: true,
+      skipSortable: false,
+    };
+  }
+
+  // httpMethod: enum + text + checkbox + !defaultOpen
+  if (
+    c.dataType === "enum" &&
+    c.enumValues &&
+    c.filter?.type === "checkbox" &&
+    !c.filter?.defaultOpen &&
+    c.display.type === "text"
+  ) {
+    const vals = c.enumValues.map((v) => JSON.stringify(v)).join(", ");
+    return {
+      factory: `col.presets.httpMethod([${vals}])`,
+      skipDisplay: true,
+      skipFilter: true,
+      skipSortable: false,
+    };
+  }
+
   return null;
 }
 

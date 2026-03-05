@@ -156,7 +156,7 @@ export const tableSchema = createTableSchema({
     .display("custom", {
       cell: (value) => <DataTableColumnLatency value={value as number} />,
     })
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .sheet({
@@ -213,8 +213,7 @@ export const tableSchema = createTableSchema({
     .number()
     .optional()
     .label("Percentile")
-    .notFilterable()
-    .hidden()
+    .sheetOnly()
     .sheet({
       component: (props) => {
         const row = props as ColumnSchema & {
@@ -240,7 +239,7 @@ export const tableSchema = createTableSchema({
   "timing.dns": col
     .number()
     .label("DNS")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden()
@@ -261,7 +260,7 @@ export const tableSchema = createTableSchema({
   "timing.connection": col
     .number()
     .label("Connection")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -269,7 +268,7 @@ export const tableSchema = createTableSchema({
   "timing.tls": col
     .number()
     .label("TLS")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -277,7 +276,7 @@ export const tableSchema = createTableSchema({
   "timing.ttfb": col
     .number()
     .label("TTFB")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -285,7 +284,7 @@ export const tableSchema = createTableSchema({
   "timing.transfer": col
     .number()
     .label("Transfer")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -293,8 +292,7 @@ export const tableSchema = createTableSchema({
   headers: col
     .record()
     .label("Headers")
-    .notFilterable()
-    .hidden()
+    .sheetOnly()
     .sheet({
       component: (props) => (
         <KVTabs data={(props as ColumnSchema).headers} className="-mt-[22px]" />
@@ -306,8 +304,7 @@ export const tableSchema = createTableSchema({
     .string()
     .optional()
     .label("Message")
-    .notFilterable()
-    .hidden()
+    .sheetOnly()
     .sheet({
       condition: (props) => (props as ColumnSchema).message !== undefined,
       component: (props) => (

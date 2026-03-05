@@ -4,7 +4,9 @@ import {
   DataTableCellBadge,
   DataTableCellBoolean,
   DataTableCellCode,
+  DataTableCellLevelIndicator,
   DataTableCellNumber,
+  DataTableCellStatusCode,
   DataTableCellText,
   DataTableCellTimestamp,
 } from "@/components/data-table/data-table-cell";
@@ -47,21 +49,58 @@ function renderCell(
   value: unknown,
   row: unknown,
 ): JSX.Element | null {
+  const fallback = <DataTableCellText value={String(value ?? "")} />;
   switch (display.type) {
     case "text":
-      return <DataTableCellText value={value as string} />;
+      return typeof value === "string" || typeof value === "number" ? (
+        <DataTableCellText value={value} />
+      ) : (
+        fallback
+      );
     case "code":
-      return <DataTableCellCode value={value as string} />;
+      return typeof value === "string" || typeof value === "number" ? (
+        <DataTableCellCode value={value} />
+      ) : (
+        fallback
+      );
     case "number":
-      return (
-        <DataTableCellNumber value={value as number} unit={display.unit} />
+      return typeof value === "number" ? (
+        <DataTableCellNumber value={value} unit={display.unit} />
+      ) : (
+        fallback
       );
     case "timestamp":
-      return <DataTableCellTimestamp date={value as Date} />;
+      return value instanceof Date ||
+        typeof value === "string" ||
+        typeof value === "number" ? (
+        <DataTableCellTimestamp date={value} />
+      ) : (
+        fallback
+      );
     case "badge":
-      return <DataTableCellBadge value={value as string} />;
+      return typeof value === "string" || typeof value === "number" ? (
+        <DataTableCellBadge value={value} />
+      ) : (
+        fallback
+      );
     case "boolean":
-      return <DataTableCellBoolean value={value as boolean} />;
+      return typeof value === "boolean" ? (
+        <DataTableCellBoolean value={value} />
+      ) : (
+        fallback
+      );
+    case "status-code":
+      return typeof value === "number" ? (
+        <DataTableCellStatusCode value={value} />
+      ) : (
+        fallback
+      );
+    case "level-indicator":
+      return typeof value === "string" ? (
+        <DataTableCellLevelIndicator value={value} />
+      ) : (
+        fallback
+      );
     case "custom":
       return display.cell(value, row);
   }
@@ -125,6 +164,7 @@ export function generateColumns<TData>(
       header,
       cell,
       enableResizing: config.resizable,
+      ...(config.enableHiding === false ? { enableHiding: false } : {}),
       ...(filterFn ? { filterFn } : {}),
       ...(config.size !== undefined
         ? {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { field } from "../../schema/field";
 import {
-  getFilterSliceKeys,
   createFilterSlice,
   getFilterSliceFromState,
+  getFilterSliceKeys,
 } from "./slice";
 
 // ── getFilterSliceKeys ───────────────────────────────────────────────────────
@@ -37,7 +37,11 @@ describe("createFilterSlice", () => {
 
   function createMockStore() {
     let state: Record<string, unknown> = {};
-    const set = (partial: Record<string, unknown> | ((s: Record<string, unknown>) => Record<string, unknown>)) => {
+    const set = (
+      partial:
+        | Record<string, unknown>
+        | ((s: Record<string, unknown>) => Record<string, unknown>),
+    ) => {
       if (typeof partial === "function") {
         state = { ...state, ...partial(state) };
       } else {
@@ -113,7 +117,9 @@ describe("createFilterSlice", () => {
   it("resetFilters resets specific fields to defaults", () => {
     const { state } = createMockStore();
     const setFilters = state()["setFilters_test"] as (p: any) => void;
-    const resetFilters = state()["resetFilters_test"] as (fields?: string[]) => void;
+    const resetFilters = state()["resetFilters_test"] as (
+      fields?: string[],
+    ) => void;
 
     setFilters({ level: ["error"], path: "test" });
     resetFilters(["level"]);
@@ -135,7 +141,12 @@ describe("createFilterSlice", () => {
 
   it("accepts initialState override", () => {
     let state: Record<string, unknown> = {};
-    const set = (partial: any) => { state = { ...state, ...(typeof partial === "function" ? partial(state) : partial) }; };
+    const set = (partial: any) => {
+      state = {
+        ...state,
+        ...(typeof partial === "function" ? partial(state) : partial),
+      };
+    };
     const get = () => state;
 
     const slice = createFilterSlice(schema, "t", set, get, { level: ["warn"] });
@@ -154,13 +165,13 @@ describe("getFilterSliceFromState", () => {
 
   it("extracts filter slice from state", () => {
     const state: Record<string, unknown> = {
-      "filters_test": { level: [] },
-      "filters_test_paused": false,
-      "filters_test_pending": null,
-      "setFilters_test": () => {},
-      "resetFilters_test": () => {},
-      "pauseFilters_test": () => {},
-      "resumeFilters_test": () => {},
+      filters_test: { level: [] },
+      filters_test_paused: false,
+      filters_test_pending: null,
+      setFilters_test: () => {},
+      resetFilters_test: () => {},
+      pauseFilters_test: () => {},
+      resumeFilters_test: () => {},
     };
     const slice = getFilterSliceFromState(state, "test");
     expect(slice).not.toBeNull();

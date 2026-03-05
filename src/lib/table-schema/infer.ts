@@ -52,6 +52,87 @@ function makeDescriptor(
   };
 }
 
+/** Split a key into lowercase words, handling camelCase, snake_case, and kebab-case. */
+function keyToWords(key: string): string[] {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .split(/[-_]/)
+    .map((w) => w.toLowerCase())
+    .filter(Boolean);
+}
+
+const ID_WORDS = new Set(["id", "uuid", "hash", "token", "key"]);
+const CODE_WORDS = new Set(["path", "url", "uri", "endpoint", "route", "host"]);
+const LATENCY_WORDS = new Set(["latency", "duration", "elapsed"]);
+const SIZE_WORDS = new Set(["size", "bytes", "length"]);
+const LEVEL_WORDS = new Set(["level", "severity"]);
+const TRACE_ID_WORDS = new Set(["trace", "span", "request"]);
+
+/** Post-process an inferred descriptor with smart display/config heuristics. */
+function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
+  const words = keyToWords(descriptor.key);
+  const joined = words.join("");
+  const d = { ...descriptor };
+
+  const hasIdWord = words.some((w) => ID_WORDS.has(w));
+  const hasCodeWord = words.some((w) => CODE_WORDS.has(w));
+  const hasLatencyWord =
+    words.some((w) => LATENCY_WORDS.has(w)) || joined.includes("responsetime");
+  const hasSizeWord = words.some((w) => SIZE_WORDS.has(w));
+  const hasLevelWord = words.some((w) => LEVEL_WORDS.has(w));
+  const isTraceId = hasIdWord && words.some((w) => TRACE_ID_WORDS.has(w));
+
+  // ID-like columns → code display, not sortable
+  if (hasIdWord) {
+    d.display = { type: "code" };
+    d.sortable = false;
+    // Trace/span/request IDs → hidden, not filterable (matches col.presets.traceId())
+    if (isTraceId) {
+      d.hidden = true;
+      d.filter = null;
+    }
+  }
+  // Path/URL-like columns → code display
+  else if (hasCodeWord) {
+    d.display = { type: "code" };
+  }
+  // Latency-like number columns → number with ms unit, sortable
+  else if (hasLatencyWord && d.dataType === "number") {
+    d.display = { type: "number", unit: "ms" };
+    d.sortable = true;
+  }
+  // Size-like number columns → number with B unit, sortable
+  else if (hasSizeWord && d.dataType === "number") {
+    d.display = { type: "number", unit: "B" };
+    d.sortable = true;
+  }
+
+  // Sortable defaults by type (unless ID-like)
+  if (!hasIdWord) {
+    if (d.dataType === "timestamp" || d.dataType === "number") {
+      d.sortable = true;
+    }
+  }
+
+  // Log level / severity enums: expand filter by default (matches col.presets.logLevel())
+  if (hasLevelWord && d.dataType === "enum" && d.filter) {
+    d.filter = { ...d.filter, defaultOpen: true };
+  }
+
+  // Column sizing defaults
+  const sizeDefaults: Record<string, number> = {
+    boolean: 100,
+    timestamp: 180,
+    number: 120,
+    enum: 130,
+  };
+  if (sizeDefaults[d.dataType] !== undefined) {
+    d.size = sizeDefaults[d.dataType];
+  }
+
+  return d;
+}
+
 function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
   const label = keyToLabel(key);
   const nonNull = values.filter((v) => v !== null && v !== undefined);
@@ -228,7 +309,7 @@ export function inferSchemaFromJSON(data: unknown[]): SchemaJSON {
   }
 
   const columns = Array.from(keyValues.entries()).map(([key, values]) =>
-    inferColDescriptor(key, values),
+    enhanceDescriptor(inferColDescriptor(key, values)),
   );
 
   return { columns };

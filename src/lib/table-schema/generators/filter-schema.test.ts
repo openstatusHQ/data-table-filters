@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
 } from "@/lib/delimiters";
+import { describe, expect, it } from "vitest";
 import { col } from "../col";
 import type { TableSchemaDefinition } from "../types";
 import { generateFilterSchema } from "./filter-schema";
@@ -48,7 +48,10 @@ describe("generateFilterSchema", () => {
 
   it("number + slider → field.array(field.number()) with SLIDER_DELIMITER", () => {
     const schema: TableSchemaDefinition = {
-      latency: col.number().label("Latency").filterable("slider", { min: 0, max: 5000 }),
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 0, max: 5000 }),
     };
     const result = generateFilterSchema(schema);
     const field = result.definition.latency;
@@ -59,9 +62,12 @@ describe("generateFilterSchema", () => {
 
   it("number + checkbox → field.array(field.number()) with ARRAY_DELIMITER", () => {
     const schema: TableSchemaDefinition = {
-      status: col.number().label("Status").filterable("checkbox", {
-        options: [{ label: "200", value: 200 }],
-      }),
+      status: col
+        .number()
+        .label("Status")
+        .filterable("checkbox", {
+          options: [{ label: "200", value: 200 }],
+        }),
     };
     const result = generateFilterSchema(schema);
     const field = result.definition.status;
@@ -106,7 +112,10 @@ describe("generateFilterSchema", () => {
   it("array(enum) + checkbox → field.array(field.stringLiteral(values))", () => {
     const REGIONS = ["us-east", "us-west"] as const;
     const schema: TableSchemaDefinition = {
-      regions: col.array(col.enum(REGIONS)).label("Regions").filterable("checkbox"),
+      regions: col
+        .array(col.enum(REGIONS))
+        .label("Regions")
+        .filterable("checkbox"),
     };
     const result = generateFilterSchema(schema);
     const field = result.definition.regions;
@@ -119,11 +128,18 @@ describe("generateFilterSchema", () => {
     const schema: TableSchemaDefinition = {
       level: col.enum(LEVELS).label("Level").filterable("checkbox"),
       path: col.string().label("Path").filterable("input"),
-      latency: col.number().label("Latency").filterable("slider", { min: 0, max: 100 }),
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 0, max: 100 }),
     };
     const result = generateFilterSchema(schema);
     expect(result).toHaveProperty("definition");
-    expect(Object.keys(result.definition)).toEqual(["level", "path", "latency"]);
+    expect(Object.keys(result.definition)).toEqual([
+      "level",
+      "path",
+      "latency",
+    ]);
   });
 
   it("handles a comprehensive schema with all filter types", () => {
@@ -131,10 +147,16 @@ describe("generateFilterSchema", () => {
     const schema: TableSchemaDefinition = {
       level: col.enum(LEVELS).label("Level").filterable("checkbox"),
       path: col.string().label("Path").filterable("input"),
-      latency: col.number().label("Latency").filterable("slider", { min: 0, max: 5000 }),
-      status: col.number().label("Status").filterable("checkbox", {
-        options: [{ label: "200", value: 200 }],
-      }),
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 0, max: 5000 }),
+      status: col
+        .number()
+        .label("Status")
+        .filterable("checkbox", {
+          options: [{ label: "200", value: 200 }],
+        }),
       date: col.timestamp().label("Date").filterable("timerange"),
       active: col.boolean().label("Active"),
       host: col.string().label("Host").notFilterable(),

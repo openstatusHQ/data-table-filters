@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  calculateSpecificPercentile,
   calculatePercentile,
+  calculateSpecificPercentile,
   getPercentileColor,
 } from "./percentile";
 

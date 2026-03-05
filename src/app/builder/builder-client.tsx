@@ -162,6 +162,8 @@ export function BuilderClient() {
         schemaForm.setValue("schema", JSON.stringify(schema, null, 2), {
           shouldValidate: true,
         });
+        // Clear URL search params from the previous dataset before remounting
+        window.history.replaceState({}, "", window.location.pathname);
         setSchemaVersion((v) => v + 1);
       } catch (e) {
         dataForm.setError("json", {
@@ -216,6 +218,8 @@ export function BuilderClient() {
       }
 
       setSchemaJson(parsed);
+      // Clear URL search params from the previous schema before remounting
+      window.history.replaceState({}, "", window.location.pathname);
       setSchemaVersion((v) => v + 1);
     } catch (e) {
       schemaForm.setError("schema", {
