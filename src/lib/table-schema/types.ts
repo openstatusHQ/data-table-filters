@@ -14,17 +14,18 @@ export type ColKind =
 export type FilterType = "input" | "checkbox" | "slider" | "timerange";
 
 export type DisplayConfig =
-  | { type: "text" }
-  | { type: "code" }
-  | { type: "boolean" }
-  | { type: "badge" }
-  | { type: "timestamp" }
-  | { type: "number"; unit?: string }
-  | { type: "status-code" }
-  | { type: "level-indicator" }
+  | { type: "text"; colorMap?: Record<string, string> }
+  | { type: "code"; colorMap?: Record<string, string> }
+  | { type: "boolean"; colorMap?: Record<string, string> }
+  | { type: "badge"; colorMap?: Record<string, string> }
+  | { type: "timestamp"; colorMap?: Record<string, string> }
+  | { type: "number"; unit?: string; colorMap?: Record<string, string> }
+  | { type: "status-code"; colorMap?: Record<string, string> }
+  | { type: "level-indicator"; colorMap?: Record<string, string> }
   | {
       type: "custom";
       cell: (value: unknown, row: unknown) => JSX.Element | null;
+      colorMap?: Record<string, string>;
     };
 
 export type FilterConfig = {
@@ -134,11 +135,18 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
       | "timestamp"
       | "status-code"
       | "level-indicator",
+    options?: { colorMap?: Record<string, string> },
   ): ColBuilder<T, F>;
-  display(type: "number", options?: { unit?: string }): ColBuilder<T, F>;
+  display(
+    type: "number",
+    options?: { unit?: string; colorMap?: Record<string, string> },
+  ): ColBuilder<T, F>;
   display(
     type: "custom",
-    options: { cell: (value: unknown, row: unknown) => JSX.Element | null },
+    options: {
+      cell: (value: unknown, row: unknown) => JSX.Element | null;
+      colorMap?: Record<string, string>;
+    },
   ): ColBuilder<T, F>;
 
   /**
@@ -350,7 +358,7 @@ export type ColumnDescriptor = {
   sortable: boolean;
   size?: number;
   /** `"custom"` means a developer-supplied renderer exists; not reconstructable from JSON. */
-  display: { type: string; unit?: string };
+  display: { type: string; unit?: string; colorMap?: Record<string, string> };
   filter: FilterDescriptor | null;
   sheet: SheetDescriptor | null;
 };

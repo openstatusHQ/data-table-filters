@@ -81,6 +81,12 @@ describe("col.string()", () => {
     expect(c._config.display).toEqual({ type: "code" });
   });
 
+  it(".display() with colorMap stores the colorMap", () => {
+    const colorMap = { active: "#22c55e", inactive: "#6b7280" };
+    const c = col.string().label("Status").display("badge", { colorMap });
+    expect(c._config.display).toEqual({ type: "badge", colorMap });
+  });
+
   it("is immutable — each method returns a new builder instance", () => {
     const base = col.string();
     const withLabel = base.label("Host");
@@ -151,6 +157,15 @@ describe("col.number()", () => {
   it(".display('number', { unit }) stores the unit", () => {
     const c = col.number().label("Latency").display("number", { unit: "ms" });
     expect(c._config.display).toEqual({ type: "number", unit: "ms" });
+  });
+
+  it(".display('number', { unit, colorMap }) stores both", () => {
+    const colorMap = { "200": "#22c55e", "500": "#ef4444" };
+    const c = col
+      .number()
+      .label("Status")
+      .display("number", { unit: "ms", colorMap });
+    expect(c._config.display).toEqual({ type: "number", unit: "ms", colorMap });
   });
 });
 

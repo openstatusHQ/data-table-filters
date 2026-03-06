@@ -7,6 +7,7 @@ import {
   DataTableCellLevelIndicator,
   DataTableCellNumber,
   DataTableCellStatusCode,
+  DataTableCellText,
   DataTableCellTimestamp,
 } from "@/components/data-table/data-table-cell";
 import { cn } from "@/lib/utils";
@@ -18,55 +19,90 @@ import { SheetDetailsContentSkeleton } from "./data-table-sheet-skeleton";
 
 function renderSheetValue(
   rawValue: unknown,
-  display?: { type: string; unit?: string },
+  display?: { type: string; unit?: string; colorMap?: Record<string, string> },
 ): React.ReactNode {
   if (!display) return String(rawValue);
+  const colorMap = display.colorMap;
   switch (display.type) {
-    case "timestamp":
+    case "timestamp": {
+      const hex = colorMap?.[String(rawValue)];
       return rawValue instanceof Date ||
         typeof rawValue === "string" ||
         typeof rawValue === "number" ? (
-        <DataTableCellTimestamp date={rawValue} />
+        <DataTableCellTimestamp date={rawValue} color={hex} />
       ) : (
         String(rawValue)
       );
-    case "number":
+    }
+    case "number": {
+      const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "number" ? (
-        <DataTableCellNumber value={rawValue} unit={display.unit} />
+        <DataTableCellNumber value={rawValue} unit={display.unit} color={hex} />
       ) : (
         String(rawValue)
       );
-    case "boolean":
+    }
+    case "boolean": {
+      const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "boolean" ? (
-        <DataTableCellBoolean value={rawValue} />
+        <DataTableCellBoolean value={rawValue} color={hex} />
       ) : (
         String(rawValue)
       );
-    case "badge":
+    }
+    case "badge": {
+      if (Array.isArray(rawValue)) {
+        return (
+          <div className="flex flex-wrap gap-1">
+            {rawValue.map((item, i) => (
+              <DataTableCellBadge
+                key={i}
+                value={item}
+                color={colorMap?.[String(item)]}
+              />
+            ))}
+          </div>
+        );
+      }
+      const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "string" || typeof rawValue === "number" ? (
-        <DataTableCellBadge value={rawValue} />
+        <DataTableCellBadge value={rawValue} color={hex} />
       ) : (
         String(rawValue)
       );
-    case "code":
+    }
+    case "code": {
+      const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "string" || typeof rawValue === "number" ? (
-        <DataTableCellCode value={rawValue} />
+        <DataTableCellCode value={rawValue} color={hex} />
       ) : (
         String(rawValue)
       );
-    case "status-code":
+    }
+    case "status-code": {
+      const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "number" ? (
-        <DataTableCellStatusCode value={rawValue} />
+        <DataTableCellStatusCode value={rawValue} color={hex} />
       ) : (
         String(rawValue)
       );
-    case "level-indicator":
+    }
+    case "level-indicator": {
+      const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "string" ? (
-        <DataTableCellLevelIndicator value={rawValue} />
+        <DataTableCellLevelIndicator value={rawValue} color={hex} />
       ) : (
         String(rawValue)
       );
-    case "text":
+    }
+    case "text": {
+      const hex = colorMap?.[String(rawValue)];
+      return typeof rawValue === "string" || typeof rawValue === "number" ? (
+        <DataTableCellText value={rawValue} color={hex} />
+      ) : (
+        String(rawValue)
+      );
+    }
     default:
       return String(rawValue);
   }

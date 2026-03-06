@@ -27,12 +27,14 @@ import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { BuilderTable } from "./builder-table";
 import {
+  applyDatasetColorMaps,
   EXAMPLE_DATASETS,
   PLACEHOLDER_DATA,
   PLACEHOLDER_DATA_JSON,
 } from "./datasets";
 
 const INITIAL_SCHEMA = inferSchemaFromJSON(PLACEHOLDER_DATA);
+applyDatasetColorMaps(INITIAL_SCHEMA, PLACEHOLDER_DATA);
 
 const dataFormSchema = z.object({
   json: z.string().superRefine((val, ctx) => {
@@ -157,6 +159,8 @@ export function BuilderClient() {
           }
           csvHeaderMapRef.current = null;
         }
+        // Inject colorMaps for known example datasets
+        applyDatasetColorMaps(schema, data);
         setDataId(newDataId);
         setSchemaJson(schema);
         schemaForm.setValue("schema", JSON.stringify(schema, null, 2), {

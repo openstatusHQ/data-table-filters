@@ -132,6 +132,21 @@ describe("generateSheetFields", () => {
     expect(field.display).toEqual({ type: "boolean" });
   });
 
+  it("propagates colorMap through display descriptor", () => {
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["a", "b"] as const)
+        .label("Level")
+        .display("badge", { colorMap: { a: "#ef4444", b: "#3b82f6" } })
+        .sheet(),
+    };
+    const [field] = generateSheetFields(schema);
+    expect(field.display).toEqual({
+      type: "badge",
+      colorMap: { a: "#ef4444", b: "#3b82f6" },
+    });
+  });
+
   it("falls back to kind-default display for custom display type", () => {
     const schema: TableSchemaDefinition = {
       level: col

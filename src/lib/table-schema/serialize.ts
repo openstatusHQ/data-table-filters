@@ -53,10 +53,20 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
         optional: c.optional,
         hidden: c.hidden,
         sortable: c.sortable,
-        display:
-          c.display.type === "number" && "unit" in c.display && c.display.unit
-            ? { type: "number", unit: c.display.unit }
-            : { type: c.display.type },
+        display: (() => {
+          const d: ColumnDescriptor["display"] = { type: c.display.type };
+          if (
+            c.display.type === "number" &&
+            "unit" in c.display &&
+            c.display.unit
+          ) {
+            d.unit = c.display.unit;
+          }
+          if (c.display.colorMap) {
+            d.colorMap = c.display.colorMap;
+          }
+          return d;
+        })(),
         filter: serializeFilter(c.filter),
         sheet: serializeSheet(c.sheet),
       };
@@ -141,8 +151,14 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
       col_.display.type === "custom"
         ? defaultDisplayType(col_.dataType)
         : col_.display.type;
-    if (displayType === "number" && col_.display.unit) {
-      builder = builder.display("number", { unit: col_.display.unit });
+    if (displayType === "number") {
+      const opts: { unit?: string; colorMap?: Record<string, string> } = {};
+      if (col_.display.unit) opts.unit = col_.display.unit;
+      if (col_.display.colorMap) opts.colorMap = col_.display.colorMap;
+      builder = builder.display(
+        "number",
+        Object.keys(opts).length > 0 ? opts : undefined,
+      );
     } else if (
       displayType === "text" ||
       displayType === "code" ||
@@ -152,7 +168,10 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
       displayType === "status-code" ||
       displayType === "level-indicator"
     ) {
-      builder = builder.display(displayType);
+      builder = builder.display(
+        displayType,
+        col_.display.colorMap ? { colorMap: col_.display.colorMap } : undefined,
+      );
     }
 
     // 4. Filter

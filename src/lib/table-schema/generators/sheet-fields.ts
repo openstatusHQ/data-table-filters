@@ -22,18 +22,26 @@ function defaultDisplayForKind(kind: ColConfig["kind"]): string {
 function getDisplayDescriptor(config: ColConfig): {
   type: string;
   unit?: string;
+  colorMap?: Record<string, string>;
 } {
   const type =
     config.display.type === "custom"
       ? defaultDisplayForKind(config.kind)
       : config.display.type;
-  const desc: { type: string; unit?: string } = { type };
+  const desc: {
+    type: string;
+    unit?: string;
+    colorMap?: Record<string, string>;
+  } = { type };
   if (
     config.display.type === "number" &&
     "unit" in config.display &&
     config.display.unit
   ) {
     desc.unit = config.display.unit;
+  }
+  if (config.display.colorMap) {
+    desc.colorMap = config.display.colorMap;
   }
   return desc;
 }

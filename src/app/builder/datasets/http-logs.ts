@@ -1,3 +1,5 @@
+import { patchDates } from "./relative-dates";
+
 export type HttpLog = {
   timestamp: string;
   method: string;
@@ -809,3 +811,5 @@ export const httpLogsData: HttpLog[] = [
     region: "ap-southeast-1",
   },
 ];
+
+patchDates(httpLogsData, "timestamp");

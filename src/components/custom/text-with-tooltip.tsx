@@ -11,9 +11,14 @@ import React, { useEffect, useRef, useState } from "react";
 interface TextWithTooltipProps {
   text: string | number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function TextWithTooltip({ text, className }: TextWithTooltipProps) {
+export function TextWithTooltip({
+  text,
+  className,
+  style,
+}: TextWithTooltipProps) {
   const [isTruncated, setIsTruncated] = useState<boolean>(false);
   const textRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +56,7 @@ export function TextWithTooltip({ text, className }: TextWithTooltipProps) {
               !isTruncated && "pointer-events-none",
               className,
             )}
+            style={style}
           >
             {text}
           </div>

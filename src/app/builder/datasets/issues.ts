@@ -1,3 +1,5 @@
+import { patchDates } from "./relative-dates";
+
 export type Issue = {
   title: string;
   priority: string;
@@ -910,3 +912,5 @@ export const issuesData: Issue[] = [
     created_at: "2024-04-10T17:01:39.000Z",
   },
 ];
+
+patchDates(issuesData, "created_at");

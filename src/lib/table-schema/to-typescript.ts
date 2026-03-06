@@ -154,18 +154,29 @@ function buildChain(c: ColumnDescriptor): string {
     parts.push(`.description(${JSON.stringify(c.description)})`);
   }
 
-  // 4. .display() — skip if covered by preset
+  // 4. .display() — skip if covered by preset (unless colorMap needs emitting)
   if (!skipDisplay) {
     const dt = c.display.type;
-    if (dt === "number" && c.display.unit) {
+    const hasColorMap = !!c.display.colorMap;
+    if (dt === "number" && (c.display.unit || hasColorMap)) {
+      const opts: Record<string, unknown> = {};
+      if (c.display.unit) opts.unit = c.display.unit;
+      if (hasColorMap) opts.colorMap = c.display.colorMap;
+      parts.push(`.display("number", ${JSON.stringify(opts)})`);
+    } else if (hasColorMap) {
       parts.push(
-        `.display("number", { unit: ${JSON.stringify(c.display.unit)} })`,
+        `.display(${JSON.stringify(dt)}, ${JSON.stringify({ colorMap: c.display.colorMap })})`,
       );
     } else if (
       dt !== "text" // "text" is the default for string/record, skip it
     ) {
       parts.push(`.display(${JSON.stringify(dt)})`);
     }
+  } else if (c.display.colorMap) {
+    // Preset covers display type, but colorMap still needs to be emitted
+    parts.push(
+      `.display(${JSON.stringify(c.display.type)}, ${JSON.stringify({ colorMap: c.display.colorMap })})`,
+    );
   }
 
   // 5. .filterable() / .notFilterable() — skip if covered by preset

@@ -417,6 +417,79 @@ describe("schemaToTypeScript", () => {
     expect(ts).not.toContain('.filterable("checkbox"');
   });
 
+  it("generates colorMap option in .display() call for badge", () => {
+    const json: SchemaJSON = {
+      columns: [
+        makeCol({
+          key: "level",
+          label: "Level",
+          dataType: "enum",
+          enumValues: ["error", "warn"],
+          display: {
+            type: "badge",
+            colorMap: { error: "#ef4444", warn: "#f59e0b" },
+          },
+          filter: {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+          },
+        }),
+      ],
+    };
+    const ts = schemaToTypeScript(json);
+    expect(ts).toContain('.display("badge",');
+    expect(ts).toContain('"colorMap"');
+    expect(ts).toContain('"#ef4444"');
+  });
+
+  it("generates colorMap option in .display() call for text", () => {
+    const json: SchemaJSON = {
+      columns: [
+        makeCol({
+          key: "status",
+          label: "Status",
+          display: {
+            type: "text",
+            colorMap: { active: "#22c55e" },
+          },
+        }),
+      ],
+    };
+    const ts = schemaToTypeScript(json);
+    expect(ts).toContain('.display("text",');
+    expect(ts).toContain('"colorMap"');
+  });
+
+  it("emits .display() with colorMap even when preset has skipDisplay", () => {
+    const json: SchemaJSON = {
+      columns: [
+        makeCol({
+          key: "level",
+          label: "Level",
+          dataType: "enum",
+          enumValues: ["error", "warn", "info"],
+          display: {
+            type: "badge",
+            colorMap: { error: "#ef4444", warn: "#eab308", info: "#3b82f6" },
+          },
+          filter: {
+            type: "checkbox",
+            defaultOpen: true,
+            commandDisabled: false,
+          },
+        }),
+      ],
+    };
+    const ts = schemaToTypeScript(json);
+    // Should still use the preset
+    expect(ts).toContain("col.presets.logLevel");
+    // But also emit .display() for the colorMap
+    expect(ts).toContain('.display("badge",');
+    expect(ts).toContain('"colorMap"');
+    expect(ts).toContain('"#ef4444"');
+  });
+
   it("does NOT match logLevel when defaultOpen is false (falls through)", () => {
     const json: SchemaJSON = {
       columns: [

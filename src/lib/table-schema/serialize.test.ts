@@ -181,6 +181,37 @@ describe("serializeSchema", () => {
     expect(json.columns[0]?.sheet).not.toHaveProperty("condition");
   });
 
+  it("serializes colorMap on badge display", () => {
+    const LEVELS = ["error", "warn", "info"] as const;
+    const json = serializeSchema({
+      level: col
+        .enum(LEVELS)
+        .label("Level")
+        .display("badge", {
+          colorMap: { error: "#ef4444", warn: "#f59e0b", info: "#3b82f6" },
+        }),
+    });
+    expect(json.columns[0]?.display).toEqual({
+      type: "badge",
+      colorMap: { error: "#ef4444", warn: "#f59e0b", info: "#3b82f6" },
+    });
+  });
+
+  it("serializes colorMap on text display", () => {
+    const json = serializeSchema({
+      status: col
+        .string()
+        .label("Status")
+        .display("text", {
+          colorMap: { active: "#22c55e", inactive: "#ef4444" },
+        }),
+    });
+    expect(json.columns[0]?.display).toEqual({
+      type: "text",
+      colorMap: { active: "#22c55e", inactive: "#ef4444" },
+    });
+  });
+
   it("returns a columns array in insertion order", () => {
     const json = serializeSchema({
       a: col.string().label("A"),
@@ -294,6 +325,37 @@ describe("deserializeSchema", () => {
         .string()
         .label("Host")
         .sheet({ label: "Origin", skeletonClassName: "w-24" }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips colorMap on badge display", () => {
+    const LEVELS = ["error", "warn"] as const;
+    const def = {
+      level: col
+        .enum(LEVELS)
+        .label("Level")
+        .display("badge", { colorMap: { error: "#ef4444", warn: "#f59e0b" } }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips colorMap on text display", () => {
+    const def = {
+      status: col
+        .string()
+        .label("Status")
+        .display("text", { colorMap: { active: "#22c55e" } }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips colorMap on number display with unit", () => {
+    const def = {
+      score: col
+        .number()
+        .label("Score")
+        .display("number", { unit: "pts", colorMap: { "100": "#22c55e" } }),
     };
     expect(roundTrip(def)).toEqual(serializeSchema(def));
   });

@@ -7,11 +7,23 @@ const LEVEL_COLORS: Record<string, string> = {
   success: "bg-green-500",
 };
 
-export function DataTableCellLevelIndicator({ value }: { value: string }) {
-  const color = LEVEL_COLORS[value.toLowerCase()] ?? "bg-gray-300";
+export function DataTableCellLevelIndicator({
+  value,
+  color: colorOverride,
+}: {
+  value: string;
+  color?: string;
+}) {
+  const builtinColor = LEVEL_COLORS[value.toLowerCase()] ?? "bg-gray-300";
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`} />
+    <span
+      className="inline-flex items-center gap-1.5"
+      style={colorOverride ? { color: colorOverride } : undefined}
+    >
+      <span
+        className={`inline-block h-2 w-2 shrink-0 rounded-full ${colorOverride ? "" : builtinColor}`}
+        style={colorOverride ? { backgroundColor: colorOverride } : undefined}
+      />
       <span>{value}</span>
     </span>
   );

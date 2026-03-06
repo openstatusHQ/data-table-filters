@@ -50,57 +50,87 @@ function renderCell(
   row: unknown,
 ): JSX.Element | null {
   const fallback = <DataTableCellText value={String(value ?? "")} />;
+  const colorMap = display.colorMap;
   switch (display.type) {
-    case "text":
+    case "text": {
+      const hex = colorMap?.[String(value)];
       return typeof value === "string" || typeof value === "number" ? (
-        <DataTableCellText value={value} />
+        <DataTableCellText value={value} color={hex} />
       ) : (
         fallback
       );
-    case "code":
+    }
+    case "code": {
+      const hex = colorMap?.[String(value)];
       return typeof value === "string" || typeof value === "number" ? (
-        <DataTableCellCode value={value} />
+        <DataTableCellCode value={value} color={hex} />
       ) : (
         fallback
       );
-    case "number":
+    }
+    case "number": {
+      const hex = colorMap?.[String(value)];
       return typeof value === "number" ? (
-        <DataTableCellNumber value={value} unit={display.unit} />
+        <DataTableCellNumber value={value} unit={display.unit} color={hex} />
       ) : (
         fallback
       );
-    case "timestamp":
+    }
+    case "timestamp": {
+      const hex = colorMap?.[String(value)];
       return value instanceof Date ||
         typeof value === "string" ||
         typeof value === "number" ? (
-        <DataTableCellTimestamp date={value} />
+        <DataTableCellTimestamp date={value} color={hex} />
       ) : (
         fallback
       );
-    case "badge":
+    }
+    case "badge": {
+      if (Array.isArray(value)) {
+        return (
+          <div className="flex flex-wrap gap-1">
+            {value.map((item, i) => (
+              <DataTableCellBadge
+                key={i}
+                value={item}
+                color={colorMap?.[String(item)]}
+              />
+            ))}
+          </div>
+        );
+      }
+      const hex = colorMap?.[String(value)];
       return typeof value === "string" || typeof value === "number" ? (
-        <DataTableCellBadge value={value} />
+        <DataTableCellBadge value={value} color={hex} />
       ) : (
         fallback
       );
-    case "boolean":
+    }
+    case "boolean": {
+      const hex = colorMap?.[String(value)];
       return typeof value === "boolean" ? (
-        <DataTableCellBoolean value={value} />
+        <DataTableCellBoolean value={value} color={hex} />
       ) : (
         fallback
       );
-    case "status-code":
+    }
+    case "status-code": {
+      const hex = colorMap?.[String(value)];
       return typeof value === "number" ? (
-        <DataTableCellStatusCode value={value} />
+        <DataTableCellStatusCode value={value} color={hex} />
       ) : (
         fallback
       );
-    case "level-indicator":
+    }
+    case "level-indicator": {
+      const hex = colorMap?.[String(value)];
       return typeof value === "string" ? (
-        <DataTableCellLevelIndicator value={value} />
+        <DataTableCellLevelIndicator value={value} color={hex} />
       ) : (
         fallback
       );
+    }
     case "custom":
       return display.cell(value, row);
   }

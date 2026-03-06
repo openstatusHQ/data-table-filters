@@ -1,3 +1,5 @@
+import { patchDates } from "./relative-dates";
+
 export type Order = {
   order_id: string;
   product: string;
@@ -1011,3 +1013,5 @@ export const ordersData: Order[] = [
     ordered_at: "2024-03-13T23:32:42.000Z",
   },
 ];
+
+patchDates(ordersData, "ordered_at");

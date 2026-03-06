@@ -1,5 +1,11 @@
 import { TextWithTooltip } from "@/components/custom/text-with-tooltip";
 
-export function DataTableCellText({ value }: { value: string | number }) {
-  return <TextWithTooltip text={value} />;
+export function DataTableCellText({
+  value,
+  color,
+}: {
+  value: string | number;
+  color?: string;
+}) {
+  return <TextWithTooltip text={value} style={color ? { color } : undefined} />;
 }
