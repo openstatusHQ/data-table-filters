@@ -1,4 +1,4 @@
-## Guide (WIP)
+## Guide
 
 <span className="font-medium text-muted-foreground">
   As of:{" "}
@@ -9,89 +9,345 @@
   })}
 </span>
 
-This guide helps you get started with the data-table and define columns, filters, schemas, adapters, and more.
+This guide covers the data-table system end to end — from defining a table schema to rendering filters, columns, and row details.
 
 > If you have any questions or feature requests, please open an issue on [GitHub](https://github.com/openstatusHQ/data-table-filters/issues). This is a work in progress and we are happy to hear from you.
 
-The data-table uses shadcn/ui components. Some modifications live in `src/components/custom/*` but will eventually migrate back to shadcn/ui to be fully compliant.
+---
 
-The infinite scrollable data-table is composed of the following parts:
+## Overview
 
-- `DataTableFilterControls`: the left sidebar controls
-- `DataTableFilterCommand`: the cmdk input
-- `DataTableInfinite`: the infinite data-table
-- `DataTableDetailsSheet`: the details sheet
-- `TimelineChart`: the timeline chart
-- `DataTableStoreProvider`: the BYOS state provider
+The data-table is built on three layers:
 
-You have full control over the data-table and the components that are rendered. Feel free to extend, modify, or remove components as you see fit.
+1. **Table Schema** — a declarative builder that defines columns, filters, display, sorting, and row details in one place
+2. **BYOS (Bring Your Own Store)** — a pluggable state management system for filter state (URL, Zustand, or custom)
+3. **Components** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
 
-## Quick Start
+> For a simpler client-side pagination example without infinite scroll, see the [`/default`](/default) route.
 
-The recommended approach uses **BYOS (Bring Your Own Store)** for filter state management. Here's a minimal setup:
+The recommended flow:
+
+```
+Table Schema → Generators → Components
+     ↓              ↓            ↓
+  col.*        columns[]    DataTableInfinite
+  presets      filterFields  DataTableFilterControls
+  .sheet()     sheetFields   DataTableSheetDetails
+               filterSchema  DataTableFilterCommand
+```
+
+---
+
+## Table Schema
+
+The table schema is a type-safe builder for defining your entire table in one place. Instead of manually wiring up `columns.tsx`, `filterFields`, `sheetFields`, and a BYOS schema separately, a single schema definition generates all of them.
+
+### Defining a Schema
 
 ```tsx
-// 1. Define your schema (schema.ts)
+import {
+  col,
+  createTableSchema,
+  type InferTableType,
+} from "@/lib/table-schema";
 
-// 2. Create your client component (client.tsx)
-import { DataTableStoreProvider, useFilterState } from "@/lib/store";
-import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+const LEVELS = ["error", "warn", "info", "debug"] as const;
+const METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
+
+export const tableSchema = createTableSchema({
+  level: col.presets.logLevel(LEVELS).description("Log severity"),
+  date: col.presets.timestamp().label("Date").size(200).sheet(),
+  latency: col.presets
+    .duration("ms")
+    .label("Latency")
+    .sortable()
+    .size(110)
+    .sheet(),
+  status: col.presets.httpStatus().label("Status").size(60),
+  method: col.presets.httpMethod(METHODS).size(69),
+  host: col.string().label("Host").size(125).sheet(),
+  path: col.presets.pathname().label("Path").size(130).sheet(),
+  traceId: col.presets.traceId().label("Request ID").hidden().sheet(),
+  headers: col.record().label("Headers").sheetOnly().sheet(),
+});
+
+// Row type inferred from the schema
+export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
+```
+
+### Column Factories
+
+Choose the factory based on your data type:
+
+```ts
+col.string(); // string  — text display, input filter
+col.number(); // number  — number display, input filter
+col.boolean(); // boolean — boolean display, checkbox filter
+col.timestamp(); // Date    — timestamp display, timerange filter
+col.enum(values); // union   — badge display, checkbox filter
+col.array(item); // array   — badge display, checkbox filter
+col.record(); // Record  — text display, not filterable
+```
+
+Each factory returns a `ColBuilder<T, F>` where `T` is the inferred TypeScript type and `F` constrains which filter types are valid at compile time:
+
+| Factory                       | Allowed Filters                     | Notes                                           |
+| ----------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `col.string()`                | `"input"`                           | Text search                                     |
+| `col.number()`                | `"input"`, `"slider"`, `"checkbox"` | Slider for ranges, checkbox for discrete values |
+| `col.boolean()`               | `"checkbox"`                        | Pre-wired with true/false options               |
+| `col.timestamp()`             | `"timerange"`                       | Date range picker                               |
+| `col.enum(values)`            | `"checkbox"`                        | Options auto-derived from values                |
+| `col.array(col.enum(values))` | `"checkbox"`                        | Multi-value tags, regions, labels               |
+| `col.record()`                | _none_ (`never`)                    | Use `.sheetOnly()` for detail drawers           |
+
+### Presets
+
+Pre-configured builders for common patterns. All remain fully customizable via chaining.
+
+```ts
+col.presets.logLevel(["error", "warn", "info", "debug"]);
+// → enum + badge + checkbox + defaultOpen
+
+col.presets.httpMethod(["GET", "POST", "PUT", "DELETE"]);
+// → enum + text display + checkbox
+
+col.presets.httpStatus();
+// → number + checkbox with common codes (200, 201, 204, 301, ..., 504)
+// Custom codes: col.presets.httpStatus([200, 400, 500])
+
+col.presets.duration("ms");
+// → number + formatted display with unit + slider (0–5000)
+// Custom bounds: col.presets.duration("s", { min: 0, max: 60 })
+
+col.presets.timestamp();
+// → Date + relative time display + timerange filter + sortable
+
+col.presets.traceId();
+// → string + code display + not filterable
+
+col.presets.pathname();
+// → string + text display + input filter
+```
+
+### Builder Methods
+
+All methods return a new builder instance (immutable) for fluent chaining.
+
+#### Label & Description
+
+```ts
+col
+  .string()
+  .label("Host") // Column header label (required)
+  .description("Origin server"); // For AI agents / MCP tools (not shown in UI)
+```
+
+#### Display
+
+Controls how the cell value renders. Built-in display types:
+
+| Type                | Use case                                               |
+| ------------------- | ------------------------------------------------------ |
+| `"text"`            | Plain text with overflow tooltip (default for strings) |
+| `"code"`            | Monospace — IDs, paths, hashes                         |
+| `"number"`          | Formatted number with optional `unit` suffix           |
+| `"badge"`           | Colored chip (default for enums)                       |
+| `"timestamp"`       | Relative time ("3m ago"), absolute on hover            |
+| `"boolean"`         | Checkmark / dash icon                                  |
+| `"status-code"`     | HTTP status code coloring                              |
+| `"level-indicator"` | Severity dot indicator                                 |
+| `"custom"`          | Developer-supplied JSX (not serializable)              |
+
+```ts
+col.number().display("number", { unit: "ms" })
+col.enum(v).display("badge", { colorMap: { error: "#ef4444", warn: "#f59e0b" } })
+col.enum(v).display("custom", {
+  cell: (value, row) => <MyComponent value={value} />,
+})
+```
+
+#### Filtering
+
+```ts
+col.string().filterable("input")
+col.number().filterable("slider", { min: 0, max: 5000 })
+col.enum(v).filterable("checkbox")
+col.enum(v).filterable("checkbox", {
+  options: v.map(v => ({ label: v, value: v })),
+  component: (props) => <StatusBadge value={props.value} />,
+})
+col.timestamp().filterable("timerange")
+
+col.string().notFilterable()        // Disables filtering (F becomes never)
+col.enum(v).defaultOpen()           // Expand in filter sidebar by default
+col.timestamp().commandDisabled()   // Exclude from command palette
+```
+
+Passing a filter type not in `F` is a **compile-time error** — e.g. `col.string().filterable("slider")` won't compile.
+
+#### Visibility & Layout
+
+```ts
+col.string().hidden(); // Hidden by default (toggleable in column menu)
+col.enum(v).hideHeader(); // Hide header label, keep column visible
+col.string().resizable(); // Enable drag-to-resize
+col.string().size(125); // Fixed width in pixels (initial width if resizable)
+```
+
+#### Sorting & Optionality
+
+```ts
+col.number().sortable(); // Click-to-sort on column header
+col.string().optional(); // T becomes T | undefined in InferTableType
+```
+
+#### Sheet (Row Detail Drawer)
+
+```ts
+col.string().sheet()        // Include in detail drawer
+col.string().sheet({ label: "Server", skeletonClassName: "w-24" })
+col.number().sheet({
+  component: (row) => <>{row.latency}ms</>,
+  skeletonClassName: "w-16",
+})
+col.record().sheetOnly()    // hidden + notFilterable + enableHiding: false
+```
+
+### Generators
+
+The schema drives four generators that produce everything the table components need.
+
+```tsx
+import {
+  generateColumns,
+  generateFilterFields,
+  generateFilterSchema,
+  generateSheetFields,
+  getDefaultColumnVisibility,
+} from "@/lib/table-schema";
+
+// TanStack Table ColumnDef[]
+const columns = generateColumns<ColumnSchema>(tableSchema.definition);
+
+// Filter sidebar and command palette fields
+const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
+
+// Row detail drawer fields
+const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
+
+// Initial column visibility from .hidden() columns
+const defaultColumnVisibility = getDefaultColumnVisibility(
+  tableSchema.definition,
+);
+```
+
+You can append custom virtual columns that span multiple fields:
+
+```tsx
+const allColumns = [
+  ...generateColumns<ColumnSchema>(tableSchema.definition),
+  {
+    id: "timing",
+    header: "Timing Phases",
+    cell: ({ row }) => <TimingBar row={row} />,
+    size: 130,
+  },
+];
+```
+
+#### generateFilterSchema
+
+Bridges the table schema to BYOS by generating a filter schema. Add non-column state fields (sort, pagination, live mode) alongside:
+
+```tsx
 import { createSchema, field } from "@/lib/store/schema";
 
 export const filterSchema = createSchema({
-  status: field.array(field.number()).delimiter(","),
-  host: field.string(),
-  date: field.array(field.timestamp()).delimiter("-"),
+  ...generateFilterSchema(tableSchema.definition).definition,
+  sort: field.sort(),
+  live: field.boolean().default(false),
+  size: field.number().default(40),
 });
-
-export type FilterState = typeof filterSchema._type;
-
-export function Client() {
-  const adapter = useNuqsAdapter(filterSchema.definition, { id: "my-table" });
-
-  return (
-    <DataTableStoreProvider adapter={adapter}>
-      <DataTableContent />
-    </DataTableStoreProvider>
-  );
-}
-
-function DataTableContent() {
-  const search = useFilterState<FilterState>();
-  const { data } = useInfiniteQuery(dataOptions(search));
-  // ... render your table
-}
 ```
+
+> The `/infinite` route writes the BYOS schema manually instead of using `generateFilterSchema` for better TypeScript inference. Both approaches work — use `generateFilterSchema` for convenience, manual for full control.
+
+The mapping from column types to BYOS field types:
+
+| Column + Filter                   | BYOS Field                                      |
+| --------------------------------- | ----------------------------------------------- |
+| `col.string()` + `"input"`        | `field.string()`                                |
+| `col.number()` + `"input"`        | `field.number()`                                |
+| `col.number()` + `"slider"`       | `field.array(field.number()).delimiter("-")`    |
+| `col.number()` + `"checkbox"`     | `field.array(field.number()).delimiter(",")`    |
+| `col.enum(v)` + `"checkbox"`      | `field.array(field.stringLiteral(v))`           |
+| `col.boolean()` + `"checkbox"`    | `field.array(field.boolean()).delimiter(",")`   |
+| `col.timestamp()` + `"timerange"` | `field.array(field.timestamp()).delimiter("-")` |
+
+### Serialization & AI
+
+The schema serializes to a function-free JSON descriptor for AI agents, MCP tools, or remote storage.
+
+```ts
+// Schema → JSON
+const json = tableSchema.toJSON();
+// JSON.stringify(tableSchema) also works
+
+// JSON → Schema (e.g. from an AI agent)
+const reconstructed = createTableSchema.fromJSON(json);
+
+// JSON → TypeScript code
+import { schemaToTypeScript } from "@/lib/table-schema/to-typescript";
+const tsCode = schemaToTypeScript(json);
+```
+
+> Custom renderers (`display("custom", ...)`, `filter.component`, `sheet.component`) are functions and cannot be serialized. They are stripped during `toJSON()` and must be applied manually on reconstructed schemas.
+
+### Interactive Builder (`/builder`)
+
+The `/builder` page lets you visually build a table schema:
+
+1. **Paste JSON data** (or upload a CSV) in the left panel
+2. Click **Generate Schema** — the schema is auto-inferred from your data
+3. A **live table preview** appears with filters, sorting, and row details
+4. Edit the **Schema JSON** directly and click **Apply** for instant updates
+5. Click **Export TS** to copy the generated `createTableSchema(...)` code
+
+The inference engine detects column types from your data:
+
+- ISO 8601 strings / Unix-ms numbers → `timestamp` + `timerange` filter
+- Booleans → `boolean` + `checkbox` filter
+- Numbers with varying values → `number` + `slider` filter
+- Strings with ≤10 distinct values → `enum` + `checkbox` filter
+- Arrays of strings → `array` with enum items
+- Plain objects → `record` (not filterable)
+
+Post-inference heuristics apply smart defaults (ID-like → code display, latency → "ms" unit, log level → `defaultOpen`, etc.).
+
+Example datasets (Pokemon, HTTP Logs, Space Missions, Cocktails, Orders, Issues, Movies, RPG Characters) are included to explore different configurations.
+
+---
 
 ## BYOS (Bring Your Own Store)
 
-BYOS is an adapter pattern that allows you to use any state management solution for your data-table filters. Instead of being locked into a specific library, you can use **nuqs** (URL-based), **Zustand** (client-side), or create your own custom adapter.
-
-### Why BYOS?
-
-- **Flexibility**: Use the state management you're already using in your app
-- **SPAs without URL routing**: Not every app needs filter state in the URL
-- **Single source of truth**: Schema defines types, defaults, and serialization in one place
-- **Type safety**: Full TypeScript inference from your schema
+BYOS is an adapter pattern that decouples filter state management from the table components. Use **nuqs** (URL-based), **Zustand** (client-side), **memory** (ephemeral), or build your own adapter.
 
 ### Schema Definition
 
-The schema is the single source of truth for your filter fields. It defines types, default values, and serialization rules.
+The schema is the single source of truth for filter field types, defaults, and serialization.
 
 ```tsx
-// schema.ts
 import { createSchema, field } from "@/lib/store/schema";
 
 export const filterSchema = createSchema({
   // Checkbox filters (arrays of values)
   level: field.array(field.stringLiteral(["success", "warning", "error"])),
-  method: field.array(field.stringLiteral(["GET", "POST", "PUT", "DELETE"])),
   status: field.array(field.number()).delimiter(","),
-  regions: field.array(field.stringLiteral(["ams", "gru", "syd", "iad"])),
+  regions: field.array(field.stringLiteral(["ams", "gru", "syd"])),
 
   // Text input filters
   host: field.string(),
-  pathname: field.string(),
 
   // Slider filters (ranges)
   latency: field.array(field.number()).delimiter("-"),
@@ -102,71 +358,46 @@ export const filterSchema = createSchema({
   // Sorting
   sort: field.sort(),
 
-  // Row selection
-  uuid: field.string(),
-
-  // Live mode toggle
+  // UI state
   live: field.boolean().default(false),
-
-  // Pagination
   size: field.number().default(40),
-  cursor: field.timestamp(),
-  direction: field.stringLiteral(["prev", "next"]).default("next"),
 });
 
-// Infer TypeScript types automatically
 export type FilterState = typeof filterSchema._type;
 ```
 
 ### Field Types
 
-The field builders provide a fluent API for defining filter field types with serialization.
-
 ```ts
-/**
- * Primitive types - return null as default
- */
-field.string();    // string | null - Basic string field
-field.number();    // number | null - Integer field (uses parseInt)
-field.boolean();   // boolean | null - Parses "true"/"false" strings
-field.timestamp(); // Date | null - Serializes as milliseconds timestamp
+// Primitives (default to null)
+field.string()                              // string | null
+field.number()                              // number | null (parseInt)
+field.boolean()                             // boolean | null
+field.timestamp()                           // Date | null (serialized as ms)
 
-/**
- * Constrained types - type-safe string literals
- */
-field.stringLiteral(["a", "b", "c"]); // 'a' | 'b' | 'c' | null
-// Only parses values that exist in the literals array
+// Constrained
+field.stringLiteral(["a", "b", "c"])        // 'a' | 'b' | 'c' | null
 
-/**
- * Sorting field - special type for column sorting
- * Serializes as "columnId.asc" or "columnId.desc"
- */
-field.sort(); // { id: string; desc: boolean } | null
+// Sorting
+field.sort()                                // { id: string; desc: boolean } | null
+                                            // Serialized as "columnId.asc" / "columnId.desc"
 
-/**
- * Array field - wraps any inner field type
- * Default delimiter is "," for strings, "-" for numbers (slider ranges)
- */
-field.array(field.string());           // string[]
-field.array(field.number());           // number[] (uses "-" delimiter by default)
-field.array(field.stringLiteral([...])); // Literal[]
+// Arrays
+field.array(field.string())                 // string[]
+field.array(field.number())                 // number[]
+field.array(field.stringLiteral([...]))     // Literal[]
 
-/**
- * Modifiers (chainable) - customize defaults and serialization
- */
-field
-  .array(field.string())
-  .default(["default"]) // Set default value (used on reset)
-  .delimiter(",");      // Set URL serialization delimiter
+// Modifiers (chainable)
+field.array(field.string())
+  .default(["default"])                     // Default value on reset
+  .delimiter(",")                           // URL serialization separator
 ```
 
 ### Adapters
 
-Adapters connect your schema to a state management solution. We provide two official adapters:
-
 #### nuqs Adapter (URL-based)
 
-The nuqs adapter syncs filter state to URL search params, enabling shareable URLs and browser history support.
+Syncs filter state to URL search params. Enables shareable URLs and browser history.
 
 ```tsx
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
@@ -174,7 +405,6 @@ import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 function Client() {
   const adapter = useNuqsAdapter(filterSchema.definition, {
     id: "my-table",
-    // Optional nuqs options:
     shallow: true, // Don't trigger navigation
     history: "push", // "push" | "replace"
     throttleMs: 50, // Throttle URL updates
@@ -188,29 +418,26 @@ function Client() {
 }
 ```
 
-For server-side parsing (in `page.tsx` or API routes):
+For server-side parsing:
 
 ```tsx
-// search-params.ts
 import { createNuqsSearchParams } from "@/lib/store/adapters/nuqs/server";
 
 export const { searchParamsParser, searchParamsCache, searchParamsSerializer } =
   createNuqsSearchParams(filterSchema.definition);
 
-// page.tsx
+// In page.tsx
 export default async function Page({ searchParams }) {
   const search = await searchParamsCache.parse(searchParams);
-  // Use search for server-side data fetching...
+  // Use for server-side data fetching or prefetching...
 }
 ```
 
 #### Zustand Adapter (Client-side)
 
-The Zustand adapter integrates with existing Zustand stores, keeping filter state client-side only.
+Integrates with existing Zustand stores.
 
 ```tsx
-// store.ts
-// client.tsx
 import {
   createFilterSlice,
   useZustandAdapter,
@@ -218,7 +445,6 @@ import {
 import { create } from "zustand";
 
 export const useFilterStore = create<Record<string, unknown>>((set, get) => ({
-  // Your existing store state...
   ...createFilterSlice(filterSchema.definition, "my-table", set, get),
 }));
 
@@ -235,102 +461,34 @@ function Client() {
 }
 ```
 
-#### Switching Adapters
+#### Memory Adapter (Ephemeral)
 
-The `/infinite` route demonstrates switching between adapters at runtime using a cookie:
+Lightweight in-memory state. No URL sync, no external store. Useful for embedded tables or the builder.
 
 ```tsx
-// page.tsx
-import { ADAPTER_COOKIE_NAME } from "@/lib/constants/cookies";
+import { useMemoryAdapter } from "@/lib/store/adapters/memory";
 
-export default async function Page() {
-  const cookieStore = await cookies();
-  const adapterType = cookieStore.get(ADAPTER_COOKIE_NAME)?.value || "nuqs";
-
-  return <Client defaultAdapterType={adapterType} />;
-}
-
-// client.tsx
-export function Client({ defaultAdapterType }) {
-  return defaultAdapterType === "nuqs" ? <NuqsClient /> : <ZustandClient />;
-}
+const adapter = useMemoryAdapter(filterSchema.definition);
 ```
 
 #### Custom Adapters
 
-You can create custom adapters by implementing the `StoreAdapter` interface. This is useful for integrating with other state management libraries or custom storage solutions.
+Implement the `StoreAdapter` interface:
 
 ```ts
-/**
- * Store adapter interface that all adapters must implement.
- * Designed to be compatible with React 18's useSyncExternalStore.
- */
 interface StoreAdapter<T extends Record<string, unknown>> {
-  /**
-   * Subscribe to state changes.
-   * Compatible with useSyncExternalStore's subscribe parameter.
-   *
-   * @param listener - Callback to invoke when state changes
-   * @returns Unsubscribe function
-   */
   subscribe(listener: () => void): () => void;
-
-  /**
-   * Get the current state snapshot.
-   * Compatible with useSyncExternalStore's getSnapshot parameter.
-   *
-   * @returns Current state snapshot with version
-   */
   getSnapshot(): { state: T; version: number };
-
-  /**
-   * Get the server-side state snapshot (for SSR).
-   * Only implemented by URL-based adapters.
-   */
   getServerSnapshot?(): { state: T; version: number };
-
-  /**
-   * Update state with partial values.
-   * Must use immutable updates (new references for changed values).
-   */
   setState(partial: Partial<T>): void;
-
-  /**
-   * Update a single field value.
-   */
   setField<K extends keyof T>(key: K, value: T[K]): void;
-
-  /**
-   * Reset state to defaults.
-   * @param fields - Optional array of fields to reset. If omitted, resets all.
-   */
   reset(fields?: (keyof T)[]): void;
-
-  /**
-   * Pause state updates (for live mode).
-   * While paused, setState calls are queued.
-   */
   pause(): void;
-
-  /**
-   * Resume state updates.
-   * Applies any queued state changes.
-   */
   resume(): void;
-
-  /** Check if updates are paused. */
   isPaused(): boolean;
-
-  /** Cleanup resources when adapter is destroyed. */
   destroy(): void;
-
-  /** Get the unique table ID for this adapter. */
   getTableId(): string;
-
-  /** Get the schema definition used by this adapter. */
   getSchema(): SchemaDefinition;
-
-  /** Get the default values from the schema. */
   getDefaults(): T;
 }
 ```
@@ -347,157 +505,172 @@ Wraps your components with the adapter context:
 
 #### useFilterState
 
-Read filter state from the adapter. Uses `useSyncExternalStore` for optimal React 18+ compatibility.
+Read filter state. Uses `useSyncExternalStore` for optimal React 18+ compatibility.
 
 ```tsx
-/**
- * Hook to read filter state from the adapter
- *
- * @example
- * // Read entire state
- * const state = useFilterState<FilterState>();
- *
- * // Read with selector (for performance - only re-renders when selected value changes)
- * const regions = useFilterState<FilterState, string[]>((s) => s.regions);
- */
-
 // Read entire state
 const state = useFilterState<FilterState>();
 
-// Read with selector (better performance - only re-renders when selected value changes)
+// Read with selector (only re-renders when selected value changes)
 const live = useFilterState<FilterState, boolean>((s) => s.live);
 const regions = useFilterState<FilterState, string[]>((s) => s.regions);
 ```
 
 #### useFilterActions
 
-Get actions to modify filter state.
+Modify filter state.
 
 ```tsx
-/**
- * Actions returned by useFilterActions
- */
-interface FilterActions<T> {
-  /** Set a single filter field value */
-  setFilter: <K extends keyof T>(key: K, value: T[K]) => void;
+const {
+  setFilter, // Set a single field
+  setFilters, // Set multiple fields at once
+  resetFilter, // Reset a single field to default
+  resetAllFilters, // Reset all filters
+  pause, // Pause state updates (for live mode)
+  resume, // Resume and apply queued changes
+  isPaused, // Check if paused
+} = useFilterActions<FilterState>();
 
-  /** Set multiple filter fields at once */
-  setFilters: (partial: Partial<T>) => void;
-
-  /** Reset a single filter field to its default value */
-  resetFilter: (key: keyof T) => void;
-
-  /** Reset all filters to default values */
-  resetAllFilters: () => void;
-
-  /** Pause state updates (for live mode) */
-  pause: () => void;
-
-  /** Resume state updates */
-  resume: () => void;
-
-  /** Check if updates are paused */
-  isPaused: () => boolean;
-}
-
-// Usage
-const { setFilter, setFilters, resetFilter, resetAllFilters } =
-  useFilterActions<FilterState>();
-
-// Set single field
 setFilter("regions", ["ams", "gru"]);
-
-// Set multiple fields at once
 setFilters({ regions: ["ams"], host: "api.example.com" });
-
-// Reset single field to default
 resetFilter("regions");
-
-// Reset all filters to defaults
 resetAllFilters();
+```
+
+#### useReactTableSync
+
+Bidirectional sync between BYOS filter state and React Table's `columnFilters`. Useful when you need React Table's internal filtering to stay in sync with adapter state.
+
+```tsx
+import { useReactTableSync } from "@/lib/store";
+
+const table = useReactTable({ ... });
+
+useReactTableSync({
+  table,
+  filterFields,
+});
 ```
 
 #### useFilterField
 
-Hook for working with a single filter field. Combines read and write operations.
+Work with a single field. Combines read and write.
 
 ```tsx
-/**
- * Return type for useFilterField
- */
-interface FilterFieldResult<T> {
-  /** Current value of the field */
-  value: T;
-
-  /** Set the field value */
-  setValue: (value: T) => void;
-
-  /** Reset the field to its default value */
-  reset: () => void;
-}
-
-// Usage
 const { value, setValue, reset } = useFilterField<FilterState, "regions">(
   "regions",
 );
 
-// Read value
-console.log(value); // ['ams', 'gru']
-
-// Update value
 setValue(["ams", "gru", "fra"]);
-
-// Reset to default
-reset();
+reset(); // Back to default
 ```
 
-### Data Fetching Pattern
+---
 
-The recommended pattern for data fetching with BYOS:
+## Components
+
+### DataTableInfinite
+
+The main infinite scroll table component. Located at `src/app/infinite/data-table-infinite.tsx`.
 
 ```tsx
-function DataTableContent() {
-  // Read full state for data fetching
-  const search = useFilterState<FilterState>();
+<DataTableInfinite
+  columns={columns}
+  data={flatData}
+  totalRows={totalDBRowCount}
+  filterRows={filterDBRowCount}
+  totalRowsFetched={totalFetched}
+  defaultColumnFilters={defaultColumnFilters}
+  defaultColumnSorting={sort ? [sort] : undefined}
+  defaultColumnVisibility={defaultColumnVisibility}
+  filterFields={filterFields}
+  sheetFields={sheetFields}
+  schema={filterSchema.definition}
+  meta={metadata}
+  isFetching={isFetching}
+  isLoading={isLoading}
+  fetchNextPage={fetchNextPage}
+  hasNextPage={hasNextPage}
+  fetchPreviousPage={fetchPreviousPage}
+  refetch={refetch}
+  renderSheetTitle={(props) => props.row?.original.pathname}
+  getRowId={(row) => row.uuid}
+  chartData={chartData}
+  chartDataColumnId="date"
+/>
+```
 
-  const { data, isFetching, fetchNextPage, hasNextPage } = useInfiniteQuery(
-    dataOptions(search),
-  );
+### DataTableFilterControls
 
-  // Destructure for defaultColumnFilters (exclude non-filter fields)
-  const { sort, cursor, direction, uuid, live, size, ...filter } = search;
+The left sidebar with accordion-based filter controls. Renders the appropriate UI component for each filter type:
 
-  const defaultColumnFilters = useMemo(() => {
-    return Object.entries(filter)
-      .map(([key, value]) => ({ id: key, value }))
-      .filter(({ value }) => {
-        if (value === null || value === undefined) return false;
-        if (Array.isArray(value) && value.length === 0) return false;
-        return true;
-      });
-  }, [filter]);
+- **Checkbox** — multi-select with search and count display
+- **Slider** — dual min/max range inputs
+- **Input** — text search with debounce
+- **Timerange** — date range picker with preset shortcuts
 
-  return (
-    <DataTableInfinite
-      data={data}
-      defaultColumnFilters={defaultColumnFilters}
-      defaultColumnSorting={sort ? [sort] : undefined}
-      schema={filterSchema.definition}
-      // ... other props
-    />
-  );
+Toggle with `Cmd+B`. For responsive layouts, `DataTableFilterControlsDrawer` provides a mobile-friendly drawer alternative.
+
+### DataTableFilterCommand
+
+The command palette for text-based filtering. Opens with `Cmd+K`.
+
+Supports filter syntax:
+
+- Union: `regions:ams,gru`
+- Range: `latency:100-500`
+- Quoted: `host:"api.example.com"`
+- Free text search across all input fields
+
+```tsx
+<DataTableFilterCommand schema={filterSchema.definition} tableId="my-table" />
+```
+
+### DataTableSheetDetails
+
+Row detail drawer. Opens when a row is selected. Supports keyboard navigation between rows.
+
+```tsx
+<DataTableSheetDetails
+  title={<>{row?.original.pathname}</>}
+  titleClassName="font-mono"
+>
+  <DataTableSheetContent fields={sheetFields} />
+</DataTableSheetDetails>
+```
+
+### Cell Components
+
+Built-in cell renderers (used automatically by `generateColumns`):
+
+- `DataTableCellText` — plain text with overflow tooltip
+- `DataTableCellCode` — monospace
+- `DataTableCellNumber` — formatted with optional unit
+- `DataTableCellTimestamp` — relative time with absolute tooltip
+- `DataTableCellBadge` — colored chip
+- `DataTableCellBoolean` — checkmark / dash
+- `DataTableCellStatusCode` — HTTP status styling
+- `DataTableCellLevelIndicator` — severity dot
+
+All support an optional `colorMap` for value-based coloring.
+
+### Filter Functions
+
+Register custom filter functions on your table:
+
+```ts
+import { inDateRange, arrSome } from "@/lib/table/filterfns";
+
+// In your table config
+filterFns: {
+  inDateRange, arrSome;
 }
 ```
 
-## Table
+- `inDateRange` — matches dates within [start, end] range
+- `arrSome` — matches if row value is in the filter array
 
-### Table Columns
-
-The `columns.tsx` file is the source of truth for table columns. If you're familiar with shadcn, you should feel right at home. Check out the shadcn/ui [docs](https://ui.shadcn.com/docs/components/data-table) for more information.
-
-#### Extending Tanstack Table Types
-
-We extend the meta types mainly for _styling_ and _filter functions_:
+### Extending TanStack Table Types
 
 ```tsx
 import "@tanstack/react-table";
@@ -520,276 +693,312 @@ declare module "@tanstack/react-table" {
 }
 ```
 
-### Table Rows
+---
 
-For performance with large datasets, rows are memoized with custom dependencies:
+## Data Fetching
+
+### API Response Shape
+
+Your API should return:
+
+```ts
+{
+  data: ColumnSchema[];
+  meta: {
+    totalRowCount: number;
+    filterRowCount: number;
+    chartData: BaseChartSchema[];
+    facets: Record<string, FacetMetadataSchema>;
+    metadata?: TMeta;
+  };
+  nextCursor: number | null;   // Timestamp of last item
+  prevCursor: number | null;   // Timestamp of first item (for live mode)
+}
+```
+
+We use [`superjson`](https://github.com/flightcontrolhq/superjson) to serialize `Date` objects and other non-JSON-safe values.
+
+### useInfiniteQuery Pattern
 
 ```tsx
-const MemoizedRow = React.memo(
-  Row,
-  (prev, next) =>
-    prev.row.id === next.row.id &&
-    prev.selected === next.selected &&
-    prev.visibleColumnIds === next.visibleColumnIds &&
-    prev.columnOrder === next.columnOrder,
-) as typeof Row;
+function DataTableContent() {
+  const search = useFilterState<FilterState>();
 
-function Row({ row, selected, visibleColumnIds, columnOrder }) {
-  // Force re-render when live mode changes (for opacity styling)
-  useFilterState((s) => s.live);
+  const { data, isFetching, fetchNextPage, hasNextPage } = useInfiniteQuery(
+    dataOptions(search),
+  );
 
-  return <TableRow /* ... */ />;
+  const flatData = React.useMemo(
+    () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
+    [data?.pages],
+  );
+
+  // Derive defaultColumnFilters from state (exclude non-filter fields)
+  const { sort, cursor, direction, uuid, live, size, ...filter } = search;
+
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({ id: key, value }))
+      .filter(({ value }) => {
+        if (value === null || value === undefined) return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        return true;
+      });
+  }, [filter]);
+
+  return (
+    <DataTableInfinite
+      data={flatData}
+      defaultColumnFilters={defaultColumnFilters}
+      defaultColumnSorting={sort ? [sort] : undefined}
+      // ...
+    />
+  );
 }
 ```
 
-The row re-renders only when:
+### Server Prefetch
 
-- The row `id` changes
-- The `selected` state changes
-- Visible columns change
-- Column order changes
-- Live mode toggles (via the `useFilterState` hook)
+Server-side prefetching with React Query's `HydrationBoundary`:
 
-> At a certain point, consider adding `@tanstack/react-virtual` for virtualization.
+```tsx
+// page.tsx
+import { getQueryClient } from "@/providers/get-query-client";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 
-## Filters
+export default async function Page({ searchParams }) {
+  const search = await searchParamsCache.parse(searchParams);
+  const queryClient = getQueryClient();
+  await queryClient.prefetchInfiniteQuery(dataOptions(search));
 
-### filterFields
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Client />
+    </HydrationBoundary>
+  );
+}
+```
 
-The `filterFields` array in `constants.tsx` defines the left sidebar controls and cmdk input items.
+---
 
-Supported types: `input`, `checkbox`, `slider`, `timerange`
+## Faceted Values
 
-All types extend the `Base` type:
+Server-side faceted values provide accurate counts and ranges for filter options. The API returns them in `meta.facets`:
 
 ```ts
-export type Base<TData> = {
-  /** Display label for the filter */
-  label: string;
-
-  /** Key in TData that this filter controls */
-  value: keyof TData;
-
-  /**
-   * Defines if the accordion in the filter bar is open by default
-   */
-  defaultOpen?: boolean;
-
-  /**
-   * Defines if the command input is disabled for this field.
-   * Use this for fields that shouldn't be searchable via ⌘K.
-   */
-  commandDisabled?: boolean;
+type FacetMetadataSchema = {
+  rows: Array<{ value: any; total: number }>;
+  total: number;
+  min?: number;
+  max?: number;
 };
 ```
 
-#### Option Type
+Inject them into your filter fields at runtime:
 
-All filter types use the `Option` type for their selectable values:
+```tsx
+const dynamicFilterFields = React.useMemo(() => {
+  return filterFields.map((field) => {
+    const facetsField = facets?.[field.value as string];
+    if (!facetsField) return field;
+    if (field.options && field.options.length > 0) return field;
 
-```ts
-export type Option = {
-  label: string;
-  value: string | boolean | number | undefined;
-};
-```
+    const options = facetsField.rows.map(({ value }) => ({
+      label: `${value}`,
+      value,
+    }));
 
-#### Input
+    if (field.type === "slider") {
+      return {
+        ...field,
+        min: facetsField.min ?? field.min,
+        max: facetsField.max ?? field.max,
+        options,
+      };
+    }
 
-Text input filter with optional autocomplete suggestions.
-
-```ts
-export type Input = {
-  type: "input";
-  /** Optional suggestions for autocomplete */
-  options?: Option[];
-};
-```
-
-#### Checkbox
-
-Multi-select checkbox filter. The most common filter type.
-
-```ts
-export type Checkbox = {
-  type: "checkbox";
-  /** Custom component to render each option (e.g., status badge, region flag) */
-  component?: (props: Option) => JSX.Element | null;
-  /** Available options to select from */
-  options?: Option[];
-};
-```
-
-#### Slider
-
-Range slider filter for numeric values (e.g., latency, price).
-
-```ts
-export type Slider = {
-  type: "slider";
-  /** Minimum value */
-  min: number;
-  /** Maximum value */
-  max: number;
-  /**
-   * If options is undefined, all steps between min and max are provided.
-   * Use options to define specific steps.
-   */
-  options?: Option[];
-};
-```
-
-#### Timerange
-
-Date range picker with optional preset shortcuts.
-
-```ts
-export type Timerange = {
-  type: "timerange";
-  options?: Option[];
-  /** Quick select presets like "Last 24 hours", "Last 7 days" */
-  presets?: DatePreset[];
-};
-
-export type DatePreset = {
-  /** Display label (e.g., "Last 24 hours") */
-  label: string;
-  /** Start date of the range */
-  from: Date;
-  /** End date of the range */
-  to: Date;
-  /** Keyboard shortcut key (shown in UI) */
-  shortcut: string;
-};
-```
-
-## Details Sheet
-
-The `sheetFields` array defines the components inside the `Sheet` component when a row is selected.
-
-```ts
-export type SheetField<TData, TMeta = Record<string, unknown>> = {
-  /** Key in TData to display */
-  id: keyof TData;
-
-  /** Label shown above the field */
-  label: string;
-
-  /**
-   * Field type:
-   * - "readonly": Display only (e.g., uuid to copy)
-   * - "input": Text input for editing
-   * - "checkbox": Multi-select
-   * - "slider": Range slider
-   * - "timerange": Date picker
-   */
-  type: "readonly" | "input" | "checkbox" | "slider" | "timerange";
-
-  /**
-   * Custom component to render the field value.
-   * Receives the full row data plus optional metadata (totalRows, filterRows, etc.)
-   */
-  component?: (
-    props: TData & {
-      metadata?: {
-        totalRows: number;
-        filterRows: number;
-        totalRowsFetched: number;
-      } & TMeta;
-    },
-  ) => JSX.Element | null | string;
-
-  /** Conditionally show/hide this field based on row data */
-  condition?: (props: TData) => boolean;
-
-  /** Additional CSS classes for the field container */
-  className?: string;
-
-  /** CSS classes for the loading skeleton */
-  skeletonClassName?: string;
-};
-```
-
-## API
-
-We use `@tanstack/react-query` and `useInfiniteQuery` for data fetching.
-
-Your API must return:
-
-```ts
-export async function GET(req: Request) {
-  return Response.json({
-    data: ColumnSchema[],
-    meta: {
-      totalRowCount: number,
-      filterRowCount: number,
-      chartData: BaseChartSchema[],
-      facets: Record<string, FacetMetadataSchema>,
-      metadata?: TMeta,
-    },
-    nextCursor: number | null,  // timestamp of last item
-    prevCursor: number | null,  // timestamp of first item (for live mode)
+    return { ...field, options };
   });
-}
+}, [facets]);
 ```
 
-We use [`superjson`](https://github.com/flightcontrolhq/superjson) to serialize/deserialize `Date` objects and other non-serializable values.
+---
 
-## More
+## Timeline Chart
 
-### Timeline Chart
-
-The timeline chart visualizes data over time using shadcn components:
+The timeline chart visualizes data distribution over time as a stacked bar chart.
 
 ```ts
 type BaseChartSchema = {
-  timestamp: number;
-  [key: string]: number; // expects "success", "warning", "error"
+  timestamp: number; // UNIX ms
+  [key: string]: number; // Level counts, e.g. "success", "warning", "error"
 };
 ```
 
-### Live Mode
+Pass chart data via the `chartData` and `chartDataColumnId` props on `DataTableInfinite`. Selecting a range on the chart sets the corresponding date filter.
 
-Live mode fetches new data every 5 seconds using `fetchPreviousPage` from `useInfiniteQuery`.
+---
 
-The `live` field in the schema controls this behavior. When enabled, new data is prepended to the beginning of the data array.
+## Live Mode
 
-### Server Prefetch & Configuration
+Live mode polls for new data every 5 seconds using `fetchPreviousPage` from `useInfiniteQuery`. New rows are prepended to the data array.
 
-The `/infinite` route supports server-side prefetching with React Query's `HydrationBoundary`. This can be toggled via cookies.
+The `live` field in the filter schema controls this:
 
-#### Configuration Dropdown
+```ts
+live: field.boolean().default(false),
+```
 
-The configuration dropdown in the sidebar footer allows toggling:
+When live mode is active, rows older than the activation timestamp are visually dimmed.
 
-- **Adapter Type**: Switch between `nuqs` (URL) and `zustand` (client-side)
-- **Server Prefetch**: Enable/disable server-side data prefetching
+---
 
-Both settings are persisted in cookies (`data-table-adapter` and `data-table-prefetch`).
+## Keyboard Shortcuts
 
-### Keyboard Shortcuts
+- `Cmd+K` — Toggle command palette
+- `Cmd+B` — Toggle filter sidebar
+- `Cmd+U` — Reset column state (order, visibility)
+- `Cmd+J` — Toggle live mode
+- `Esc` — Reset table filters
+- `Cmd+.` — Reset element focus
 
-Available keyboard shortcuts (accessible via the Command icon in the sidebar):
+---
 
-- `⌘K` - Toggle command input
-- `⌘B` - Toggle sidebar controls
-- `⌘U` - Reset column state (order, visibility)
-- `⌘J` - Toggle live mode
-- `Esc` - Reset table filters
-- `⌘.` - Reset element focus to start
+## Full Example
+
+Putting it all together with the table schema builder:
+
+```tsx
+// table-schema.tsx
+import {
+  col,
+  createTableSchema,
+  type InferTableType,
+} from "@/lib/table-schema";
+
+const LEVELS = ["error", "warn", "info", "debug"] as const;
+const METHODS = ["GET", "POST", "DELETE"] as const;
+
+export const tableSchema = createTableSchema({
+  level: col.presets.logLevel(LEVELS),
+  date: col.presets.timestamp().label("Date").size(200).sheet(),
+  latency: col.presets
+    .duration("ms")
+    .label("Latency")
+    .sortable()
+    .size(110)
+    .sheet(),
+  status: col.presets.httpStatus().label("Status").size(60),
+  method: col.presets.httpMethod(METHODS).size(69),
+  host: col.string().label("Host").size(125).sheet(),
+});
+
+export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
+```
+
+```tsx
+// schema.ts
+import { createSchema, field } from "@/lib/store/schema";
+import { generateFilterSchema } from "@/lib/table-schema";
+import { tableSchema } from "./table-schema";
+
+export const filterSchema = createSchema({
+  ...generateFilterSchema(tableSchema.definition).definition,
+  sort: field.sort(),
+  live: field.boolean().default(false),
+  size: field.number().default(40),
+});
+
+export type FilterState = typeof filterSchema._type;
+```
+
+```tsx
+// client.tsx
+import { DataTableStoreProvider, useFilterState } from "@/lib/store";
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import {
+  generateColumns,
+  generateFilterFields,
+  generateSheetFields,
+  getDefaultColumnVisibility,
+} from "@/lib/table-schema";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import type { ColumnSchema, FilterState } from "./schema";
+import { filterSchema } from "./schema";
+import { tableSchema } from "./table-schema";
+
+const columns = generateColumns<ColumnSchema>(tableSchema.definition);
+const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
+const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
+const defaultColumnVisibility = getDefaultColumnVisibility(
+  tableSchema.definition,
+);
+
+export function Client() {
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "logs" });
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableContent />
+    </DataTableStoreProvider>
+  );
+}
+
+function DataTableContent() {
+  const search = useFilterState<FilterState>();
+  const { data, isFetching, fetchNextPage, hasNextPage, refetch } =
+    useInfiniteQuery(dataOptions(search));
+
+  const flatData = React.useMemo(
+    () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
+    [data?.pages],
+  );
+
+  const { sort, live, size, ...filter } = search;
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({ id: key, value }))
+      .filter(
+        ({ value }) =>
+          value !== null &&
+          value !== undefined &&
+          !(Array.isArray(value) && value.length === 0),
+      );
+  }, [filter]);
+
+  return (
+    <DataTableInfinite
+      columns={columns}
+      data={flatData}
+      defaultColumnFilters={defaultColumnFilters}
+      defaultColumnSorting={sort ? [sort] : undefined}
+      defaultColumnVisibility={defaultColumnVisibility}
+      filterFields={filterFields}
+      sheetFields={sheetFields}
+      schema={filterSchema.definition}
+      isFetching={isFetching}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
+      refetch={refetch}
+      renderSheetTitle={(props) => props.row?.original.host}
+      meta={{}}
+    />
+  );
+}
+```
+
+---
 
 ## Debugging
 
-We use `react-scan` for performance debugging. Enable it by setting:
+We use `react-scan` for performance debugging:
 
 ```
 # .env.local
 NEXT_PUBLIC_REACT_SCAN=true
 ```
 
-For Tanstack Query, the `ReactQueryDevtools` appear automatically in development.
-
-For Tanstack Table debug logs:
+TanStack Query devtools appear automatically in development. For table debug logs:
 
 ```
 NEXT_PUBLIC_TABLE_DEBUG=true

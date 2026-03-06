@@ -2,7 +2,6 @@ import { Link } from "@/components/custom/link";
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ArrowRight, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { default as NextLink } from "next/link";
 
@@ -457,20 +456,5 @@ function Examples() {
         </li>
       </ul>
     </div>
-  );
-}
-
-function GuideBadgeLink({ className }: { className?: string }) {
-  return (
-    <NextLink href="/guide" className={cn("group", className)}>
-      <Badge
-        variant="outline"
-        className="border-dashed border-border bg-background pr-1.5"
-      >
-        Guide{" "}
-        <ArrowRight className="relative mb-[1px] inline h-3 w-0 transition-all group-hover:w-3" />
-        <ChevronRight className="relative mb-[1px] inline h-3 w-3 transition-all group-hover:w-0" />
-      </Badge>
-    </NextLink>
   );
 }

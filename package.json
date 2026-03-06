@@ -58,6 +58,7 @@
     "react-hook-form": "^7.71.2",
     "recharts": "^2.15.0",
     "rehype-pretty-code": "^0.14.0",
+    "remark-gfm": "^4.0.1",
     "shiki": "^1.29.0",
     "sonner": "^1.7.2",
     "superjson": "^2.2.2",

@@ -35,7 +35,7 @@ const nextConfig = {
 const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [],
+    remarkPlugins: ["remark-gfm"],
     rehypePlugins: [["rehype-pretty-code", options]],
   },
 });

@@ -390,7 +390,7 @@ export function BuilderClient() {
                   id={field.name}
                   rows={7}
                   className={cn(
-                    "resize-none font-mono text-xs",
+                    "font-mono text-xs",
                     fieldState.invalid && "border-destructive",
                   )}
                   placeholder='{ "columns": [] }'

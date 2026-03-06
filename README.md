@@ -1,58 +1,68 @@
 ## About The Project
 
-This is a standalone data-table demo that we will be using within the [OpenStatus](https://openstatus.dev) dashboard.
+A **Table Schema builder**, **BYOS (Bring Your Own Store)** state management, and a set of pre-built **components** for building powerful, filterable data-tables with React.
 
 ![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
 
-Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn more.
+Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn more. Read the [Guide](https://data-table.openstatus.dev/guide) for full documentation.
 
-To make it not only more accessible for you to use, but also work on PoC/MVP with data-tables, we have started this repository. We will maintain it and add new examples over time.
+## Table Schema
 
-It currently includes two main concepts:
+Define your entire table — columns, filters, display, sorting, row details — in one place with `createTableSchema` and `col.*` factories.
 
-- [data-table with simple pagination](https://data-table.openstatus.dev/default) (client-side filtering with zustand client state)
-- [data-table with infinite scroll and click details](https://data-table.openstatus.dev/infinite) (server-side with URL state via nuqs)
+```tsx
+import {
+  col,
+  createTableSchema,
+  type InferTableType,
+} from "@/lib/table-schema";
 
-The UI is heavily inspired by datadog and vercel log tables.
+const LEVELS = ["error", "warn", "info", "debug"] as const;
 
-> [!NOTE]
-> We are working on a [Guide](https://data-table.openstatus.dev/guide) to help you get started and not wild guess anymore.
+export const tableSchema = createTableSchema({
+  level: col.presets.logLevel(LEVELS),
+  date: col.presets.timestamp().label("Date").size(200).sheet(),
+  latency: col.presets
+    .duration("ms")
+    .label("Latency")
+    .sortable()
+    .size(110)
+    .sheet(),
+  status: col.presets.httpStatus().label("Status").size(60),
+  host: col.string().label("Host").size(125).sheet(),
+});
 
-More Examples:
+export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
+```
 
-- [OpenStatus Light Viewer](https://data-table.openstatus.dev/light) (UI for [`vercel-edge-ping`](https://github.com/OpenStatusHQ/vercel-edge-ping))
+**Generators** produce everything the table components need from a single schema:
+
+```tsx
+const columns = generateColumns<ColumnSchema>(tableSchema.definition);
+const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
+const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
+```
+
+**Presets** cover common patterns: `logLevel`, `httpStatus`, `httpMethod`, `duration`, `timestamp`, `traceId`, `pathname`.
+
+## Examples
+
+- [`/default`](https://data-table.openstatus.dev/default) — client-side pagination (nuqs or zustand)
+- [`/infinite`](https://data-table.openstatus.dev/infinite) — infinite scroll with server-side filtering, live mode, row details
+- [`/light`](https://data-table.openstatus.dev/light) — OpenStatus Light Viewer (UI for [`vercel-edge-ping`](https://github.com/OpenStatusHQ/vercel-edge-ping))
+- [`/builder`](https://data-table.openstatus.dev/builder) — interactive schema builder (paste JSON/CSV, live table preview, export TS)
 
 ## BYOS (Bring Your Own Store)
 
-We support a flexible adapter pattern for state management called **BYOS** (Bring Your Own Store). This allows you to:
+A pluggable adapter pattern for filter state management. Three built-in adapters:
 
-- Use **URL-based state** with `nuqs` (default for `/infinite` and `/light` routes)
-- Use **client-side state** with `zustand` or React state (default for `/default` route)
-- Create **custom adapters** for any state management solution
+- **nuqs** — URL-based state (shareable URLs, browser history)
+- **zustand** — client-side state (existing store integration)
+- **memory** — ephemeral in-memory state (embedded tables, builder)
 
-### Quick Example
-
-```tsx
-import { createSchema, field } from "@/lib/store/schema";
-
-// Define your filter schema
-const filterSchema = createSchema({
-  regions: field
-    .array(field.stringLiteral(["ams", "gru", "syd"]))
-    .delimiter(","),
-  latency: field.array(field.number()).delimiter("-"),
-  active: field.array(field.boolean()).delimiter(","),
-});
-
-// Use with DataTableFilterCommand
-<DataTableFilterCommand schema={filterSchema.definition} />;
-```
-
-See the [Guide](https://data-table.openstatus.dev/guide) for detailed documentation on BYOS, creating custom adapters, and more.
+Or implement the `StoreAdapter` interface for a custom solution. See the [Guide](https://data-table.openstatus.dev/guide) for details.
 
 ## Built With
-
-Our stack is:
 
 - [nextjs](https://nextjs.org)
 - [tanstack-query](https://tanstack.com/query/latest)
@@ -60,15 +70,19 @@ Our stack is:
 - [shadcn/ui](https://ui.shadcn.com)
 - [cmdk](http://cmdk.paco.me)
 - [nuqs](http://nuqs.47ng.com)
+- [zustand](https://zustand.docs.pmnd.rs)
+- [zod](https://zod.dev)
+- [superjson](https://github.com/flightcontrolhq/superjson)
+- [date-fns](https://date-fns.org)
+- [recharts](https://recharts.org)
 - [dnd-kit](https://dndkit.com)
-
-We will consider making an example with [vitejs](https://vitejs.dev) for all our raw react lovers. **Contributions are welcome!**
 
 ## Getting Started
 
-No environment variable required. Run the development server:
+No environment variable required.
 
 ```bash
+pnpm install
 pnpm dev
 ```
 
