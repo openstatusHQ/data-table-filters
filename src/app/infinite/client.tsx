@@ -19,15 +19,14 @@ import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Table as TTable } from "@tanstack/react-table";
 import * as React from "react";
-import { timingPhasesColumn } from "./_components/timing-phases-column";
 import { LiveRow } from "./_components/live-row";
+import { timingPhasesColumn } from "./_components/timing-phases-column";
 import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
 import type { ColumnSchema, FacetMetadataSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
-import type { LogsMeta } from "./query-options";
-import { tableSchema } from "./table-schema";
 import { useFilterStore } from "./store";
+import { tableSchema } from "./table-schema";
 
 // Generated from tableSchema — stable references (defined at module level to
 // avoid recreating on every render)
@@ -38,7 +37,9 @@ const columns = [
 
 const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
 const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
-const defaultColumnVisibility = getDefaultColumnVisibility(tableSchema.definition);
+const defaultColumnVisibility = getDefaultColumnVisibility(
+  tableSchema.definition,
+);
 
 export function Client({
   defaultAdapterType = "nuqs",

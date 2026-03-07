@@ -49,8 +49,8 @@ export function generateFilterFields<TData>(
             options = enumValues.map((v) => ({ label: v, value: v }));
           } else if (kind === "boolean") {
             options = [
-              { label: "Yes", value: true },
-              { label: "No", value: false },
+              { label: "true", value: true },
+              { label: "false", value: false },
             ];
           } else if (
             kind === "array" &&
@@ -69,11 +69,16 @@ export function generateFilterFields<TData>(
         break;
       }
       case "slider": {
+        const displayUnit =
+          config.display.type === "number" && "unit" in config.display
+            ? config.display.unit
+            : undefined;
         result.push({
           ...base,
           type: "slider",
           min: filter.min ?? 0,
           max: filter.max ?? 100,
+          unit: filter.unit ?? displayUnit,
         });
         break;
       }

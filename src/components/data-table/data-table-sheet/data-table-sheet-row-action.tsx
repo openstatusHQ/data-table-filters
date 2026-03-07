@@ -25,10 +25,13 @@ import { DataTableFilterField } from "../types";
 interface DataTableSheetRowActionProps<
   TData,
   TFields extends DataTableFilterField<TData>,
-> extends React.ComponentPropsWithRef<typeof DropdownMenuTrigger> {
+> extends Omit<
+    React.ComponentPropsWithRef<typeof DropdownMenuTrigger>,
+    "value"
+  > {
   fieldValue: TFields["value"];
   filterFields: TFields[];
-  value: string | number;
+  value: string | number | boolean;
   table: Table<TData>;
 }
 
@@ -104,7 +107,7 @@ export function DataTableSheetRowAction<
           </DropdownMenuGroup>
         );
       case "timerange":
-        const date = new Date(value);
+        const date = new Date(value as string | number);
         return (
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => column?.setFilterValue([date])}>

@@ -240,15 +240,18 @@ const inter = Inter({ subsets: ['latin'] })
 ```tsx
 // For component-specific fonts, export from a shared file
 // lib/fonts.ts
-import { Inter, Playfair_Display } from 'next/font/google'
+import { Inter, Playfair_Display } from "next/font/google";
 
-export const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-export const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
+export const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+export const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+});
 
 // components/Heading.tsx
-import { playfair } from '@/lib/fonts'
+import { playfair } from "@/lib/fonts";
 
 export function Heading({ children }) {
-  return <h1 className={playfair.className}>{children}</h1>
+  return <h1 className={playfair.className}>{children}</h1>;
 }
 ```

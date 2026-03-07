@@ -11,23 +11,30 @@ import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
 import { formatMilliseconds } from "@/lib/format";
 import { getLevelColor, getLevelLabel } from "@/lib/request/level";
-import type { TimingPhase } from "@/lib/request/timing";
 import { getStatusColor } from "@/lib/request/status-code";
-import { col, createTableSchema, type InferTableType } from "@/lib/table-schema";
+import type { TimingPhase } from "@/lib/request/timing";
+import {
+  col,
+  createTableSchema,
+  type InferTableType,
+} from "@/lib/table-schema";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { PopoverPercentile } from "./_components/popover-percentile";
 import { SheetTimingPhases } from "./_components/sheet-timing-phases";
-import type { ColumnSchema } from "./schema";
 import type { LogsMeta } from "./query-options";
+import type { ColumnSchema } from "./schema";
 
 export const tableSchema = createTableSchema({
   level: col
     .enum(LEVELS)
     .label("Level")
+    .hideHeader()
     .display("custom", {
       cell: (value) => (
-        <DataTableColumnLevelIndicator value={value as (typeof LEVELS)[number]} />
+        <DataTableColumnLevelIndicator
+          value={value as (typeof LEVELS)[number]}
+        />
       ),
     })
     .filterable("checkbox", {
@@ -41,7 +48,10 @@ export const tableSchema = createTableSchema({
             </span>
             <div className="flex items-center gap-2">
               <div
-                className={cn("h-2.5 w-2.5 rounded-[2px]", getLevelColor(value).bg)}
+                className={cn(
+                  "h-2.5 w-2.5 rounded-[2px]",
+                  getLevelColor(value).bg,
+                )}
               />
               <span className="text-xs text-muted-foreground/70">
                 {getLevelLabel(value)}
@@ -68,15 +78,10 @@ export const tableSchema = createTableSchema({
       skeletonClassName: "w-36",
     }),
 
-  uuid: col
-    .string()
-    .label("Request Id")
-    .notFilterable()
-    .hidden()
-    .sheet({
-      label: "Request ID",
-      skeletonClassName: "w-64",
-    }),
+  uuid: col.string().label("Request Id").notFilterable().hidden().sheet({
+    label: "Request ID",
+    skeletonClassName: "w-64",
+  }),
 
   status: col
     .number()
@@ -121,9 +126,7 @@ export const tableSchema = createTableSchema({
     .display("text")
     .filterable("checkbox", {
       options: METHODS.map((m) => ({ label: m, value: m })),
-      component: (props) => (
-        <span className="font-mono">{props.value}</span>
-      ),
+      component: (props) => <span className="font-mono">{props.value}</span>,
     })
     .size(69)
     .sheet({
@@ -137,12 +140,14 @@ export const tableSchema = createTableSchema({
     .string()
     .label("Host")
     .size(125)
+    .resizable()
     .sheet({ skeletonClassName: "w-24" }),
 
   pathname: col
     .string()
     .label("Pathname")
     .size(130)
+    .resizable()
     .sheet({ skeletonClassName: "w-56" }),
 
   latency: col
@@ -151,7 +156,7 @@ export const tableSchema = createTableSchema({
     .display("custom", {
       cell: (value) => <DataTableColumnLatency value={value as number} />,
     })
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .sheet({
@@ -190,9 +195,7 @@ export const tableSchema = createTableSchema({
     })
     .filterable("checkbox", {
       options: REGIONS.map((r) => ({ label: r, value: r })),
-      component: (props) => (
-        <span className="font-mono">{props.value}</span>
-      ),
+      component: (props) => <span className="font-mono">{props.value}</span>,
     })
     .size(163)
     .sheet({
@@ -210,12 +213,16 @@ export const tableSchema = createTableSchema({
     .number()
     .optional()
     .label("Percentile")
-    .notFilterable()
-    .hidden()
+    .sheetOnly()
     .sheet({
       component: (props) => {
         const row = props as ColumnSchema & {
-          metadata?: { currentPercentiles: Parameters<typeof PopoverPercentile>[0]["percentiles"]; filterRows: number } & LogsMeta;
+          metadata?: {
+            currentPercentiles: Parameters<
+              typeof PopoverPercentile
+            >[0]["percentiles"];
+            filterRows: number;
+          } & LogsMeta;
         };
         return (
           <PopoverPercentile
@@ -232,7 +239,7 @@ export const tableSchema = createTableSchema({
   "timing.dns": col
     .number()
     .label("DNS")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden()
@@ -253,7 +260,7 @@ export const tableSchema = createTableSchema({
   "timing.connection": col
     .number()
     .label("Connection")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -261,7 +268,7 @@ export const tableSchema = createTableSchema({
   "timing.tls": col
     .number()
     .label("TLS")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -269,7 +276,7 @@ export const tableSchema = createTableSchema({
   "timing.ttfb": col
     .number()
     .label("TTFB")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -277,7 +284,7 @@ export const tableSchema = createTableSchema({
   "timing.transfer": col
     .number()
     .label("Transfer")
-    .filterable("slider", { min: 0, max: 5000 })
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()
     .hidden(),
@@ -285,14 +292,10 @@ export const tableSchema = createTableSchema({
   headers: col
     .record()
     .label("Headers")
-    .notFilterable()
-    .hidden()
+    .sheetOnly()
     .sheet({
       component: (props) => (
-        <KVTabs
-          data={(props as ColumnSchema).headers}
-          className="-mt-[22px]"
-        />
+        <KVTabs data={(props as ColumnSchema).headers} className="-mt-[22px]" />
       ),
       className: "flex-col items-start w-full gap-1",
     }),
@@ -301,8 +304,7 @@ export const tableSchema = createTableSchema({
     .string()
     .optional()
     .label("Message")
-    .notFilterable()
-    .hidden()
+    .sheetOnly()
     .sheet({
       condition: (props) => (props as ColumnSchema).message !== undefined,
       component: (props) => (
@@ -315,4 +317,6 @@ export const tableSchema = createTableSchema({
 });
 
 // TypeScript type inferred from schema
-export type ColumnSchemaFromTable = InferTableType<typeof tableSchema.definition>;
+export type ColumnSchemaFromTable = InferTableType<
+  typeof tableSchema.definition
+>;

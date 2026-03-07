@@ -60,6 +60,7 @@ export function replaceInputByFieldType<TData>({
         const input = prev.replace(currentWord, words.join(ARRAY_DELIMITER));
         return `${input.trim()} `;
       }
+      break;
     }
     case "slider": {
       if (currentWord.includes(SLIDER_DELIMITER)) {
@@ -68,6 +69,7 @@ export function replaceInputByFieldType<TData>({
         const input = prev.replace(currentWord, words.join(SLIDER_DELIMITER));
         return `${input.trim()} `;
       }
+      break;
     }
     case "timerange": {
       if (currentWord.includes(RANGE_DELIMITER)) {
@@ -76,35 +78,43 @@ export function replaceInputByFieldType<TData>({
         const input = prev.replace(currentWord, words.join(RANGE_DELIMITER));
         return `${input.trim()} `;
       }
-    }
-    default: {
-      // Quote the value if it contains spaces
-      const quotedValue = quoteIfNeeded(optionValue) || value;
-      const input = prev.replace(
-        currentWord,
-        `${String(field.value)}:${quotedValue}`,
-      );
-      return `${input.trim()} `;
+      break;
     }
   }
+
+  // Default: set a fresh filter value, quoting if it contains spaces
+  const quotedValue = quoteIfNeeded(optionValue) || value;
+  const input = prev.replace(
+    currentWord,
+    `${String(field.value)}:${quotedValue}`,
+  );
+  return `${input.trim()} `;
 }
 
 export function getFieldOptions<TData>({
   field,
+  facetedValue,
 }: {
   field: DataTableFilterField<TData>;
+  facetedValue?: Map<unknown, number>;
 }) {
   switch (field.type) {
     case "slider": {
-      return field.options?.length
-        ? field.options
-            .map(({ value }) => value)
-            .sort((a, b) => Number(a) - Number(b))
-            .filter(notEmpty)
-        : Array.from(
-            { length: field.max - field.min + 1 },
-            (_, i) => field.min + i,
-          ) || [];
+      if (field.options?.length) {
+        return field.options
+          .map(({ value }) => value)
+          .sort((a, b) => Number(a) - Number(b))
+          .filter(notEmpty);
+      }
+      // Use only the values that actually exist in the data to avoid
+      // generating thousands of intermediate integers (e.g. salary 58k-155k).
+      if (facetedValue?.size) {
+        return Array.from(facetedValue.keys())
+          .map(Number)
+          .filter((n) => !isNaN(n))
+          .sort((a, b) => a - b);
+      }
+      return [];
     }
     default: {
       return field.options?.map(({ value }) => value).filter(notEmpty) || [];
@@ -298,8 +308,19 @@ export function columnFiltersParserFromSchema<TData>({
           const fieldBuilder = schema[key] as FieldBuilder<unknown> | undefined;
           if (!fieldBuilder) return prev;
 
-          const parsed = fieldBuilder._config.parse(value);
+          let parsed = fieldBuilder._config.parse(value);
           if (parsed !== null) {
+            // Slider fields expect [min, max] for inNumberRange — if a single
+            // value is provided (e.g. "amount:1800"), duplicate it so the range
+            // becomes [1800, 1800] (exact match).
+            const field = filterFields?.find((f) => f.value === key);
+            if (
+              field?.type === "slider" &&
+              Array.isArray(parsed) &&
+              parsed.length === 1
+            ) {
+              parsed = [parsed[0], parsed[0]];
+            }
             prev[key] = parsed;
           }
           return prev;

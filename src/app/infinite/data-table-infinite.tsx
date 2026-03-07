@@ -95,7 +95,7 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   totalRowsFetched?: number;
   meta: TMeta;
   chartData?: BaseChartSchema[];
-  chartDataColumnId: string;
+  chartDataColumnId?: string;
   isFetching?: boolean;
   isLoading?: boolean;
   hasNextPage?: boolean;
@@ -305,6 +305,8 @@ export function DataTableInfinite<TData, TValue, TMeta>({
       columnVisibility={columnVisibility}
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
+      totalRows={totalRows}
+      filterRows={filterRows}
       getFacetedUniqueValues={getFacetedUniqueValues}
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >
@@ -373,11 +375,13 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               ]}
             />
             {/* TODO: move up to client component */}
-            <TimelineChart
-              data={chartData}
-              className="-mb-2"
-              columnId={chartDataColumnId}
-            />
+            {chartDataColumnId ? (
+              <TimelineChart
+                data={chartData}
+                className="-mb-2"
+                columnId={chartDataColumnId}
+              />
+            ) : null}
           </div>
           <div className="z-0">
             <Table
@@ -400,6 +404,14 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                       return (
                         <TableHead
                           key={header.id}
+                          style={
+                            header.column.getCanResize()
+                              ? {
+                                  width: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                  minWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                }
+                              : undefined
+                          }
                           className={cn(
                             "relative select-none truncate border-b border-border [&>.cursor-col-resize]:last:opacity-0",
                             header.column.columnDef.meta?.headerClassName,
@@ -574,6 +586,14 @@ function Row<TData>({
       {row.getVisibleCells().map((cell) => (
         <TableCell
           key={cell.id}
+          style={
+            cell.column.getCanResize()
+              ? {
+                  width: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                  maxWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                }
+              : undefined
+          }
           className={cn(
             "truncate border-b border-border",
             cell.column.columnDef.meta?.cellClassName,

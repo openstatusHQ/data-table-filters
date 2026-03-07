@@ -41,10 +41,14 @@ function createColBuilder<T, F extends FilterType = FilterType>(
         config.filter?.type ||
         "input") as FilterConfig["type"];
       const existing = config.filter;
+      const sameType = filterType === existing?.type;
       const newFilter: FilterConfig = {
         type: filterType,
         defaultOpen: existing?.defaultOpen ?? false,
         commandDisabled: existing?.commandDisabled ?? false,
+        // Preserve auto-derived options when filter type stays the same
+        // and no explicit options are provided by the caller.
+        ...(sameType && existing?.options ? { options: existing.options } : {}),
         ...(options ?? {}),
       };
       return createColBuilder<T, F>({ ...config, filter: newFilter });
@@ -74,6 +78,14 @@ function createColBuilder<T, F extends FilterType = FilterType>(
       return createColBuilder<T, F>({ ...config, hidden: true });
     },
 
+    hideHeader(): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, hideHeader: true });
+    },
+
+    resizable(): ColBuilder<T, F> {
+      return createColBuilder<T, F>({ ...config, resizable: true });
+    },
+
     size(px: number): ColBuilder<T, F> {
       return createColBuilder<T, F>({ ...config, size: px });
     },
@@ -88,6 +100,15 @@ function createColBuilder<T, F extends FilterType = FilterType>(
 
     sheet(sheetConfig?: SheetConfig): ColBuilder<T, F> {
       return createColBuilder<T, F>({ ...config, sheet: sheetConfig ?? {} });
+    },
+
+    sheetOnly(): ColBuilder<T, never> {
+      return createColBuilder<T, never>({
+        ...config,
+        hidden: true,
+        filter: null,
+        enableHiding: false,
+      });
     },
   } as ColBuilder<T, F>;
 
@@ -113,6 +134,9 @@ function string(): ColBuilder<string, "input"> {
     label: "",
     display: { type: "text" },
     hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: { type: "input", defaultOpen: false, commandDisabled: false },
     sheet: null,
@@ -140,6 +164,9 @@ function number(): ColBuilder<number, "input" | "slider" | "checkbox"> {
     label: "",
     display: { type: "number" },
     hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: { type: "input", defaultOpen: false, commandDisabled: false },
     sheet: null,
@@ -151,7 +178,7 @@ function number(): ColBuilder<number, "input" | "slider" | "checkbox"> {
  *
  * - Data type: `boolean`
  * - Default display: `"boolean"` (checkmark / dash icon)
- * - Default filter: `"checkbox"` with `Yes` / `No` options pre-wired
+ * - Default filter: `"checkbox"` with `true` / `false` options pre-wired
  * - Allowed filters: `"checkbox"`
  *
  * @example
@@ -164,14 +191,17 @@ function boolean(): ColBuilder<boolean, "checkbox"> {
     label: "",
     display: { type: "boolean" },
     hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: {
       type: "checkbox",
       defaultOpen: false,
       commandDisabled: false,
       options: [
-        { label: "Yes", value: true },
-        { label: "No", value: false },
+        { label: "true", value: true },
+        { label: "false", value: false },
       ],
     },
     sheet: null,
@@ -196,8 +226,11 @@ function timestamp(): ColBuilder<Date, "timerange"> {
     label: "",
     display: { type: "timestamp" },
     hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
-    filter: { type: "timerange", defaultOpen: false, commandDisabled: false },
+    filter: { type: "timerange", defaultOpen: false, commandDisabled: true },
     sheet: null,
   });
 }
@@ -207,19 +240,20 @@ function timestamp(): ColBuilder<Date, "timerange"> {
  *
  * - Data type: `T[number]` (union of the provided string literals)
  * - Default display: `"badge"` (colored chip)
- * - Default filter: `"checkbox"`
+ * - Default filter: `"checkbox"` with options auto-derived from `values`
  * - Allowed filters: `"checkbox"`
  *
- * Checkbox options are NOT auto-derived from `values` — provide them via
- * `.filterable("checkbox", { options: [...] })` or use `col.presets.logLevel()`
- * which handles option mapping automatically.
+ * Checkbox options are auto-derived from `values` by default. Override them via
+ * `.filterable("checkbox", { options: [...] })` when you need custom labels,
+ * icons, or a subset of values.
  *
  * @param values - `as const` array of allowed string values
  *
  * @example
+ * col.enum(LEVELS).label("Level").defaultOpen()
  * col.enum(LEVELS).label("Level").filterable("checkbox", {
- *   options: LEVELS.map(v => ({ label: v, value: v })),
- * }).defaultOpen()
+ *   options: LEVELS.map(v => ({ label: v, value: v })), // override labels
+ * })
  */
 function colEnum<T extends readonly string[]>(
   values: T,
@@ -231,8 +265,16 @@ function colEnum<T extends readonly string[]>(
     label: "",
     display: { type: "badge" },
     hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
-    filter: { type: "checkbox", defaultOpen: false, commandDisabled: false },
+    filter: {
+      type: "checkbox",
+      defaultOpen: false,
+      commandDisabled: false,
+      options: Array.from(values).map((v) => ({ label: v, value: v })),
+    },
     sheet: null,
   });
 }
@@ -254,7 +296,7 @@ function colEnum<T extends readonly string[]>(
  *   options: REGIONS.map(r => ({ label: r, value: r })),
  * })
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function array<U>(
   itemBuilder: ColBuilder<U, any>,
 ): ColBuilder<U[], "checkbox"> {
@@ -265,6 +307,9 @@ function array<U>(
     label: "",
     display: { type: "badge" },
     hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: { type: "checkbox", defaultOpen: false, commandDisabled: false },
     sheet: null,
@@ -294,6 +339,9 @@ function record(): ColBuilder<Record<string, string>, never> {
     label: "",
     display: { type: "text" },
     hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
     sortable: false,
     filter: null,
     sheet: null,

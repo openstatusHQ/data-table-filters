@@ -83,8 +83,8 @@ describe("serializeSchema", () => {
     expect(c.display).toEqual({ type: "boolean" });
     expect(c.filter?.type).toBe("checkbox");
     expect(c.filter?.options).toEqual([
-      { label: "Yes", value: true },
-      { label: "No", value: false },
+      { label: "true", value: true },
+      { label: "false", value: false },
     ]);
   });
 
@@ -171,7 +171,6 @@ describe("serializeSchema", () => {
 
   it("strips sheet.component and sheet.condition (functions) from output", () => {
     const json = serializeSchema({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       host: (col.string().label("Host") as any).sheet({
         component: () => null,
         condition: () => true,
@@ -179,6 +178,37 @@ describe("serializeSchema", () => {
     });
     expect(json.columns[0]?.sheet).not.toHaveProperty("component");
     expect(json.columns[0]?.sheet).not.toHaveProperty("condition");
+  });
+
+  it("serializes colorMap on badge display", () => {
+    const LEVELS = ["error", "warn", "info"] as const;
+    const json = serializeSchema({
+      level: col
+        .enum(LEVELS)
+        .label("Level")
+        .display("badge", {
+          colorMap: { error: "#ef4444", warn: "#f59e0b", info: "#3b82f6" },
+        }),
+    });
+    expect(json.columns[0]?.display).toEqual({
+      type: "badge",
+      colorMap: { error: "#ef4444", warn: "#f59e0b", info: "#3b82f6" },
+    });
+  });
+
+  it("serializes colorMap on text display", () => {
+    const json = serializeSchema({
+      status: col
+        .string()
+        .label("Status")
+        .display("text", {
+          colorMap: { active: "#22c55e", inactive: "#ef4444" },
+        }),
+    });
+    expect(json.columns[0]?.display).toEqual({
+      type: "text",
+      colorMap: { active: "#22c55e", inactive: "#ef4444" },
+    });
   });
 
   it("returns a columns array in insertion order", () => {
@@ -298,6 +328,37 @@ describe("deserializeSchema", () => {
     expect(roundTrip(def)).toEqual(serializeSchema(def));
   });
 
+  it("round-trips colorMap on badge display", () => {
+    const LEVELS = ["error", "warn"] as const;
+    const def = {
+      level: col
+        .enum(LEVELS)
+        .label("Level")
+        .display("badge", { colorMap: { error: "#ef4444", warn: "#f59e0b" } }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips colorMap on text display", () => {
+    const def = {
+      status: col
+        .string()
+        .label("Status")
+        .display("text", { colorMap: { active: "#22c55e" } }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips colorMap on number display with unit", () => {
+    const def = {
+      score: col
+        .number()
+        .label("Score")
+        .display("number", { unit: "pts", colorMap: { "100": "#22c55e" } }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
   it("falls back to 'badge' display for enum when JSON has display.type 'custom'", () => {
     const json: SchemaJSON = {
       columns: [
@@ -321,6 +382,20 @@ describe("deserializeSchema", () => {
     };
     const out = serializeSchema(deserializeSchema(json));
     expect(out.columns[0]?.display.type).toBe("badge");
+  });
+
+  it("round-trips a column with status-code display", () => {
+    const def = {
+      status: col.number().label("Status").display("status-code"),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips a column with level-indicator display", () => {
+    const def = {
+      level: col.string().label("Level").display("level-indicator"),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
   });
 
   it("falls back to 'text' display for string when JSON has display.type 'custom'", () => {

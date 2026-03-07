@@ -4,7 +4,9 @@ import {
   DataTableCellBadge,
   DataTableCellBoolean,
   DataTableCellCode,
+  DataTableCellLevelIndicator,
   DataTableCellNumber,
+  DataTableCellStatusCode,
   DataTableCellText,
   DataTableCellTimestamp,
 } from "@/components/data-table/data-table-cell";
@@ -30,9 +32,7 @@ function getFilterFn(config: ColConfig): string | undefined {
     case "slider":
       return "inNumberRange"; // TanStack built-in
     case "input":
-      if (kind === "string") return "includesString"; // TanStack built-in
-      if (kind === "number") return "equals"; // TanStack built-in
-      return undefined;
+      return "includesString"; // TanStack built-in; works for strings and numbers (via toString)
     case "checkbox":
       // Array columns use arrIncludesSome (checks row's array for filter values)
       if (kind === "array") return "arrIncludesSome"; // TanStack built-in
@@ -49,21 +49,88 @@ function renderCell(
   value: unknown,
   row: unknown,
 ): JSX.Element | null {
+  const fallback = <DataTableCellText value={String(value ?? "")} />;
+  const colorMap = display.colorMap;
   switch (display.type) {
-    case "text":
-      return <DataTableCellText value={value as string} />;
-    case "code":
-      return <DataTableCellCode value={value as string} />;
-    case "number":
-      return (
-        <DataTableCellNumber value={value as number} unit={display.unit} />
+    case "text": {
+      const hex = colorMap?.[String(value)];
+      return typeof value === "string" || typeof value === "number" ? (
+        <DataTableCellText value={value} color={hex} />
+      ) : (
+        fallback
       );
-    case "timestamp":
-      return <DataTableCellTimestamp date={value as Date} />;
-    case "badge":
-      return <DataTableCellBadge value={value as string} />;
-    case "boolean":
-      return <DataTableCellBoolean value={value as boolean} />;
+    }
+    case "code": {
+      const hex = colorMap?.[String(value)];
+      return typeof value === "string" || typeof value === "number" ? (
+        <DataTableCellCode value={value} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "number": {
+      const hex = colorMap?.[String(value)];
+      return typeof value === "number" ? (
+        <DataTableCellNumber value={value} unit={display.unit} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "timestamp": {
+      const hex = colorMap?.[String(value)];
+      return value instanceof Date ||
+        typeof value === "string" ||
+        typeof value === "number" ? (
+        <DataTableCellTimestamp date={value} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "badge": {
+      if (Array.isArray(value)) {
+        return (
+          <div className="flex flex-wrap gap-1">
+            {value.map((item, i) => (
+              <DataTableCellBadge
+                key={i}
+                value={item}
+                color={colorMap?.[String(item)]}
+              />
+            ))}
+          </div>
+        );
+      }
+      const hex = colorMap?.[String(value)];
+      return typeof value === "string" || typeof value === "number" ? (
+        <DataTableCellBadge value={value} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "boolean": {
+      const hex = colorMap?.[String(value)];
+      return typeof value === "boolean" ? (
+        <DataTableCellBoolean value={value} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "status-code": {
+      const hex = colorMap?.[String(value)];
+      return typeof value === "number" ? (
+        <DataTableCellStatusCode value={value} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "level-indicator": {
+      const hex = colorMap?.[String(value)];
+      return typeof value === "string" ? (
+        <DataTableCellLevelIndicator value={value} color={hex} />
+      ) : (
+        fallback
+      );
+    }
     case "custom":
       return display.cell(value, row);
   }
@@ -100,13 +167,15 @@ export function generateColumns<TData>(
     const isDotted = key.includes(".");
     const filterFn = getFilterFn(config);
 
-    const header = config.sortable
-      ? ({
-          column,
-        }: {
-          column: Parameters<typeof DataTableColumnHeader>[0]["column"];
-        }) => <DataTableColumnHeader column={column} title={config.label} />
-      : config.label;
+    const header = config.hideHeader
+      ? () => null
+      : config.sortable
+        ? ({
+            column,
+          }: {
+            column: Parameters<typeof DataTableColumnHeader>[0]["column"];
+          }) => <DataTableColumnHeader column={column} title={config.label} />
+        : config.label;
 
     const cell = ({
       getValue,
@@ -124,9 +193,14 @@ export function generateColumns<TData>(
     const base = {
       header,
       cell,
+      enableResizing: config.resizable,
+      ...(config.enableHiding === false ? { enableHiding: false } : {}),
       ...(filterFn ? { filterFn } : {}),
       ...(config.size !== undefined
-        ? { size: config.size, minSize: config.size }
+        ? {
+            size: config.size,
+            ...(config.resizable ? {} : { minSize: config.size }),
+          }
         : {}),
       meta,
     };

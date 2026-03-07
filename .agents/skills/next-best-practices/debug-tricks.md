@@ -49,6 +49,7 @@ Discover all routes by scanning filesystem:
 ```json
 { "name": "get_routes", "arguments": {} }
 
+
 // Optional: { "name": "get_routes", "arguments": { "routerType": "app" } }
 ```
 

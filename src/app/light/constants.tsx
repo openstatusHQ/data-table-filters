@@ -88,6 +88,7 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 5000,
+    unit: "ms",
     // REMINDER: will be injected by the client.tsx
     options: [{ label: "0", value: 0 }],
   },

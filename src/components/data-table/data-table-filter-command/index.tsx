@@ -30,8 +30,6 @@ import {
   replaceInputByFieldType,
 } from "./utils";
 
-// FIXME: there is an issue on cmdk if I wanna only set a single slider value...
-
 interface DataTableFilterCommandProps {
   // Schema definition for parsing/serializing filter values (BYOS)
   schema: SchemaDefinition;
@@ -262,7 +260,7 @@ export function DataTableFilterCommand({
                     getFacetedUniqueValues?.(table, field.value) ||
                     column?.getFacetedUniqueValues();
 
-                  const options = getFieldOptions({ field });
+                  const options = getFieldOptions({ field, facetedValue });
 
                   return options.map((optionValue) => {
                     return (

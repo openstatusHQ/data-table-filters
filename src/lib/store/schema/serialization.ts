@@ -136,7 +136,13 @@ export function isStateEqual<T extends Record<string, unknown>>(
     if (Array.isArray(valA) && Array.isArray(valB)) {
       if (valA.length !== valB.length) return false;
       for (let i = 0; i < valA.length; i++) {
-        if (valA[i] !== valB[i]) return false;
+        const itemA = valA[i];
+        const itemB = valB[i];
+        if (itemA instanceof Date && itemB instanceof Date) {
+          if (itemA.getTime() !== itemB.getTime()) return false;
+        } else if (itemA !== itemB) {
+          return false;
+        }
       }
       continue;
     }

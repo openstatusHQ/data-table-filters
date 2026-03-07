@@ -48,6 +48,7 @@ export const filterFields = [
     type: "slider",
     min: 0,
     max: 3000,
+    unit: "ms",
     options: data.map(({ p95 }) => ({ label: `${p95}`, value: p95 })),
     defaultOpen: true,
   },

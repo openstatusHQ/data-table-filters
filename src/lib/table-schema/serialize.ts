@@ -53,10 +53,20 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
         optional: c.optional,
         hidden: c.hidden,
         sortable: c.sortable,
-        display:
-          c.display.type === "number" && "unit" in c.display && c.display.unit
-            ? { type: "number", unit: c.display.unit }
-            : { type: c.display.type },
+        display: (() => {
+          const d: ColumnDescriptor["display"] = { type: c.display.type };
+          if (
+            c.display.type === "number" &&
+            "unit" in c.display &&
+            c.display.unit
+          ) {
+            d.unit = c.display.unit;
+          }
+          if (c.display.colorMap) {
+            d.colorMap = c.display.colorMap;
+          }
+          return d;
+        })(),
         filter: serializeFilter(c.filter),
         sheet: serializeSheet(c.sheet),
       };
@@ -71,6 +81,7 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
         };
       }
       if (c.size !== undefined) descriptor.size = c.size;
+      if (c.enableHiding === false) descriptor.enableHiding = false;
       return descriptor;
     },
   );
@@ -111,7 +122,7 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     // F is typed as `any` on the variable so we can call filterable() dynamically
     // without knowing the col kind at compile time — this is intentional since
     // deserializeSchema is a runtime operation reading from JSON.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     let builder: ColBuilder<unknown, any> =
       col_.dataType === "enum" && col_.enumValues
         ? col.enum(col_.enumValues as readonly string[])
@@ -140,16 +151,27 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
       col_.display.type === "custom"
         ? defaultDisplayType(col_.dataType)
         : col_.display.type;
-    if (displayType === "number" && col_.display.unit) {
-      builder = builder.display("number", { unit: col_.display.unit });
+    if (displayType === "number") {
+      const opts: { unit?: string; colorMap?: Record<string, string> } = {};
+      if (col_.display.unit) opts.unit = col_.display.unit;
+      if (col_.display.colorMap) opts.colorMap = col_.display.colorMap;
+      builder = builder.display(
+        "number",
+        Object.keys(opts).length > 0 ? opts : undefined,
+      );
     } else if (
       displayType === "text" ||
       displayType === "code" ||
       displayType === "boolean" ||
       displayType === "badge" ||
-      displayType === "timestamp"
+      displayType === "timestamp" ||
+      displayType === "status-code" ||
+      displayType === "level-indicator"
     ) {
-      builder = builder.display(displayType);
+      builder = builder.display(
+        displayType,
+        col_.display.colorMap ? { colorMap: col_.display.colorMap } : undefined,
+      );
     }
 
     // 4. Filter
@@ -173,7 +195,11 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     }
 
     // 5. Structural modifiers
-    if (col_.hidden) builder = builder.hidden();
+    if (col_.enableHiding === false) {
+      builder = builder.sheetOnly();
+    } else if (col_.hidden) {
+      builder = builder.hidden();
+    }
     if (col_.sortable) builder = builder.sortable();
     if (col_.optional) builder = builder.optional();
     if (col_.size !== undefined) builder = builder.size(col_.size);

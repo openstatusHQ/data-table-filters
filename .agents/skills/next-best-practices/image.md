@@ -6,11 +6,11 @@ Use `next/image` for automatic image optimization.
 
 ```tsx
 // Bad: Avoid native img
-<img src="/hero.png" alt="Hero" />
+<img src="/hero.png" alt="Hero" />;
 
 // Good: Use next/image
-import Image from 'next/image'
-<Image src="/hero.png" alt="Hero" width={800} height={400} />
+import Image from "next/image";
+<Image src="/hero.png" alt="Hero" width={800} height={400} />;
 ```
 
 ## Required Props

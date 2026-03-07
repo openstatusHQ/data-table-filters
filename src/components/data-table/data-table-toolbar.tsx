@@ -13,7 +13,6 @@ import { useHotKey } from "@/hooks/use-hot-key";
 import { formatCompactNumber } from "@/lib/format";
 import { useControls } from "@/providers/controls";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { useMemo } from "react";
 import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 import { DataTableResetButton } from "./data-table-reset-button";
 import { DataTableViewOptions } from "./data-table-view-options";
@@ -23,18 +22,16 @@ interface DataTableToolbarProps {
 }
 
 export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
-  const { table, isLoading, columnFilters } = useDataTable();
+  const { table, isLoading, columnFilters, totalRows, filterRows } =
+    useDataTable();
   const { open, setOpen } = useControls();
   useHotKey(() => setOpen((prev) => !prev), "b");
   const filters = table.getState().columnFilters;
 
-  const rows = useMemo(
-    () => ({
-      total: table.getCoreRowModel().rows.length,
-      filtered: table.getFilteredRowModel().rows.length,
-    }),
-    [isLoading, columnFilters, table],
-  );
+  const rows = {
+    total: totalRows ?? table.getCoreRowModel().rows.length,
+    filtered: filterRows ?? table.getFilteredRowModel().rows.length,
+  };
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">

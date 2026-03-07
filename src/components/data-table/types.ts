@@ -32,8 +32,9 @@ export type Slider = {
   type: "slider";
   min: number;
   max: number;
-  // if options is undefined, we will provide all the steps between min and max
+  // if options is undefined, faceted unique values from the data are used in the command
   options?: Option[];
+  unit?: string;
 };
 
 export type Timerange = {
@@ -75,6 +76,7 @@ export type SheetField<TData, TMeta = Record<string, unknown>> = {
   // REMINDER: readonly if we only want to copy the value (e.g. uuid)
   // TODO: we might have some values that are not in the data but can be computed
   type: "readonly" | "input" | "checkbox" | "slider" | "timerange";
+  display?: { type: string; unit?: string; colorMap?: Record<string, string> };
   component?: (
     // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
     props: TData & {

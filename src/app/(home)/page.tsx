@@ -2,7 +2,6 @@ import { Link } from "@/components/custom/link";
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ArrowRight, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { default as NextLink } from "next/link";
 
@@ -337,7 +336,7 @@ function Hero() {
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <p className="max-w-[750px] text-lg text-muted-foreground">
+        <h2 className="max-w-[750px] text-lg text-muted-foreground">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
@@ -356,10 +355,11 @@ function Hero() {
             GitHub
           </Link>
           .
-        </p>
-        <p className="text-lg text-muted-foreground">
-          Learn more in the <Link href="/guide">Guide</Link>. Extendable with
-          BYOS (Bring Your Own Store).
+        </h2>
+        <p className="max-w-[740px] text-lg text-muted-foreground">
+          Learn more in the <Link href="/guide">Guide</Link>. Plug in any state
+          manager with BYOS (Bring Your Own Store). Try the{" "}
+          <Link href="/builder">Builder</Link> to generate your schema.
         </p>
       </div>
       <NextLink
@@ -452,22 +452,10 @@ function Examples() {
         <li>
           <Link href="/light">OpenStatus Light Viewer</Link>
         </li>
+        <li>
+          <Link href="/builder">Table Builder</Link>
+        </li>
       </ul>
     </div>
-  );
-}
-
-function GuideBadgeLink({ className }: { className?: string }) {
-  return (
-    <NextLink href="/guide" className={cn("group", className)}>
-      <Badge
-        variant="outline"
-        className="border-dashed border-border bg-background pr-1.5"
-      >
-        Guide{" "}
-        <ArrowRight className="relative mb-[1px] inline h-3 w-0 transition-all group-hover:w-3" />
-        <ChevronRight className="relative mb-[1px] inline h-3 w-3 transition-all group-hover:w-0" />
-      </Badge>
-    </NextLink>
   );
 }

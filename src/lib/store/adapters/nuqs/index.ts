@@ -8,7 +8,7 @@
 "use client";
 
 import { useQueryStates, type ParserBuilder } from "nuqs";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { InternalStoreAdapter } from "../../adapter/types";
 import { getSchemaDefaults, validateState } from "../../schema/serialization";
 import type { SchemaDefinition, StoreSnapshot } from "../../schema/types";
@@ -77,21 +77,21 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
     version: 0,
   });
 
-  // Sync nuqs state to our state ref synchronously (needed for first render)
-  const validated = validateState(schema, nuqsState) as T;
-  const currentState = { ...defaults, ...initialState, ...validated };
-  if (stateRef.current !== currentState) {
-    stateRef.current = currentState;
-  }
-
-  // Also update via effect to trigger listeners on subsequent changes
-  useEffect(() => {
+  // Compute merged state once per render so validateState isn't called twice
+  const currentState = useMemo(() => {
     const validated = validateState(schema, nuqsState) as T;
-    const merged = { ...defaults, ...initialState, ...validated };
-    stateRef.current = merged;
+    return { ...defaults, ...initialState, ...validated } as T;
+  }, [nuqsState, schema, defaults, initialState]);
+
+  // Sync ref synchronously so getSnapshot() is always current during this render
+  stateRef.current = currentState;
+
+  // Notify listeners when state changes
+  useEffect(() => {
+    stateRef.current = currentState;
     versionRef.current++;
     listenersRef.current.forEach((listener) => listener());
-  }, [nuqsState, schema, defaults, initialState]);
+  }, [currentState]);
 
   // Create stable adapter reference
   const adapter = useMemo<InternalStoreAdapter<T>>(() => {

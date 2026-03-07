@@ -14,15 +14,18 @@ export type ColKind =
 export type FilterType = "input" | "checkbox" | "slider" | "timerange";
 
 export type DisplayConfig =
-  | { type: "text" }
-  | { type: "code" }
-  | { type: "boolean" }
-  | { type: "badge" }
-  | { type: "timestamp" }
-  | { type: "number"; unit?: string }
+  | { type: "text"; colorMap?: Record<string, string> }
+  | { type: "code"; colorMap?: Record<string, string> }
+  | { type: "boolean"; colorMap?: Record<string, string> }
+  | { type: "badge"; colorMap?: Record<string, string> }
+  | { type: "timestamp"; colorMap?: Record<string, string> }
+  | { type: "number"; unit?: string; colorMap?: Record<string, string> }
+  | { type: "status-code"; colorMap?: Record<string, string> }
+  | { type: "level-indicator"; colorMap?: Record<string, string> }
   | {
       type: "custom";
       cell: (value: unknown, row: unknown) => JSX.Element | null;
+      colorMap?: Record<string, string>;
     };
 
 export type FilterConfig = {
@@ -33,6 +36,7 @@ export type FilterConfig = {
   component?: (props: Option) => JSX.Element | null;
   min?: number;
   max?: number;
+  unit?: string;
   presets?: DatePreset[];
 };
 
@@ -54,6 +58,9 @@ export type ColConfig = {
   display: DisplayConfig;
   size?: number;
   hidden: boolean;
+  enableHiding: boolean;
+  hideHeader: boolean;
+  resizable: boolean;
   sortable: boolean;
   filter: FilterConfig | null;
   sheet: SheetConfig | null;
@@ -120,12 +127,26 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * col.enum(LEVELS).display("custom", { cell: (value) => <LevelBadge value={value} /> })
    */
   display(
-    type: "text" | "code" | "boolean" | "badge" | "timestamp",
+    type:
+      | "text"
+      | "code"
+      | "boolean"
+      | "badge"
+      | "timestamp"
+      | "status-code"
+      | "level-indicator",
+    options?: { colorMap?: Record<string, string> },
   ): ColBuilder<T, F>;
-  display(type: "number", options?: { unit?: string }): ColBuilder<T, F>;
+  display(
+    type: "number",
+    options?: { unit?: string; colorMap?: Record<string, string> },
+  ): ColBuilder<T, F>;
   display(
     type: "custom",
-    options: { cell: (value: unknown, row: unknown) => JSX.Element | null },
+    options: {
+      cell: (value: unknown, row: unknown) => JSX.Element | null;
+      colorMap?: Record<string, string>;
+    },
   ): ColBuilder<T, F>;
 
   /**
@@ -151,7 +172,11 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * col.enum(LEVELS).filterable("checkbox", { options: LEVELS.map(v => ({ label: v, value: v })) })
    * col.number().filterable("slider", { min: 0, max: 5000 })
    */
-  filterable(type: F & ("input" | "timerange")): ColBuilder<T, F>;
+  filterable(type: F & "input"): ColBuilder<T, F>;
+  filterable(
+    type: F & "timerange",
+    options?: { presets?: DatePreset[] },
+  ): ColBuilder<T, F>;
   filterable(
     type: F & "checkbox",
     options?: {
@@ -161,7 +186,7 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
   ): ColBuilder<T, F>;
   filterable(
     type: F & "slider",
-    options: { min: number; max: number },
+    options: { min: number; max: number; unit?: string },
   ): ColBuilder<T, F>;
 
   /**
@@ -209,9 +234,31 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
   hidden(): ColBuilder<T, F>;
 
   /**
+   * Hides the column header label in the table while keeping the column visible.
+   *
+   * The label is still used in the filter sidebar and other UI elements.
+   *
+   * @example
+   * col.enum(LEVELS).label("Level").hideHeader()
+   */
+  hideHeader(): ColBuilder<T, F>;
+
+  /**
+   * Enables column resizing via a drag handle in the header.
+   *
+   * Without this, `size` locks the column to a fixed width (`minSize === size`).
+   * With this, the column can be freely resized; `size` becomes the initial width only.
+   *
+   * @example
+   * col.string().label("Host").size(125).resizable()
+   */
+  resizable(): ColBuilder<T, F>;
+
+  /**
    * Sets a fixed column width in pixels.
    *
-   * Both `size` and `minSize` are set to this value, preventing resizing below it.
+   * Without `.resizable()`, both `size` and `minSize` are set to this value.
+   * With `.resizable()`, only `size` is set (initial width), allowing free resizing.
    *
    * @example
    * col.enum(LEVELS).label("Level").size(27)
@@ -258,14 +305,24 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * })
    */
   sheet(config?: SheetConfig): ColBuilder<T, F>;
+
+  /**
+   * Marks the column as sheet-only: hidden, not filterable, and excluded
+   * from the column visibility dropdown (`enableHiding: false`).
+   *
+   * Convenience for `.hidden().notFilterable()` + `enableHiding: false`.
+   *
+   * @example
+   * col.record().label("Headers").sheetOnly().sheet({ ... })
+   * col.string().optional().label("Message").sheetOnly().sheet({ ... })
+   */
+  sheetOnly(): ColBuilder<T, never>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TableSchemaDefinition = Record<string, ColBuilder<unknown, any>>;
 
 // Infer the data row type from a table schema definition
 export type InferTableType<T extends TableSchemaDefinition> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [K in keyof T]: T[K] extends ColBuilder<infer U, any> ? U : never;
 };
 
@@ -295,10 +352,11 @@ export type ColumnDescriptor = {
   arrayItemType?: { dataType: ColKind; enumValues?: readonly string[] };
   optional: boolean;
   hidden: boolean;
+  enableHiding?: boolean;
   sortable: boolean;
   size?: number;
   /** `"custom"` means a developer-supplied renderer exists; not reconstructable from JSON. */
-  display: { type: string; unit?: string };
+  display: { type: string; unit?: string; colorMap?: Record<string, string> };
   filter: FilterDescriptor | null;
   sheet: SheetDescriptor | null;
 };
