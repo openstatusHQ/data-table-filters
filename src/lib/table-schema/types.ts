@@ -319,12 +319,10 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
   sheetOnly(): ColBuilder<T, never>;
 }
 
- 
 export type TableSchemaDefinition = Record<string, ColBuilder<unknown, any>>;
 
 // Infer the data row type from a table schema definition
 export type InferTableType<T extends TableSchemaDefinition> = {
-   
   [K in keyof T]: T[K] extends ColBuilder<infer U, any> ? U : never;
 };
 

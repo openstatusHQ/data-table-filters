@@ -21,7 +21,7 @@ function isUnixMs(value: number): boolean {
 function keyToLabel(key: string): string {
   let label = key.replace(/[-_]/g, " ");
   label = label.replace(/([a-z])([A-Z])/g, "$1 $2");
-  return label.charAt(0).toUpperCase() + label.slice(1);
+  return label.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function makeDescriptor(

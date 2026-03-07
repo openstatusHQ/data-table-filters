@@ -47,18 +47,22 @@ describe("inferSchemaFromJSON — label derivation", () => {
     expect(columns[0]?.label).toBe("Host Name");
   });
 
-  it("converts snake_case keys to space-separated labels", () => {
+  it("converts snake_case keys to title-cased space-separated labels", () => {
     const data = [{ created_at: "2024-01-01T00:00:00Z" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.label).toBe("Created at");
+    expect(columns[0]?.label).toBe("Created At");
   });
 
-  it("capitalises the first character of the label", () => {
+  it("capitalises every word in the label", () => {
+    const data = [{ some_long_key: "val1" }, { some_long_key: "val2" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.label).toBe("Some Long Key");
+  });
+
+  it("capitalises single-word keys", () => {
     const data = [{ level: "error" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.label.charAt(0)).toBe(
-      columns[0]?.label.charAt(0).toUpperCase(),
-    );
+    expect(columns[0]?.label).toBe("Level");
   });
 });
 
@@ -225,7 +229,7 @@ describe("inferSchemaFromJSON — label derivation (extended)", () => {
   it("converts kebab-case keys to space-separated labels", () => {
     const data = [{ "content-type": "application/json" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.label).toBe("Content type");
+    expect(columns[0]?.label).toBe("Content Type");
   });
 });
 

@@ -122,7 +122,7 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     // F is typed as `any` on the variable so we can call filterable() dynamically
     // without knowing the col kind at compile time — this is intentional since
     // deserializeSchema is a runtime operation reading from JSON.
-     
+
     let builder: ColBuilder<unknown, any> =
       col_.dataType === "enum" && col_.enumValues
         ? col.enum(col_.enumValues as readonly string[])

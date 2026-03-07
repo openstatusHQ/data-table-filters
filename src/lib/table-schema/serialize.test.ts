@@ -171,7 +171,6 @@ describe("serializeSchema", () => {
 
   it("strips sheet.component and sheet.condition (functions) from output", () => {
     const json = serializeSchema({
-       
       host: (col.string().label("Host") as any).sheet({
         component: () => null,
         condition: () => true,

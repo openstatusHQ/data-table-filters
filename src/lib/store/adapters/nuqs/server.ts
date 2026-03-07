@@ -39,7 +39,6 @@ export type { SchemaToNuqsParsers } from "./parser-bridge";
  * Options for creating nuqs search params utilities
  */
 export interface CreateNuqsSearchParamsOptions<
-   
   TExtra extends Record<string, ParserBuilder<any>> = {},
 > {
   /**
@@ -53,7 +52,6 @@ export interface CreateNuqsSearchParamsOptions<
  */
 export interface NuqsSearchParamsResult<
   TSchema extends SchemaDefinition,
-   
   TExtra extends Record<string, ParserBuilder<any>> = {},
 > {
   /**
@@ -102,7 +100,6 @@ export interface NuqsSearchParamsResult<
  */
 export function createNuqsSearchParams<
   TSchema extends SchemaDefinition,
-   
   TExtra extends Record<string, ParserBuilder<any>> = {},
 >(
   schema: TSchema,
