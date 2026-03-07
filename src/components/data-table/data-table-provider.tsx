@@ -30,6 +30,8 @@ interface DataTableBaseContextType<TData = unknown, TValue = unknown> {
   filterFields: DataTableFilterField<TData>[];
   columns: ColumnDef<TData, TValue>[];
   isLoading?: boolean;
+  totalRows?: number;
+  filterRows?: number;
   getFacetedUniqueValues?: (
     table: Table<TData>,
     columnId: string,
@@ -80,6 +82,8 @@ export function DataTableProvider<TData, TValue>({
       props.columns,
       props.enableColumnOrdering,
       props.isLoading,
+      props.totalRows,
+      props.filterRows,
       props.getFacetedUniqueValues,
       props.getFacetedMinMaxValues,
     ],

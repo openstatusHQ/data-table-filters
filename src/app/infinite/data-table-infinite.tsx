@@ -305,6 +305,8 @@ export function DataTableInfinite<TData, TValue, TMeta>({
       columnVisibility={columnVisibility}
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
+      totalRows={totalRows}
+      filterRows={filterRows}
       getFacetedUniqueValues={getFacetedUniqueValues}
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >

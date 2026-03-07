@@ -22,14 +22,15 @@ interface DataTableToolbarProps {
 }
 
 export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
-  const { table, isLoading, columnFilters } = useDataTable();
+  const { table, isLoading, columnFilters, totalRows, filterRows } =
+    useDataTable();
   const { open, setOpen } = useControls();
   useHotKey(() => setOpen((prev) => !prev), "b");
   const filters = table.getState().columnFilters;
 
   const rows = {
-    total: table.getCoreRowModel().rows.length,
-    filtered: table.getFilteredRowModel().rows.length,
+    total: totalRows ?? table.getCoreRowModel().rows.length,
+    filtered: filterRows ?? table.getFilteredRowModel().rows.length,
   };
 
   return (
