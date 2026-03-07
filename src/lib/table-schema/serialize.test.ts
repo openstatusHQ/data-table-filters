@@ -171,7 +171,7 @@ describe("serializeSchema", () => {
 
   it("strips sheet.component and sheet.condition (functions) from output", () => {
     const json = serializeSchema({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       host: (col.string().label("Host") as any).sheet({
         component: () => null,
         condition: () => true,

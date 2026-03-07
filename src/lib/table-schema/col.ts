@@ -296,7 +296,7 @@ function colEnum<T extends readonly string[]>(
  *   options: REGIONS.map(r => ({ label: r, value: r })),
  * })
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function array<U>(
   itemBuilder: ColBuilder<U, any>,
 ): ColBuilder<U[], "checkbox"> {
