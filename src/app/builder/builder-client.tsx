@@ -3,6 +3,16 @@
 import { Link } from "@/components/custom/link";
 import { Button } from "@/components/ui/button";
 import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
   Field,
   FieldDescription,
   FieldError,
@@ -21,7 +31,8 @@ import { schemaToTypeScript } from "@/lib/table-schema/to-typescript";
 import { validateSchema } from "@/lib/table-schema/validate";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Shuffle, Sparkle, Upload } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Blocks, Shuffle, Sparkle, Upload } from "lucide-react";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
@@ -238,10 +249,173 @@ export function BuilderClient() {
     await copy(schemaToTypeScript(schemaJson), { withToast: true });
   };
 
+  const panelContent = (
+    <>
+      <Tabs defaultValue="data" className="flex flex-col gap-3 px-4 py-2">
+        <TabsList className="w-full">
+          <TabsTrigger value="data" className="flex-1">
+            Data
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="flex-1" disabled>
+            AI <Sparkle className="ml-1 h-3 w-3" />
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Data tab */}
+        <TabsContent value="data" className="mt-0">
+          <form onSubmit={handleGenerate} className="flex flex-col gap-2">
+            <Controller
+              name="json"
+              control={dataForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel htmlFor="json" className="text-sm font-medium">
+                      JSON Data
+                    </FieldLabel>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 gap-1.5 px-2 text-xs text-muted-foreground"
+                      onClick={handleRandom}
+                    >
+                      <Shuffle className="h-3 w-3" />
+                      {currentDatasetLabel}
+                    </Button>
+                  </div>
+                  <Textarea
+                    {...field}
+                    id={field.name}
+                    className={cn(
+                      "font-mono text-xs",
+                      fieldState.invalid && "border-destructive",
+                    )}
+                    rows={7}
+                    placeholder={PLACEHOLDER_DATA_JSON}
+                    spellCheck={false}
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                  <FieldDescription className="text-sm">
+                    Paste JSON to generate a live table with an auto-inferred
+                    schema.
+                  </FieldDescription>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={handleCSVUpload}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-1 h-3 w-3" />
+                    Transform CSV
+                  </Button>
+                  <FieldDescription className="text-sm">
+                    Or transform a CSV to a JSON array. The CSV is not uploaded
+                    to a server.
+                  </FieldDescription>
+                </Field>
+              )}
+            />
+            <Button
+              type="submit"
+              disabled={generating || !dataForm.formState.isValid}
+              size="sm"
+              className="w-full"
+            >
+              {generating ? "Generating…" : "Generate Schema"}
+            </Button>
+          </form>
+        </TabsContent>
+
+        {/* AI tab (stub) */}
+        <TabsContent value="ai" className="mt-0">
+          <div className="flex flex-col gap-3 rounded-md border border-dashed border-border p-3">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium">AI Schema Generation</p>
+              <p className="text-xs text-muted-foreground">
+                Describe your data in plain English and get a schema generated
+                automatically — no JSON needed.
+              </p>
+            </div>
+            <Input
+              placeholder="e.g. A table of HTTP logs with method, status, latency and timestamp…"
+              disabled
+            />
+            <p className="text-xs text-muted-foreground">
+              Coming soon. Until then, use the{" "}
+              <strong className="font-medium text-foreground">Data</strong> tab
+              to paste JSON and infer a schema automatically.
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <Separator />
+
+      {/* Schema editor — always visible below tabs */}
+      <form onSubmit={handleApply} className="flex flex-col gap-2 px-4 py-2">
+        <Controller
+          name="schema"
+          control={schemaForm.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor="schema" className="text-sm font-medium">
+                  Schema JSON
+                </FieldLabel>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleExport}
+                  disabled={!schemaJson}
+                  className="h-6 gap-1.5 px-2 text-xs text-muted-foreground"
+                >
+                  {isCopied ? "Copied!" : "Export TS"}
+                </Button>
+              </div>
+              <Textarea
+                {...field}
+                id={field.name}
+                rows={7}
+                className={cn(
+                  "font-mono text-xs",
+                  fieldState.invalid && "border-destructive",
+                )}
+                placeholder='{ "columns": [] }'
+                spellCheck={false}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+        <Button
+          type="submit"
+          disabled={!schemaForm.formState.isValid}
+          size="sm"
+          variant="secondary"
+          className="w-full"
+        >
+          Apply
+        </Button>
+      </form>
+    </>
+  );
+
   return (
     <div className="flex h-screen max-h-screen w-full max-w-full flex-row">
-      {/* Left panel */}
-      <div className="flex w-[288px] shrink-0 flex-col gap-2 overflow-y-auto">
+      {/* Left panel — desktop */}
+      <div className="hidden shrink-0 flex-col gap-2 overflow-y-auto sm:flex sm:min-w-52 sm:max-w-52 md:min-w-72 md:max-w-72">
         <div className="border-b border-border bg-background px-4 py-2">
           <div className="flex h-[46px] items-center justify-start gap-3">
             <Link href="/" className="font-medium text-foreground">
@@ -249,173 +423,11 @@ export function BuilderClient() {
             </Link>
           </div>
         </div>
-        <Tabs defaultValue="data" className="flex flex-col gap-3 px-4 py-2">
-          <TabsList className="w-full">
-            <TabsTrigger value="data" className="flex-1">
-              Data
-            </TabsTrigger>
-            <TabsTrigger value="ai" className="flex-1" disabled>
-              AI <Sparkle className="ml-1 h-3 w-3" />
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Data tab */}
-          <TabsContent value="data" className="mt-0">
-            <form onSubmit={handleGenerate} className="flex flex-col gap-2">
-              <Controller
-                name="json"
-                control={dataForm.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <div className="flex items-center justify-between">
-                      <FieldLabel
-                        htmlFor="json"
-                        className="text-sm font-medium"
-                      >
-                        JSON Data
-                      </FieldLabel>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 gap-1.5 px-2 text-xs text-muted-foreground"
-                        onClick={handleRandom}
-                      >
-                        <Shuffle className="h-3 w-3" />
-                        {currentDatasetLabel}
-                      </Button>
-                    </div>
-                    <Textarea
-                      {...field}
-                      id={field.name}
-                      className={cn(
-                        "font-mono text-xs",
-                        fieldState.invalid && "border-destructive",
-                      )}
-                      rows={7}
-                      placeholder={PLACEHOLDER_DATA_JSON}
-                      spellCheck={false}
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                    <FieldDescription className="text-sm">
-                      Paste JSON to generate a live table with an auto-inferred
-                      schema.
-                    </FieldDescription>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv"
-                      className="hidden"
-                      onChange={handleCSVUpload}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="mr-1 h-3 w-3" />
-                      Transform CSV
-                    </Button>
-                    <FieldDescription className="text-sm">
-                      Or transform a CSV to a JSON array. The CSV is not
-                      uploaded to a server.
-                    </FieldDescription>
-                  </Field>
-                )}
-              />
-              <Button
-                type="submit"
-                disabled={generating || !dataForm.formState.isValid}
-                size="sm"
-                className="w-full"
-              >
-                {generating ? "Generating…" : "Generate Schema"}
-              </Button>
-            </form>
-          </TabsContent>
-
-          {/* AI tab (stub) */}
-          <TabsContent value="ai" className="mt-0">
-            <div className="flex flex-col gap-3 rounded-md border border-dashed border-border p-3">
-              <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium">AI Schema Generation</p>
-                <p className="text-xs text-muted-foreground">
-                  Describe your data in plain English and get a schema generated
-                  automatically — no JSON needed.
-                </p>
-              </div>
-              <Input
-                placeholder="e.g. A table of HTTP logs with method, status, latency and timestamp…"
-                disabled
-              />
-              <p className="text-xs text-muted-foreground">
-                Coming soon. Until then, use the{" "}
-                <strong className="font-medium text-foreground">Data</strong>{" "}
-                tab to paste JSON and infer a schema automatically.
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <Separator />
-
-        {/* Schema editor — always visible below tabs */}
-        <form onSubmit={handleApply} className="flex flex-col gap-2 px-4 py-2">
-          <Controller
-            name="schema"
-            control={schemaForm.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <div className="flex items-center justify-between">
-                  <FieldLabel htmlFor="schema" className="text-sm font-medium">
-                    Schema JSON
-                  </FieldLabel>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleExport}
-                    disabled={!schemaJson}
-                    className="h-6 gap-1.5 px-2 text-xs text-muted-foreground"
-                  >
-                    {isCopied ? "Copied!" : "Export TS"}
-                  </Button>
-                </div>
-                <Textarea
-                  {...field}
-                  id={field.name}
-                  rows={7}
-                  className={cn(
-                    "font-mono text-xs",
-                    fieldState.invalid && "border-destructive",
-                  )}
-                  placeholder='{ "columns": [] }'
-                  spellCheck={false}
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-          <Button
-            type="submit"
-            disabled={!schemaForm.formState.isValid}
-            size="sm"
-            variant="secondary"
-            className="w-full"
-          >
-            Apply
-          </Button>
-        </form>
+        {panelContent}
       </div>
 
       {/* Right panel — live table */}
-      <div className="min-w-0 flex-1 overflow-hidden border-l">
+      <div className="min-w-0 flex-1 overflow-hidden sm:border-l">
         {schemaJson && dataId ? (
           <BuilderTable
             dataId={dataId}
@@ -433,6 +445,36 @@ export function BuilderClient() {
             </p>
           </div>
         )}
+      </div>
+
+      {/* FAB + Drawer — mobile */}
+      <div className="sm:hidden">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button
+              size="icon"
+              className="fixed bottom-4 right-4 z-40 h-12 w-12 rounded-full shadow-lg"
+            >
+              <Blocks className="h-5 w-5" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[calc(100dvh-2rem)]">
+            <VisuallyHidden>
+              <DrawerHeader>
+                <DrawerTitle>Builder</DrawerTitle>
+                <DrawerDescription>Configure data and schema</DrawerDescription>
+              </DrawerHeader>
+            </VisuallyHidden>
+            <div className="flex-1 overflow-y-auto">{panelContent}</div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline" className="w-full">
+                  Close
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
       </div>
     </div>
   );

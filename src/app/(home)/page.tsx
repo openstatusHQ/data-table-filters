@@ -336,7 +336,7 @@ function Hero() {
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <p className="max-w-[750px] text-lg text-muted-foreground">
+        <h2 className="max-w-[750px] text-lg text-muted-foreground">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
@@ -355,10 +355,11 @@ function Hero() {
             GitHub
           </Link>
           .
-        </p>
-        <p className="text-lg text-muted-foreground">
-          Learn more in the <Link href="/guide">Guide</Link>. Extendable with
-          BYOS (Bring Your Own Store).
+        </h2>
+        <p className="max-w-[740px] text-lg text-muted-foreground">
+          Learn more in the <Link href="/guide">Guide</Link>. Plug in any state
+          manager with BYOS (Bring Your Own Store). Try the{" "}
+          <Link href="/builder">Builder</Link> to generate your schema.
         </p>
       </div>
       <NextLink
