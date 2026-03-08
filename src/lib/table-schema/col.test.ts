@@ -301,6 +301,7 @@ describe(".filterable() option preservation", () => {
       .number()
       .label("Count")
       .filterable("checkbox", { options })
+      // @ts-expect-error - testing filter type switch (F narrowed to "checkbox")
       .filterable("input"); // type change — options not preserved
     expect((c._config.filter as any).options).toBeUndefined();
   });

@@ -24,10 +24,35 @@ type FilterableKeys<T extends TableSchemaDefinition> = {
     : never;
 }[keyof T];
 
+// Extract T and F separately — TS struggles to infer both at once from ColBuilder
+type GetColValue<B> = B extends ColBuilder<infer T, any> ? T : never;
+type GetColFilter<B> = B extends ColBuilder<any, infer F> ? F : never;
+
+/**
+ * Map a single ColBuilder to the correct FieldBuilder type based on its
+ * value type `T` and filter type `F`.
+ */
+type InferFilterFieldType<B> = [GetColFilter<B>] extends [never]
+  ? never
+  : GetColFilter<B> extends "input"
+    ? GetColValue<B> extends string
+      ? FieldBuilder<string | null>
+      : GetColValue<B> extends number
+        ? FieldBuilder<number | null>
+        : FieldBuilder<unknown>
+    : GetColFilter<B> extends "slider"
+      ? FieldBuilder<(number | null)[]>
+      : GetColFilter<B> extends "timerange"
+        ? FieldBuilder<(Date | null)[]>
+        : GetColFilter<B> extends "checkbox"
+          ? GetColValue<B> extends (infer U)[]
+            ? FieldBuilder<(U | null)[]>
+            : FieldBuilder<(GetColValue<B> | null)[]>
+          : FieldBuilder<unknown>;
+
 /** The generated filter definition — preserves the filterable keys from `T`. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GeneratedFilterDef<T extends TableSchemaDefinition> = {
-  [K in FilterableKeys<T>]: FieldBuilder<any>;
+  [K in FilterableKeys<T>]: InferFilterFieldType<T[K]>;
 };
 
 function buildFilterDefinition(
