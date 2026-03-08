@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -13,16 +12,7 @@ export default function MDXLayout({ children }: { children: React.ReactNode }) {
         </Link>
       </Button>
       <Separator className="my-6" />
-      <div
-        className={cn(
-          "prose prose-lg mx-auto dark:prose-invert",
-          "prose-pre:bg-foreground dark:prose-pre:bg-muted/50",
-          "prose-figure:rounded-lg prose-figure:border prose-figure:border-border",
-          "prose-blockquote:rounded-lg prose-blockquote:border prose-blockquote:border-border prose-blockquote:bg-muted/50 prose-blockquote:pe-6 prose-blockquote:font-normal prose-blockquote:not-italic",
-        )}
-      >
-        {children}
-      </div>
+      {children}
     </main>
   );
 }

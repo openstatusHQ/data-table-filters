@@ -1,16 +1,9 @@
-import createMDX from "@next/mdx";
-
-/** @type {import('rehype-pretty-code').Options} */
-const options = {
-  keepBackground: false,
-};
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
   // REMINDER: new react compiler to memoize the components
   // https://react.dev/learn/react-compiler
   reactCompiler: true,
+  transpilePackages: ["next-mdx-remote"],
   async redirects() {
     return [
       {
@@ -37,12 +30,4 @@ const nextConfig = {
   },
 };
 
-const withMDX = createMDX({
-  extension: /\.mdx?$/,
-  options: {
-    remarkPlugins: ["remark-gfm"],
-    rehypePlugins: [["rehype-pretty-code", options]],
-  },
-});
-
-export default withMDX(nextConfig);
+export default nextConfig;
