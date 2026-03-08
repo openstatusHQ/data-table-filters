@@ -26,70 +26,81 @@ const handler = createDrizzleHandler({
 });
 
 export async function GET(req: NextRequest): Promise<Response> {
-  const _search: Map<string, string> = new Map();
-  req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
-  const search = searchParamsCache.parse(Object.fromEntries(_search));
+  try {
+    const _search: Map<string, string> = new Map();
+    req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
+    const search = searchParamsCache.parse(Object.fromEntries(_search));
 
-  const result = await handler.execute(search as Record<string, unknown>);
+    const result = await handler.execute(search as Record<string, unknown>);
 
-  // Map DB rows to ColumnSchema shape
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: ColumnSchema[] = result.data.map((row: any) => ({
-    uuid: row.uuid,
-    level: row.level,
-    method: row.method,
-    host: row.host,
-    pathname: row.pathname,
-    status: row.status,
-    latency: row.latency,
-    regions: row.regions as ColumnSchema["regions"],
-    date: row.date,
-    headers: row.headers,
-    message: row.message ?? undefined,
-    "timing.dns": row.timingDns,
-    "timing.connection": row.timingConnection,
-    "timing.tls": row.timingTls,
-    "timing.ttfb": row.timingTtfb,
-    "timing.transfer": row.timingTransfer,
-  }));
+    // Map DB rows to ColumnSchema shape
+    type LogRow = typeof logs.$inferSelect;
+    const data: ColumnSchema[] = result.data.map((row) => {
+      const r = row as LogRow;
+      return {
+        uuid: r.uuid,
+        level: r.level,
+        method: r.method,
+        host: r.host,
+        pathname: r.pathname,
+        status: r.status,
+        latency: r.latency,
+        regions: r.regions as ColumnSchema["regions"],
+        date: r.date,
+        headers: r.headers,
+        message: r.message ?? undefined,
+        "timing.dns": r.timingDns,
+        "timing.connection": r.timingConnection,
+        "timing.tls": r.timingTls,
+        "timing.ttfb": r.timingTtfb,
+        "timing.transfer": r.timingTransfer,
+      };
+    });
 
-  // --- Per-row percentile ---
-  const latencies = data.map((d) => d.latency);
-  for (const row of data) {
-    row.percentile = calculatePercentile(latencies, row.latency);
+    // --- Per-row percentile ---
+    const latencies = data.map((d) => d.latency);
+    for (const row of data) {
+      row.percentile = calculatePercentile(latencies, row.latency);
+    }
+
+    // --- Percentiles ---
+    const currentPercentiles = {
+      50: calculateSpecificPercentile(latencies, 50),
+      75: calculateSpecificPercentile(latencies, 75),
+      90: calculateSpecificPercentile(latencies, 90),
+      95: calculateSpecificPercentile(latencies, 95),
+      99: calculateSpecificPercentile(latencies, 99),
+    };
+
+    // --- Chart data via SQL ---
+    const chartData = await getChartData(
+      db,
+      logs,
+      result.allConditions,
+      search.date,
+    );
+
+    return Response.json(
+      SuperJSON.stringify({
+        data,
+        meta: {
+          totalRowCount: result.totalRowCount,
+          filterRowCount: result.filterRowCount,
+          chartData,
+          facets: result.facets,
+          metadata: { currentPercentiles },
+        },
+        prevCursor: result.prevCursor,
+        nextCursor: result.nextCursor,
+      } satisfies InfiniteQueryResponse<ColumnSchema[], LogsMeta>),
+    );
+  } catch (error) {
+    console.error("[drizzle/api] GET failed:", error);
+    return Response.json(
+      { error: "Failed to fetch data" },
+      { status: 500 },
+    );
   }
-
-  // --- Percentiles ---
-  const currentPercentiles = {
-    50: calculateSpecificPercentile(latencies, 50),
-    75: calculateSpecificPercentile(latencies, 75),
-    90: calculateSpecificPercentile(latencies, 90),
-    95: calculateSpecificPercentile(latencies, 95),
-    99: calculateSpecificPercentile(latencies, 99),
-  };
-
-  // --- Chart data via SQL ---
-  const chartData = await getChartData(
-    db,
-    logs,
-    result.allConditions,
-    search.date,
-  );
-
-  return Response.json(
-    SuperJSON.stringify({
-      data,
-      meta: {
-        totalRowCount: result.totalRowCount,
-        filterRowCount: result.filterRowCount,
-        chartData,
-        facets: result.facets,
-        metadata: { currentPercentiles },
-      },
-      prevCursor: result.prevCursor,
-      nextCursor: result.nextCursor,
-    } satisfies InfiniteQueryResponse<ColumnSchema[], LogsMeta>),
-  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
