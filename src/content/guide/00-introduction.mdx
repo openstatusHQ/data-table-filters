@@ -13,9 +13,9 @@ year: "numeric",
 
 > If you have any questions or feature requests, please open an issue on [GitHub](https://github.com/openstatusHQ/data-table-filters/issues). This is a **work in progress** and we are happy to hear from you.
 
-This guide covers the data-table system end to end — from defining a table schema to rendering filters, columns, and row details.
+This guide covers the data-table system end to end — from defining a table schema to rendering filters, columns, and row details. For a complete working example, see the [Full Example](/guide/full-example).
 
-### Examples
+## Examples
 
 - [Drizzle](/drizzle) — server-side filtering with Drizzle ORM
 - [Default](/default) — client-side pagination without infinite scroll
@@ -25,17 +25,41 @@ This guide covers the data-table system end to end — from defining a table sch
 
 ---
 
-## Overview
+## Quick Overview
+
+```tsx
+import { col, createTableSchema } from "@/lib/table-schema";
+import { generateColumns, generateFilterFields } from "@/lib/table-schema";
+import { createSchema, field } from "@/lib/store/schema";
+
+// 1. Define your table
+const tableSchema = createTableSchema({
+  level: col.presets.logLevel(["error", "warn", "info", "debug"]),
+  latency: col.presets.duration("ms").label("Latency").sortable(),
+  host: col.string().label("Host"),
+});
+
+// 2. Generate everything the components need
+const columns = generateColumns(tableSchema.definition);
+const filterFields = generateFilterFields(tableSchema.definition);
+
+// 3. Wire up state + components
+<DataTableStoreProvider adapter={adapter}>
+  <DataTableInfinite columns={columns} filterFields={filterFields} ... />
+</DataTableStoreProvider>
+```
+
+---
+
+## Architecture
 
 The data-table is built on three layers:
 
-1. **Table Schema** — a declarative builder that defines columns, filters, display, sorting, and row details in one place
-2. **BYOS (Bring Your Own Store)** — a pluggable state management system for filter state (URL, Zustand, or custom)
-3. **Components** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
+1. **[Table Schema](/guide/table-schema)** — a declarative builder that defines columns, filters, display, sorting, and row details in one place
+2. **[Components](/guide/components)** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
+3. **[State Management](/guide/state-management)** — a pluggable BYOS (Bring Your Own Store) system for filter state (URL, Zustand, or custom)
 
-For server-side data fetching, a **Drizzle ORM** adapter provides helper functions to build `WHERE` conditions, sorting, cursor pagination, and faceted counts from your filter state.
-
-The recommended frontend flow:
+For server-side data, a **[Database](/guide/database)** adapter (Drizzle ORM) provides helper functions to build `WHERE` conditions, sorting, cursor pagination, and faceted counts. The **[Data Fetching](/guide/data-fetching)** section covers the API response shape and React Query integration.
 
 ```
 Table Schema → Generators → Components

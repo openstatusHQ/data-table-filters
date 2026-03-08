@@ -3,11 +3,11 @@ title: "Table Schema"
 description: "Type-safe builder for defining your entire table in one place"
 ---
 
-## Table Schema
+# Table Schema
 
 The table schema is a type-safe builder for defining your entire table in one place. Instead of manually wiring up `columns.tsx`, `filterFields`, `sheetFields`, and a BYOS schema separately, a single schema definition generates all of them.
 
-### Defining a Schema
+## Defining a Schema
 
 ```tsx
 import {
@@ -40,7 +40,7 @@ export const tableSchema = createTableSchema({
 export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
 ```
 
-### Column Factories
+## Column Factories
 
 Choose the factory based on your data type:
 
@@ -66,7 +66,7 @@ Each factory returns a `ColBuilder<T, F>` where `T` is the inferred TypeScript t
 | `col.array(col.enum(values))` | `"checkbox"`                        | Multi-value tags, regions, labels               |
 | `col.record()`                | _none_ (`never`)                    | Use `.sheetOnly()` for detail drawers           |
 
-### Presets
+## Presets
 
 Pre-configured builders for common patterns. All remain fully customizable via chaining.
 
@@ -95,11 +95,11 @@ col.presets.pathname();
 // → string + text display + input filter
 ```
 
-### Builder Methods
+## Builder Methods
 
 All methods return a new builder instance (immutable) for fluent chaining.
 
-#### Label & Description
+### Label & Description
 
 ```ts
 col
@@ -108,7 +108,7 @@ col
   .description("Origin server"); // For AI agents / MCP tools (not shown in UI)
 ```
 
-#### Display
+### Display
 
 Controls how the cell value renders. Built-in display types:
 
@@ -132,7 +132,7 @@ col.enum(v).display("custom", {
 })
 ```
 
-#### Filtering
+### Filtering
 
 ```ts
 col.string().filterable("input")
@@ -151,7 +151,7 @@ col.timestamp().commandDisabled()   // Exclude from command palette
 
 Passing a filter type not in `F` is a **compile-time error** — e.g. `col.string().filterable("slider")` won't compile.
 
-#### Visibility & Layout
+### Visibility & Layout
 
 ```ts
 col.string().hidden(); // Hidden by default (toggleable in column menu)
@@ -160,14 +160,14 @@ col.string().resizable(); // Enable drag-to-resize
 col.string().size(125); // Fixed width in pixels (initial width if resizable)
 ```
 
-#### Sorting & Optionality
+### Sorting & Optionality
 
 ```ts
 col.number().sortable(); // Click-to-sort on column header
 col.string().optional(); // T becomes T | undefined in InferTableType
 ```
 
-#### Sheet (Row Detail Drawer)
+### Sheet (Row Detail Drawer)
 
 ```ts
 col.string().sheet()        // Include in detail drawer
@@ -179,7 +179,7 @@ col.number().sheet({
 col.record().sheetOnly()    // hidden + notFilterable + enableHiding: false
 ```
 
-### Generators
+## Generators
 
 The schema drives four generators that produce everything the table components need.
 
@@ -221,7 +221,7 @@ const allColumns = [
 ];
 ```
 
-#### generateFilterSchema
+### generateFilterSchema
 
 Bridges the table schema to BYOS by generating a filter schema. Add non-column state fields (sort, pagination, live mode) alongside:
 
@@ -250,44 +250,4 @@ The mapping from column types to BYOS field types:
 | `col.boolean()` + `"checkbox"`    | `field.array(field.boolean()).delimiter(",")`   |
 | `col.timestamp()` + `"timerange"` | `field.array(field.timestamp()).delimiter("-")` |
 
-### Serialization & AI
-
-The schema serializes to a function-free JSON descriptor for AI agents, MCP tools, or remote storage.
-
-```ts
-// Schema → JSON
-const json = tableSchema.toJSON();
-// JSON.stringify(tableSchema) also works
-
-// JSON → Schema (e.g. from an AI agent)
-const reconstructed = createTableSchema.fromJSON(json);
-
-// JSON → TypeScript code
-import { schemaToTypeScript } from "@/lib/table-schema/to-typescript";
-const tsCode = schemaToTypeScript(json);
-```
-
-> Custom renderers (`display("custom", ...)`, `filter.component`, `sheet.component`) are functions and cannot be serialized. They are stripped during `toJSON()` and must be applied manually on reconstructed schemas.
-
-### Interactive Builder (`/builder`)
-
-The `/builder` page lets you visually build a table schema:
-
-1. **Paste JSON data** (or upload a CSV) in the left panel
-2. Click **Generate Schema** — the schema is auto-inferred from your data
-3. A **live table preview** appears with filters, sorting, and row details
-4. Edit the **Schema JSON** directly and click **Apply** for instant updates
-5. Click **Export TS** to copy the generated `createTableSchema(...)` code
-
-The inference engine detects column types from your data:
-
-- ISO 8601 strings / Unix-ms numbers → `timestamp` + `timerange` filter
-- Booleans → `boolean` + `checkbox` filter
-- Numbers with varying values → `number` + `slider` filter
-- Strings with ≤10 distinct values → `enum` + `checkbox` filter
-- Arrays of strings → `array` with enum items
-- Plain objects → `record` (not filterable)
-
-Post-inference heuristics apply smart defaults (ID-like → code display, latency → "ms" unit, log level → `defaultOpen`, etc.).
-
-Example datasets (Pokemon, HTTP Logs, Space Missions, Cocktails, Orders, Issues, Movies, RPG Characters) are included to explore different configurations.
+See the [Builder](/guide/builder) page for visual schema creation, serialization, and AI integration.

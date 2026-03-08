@@ -1,0 +1,57 @@
+---
+title: "Features"
+description: "Timeline chart, live mode, and keyboard shortcuts"
+---
+
+# Features
+
+## Timeline Chart
+
+The timeline chart visualizes data distribution over time as a stacked bar chart. It groups your data into time buckets and stacks counts by a category field (e.g. log level).
+
+```ts
+type BaseChartSchema = {
+  timestamp: number; // UNIX ms
+  [key: string]: number; // Level counts, e.g. "success", "warning", "error"
+};
+```
+
+Pass chart data via the `chartData` and `chartDataColumnId` props on `DataTableInfinite`. The `chartDataColumnId` must point to a column with a `timerange` filter.
+
+```tsx
+<DataTableInfinite
+  chartData={chartData}
+  chartDataColumnId="date"
+  // ...
+/>
+```
+
+The chart supports **drag-to-select** — click and drag a range on the chart to set the corresponding date filter. The bucket size is calculated dynamically based on the visible date range (from 1-second intervals for short ranges up to 12-hour intervals for multi-month ranges).
+
+## Live Mode
+
+Live mode polls for new data every 5 seconds using `fetchPreviousPage` from `useInfiniteQuery`. New rows are prepended to the top of the table.
+
+The `live` field in the filter schema controls this:
+
+```ts
+live: field.boolean().default(false),
+```
+
+When live mode is active:
+
+- New rows appear at the top of the table
+- Rows older than the activation timestamp are visually dimmed (`opacity-50`)
+- A separator row marks the boundary between old and new data
+- Setting a date filter or changing sort automatically deactivates live mode
+
+Toggle with `Cmd+J` or the live mode button in the toolbar.
+
+## Keyboard Shortcuts
+
+- `Cmd+K` — Toggle command palette
+- `Cmd+B` — Toggle filter sidebar
+- `Cmd+U` — Reset column state (order, visibility)
+- `Cmd+J` — Toggle live mode
+- `Esc` — Reset table filters
+- `Cmd+.` — Reset element focus
