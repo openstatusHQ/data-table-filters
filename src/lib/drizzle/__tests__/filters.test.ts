@@ -71,9 +71,9 @@ describe.skipIf(!hasDatabase)("buildWhereConditions", () => {
   });
 
   it("number array (3+ elements) → inArray for checkbox", async () => {
-    const rows = await queryWithFilters({ status: [200, 500] });
-    const expected = seedRows.filter(
-      (r) => r.status === 200 || r.status === 500,
+    const rows = await queryWithFilters({ status: [200, 404, 500] });
+    const expected = seedRows.filter((r) =>
+      [200, 404, 500].includes(r.status),
     ).length;
     expect(rows.length).toBe(expected);
   });
