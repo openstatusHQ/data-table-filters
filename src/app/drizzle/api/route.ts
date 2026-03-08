@@ -242,7 +242,7 @@ async function getChartData(
     error: number;
   }[] = await db.execute(
     sql`SELECT
-        date_bin(${intervalSeconds + " seconds"}::interval, ${table.date}, ${minDate}) as bucket,
+        date_bin(${intervalSeconds + " seconds"}::interval, ${table.date}, ${minDate.toISOString()}::timestamptz) as bucket,
         COUNT(*) FILTER (WHERE ${table.level} = 'success')::int as success,
         COUNT(*) FILTER (WHERE ${table.level} = 'warning')::int as warning,
         COUNT(*) FILTER (WHERE ${table.level} = 'error')::int as error
