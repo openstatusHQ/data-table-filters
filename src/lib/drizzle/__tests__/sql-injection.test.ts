@@ -59,11 +59,12 @@ describe.skipIf(!hasDatabase)("SQL injection resistance", () => {
   });
 
   it("string array with SQL in values (inArray path)", async () => {
-    const rows = await queryWithFilters({
-      level: ["success", "'; DROP TABLE logs; --"],
-    });
-    const expected = seedRows.filter((r) => r.level === "success").length;
-    expect(rows.length).toBe(expected);
+    // Postgres rejects invalid enum values via parameterized query — safe behavior
+    await expect(
+      queryWithFilters({
+        level: ["success", "'; DROP TABLE logs; --"],
+      }),
+    ).rejects.toThrow();
     expect(await tableExists()).toBe(true);
   });
 
@@ -86,11 +87,13 @@ describe.skipIf(!hasDatabase)("SQL injection resistance", () => {
   });
 
   it("null byte in string filter does not cause unexpected behavior", async () => {
-    const rows = await queryWithFilters({
-      host: "api\0.example.com",
-    });
-    // Should not crash; result depends on DB handling of null bytes
-    expect(typeof rows.length).toBe("number");
+    // Postgres rejects null bytes in UTF8 via parameterized query — safe behavior
+    await expect(
+      queryWithFilters({
+        host: "api\0.example.com",
+      }),
+    ).rejects.toThrow();
+    expect(await tableExists()).toBe(true);
   });
 
   it("very long string does not crash", async () => {

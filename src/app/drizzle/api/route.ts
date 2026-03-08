@@ -96,10 +96,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     );
   } catch (error) {
     console.error("[drizzle/api] GET failed:", error);
-    return Response.json(
-      { error: "Failed to fetch data" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }
 
