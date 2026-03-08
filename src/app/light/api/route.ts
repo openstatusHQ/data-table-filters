@@ -2,7 +2,7 @@ import { InfiniteQueryResponse } from "@/app/infinite/query-options";
 import type {
   BaseChartSchema,
   FacetMetadataSchema,
-} from "@/app/infinite/schema";
+} from "@/lib/data-table/types";
 import { differenceInMinutes, subDays } from "date-fns";
 import type { NextRequest } from "next/server";
 import SuperJSON from "superjson";

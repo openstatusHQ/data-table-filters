@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/data-table/data-table-infinite/skeleton";
 import {
   ADAPTER_COOKIE_NAME,
   PREFETCH_COOKIE_NAME,
@@ -11,7 +12,6 @@ import { Suspense } from "react";
 import { Client } from "./client";
 import { dataOptions } from "./query-options";
 import { searchParamsCache, SearchParamsType } from "./search-params";
-import { Skeleton } from "./skeleton";
 
 export default async function Page({
   searchParams,

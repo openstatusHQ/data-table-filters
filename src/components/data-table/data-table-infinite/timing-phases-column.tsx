@@ -1,5 +1,6 @@
 "use client";
 
+import type { ColumnSchema } from "@/app/infinite/schema";
 import {
   HoverCard,
   HoverCardContent,
@@ -14,7 +15,6 @@ import {
 import { cn } from "@/lib/utils";
 import { HoverCardPortal } from "@radix-ui/react-hover-card";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ColumnSchema } from "../schema";
 
 export const timingPhasesColumn: ColumnDef<ColumnSchema> = {
   accessorKey: "timing",

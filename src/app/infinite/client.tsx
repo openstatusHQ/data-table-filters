@@ -1,6 +1,13 @@
 "use client";
 
+import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
+import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
 import { useHotKey } from "@/hooks/use-hot-key";
+import {
+  getFacetedMinMaxValues,
+  getFacetedUniqueValues,
+} from "@/lib/data-table/faceted";
 import { getLevelRowClassName } from "@/lib/request/level";
 import {
   DataTableStoreProvider,
@@ -17,13 +24,9 @@ import {
 } from "@/lib/table-schema";
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import type { Table as TTable } from "@tanstack/react-table";
 import * as React from "react";
-import { LiveRow } from "./_components/live-row";
-import { timingPhasesColumn } from "./_components/timing-phases-column";
-import { DataTableInfinite } from "./data-table-infinite";
 import { dataOptions } from "./query-options";
-import type { ColumnSchema, FacetMetadataSchema, FilterState } from "./schema";
+import type { ColumnSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
 import { useFilterStore } from "./store";
 import { tableSchema } from "./table-schema";
@@ -256,25 +259,8 @@ export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
   return { row: anchorRow, timestamp: liveTimestamp.current };
 }
 
-export function getFacetedUniqueValues<TData>(
-  facets?: Record<string, FacetMetadataSchema>,
-) {
-  return (_: TTable<TData>, columnId: string): Map<string, number> => {
-    return new Map(
-      facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) || [],
-    );
-  };
-}
-
-export function getFacetedMinMaxValues<TData>(
-  facets?: Record<string, FacetMetadataSchema>,
-) {
-  return (_: TTable<TData>, columnId: string): [number, number] | undefined => {
-    const min = facets?.[columnId]?.min;
-    const max = facets?.[columnId]?.max;
-    if (typeof min === "number" && typeof max === "number") return [min, max];
-    if (typeof min === "number") return [min, min];
-    if (typeof max === "number") return [max, max];
-    return undefined;
-  };
-}
+// Re-export shared faceted helpers for backward compat (used by builder, light)
+export {
+  getFacetedMinMaxValues,
+  getFacetedUniqueValues,
+} from "@/lib/data-table/faceted";

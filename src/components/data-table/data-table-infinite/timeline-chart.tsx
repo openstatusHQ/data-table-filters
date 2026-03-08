@@ -1,5 +1,6 @@
 "use client";
 
+import type { TimelineChartSchema } from "@/app/infinite/schema";
 import { useDataTable } from "@/components/data-table/data-table-provider";
 import {
   ChartConfig,
@@ -7,13 +8,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import type { BaseChartSchema } from "@/lib/data-table/types";
 import { getLevelLabel } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ReferenceArea, XAxis } from "recharts";
 import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
-import { BaseChartSchema, TimelineChartSchema } from "./schema";
 
 export const description = "A stacked bar chart";
 

@@ -1,4 +1,4 @@
-import type { FacetMetadataSchema } from "@/app/infinite/schema";
+import type { FacetMetadataSchema } from "@/lib/data-table/types";
 import { createTableSchema } from "@/lib/table-schema";
 import type { SchemaJSON, TableSchemaDefinition } from "@/lib/table-schema";
 
