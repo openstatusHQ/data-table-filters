@@ -1,6 +1,7 @@
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
+import type { BaseChartSchema } from "@/lib/data-table/types";
 import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
@@ -37,16 +38,13 @@ export const columnSchema = z
 export type ColumnSchema = z.infer<typeof columnSchema>;
 export type TimingSchema = z.infer<typeof timingSchema>;
 
-export const facetMetadataSchema = z.object({
-  rows: z.array(z.object({ value: z.any(), total: z.number() })),
-  total: z.number(),
-  min: z.number().optional(),
-  max: z.number().optional(),
-});
+// Re-export generic types from shared location
+export {
+  facetMetadataSchema,
+  type FacetMetadataSchema,
+} from "@/lib/data-table/types";
 
-export type FacetMetadataSchema = z.infer<typeof facetMetadataSchema>;
-
-export type BaseChartSchema = { timestamp: number; [key: string]: number };
+export type { BaseChartSchema };
 
 export const timelineChartSchema = z.object({
   timestamp: z.number(), // UNIX

@@ -29,6 +29,7 @@ import {
   getColumnOrderKey,
   getColumnVisibilityKey,
 } from "@/lib/constants/local-storage";
+import type { BaseChartSchema } from "@/lib/data-table/types";
 import { formatCompactNumber } from "@/lib/format";
 import type { AdapterType } from "@/lib/store";
 import { useFilterState } from "@/lib/store";
@@ -62,11 +63,10 @@ import {
 } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
-import { LiveButton } from "./_components/live-button";
-import { RefreshButton } from "./_components/refresh-button";
-import { SocialsFooter } from "./_components/socials-footer";
-import { BaseChartSchema } from "./schema";
-import { TimelineChart } from "./timeline-chart";
+import { LiveButton } from "./data-table-infinite/live-button";
+import { RefreshButton } from "./data-table-infinite/refresh-button";
+import { SocialsFooter } from "./data-table-infinite/socials-footer";
+import { TimelineChart } from "./data-table-infinite/timeline-chart";
 
 // TODO: add a possible chartGroupBy
 export interface DataTableInfiniteProps<TData, TValue, TMeta> {

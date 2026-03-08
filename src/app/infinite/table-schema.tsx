@@ -6,6 +6,8 @@ import { DataTableColumnLatency } from "@/components/data-table/data-table-colum
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
 import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
+import { PopoverPercentile } from "@/components/data-table/data-table-infinite/popover-percentile";
+import { SheetTimingPhases } from "@/components/data-table/data-table-infinite/sheet-timing-phases";
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
@@ -20,8 +22,6 @@ import {
 } from "@/lib/table-schema";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { PopoverPercentile } from "./_components/popover-percentile";
-import { SheetTimingPhases } from "./_components/sheet-timing-phases";
 import type { LogsMeta } from "./query-options";
 import type { ColumnSchema } from "./schema";
 

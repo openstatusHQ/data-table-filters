@@ -1,5 +1,6 @@
 "use client";
 
+import type { FilterState } from "@/app/infinite/schema";
 import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
@@ -8,7 +9,6 @@ import { cn } from "@/lib/utils";
 import type { FetchPreviousPageOptions } from "@tanstack/react-query";
 import { CirclePause, CirclePlay } from "lucide-react";
 import * as React from "react";
-import type { FilterState } from "../schema";
 
 const REFRESH_INTERVAL = 5_000;
 

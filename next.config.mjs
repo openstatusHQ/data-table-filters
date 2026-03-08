@@ -28,6 +28,11 @@ const nextConfig = {
         destination: "/builder",
         permanent: true,
       },
+      {
+        source: "/d",
+        destination: "/drizzle",
+        permanent: true,
+      },
     ];
   },
 };

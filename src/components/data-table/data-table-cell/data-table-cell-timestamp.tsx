@@ -1,6 +1,6 @@
 "use client";
 
-import { HoverCardTimestamp } from "@/app/infinite/_components/hover-card-timestamp";
+import { HoverCardTimestamp } from "@/components/data-table/data-table-infinite/hover-card-timestamp";
 
 export function DataTableCellTimestamp({
   date,
