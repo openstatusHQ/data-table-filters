@@ -75,7 +75,6 @@ describe.skipIf(!hasDatabase)("computeFacets", () => {
 
     expect(result.regions).toBeDefined();
 
-    // Count expected occurrences of each region across all seed rows
     const regionCounts: Record<string, number> = {};
     for (const row of seedRows) {
       for (const region of row.regions) {

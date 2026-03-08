@@ -37,9 +37,7 @@ describe.skipIf(!hasDatabase)("buildCursorPagination", () => {
       .orderBy(orderBy)
       .limit(10);
 
-    // All returned rows should have date < cursorDate
     expect(rows.every((r) => r.date < cursorDate)).toBe(true);
-    // Should be in desc order
     const dates = rows.map((r) => r.date.getTime());
     expect(dates).toEqual([...dates].sort((a, b) => b - a));
   });
@@ -62,9 +60,7 @@ describe.skipIf(!hasDatabase)("buildCursorPagination", () => {
       .orderBy(orderBy)
       .limit(10);
 
-    // All returned rows should have date > cursorDate
     expect(rows.every((r) => r.date > cursorDate)).toBe(true);
-    // Returned in asc order; reversing gives desc (chronological newest-first)
     const dates = rows.map((r) => r.date.getTime());
     expect(dates).toEqual([...dates].sort((a, b) => a - b));
   });
@@ -86,7 +82,6 @@ describe.skipIf(!hasDatabase)("buildCursorPagination", () => {
       .orderBy(orderBy)
       .limit(100);
 
-    // All seed rows are in the past, so all should be returned
     expect(rows.length).toBe(seedRows.length);
   });
 

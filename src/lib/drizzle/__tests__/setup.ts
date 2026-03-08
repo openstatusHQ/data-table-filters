@@ -1,18 +1,17 @@
 import { logs } from "@/db/drizzle/schema";
-import { sql } from "drizzle-orm";
+import { seedRows } from "@/db/drizzle/seed-data";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import type { ColumnMapping } from "../types";
 
 export const hasDatabase = !!process.env.DATABASE_URL;
 
+export { seedRows };
+
 let client: ReturnType<typeof postgres>;
 let db: PostgresJsDatabase;
 
-/**
- * Column mapping used across all tests — mirrors the real app's mapping.
- */
+/** Column mapping used across all tests — mirrors the real app's mapping. */
 export const testMapping: ColumnMapping = {
   level: logs.level,
   method: logs.method,
@@ -29,153 +28,6 @@ export const testMapping: ColumnMapping = {
   "timing.transfer": logs.timingTransfer,
   message: logs.message,
 };
-
-/** Fixed dates for deterministic tests */
-const BASE_DATE = new Date("2025-01-15T12:00:00Z");
-
-function hoursAgo(h: number) {
-  return new Date(BASE_DATE.getTime() - h * 60 * 60 * 1000);
-}
-
-/** Seed rows — small, deterministic, covers all edge cases */
-export const seedRows = [
-  {
-    level: "success" as const,
-    method: "GET" as const,
-    host: "api.example.com",
-    pathname: "/users",
-    status: 200,
-    latency: 50,
-    regions: ["us-east-1", "eu-west-1"],
-    date: hoursAgo(1),
-    timingDns: 5,
-    timingConnection: 10,
-    timingTls: 8,
-    timingTtfb: 20,
-    timingTransfer: 7,
-    headers: { "content-type": "application/json" },
-    message: "OK",
-  },
-  {
-    level: "success" as const,
-    method: "POST" as const,
-    host: "api.example.com",
-    pathname: "/users",
-    status: 201,
-    latency: 120,
-    regions: ["us-east-1"],
-    date: hoursAgo(2),
-    timingDns: 6,
-    timingConnection: 12,
-    timingTls: 9,
-    timingTtfb: 25,
-    timingTransfer: 8,
-    headers: { "content-type": "application/json" },
-    message: "Created",
-  },
-  {
-    level: "warning" as const,
-    method: "GET" as const,
-    host: "cdn.example.com",
-    pathname: "/assets",
-    status: 301,
-    latency: 200,
-    regions: ["eu-west-1", "ap-south-1"],
-    date: hoursAgo(3),
-    timingDns: 10,
-    timingConnection: 15,
-    timingTls: 12,
-    timingTtfb: 30,
-    timingTransfer: 10,
-    headers: { "content-type": "text/html" },
-    message: "Redirect",
-  },
-  {
-    level: "error" as const,
-    method: "DELETE" as const,
-    host: "api.example.com",
-    pathname: "/users/1",
-    status: 500,
-    latency: 300,
-    regions: ["us-east-1", "ap-south-1"],
-    date: hoursAgo(4),
-    timingDns: 8,
-    timingConnection: 20,
-    timingTls: 15,
-    timingTtfb: 50,
-    timingTransfer: 12,
-    headers: { "content-type": "application/json" },
-    message: null,
-  },
-  {
-    level: "error" as const,
-    method: "PUT" as const,
-    host: "api.example.com",
-    pathname: "/users/2",
-    status: 404,
-    latency: 150,
-    regions: ["eu-west-1"],
-    date: hoursAgo(5),
-    timingDns: 7,
-    timingConnection: 11,
-    timingTls: 10,
-    timingTtfb: 22,
-    timingTransfer: 9,
-    headers: { "content-type": "application/json" },
-    message: "Not Found",
-  },
-  {
-    level: "success" as const,
-    method: "GET" as const,
-    host: "api.example.com",
-    pathname: "/health",
-    status: 200,
-    latency: 10,
-    regions: ["us-east-1"],
-    date: hoursAgo(6),
-    timingDns: 3,
-    timingConnection: 5,
-    timingTls: 4,
-    timingTtfb: 8,
-    timingTransfer: 3,
-    headers: { "content-type": "text/plain" },
-    message: "Healthy",
-  },
-  {
-    level: "warning" as const,
-    method: "POST" as const,
-    host: "cdn.example.com",
-    pathname: "/upload",
-    status: 429,
-    latency: 500,
-    regions: ["ap-south-1"],
-    date: hoursAgo(7),
-    timingDns: 12,
-    timingConnection: 25,
-    timingTls: 18,
-    timingTtfb: 60,
-    timingTransfer: 15,
-    headers: { "content-type": "multipart/form-data" },
-    message: "Rate limited",
-  },
-  {
-    level: "success" as const,
-    method: "GET" as const,
-    host: "api.example.com",
-    pathname: "/posts",
-    status: 200,
-    latency: 80,
-    regions: ["us-east-1", "eu-west-1", "ap-south-1"],
-    date: hoursAgo(8),
-    timingDns: 4,
-    timingConnection: 8,
-    timingTls: 6,
-    timingTtfb: 15,
-    timingTransfer: 5,
-    headers: { "content-type": "application/json" },
-    message: null,
-  },
-];
 
 export function getDb() {
   return db;
@@ -196,14 +48,6 @@ export async function setupTestDb() {
 
   client = postgres(connectionString);
   db = drizzle(client);
-
-  await migrate(db, {
-    migrationsFolder: "src/db/drizzle/migrations",
-  });
-
-  // Clean slate before seeding
-  await db.execute(sql`TRUNCATE TABLE logs`);
-  await db.insert(logs).values(seedRows);
 }
 
 export async function destroyTestDb() {

@@ -31,9 +31,8 @@ describe.skipIf(!hasDatabase)("buildWhereConditions", () => {
 
   it("string filter → ilike on host", async () => {
     const rows = await queryWithFilters({ host: "api" });
-    expect(rows.length).toBe(
-      seedRows.filter((r) => r.host.includes("api")).length,
-    );
+    const expected = seedRows.filter((r) => r.host.includes("api")).length;
+    expect(rows.length).toBe(expected);
     expect(rows.every((r) => r.host.includes("api"))).toBe(true);
   });
 
@@ -118,7 +117,6 @@ describe.skipIf(!hasDatabase)("buildWhereConditions", () => {
   });
 
   it("options.exclude → skips excluded key", async () => {
-    // Filter by host="api" and status=200, but exclude status
     const rows = await queryWithFilters(
       { host: "api", status: 200 },
       { exclude: ["status"] },
@@ -128,7 +126,6 @@ describe.skipIf(!hasDatabase)("buildWhereConditions", () => {
   });
 
   it("options.only → only applies listed key", async () => {
-    // Filter by host="api" and status=200, but only apply status
     const rows = await queryWithFilters(
       { host: "api", status: 200 },
       { only: ["status"] },

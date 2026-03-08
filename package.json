@@ -13,6 +13,7 @@
     "db:drizzle:generate": "drizzle-kit generate --config src/db/drizzle/drizzle.config.ts",
     "db:drizzle:migrate": "drizzle-kit migrate --config src/db/drizzle/drizzle.config.ts",
     "db:drizzle:seed": "tsx src/db/drizzle/seed.ts",
+    "db:drizzle:seed-test": "tsx src/db/drizzle/seed-test.ts",
     "db:drizzle:studio": "drizzle-kit studio --config src/db/drizzle/drizzle.config.ts"
   },
   "dependencies": {
