@@ -6,7 +6,10 @@ import {
   buildWhereConditions,
   computeFacets,
 } from "@/lib/drizzle";
-import { calculateSpecificPercentile } from "@/lib/request/percentile";
+import {
+  calculatePercentile,
+  calculateSpecificPercentile,
+} from "@/lib/request/percentile";
 import { and, count, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import SuperJSON from "superjson";
@@ -156,8 +159,13 @@ export async function GET(req: NextRequest): Promise<Response> {
     "timing.transfer": row.timingTransfer,
   }));
 
-  // --- Percentiles ---
+  // --- Per-row percentile ---
   const latencies = data.map((d) => d.latency);
+  for (const row of data) {
+    row.percentile = calculatePercentile(latencies, row.latency);
+  }
+
+  // --- Percentiles ---
   const currentPercentiles = {
     50: calculateSpecificPercentile(latencies, 50),
     75: calculateSpecificPercentile(latencies, 75),
