@@ -1,146 +1,40 @@
 import { db } from "@/db/drizzle";
 import { logs } from "@/db/drizzle/schema";
-import {
-  buildCursorPagination,
-  buildOrderBy,
-  buildWhereConditions,
-  computeFacets,
-} from "@/lib/drizzle";
+import { createDrizzleHandler } from "@/lib/drizzle";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
-import { and, count, sql } from "drizzle-orm";
+import { and, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import SuperJSON from "superjson";
 import { columnMapping } from "../column-mapping";
 import type { InfiniteQueryResponse, LogsMeta } from "../query-options";
 import type { ColumnSchema } from "../schema";
 import { searchParamsCache } from "../search-params";
+import { tableSchema } from "../table-schema";
 
 export const dynamic = "force-dynamic";
 
-const sliderKeys = [
-  "latency",
-  "timing.dns",
-  "timing.connection",
-  "timing.tls",
-  "timing.ttfb",
-  "timing.transfer",
-];
-
-const facetKeys = [
-  "level",
-  "method",
-  "status",
-  "regions",
-  "host",
-  "pathname",
-  ...sliderKeys,
-];
+const handler = createDrizzleHandler({
+  db,
+  table: logs,
+  schema: tableSchema.definition,
+  columnMapping,
+  cursorColumn: "date",
+  defaultSize: 40,
+});
 
 export async function GET(req: NextRequest): Promise<Response> {
   const _search: Map<string, string> = new Map();
   req.nextUrl.searchParams.forEach((value, key) => _search.set(key, value));
   const search = searchParamsCache.parse(Object.fromEntries(_search));
 
-  // --- Three-pass filtering strategy ---
-
-  // Pass 1: Date range conditions
-  const dateConditions = buildWhereConditions(columnMapping, {
-    date: search.date,
-  });
-
-  // Pass 2: Non-slider filters (for slider facet bounds)
-  const nonSliderFilters = Object.fromEntries(
-    Object.entries(search).filter(
-      ([key]) => !sliderKeys.includes(key) && key !== "date",
-    ),
-  );
-  const nonSliderConditions = buildWhereConditions(
-    columnMapping,
-    nonSliderFilters,
-  );
-  const pass2Conditions = [...dateConditions, ...nonSliderConditions];
-
-  // Pass 3: All conditions including sliders
-  const sliderFilters = Object.fromEntries(
-    Object.entries(search).filter(([key]) => sliderKeys.includes(key)),
-  );
-  const sliderConditions = buildWhereConditions(columnMapping, sliderFilters);
-  const allConditions = [...pass2Conditions, ...sliderConditions];
-
-  // --- Facets ---
-  const [sliderFacets, otherFacets] = await Promise.all([
-    // Slider facets use pass2 (so slider bounds don't collapse)
-    computeFacets(db, logs, columnMapping, pass2Conditions, sliderKeys, {
-      sliderKeys,
-    }),
-    // Other facets use all conditions
-    computeFacets(
-      db,
-      logs,
-      columnMapping,
-      allConditions,
-      facetKeys.filter((k) => !sliderKeys.includes(k)),
-    ),
-  ]);
-
-  const facets = { ...sliderFacets, ...otherFacets };
-
-  // --- Counts ---
-  const allWhere = allConditions.length > 0 ? and(...allConditions) : undefined;
-
-  const [totalResult, filterResult] = await Promise.all([
-    db.select({ total: count() }).from(logs),
-    db.select({ total: count() }).from(logs).where(allWhere),
-  ]);
-
-  const totalRowCount = totalResult[0]?.total ?? 0;
-  const filterRowCount = filterResult[0]?.total ?? 0;
-
-  // --- Sort + Cursor Pagination ---
-  const orderBy = buildOrderBy(columnMapping, search.sort ?? null);
-
-  const {
-    cursorCondition,
-    orderBy: cursorOrderBy,
-    needsReverse,
-  } = buildCursorPagination({
-    cursor: search.cursor ?? null,
-    direction: search.direction ?? "next",
-    size: search.size ?? 40,
-    cursorColumn: logs.date,
-  });
-
-  const dataConditions = cursorCondition
-    ? [...allConditions, cursorCondition]
-    : allConditions;
-
-  const dataWhere =
-    dataConditions.length > 0 ? and(...dataConditions) : undefined;
-
-  const size = search.size ?? 40;
-
-  // Use cursor ordering for pagination, with sort as secondary
-  const orderClauses = orderBy
-    ? sql`${cursorOrderBy}, ${orderBy}`
-    : cursorOrderBy;
-
-  const rows = await db
-    .select()
-    .from(logs)
-    .where(dataWhere)
-    .orderBy(orderClauses)
-    .limit(size);
-
-  // Reverse if paginating backwards
-  if (needsReverse) {
-    rows.reverse();
-  }
+  const result = await handler.execute(search as Record<string, unknown>);
 
   // Map DB rows to ColumnSchema shape
-  const data: ColumnSchema[] = rows.map((row) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: ColumnSchema[] = result.data.map((row: any) => ({
     uuid: row.uuid,
     level: row.level,
     method: row.method,
@@ -175,26 +69,25 @@ export async function GET(req: NextRequest): Promise<Response> {
   };
 
   // --- Chart data via SQL ---
-  const chartData = await getChartData(db, logs, allConditions, search.date);
-
-  // --- Cursors ---
-  const nextCursor =
-    data.length > 0 ? data[data.length - 1].date.getTime() : null;
-  const prevCursor =
-    data.length > 0 ? data[0].date.getTime() : new Date().getTime();
+  const chartData = await getChartData(
+    db,
+    logs,
+    result.allConditions,
+    search.date,
+  );
 
   return Response.json(
     SuperJSON.stringify({
       data,
       meta: {
-        totalRowCount,
-        filterRowCount,
+        totalRowCount: result.totalRowCount,
+        filterRowCount: result.filterRowCount,
         chartData,
-        facets,
+        facets: result.facets,
         metadata: { currentPercentiles },
       },
-      prevCursor,
-      nextCursor,
+      prevCursor: result.prevCursor,
+      nextCursor: result.nextCursor,
     } satisfies InfiniteQueryResponse<ColumnSchema[], LogsMeta>),
   );
 }

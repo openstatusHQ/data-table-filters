@@ -1,5 +1,3 @@
-"use client";
-
 import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-container";
 import { KVTabs } from "@/components/custom/kv-tabs";
 import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
@@ -139,6 +137,7 @@ export const tableSchema = createTableSchema({
   host: col
     .string()
     .label("Host")
+    .filterable("input")
     .size(125)
     .resizable()
     .sheet({ skeletonClassName: "w-24" }),
@@ -146,6 +145,7 @@ export const tableSchema = createTableSchema({
   pathname: col
     .string()
     .label("Pathname")
+    .filterable("input")
     .size(130)
     .resizable()
     .sheet({ skeletonClassName: "w-56" }),

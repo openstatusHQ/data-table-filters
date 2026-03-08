@@ -1,10 +1,7 @@
 import type { FacetMetadataSchema } from "@/lib/data-table/types";
 import { and, count, max, min, sql, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
-import type { ColumnMapping } from "./types";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DrizzleInstance = any;
+import type { ColumnMapping, DrizzleDB } from "./types";
 
 /**
  * Compute faceted counts for filter fields via SQL.
@@ -17,7 +14,7 @@ type DrizzleInstance = any;
  * All facet queries run in parallel via Promise.all.
  */
 export async function computeFacets(
-  db: DrizzleInstance,
+  db: DrizzleDB,
   table: PgTable,
   mapping: ColumnMapping,
   baseConditions: SQL[],

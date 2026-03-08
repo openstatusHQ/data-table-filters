@@ -1,4 +1,5 @@
 import type { Column } from "drizzle-orm";
+import type { PgDatabase } from "drizzle-orm/pg-core";
 
 /**
  * Maps tableSchema field keys to Drizzle table columns.
@@ -13,6 +14,9 @@ import type { Column } from "drizzle-orm";
  * } satisfies ColumnMapping;
  */
 export type ColumnMapping = Record<string, Column>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DrizzleDB = PgDatabase<any, any, any>;
 
 /** Sort descriptor matching the URL state shape. */
 export type SortDescriptor = { id: string; desc: boolean } | null;
