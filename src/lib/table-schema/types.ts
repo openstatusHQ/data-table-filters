@@ -172,22 +172,22 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * col.enum(LEVELS).filterable("checkbox", { options: LEVELS.map(v => ({ label: v, value: v })) })
    * col.number().filterable("slider", { min: 0, max: 5000 })
    */
-  filterable(type: F & "input"): ColBuilder<T, F>;
+  filterable(type: F & "input"): ColBuilder<T, "input">;
   filterable(
     type: F & "timerange",
     options?: { presets?: DatePreset[] },
-  ): ColBuilder<T, F>;
+  ): ColBuilder<T, "timerange">;
   filterable(
     type: F & "checkbox",
     options?: {
       options?: Option[];
       component?: (props: Option) => JSX.Element | null;
     },
-  ): ColBuilder<T, F>;
+  ): ColBuilder<T, "checkbox">;
   filterable(
     type: F & "slider",
     options: { min: number; max: number; unit?: string },
-  ): ColBuilder<T, F>;
+  ): ColBuilder<T, "slider">;
 
   /**
    * Removes filtering from this column.

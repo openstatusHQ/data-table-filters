@@ -1,0 +1,47 @@
+---
+title: "Introduction"
+description: "Overview of the data-table system architecture and layers"
+---
+
+# Introduction
+
+{new Date().toLocaleDateString("en-US", {
+month: "long",
+day: "numeric",
+year: "numeric",
+})}
+
+> If you have any questions or feature requests, please open an issue on [GitHub](https://github.com/openstatusHQ/data-table-filters/issues). This is a **work in progress** and we are happy to hear from you.
+
+This guide covers the data-table system end to end — from defining a table schema to rendering filters, columns, and row details.
+
+### Examples
+
+- [Drizzle](/drizzle) — server-side filtering with Drizzle ORM
+- [Default](/default) — client-side pagination without infinite scroll
+- [Infinite](/infinite) — infinite scroll with cursor pagination (mock)
+- [Light](/light) — lightweight frontend for [light.openstatus.dev](https://light.openstatus.dev)
+- [Builder](/builder) — interactive schema builder
+
+---
+
+## Overview
+
+The data-table is built on three layers:
+
+1. **Table Schema** — a declarative builder that defines columns, filters, display, sorting, and row details in one place
+2. **BYOS (Bring Your Own Store)** — a pluggable state management system for filter state (URL, Zustand, or custom)
+3. **Components** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
+
+For server-side data fetching, a **Drizzle ORM** adapter provides helper functions to build `WHERE` conditions, sorting, cursor pagination, and faceted counts from your filter state.
+
+The recommended frontend flow:
+
+```
+Table Schema → Generators → Components
+     ↓              ↓            ↓
+  col.*        columns[]    DataTableInfinite
+  presets      filterFields  DataTableFilterControls
+  .sheet()     sheetFields   DataTableSheetDetails
+               filterSchema  DataTableFilterCommand
+```

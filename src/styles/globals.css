@@ -77,3 +77,30 @@
     @apply bg-background text-foreground;
   }
 }
+
+.prose .anchor {
+  @apply invisible absolute no-underline;
+
+  margin-left: -1em;
+  padding-right: 0.5em;
+  width: 80%;
+  max-width: 700px;
+  cursor: pointer;
+}
+
+.anchor:hover {
+  @apply visible;
+}
+
+.prose a {
+  @apply text-foreground underline decoration-muted-foreground/50 decoration-2 underline-offset-2 transition-all hover:decoration-muted-foreground;
+}
+
+.prose .anchor:after {
+  @apply text-muted-foreground;
+  content: "#";
+}
+
+.prose *:hover > .anchor {
+  @apply visible;
+}

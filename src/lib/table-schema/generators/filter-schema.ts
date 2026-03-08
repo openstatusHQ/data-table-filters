@@ -4,37 +4,60 @@ import {
   SLIDER_DELIMITER,
 } from "@/lib/delimiters";
 import { createSchema, field } from "@/lib/store/schema";
-import type { SchemaDefinition } from "@/lib/store/schema";
-import type { TableSchemaDefinition } from "../types";
+import type {
+  FieldBuilder,
+  Schema,
+  SchemaDefinition,
+} from "@/lib/store/schema";
+import type { ColBuilder, TableSchemaDefinition } from "../types";
 
 /**
- * Generate a BYOS filter schema from a table schema definition.
- *
- * Each filterable column maps to the appropriate field.* builder:
- * - col.string()  + input    → field.string()
- * - col.number()  + input    → field.number()
- * - col.number()  + slider   → field.array(field.number()).delimiter(SLIDER_DELIMITER)
- * - col.number()  + checkbox → field.array(field.number()).delimiter(ARRAY_DELIMITER)
- * - col.boolean() + checkbox → field.array(field.boolean()).delimiter(ARRAY_DELIMITER)
- * - col.timestamp()+ timerange→ field.array(field.timestamp()).delimiter(RANGE_DELIMITER)
- * - col.enum(v)   + checkbox → field.array(field.stringLiteral(v))
- * - col.array(col.enum(v)) + checkbox → field.array(field.stringLiteral(v))
- *
- * Non-filterable fields are excluded. Pagination/UI-state fields must be
- * composed separately:
- *
- * @example
- * ```ts
- * export const filterSchema = createSchema({
- *   ...generateFilterSchema(tableSchema).definition,
- *   sort: field.sort(),
- *   live: field.boolean().default(false),
- * });
- * ```
+ * Extract keys from a TableSchemaDefinition where the column is filterable.
+ * A column is filterable when its filter type `F` is not `never`.
+ * Uses `[F] extends [never]` to avoid distribution issues with `any`.
  */
-export function generateFilterSchema(
+type FilterableKeys<T extends TableSchemaDefinition> = {
+  [K in keyof T]: T[K] extends ColBuilder<infer _T, infer F>
+    ? [F] extends [never]
+      ? never
+      : K
+    : never;
+}[keyof T];
+
+// Extract T and F separately — TS struggles to infer both at once from ColBuilder
+type GetColValue<B> = B extends ColBuilder<infer T, any> ? T : never;
+type GetColFilter<B> = B extends ColBuilder<any, infer F> ? F : never;
+
+/**
+ * Map a single ColBuilder to the correct FieldBuilder type based on its
+ * value type `T` and filter type `F`.
+ */
+type InferFilterFieldType<B> = [GetColFilter<B>] extends [never]
+  ? never
+  : GetColFilter<B> extends "input"
+    ? GetColValue<B> extends string
+      ? FieldBuilder<string | null>
+      : GetColValue<B> extends number
+        ? FieldBuilder<number | null>
+        : FieldBuilder<unknown>
+    : GetColFilter<B> extends "slider"
+      ? FieldBuilder<(number | null)[]>
+      : GetColFilter<B> extends "timerange"
+        ? FieldBuilder<(Date | null)[]>
+        : GetColFilter<B> extends "checkbox"
+          ? GetColValue<B> extends (infer U)[]
+            ? FieldBuilder<(U | null)[]>
+            : FieldBuilder<(GetColValue<B> | null)[]>
+          : FieldBuilder<unknown>;
+
+/** The generated filter definition — preserves the filterable keys from `T`. */
+type GeneratedFilterDef<T extends TableSchemaDefinition> = {
+  [K in FilterableKeys<T>]: InferFilterFieldType<T[K]>;
+};
+
+function buildFilterDefinition(
   schema: TableSchemaDefinition,
-): ReturnType<typeof createSchema<SchemaDefinition>> {
+): SchemaDefinition {
   const definition: SchemaDefinition = {};
 
   for (const [key, builder] of Object.entries(schema)) {
@@ -91,5 +114,51 @@ export function generateFilterSchema(
     }
   }
 
-  return createSchema(definition);
+  return definition;
+}
+
+/**
+ * Generate a BYOS filter schema from a table schema definition.
+ *
+ * Each filterable column maps to the appropriate field.* builder:
+ * - col.string()  + input    → field.string()
+ * - col.number()  + input    → field.number()
+ * - col.number()  + slider   → field.array(field.number()).delimiter(SLIDER_DELIMITER)
+ * - col.number()  + checkbox → field.array(field.number()).delimiter(ARRAY_DELIMITER)
+ * - col.boolean() + checkbox → field.array(field.boolean()).delimiter(ARRAY_DELIMITER)
+ * - col.timestamp()+ timerange→ field.array(field.timestamp()).delimiter(RANGE_DELIMITER)
+ * - col.enum(v)   + checkbox → field.array(field.stringLiteral(v))
+ * - col.array(col.enum(v)) + checkbox → field.array(field.stringLiteral(v))
+ *
+ * Non-filterable fields are excluded. Pass `extraFields` for pagination,
+ * sorting, and other non-filter state.
+ *
+ * @example
+ * ```ts
+ * // Without extra fields (filter fields only)
+ * const filterSchema = generateFilterSchema(tableSchema.definition);
+ *
+ * // With extra fields (recommended)
+ * const filterSchema = generateFilterSchema(tableSchema.definition, {
+ *   sort: field.sort(),
+ *   uuid: field.string(),
+ *   live: field.boolean().default(false),
+ *   size: field.number().default(40),
+ * });
+ * ```
+ */
+export function generateFilterSchema<T extends TableSchemaDefinition>(
+  schema: T,
+): Schema<GeneratedFilterDef<T>>;
+export function generateFilterSchema<
+  T extends TableSchemaDefinition,
+  E extends SchemaDefinition,
+>(schema: T, extraFields: E): Schema<GeneratedFilterDef<T> & E>;
+export function generateFilterSchema<
+  T extends TableSchemaDefinition,
+  E extends SchemaDefinition,
+>(schema: T, extraFields?: E) {
+  const generated = buildFilterDefinition(schema);
+  const merged = extraFields ? { ...generated, ...extraFields } : generated;
+  return createSchema(merged);
 }

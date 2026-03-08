@@ -1,12 +1,7 @@
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
-import {
-  ARRAY_DELIMITER,
-  RANGE_DELIMITER,
-  SLIDER_DELIMITER,
-} from "@/lib/delimiters";
-import { createSchema, field } from "@/lib/store/schema";
+import type { BaseChartSchema } from "@/lib/data-table/types";
 import { z } from "zod";
 
 export const timingSchema = z.object({
@@ -37,16 +32,13 @@ export const columnSchema = z
 export type ColumnSchema = z.infer<typeof columnSchema>;
 export type TimingSchema = z.infer<typeof timingSchema>;
 
-export const facetMetadataSchema = z.object({
-  rows: z.array(z.object({ value: z.any(), total: z.number() })),
-  total: z.number(),
-  min: z.number().optional(),
-  max: z.number().optional(),
-});
+// Re-export generic types from shared location
+export {
+  facetMetadataSchema,
+  type FacetMetadataSchema,
+} from "@/lib/data-table/types";
 
-export type FacetMetadataSchema = z.infer<typeof facetMetadataSchema>;
-
-export type BaseChartSchema = { timestamp: number; [key: string]: number };
+export type { BaseChartSchema };
 
 export const timelineChartSchema = z.object({
   timestamp: z.number(), // UNIX
@@ -62,40 +54,5 @@ export const timelineChartSchema = z.object({
 
 export type TimelineChartSchema = z.infer<typeof timelineChartSchema>;
 
-// Direction type for pagination
-const DIRECTIONS = ["prev", "next"] as const;
-
-// BYOS filter schema
-// NOTE: Column filter fields are kept explicit here for TypeScript inference.
-// The field builders match the output of generateFilterSchema(tableSchema.definition)
-// from src/app/infinite/table-schema.tsx — any schema change must be reflected in both.
-export const filterSchema = createSchema({
-  // Filters
-  level: field.array(field.stringLiteral(LEVELS)),
-  method: field.array(field.stringLiteral(METHODS)),
-  host: field.string(),
-  pathname: field.string(),
-  latency: field.array(field.number()).delimiter(SLIDER_DELIMITER),
-  "timing.dns": field.array(field.number()).delimiter(SLIDER_DELIMITER),
-  "timing.connection": field.array(field.number()).delimiter(SLIDER_DELIMITER),
-  "timing.tls": field.array(field.number()).delimiter(SLIDER_DELIMITER),
-  "timing.ttfb": field.array(field.number()).delimiter(SLIDER_DELIMITER),
-  "timing.transfer": field.array(field.number()).delimiter(SLIDER_DELIMITER),
-  status: field.array(field.number()).delimiter(ARRAY_DELIMITER),
-  regions: field.array(field.stringLiteral(REGIONS)),
-  date: field.array(field.timestamp()).delimiter(RANGE_DELIMITER),
-  // Sorting
-  sort: field.sort(),
-  // Selection
-  uuid: field.string(),
-  // Live mode
-  live: field.boolean().default(false),
-  // Pagination
-  size: field.number().default(40),
-  start: field.number().default(0),
-  direction: field.stringLiteral(DIRECTIONS).default("next"),
-  cursor: field.timestamp(), // null = "now" (handled in query-options)
-});
-
-// Inferred filter state type for use with useFilterState
-export type FilterState = typeof filterSchema._type;
+// BYOS filter schema — derived from tableSchema.definition via generateFilterSchema
+export { filterSchema, type FilterState } from "./filter-schema";

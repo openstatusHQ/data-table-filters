@@ -1,0 +1,16 @@
+---
+title: "Live Mode"
+description: "Real-time data polling with automatic row prepending"
+---
+
+## Live Mode
+
+Live mode polls for new data every 5 seconds using `fetchPreviousPage` from `useInfiniteQuery`. New rows are prepended to the data array.
+
+The `live` field in the filter schema controls this:
+
+```ts
+live: field.boolean().default(false),
+```
+
+When live mode is active, rows older than the activation timestamp are visually dimmed.

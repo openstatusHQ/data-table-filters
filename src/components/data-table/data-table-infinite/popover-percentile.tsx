@@ -1,5 +1,6 @@
 "use client";
 
+import { ColumnSchema } from "@/app/infinite/schema";
 import {
   Popover,
   PopoverContent,
@@ -10,7 +11,6 @@ import { getPercentileColor, Percentile } from "@/lib/request/percentile";
 import { cn } from "@/lib/utils";
 import { FunctionSquare } from "lucide-react";
 import * as React from "react";
-import { ColumnSchema } from "../schema";
 
 interface PopoverPercentileProps {
   data?: ColumnSchema;

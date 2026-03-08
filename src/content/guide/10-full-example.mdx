@@ -1,0 +1,127 @@
+---
+title: "Full Example"
+description: "Complete end-to-end example combining table schema, BYOS, and components"
+---
+
+## Full Example
+
+Putting it all together with the table schema builder:
+
+```tsx
+// table-schema.tsx
+import {
+  col,
+  createTableSchema,
+  type InferTableType,
+} from "@/lib/table-schema";
+
+const LEVELS = ["error", "warn", "info", "debug"] as const;
+const METHODS = ["GET", "POST", "DELETE"] as const;
+
+export const tableSchema = createTableSchema({
+  level: col.presets.logLevel(LEVELS),
+  date: col.presets.timestamp().label("Date").size(200).sheet(),
+  latency: col.presets
+    .duration("ms")
+    .label("Latency")
+    .sortable()
+    .size(110)
+    .sheet(),
+  status: col.presets.httpStatus().label("Status").size(60),
+  method: col.presets.httpMethod(METHODS).size(69),
+  host: col.string().label("Host").size(125).sheet(),
+});
+
+export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
+```
+
+```tsx
+// schema.ts
+import { createSchema, field } from "@/lib/store/schema";
+import { generateFilterSchema } from "@/lib/table-schema";
+import { tableSchema } from "./table-schema";
+
+export const filterSchema = createSchema({
+  ...generateFilterSchema(tableSchema.definition).definition,
+  sort: field.sort(),
+  live: field.boolean().default(false),
+  size: field.number().default(40),
+});
+
+export type FilterState = typeof filterSchema._type;
+```
+
+```tsx
+// client.tsx
+import { DataTableStoreProvider, useFilterState } from "@/lib/store";
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import {
+  generateColumns,
+  generateFilterFields,
+  generateSheetFields,
+  getDefaultColumnVisibility,
+} from "@/lib/table-schema";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import type { ColumnSchema, FilterState } from "./schema";
+import { filterSchema } from "./schema";
+import { tableSchema } from "./table-schema";
+
+const columns = generateColumns<ColumnSchema>(tableSchema.definition);
+const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
+const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
+const defaultColumnVisibility = getDefaultColumnVisibility(
+  tableSchema.definition,
+);
+
+export function Client() {
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "logs" });
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableContent />
+    </DataTableStoreProvider>
+  );
+}
+
+function DataTableContent() {
+  const search = useFilterState<FilterState>();
+  const { data, isFetching, fetchNextPage, hasNextPage, refetch } =
+    useInfiniteQuery(dataOptions(search));
+
+  const flatData = React.useMemo(
+    () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
+    [data?.pages],
+  );
+
+  const { sort, live, size, ...filter } = search;
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({ id: key, value }))
+      .filter(
+        ({ value }) =>
+          value !== null &&
+          value !== undefined &&
+          !(Array.isArray(value) && value.length === 0),
+      );
+  }, [filter]);
+
+  return (
+    <DataTableInfinite
+      columns={columns}
+      data={flatData}
+      defaultColumnFilters={defaultColumnFilters}
+      defaultColumnSorting={sort ? [sort] : undefined}
+      defaultColumnVisibility={defaultColumnVisibility}
+      filterFields={filterFields}
+      sheetFields={sheetFields}
+      schema={filterSchema.definition}
+      isFetching={isFetching}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
+      refetch={refetch}
+      renderSheetTitle={(props) => props.row?.original.host}
+      meta={{}}
+    />
+  );
+}
+```
