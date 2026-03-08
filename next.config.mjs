@@ -26,6 +26,11 @@ const nextConfig = {
         destination: "/drizzle",
         permanent: true,
       },
+      {
+        source: "/guide",
+        destination: "/guide/introduction",
+        permanent: true,
+      },
     ];
   },
 };

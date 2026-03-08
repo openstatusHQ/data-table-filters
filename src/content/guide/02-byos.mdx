@@ -1,0 +1,240 @@
+---
+title: "BYOS"
+description: "Bring Your Own Store — pluggable state management for filter state"
+---
+
+## BYOS (Bring Your Own Store)
+
+BYOS is an adapter pattern that decouples filter state management from the table components. Use **nuqs** (URL-based), **Zustand** (client-side), **memory** (ephemeral), or build your own adapter.
+
+### Schema Definition
+
+The schema is the single source of truth for filter field types, defaults, and serialization.
+
+```tsx
+import { createSchema, field } from "@/lib/store/schema";
+
+export const filterSchema = createSchema({
+  // Checkbox filters (arrays of values)
+  level: field.array(field.stringLiteral(["success", "warning", "error"])),
+  status: field.array(field.number()).delimiter(","),
+  regions: field.array(field.stringLiteral(["ams", "gru", "syd"])),
+
+  // Text input filters
+  host: field.string(),
+
+  // Slider filters (ranges)
+  latency: field.array(field.number()).delimiter("-"),
+
+  // Date range filter
+  date: field.array(field.timestamp()).delimiter("-"),
+
+  // Sorting
+  sort: field.sort(),
+
+  // UI state
+  live: field.boolean().default(false),
+  size: field.number().default(40),
+});
+
+export type FilterState = typeof filterSchema._type;
+```
+
+### Field Types
+
+```ts
+// Primitives (default to null)
+field.string()                              // string | null
+field.number()                              // number | null (parseInt)
+field.boolean()                             // boolean | null
+field.timestamp()                           // Date | null (serialized as ms)
+
+// Constrained
+field.stringLiteral(["a", "b", "c"])        // 'a' | 'b' | 'c' | null
+
+// Sorting
+field.sort()                                // { id: string; desc: boolean } | null
+                                            // Serialized as "columnId.asc" / "columnId.desc"
+
+// Arrays
+field.array(field.string())                 // string[]
+field.array(field.number())                 // number[]
+field.array(field.stringLiteral([...]))     // Literal[]
+
+// Modifiers (chainable)
+field.array(field.string())
+  .default(["default"])                     // Default value on reset
+  .delimiter(",")                           // URL serialization separator
+```
+
+### Adapters
+
+#### nuqs Adapter (URL-based)
+
+Syncs filter state to URL search params. Enables shareable URLs and browser history.
+
+```tsx
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+
+function Client() {
+  const adapter = useNuqsAdapter(filterSchema.definition, {
+    id: "my-table",
+    shallow: true, // Don't trigger navigation
+    history: "push", // "push" | "replace"
+    throttleMs: 50, // Throttle URL updates
+  });
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableContent />
+    </DataTableStoreProvider>
+  );
+}
+```
+
+For server-side parsing:
+
+```tsx
+import { createNuqsSearchParams } from "@/lib/store/adapters/nuqs/server";
+
+export const { searchParamsParser, searchParamsCache, searchParamsSerializer } =
+  createNuqsSearchParams(filterSchema.definition);
+
+// In page.tsx
+export default async function Page({ searchParams }) {
+  const search = await searchParamsCache.parse(searchParams);
+  // Use for server-side data fetching or prefetching...
+}
+```
+
+#### Zustand Adapter (Client-side)
+
+Integrates with existing Zustand stores.
+
+```tsx
+import {
+  createFilterSlice,
+  useZustandAdapter,
+} from "@/lib/store/adapters/zustand";
+import { create } from "zustand";
+
+export const useFilterStore = create<Record<string, unknown>>((set, get) => ({
+  ...createFilterSlice(filterSchema.definition, "my-table", set, get),
+}));
+
+function Client() {
+  const adapter = useZustandAdapter(useFilterStore, filterSchema.definition, {
+    id: "my-table",
+  });
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableContent />
+    </DataTableStoreProvider>
+  );
+}
+```
+
+#### Memory Adapter (Ephemeral)
+
+Lightweight in-memory state. No URL sync, no external store. Useful for embedded tables or the builder.
+
+```tsx
+import { useMemoryAdapter } from "@/lib/store/adapters/memory";
+
+const adapter = useMemoryAdapter(filterSchema.definition);
+```
+
+#### Custom Adapters
+
+Implement the `StoreAdapter` interface:
+
+```ts
+interface StoreAdapter<T extends Record<string, unknown>> {
+  subscribe(listener: () => void): () => void;
+  getSnapshot(): { state: T; version: number };
+  getServerSnapshot?(): { state: T; version: number };
+  setState(partial: Partial<T>): void;
+  setField<K extends keyof T>(key: K, value: T[K]): void;
+  reset(fields?: (keyof T)[]): void;
+  pause(): void;
+  resume(): void;
+  isPaused(): boolean;
+  destroy(): void;
+  getTableId(): string;
+  getSchema(): SchemaDefinition;
+  getDefaults(): T;
+}
+```
+
+### Provider & Hooks
+
+#### DataTableStoreProvider
+
+Wraps your components with the adapter context:
+
+```tsx
+<DataTableStoreProvider adapter={adapter}>{children}</DataTableStoreProvider>
+```
+
+#### useFilterState
+
+Read filter state. Uses `useSyncExternalStore` for optimal React 18+ compatibility.
+
+```tsx
+// Read entire state
+const state = useFilterState<FilterState>();
+
+// Read with selector (only re-renders when selected value changes)
+const live = useFilterState<FilterState, boolean>((s) => s.live);
+const regions = useFilterState<FilterState, string[]>((s) => s.regions);
+```
+
+#### useFilterActions
+
+Modify filter state.
+
+```tsx
+const {
+  setFilter, // Set a single field
+  setFilters, // Set multiple fields at once
+  resetFilter, // Reset a single field to default
+  resetAllFilters, // Reset all filters
+  pause, // Pause state updates (for live mode)
+  resume, // Resume and apply queued changes
+  isPaused, // Check if paused
+} = useFilterActions<FilterState>();
+
+setFilter("regions", ["ams", "gru"]);
+setFilters({ regions: ["ams"], host: "api.example.com" });
+resetFilter("regions");
+resetAllFilters();
+```
+
+#### useReactTableSync
+
+Bidirectional sync between BYOS filter state and React Table's `columnFilters`. Useful when you need React Table's internal filtering to stay in sync with adapter state.
+
+```tsx
+import { useReactTableSync } from "@/lib/store";
+
+const table = useReactTable({ ... });
+
+useReactTableSync({
+  table,
+  filterFields,
+});
+```
+
+#### useFilterField
+
+Work with a single field. Combines read and write.
+
+```tsx
+const { value, setValue, reset } = useFilterField<FilterState, "regions">(
+  "regions",
+);
+
+setValue(["ams", "gru", "fra"]);
+reset(); // Back to default
+```

@@ -7,7 +7,7 @@ import { default as NextLink } from "next/link";
 
 export default function Home() {
   return (
-    <div className="container mx-auto flex min-h-screen w-full flex-col gap-6 p-4 sm:p-8 xl:gap-12 xl:p-12">
+    <div className="container mx-auto flex min-h-screen w-full flex-col gap-6 p-4 sm:p-6 xl:gap-8 xl:p-8">
       <div className="px-2.5">
         <Hero />
       </div>
