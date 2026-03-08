@@ -39,15 +39,17 @@ export function TableOfContents({ headings }: { headings: TOCItem[] }) {
         {headings.map((heading) => (
           <li
             key={heading.slug}
+            className="relative"
             style={{ paddingLeft: `${(heading.depth - 2) * 12}px` }}
           >
+            {activeId === heading.slug && (
+              <div className="absolute bottom-1 left-0 top-1 w-0.5 rounded-full bg-foreground" />
+            )}
             <a
               href={`#${heading.slug}`}
               className={cn(
-                "block truncate border-l-2 py-0.5 pl-2 text-muted-foreground transition-colors hover:text-foreground",
-                activeId === heading.slug
-                  ? "border-foreground font-medium text-foreground"
-                  : "border-transparent",
+                "mx-1 block truncate rounded-md py-0.5 pl-2 pr-1 text-muted-foreground transition-colors hover:text-foreground",
+                activeId === heading.slug && "font-medium text-foreground",
               )}
             >
               {heading.text}

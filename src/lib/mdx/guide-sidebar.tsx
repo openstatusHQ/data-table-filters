@@ -26,15 +26,16 @@ function SectionList({
   return (
     <ul className="space-y-1.5">
       {sections.map((section) => (
-        <li key={section.slug}>
+        <li key={section.slug} className="relative">
+          {currentSlug === section.slug && (
+            <div className="absolute bottom-1 left-0 top-1 w-0.5 rounded-full bg-foreground" />
+          )}
           <Link
             href={`/guide/${section.slug}`}
             onClick={onNavigate}
             className={cn(
-              "block border-l-2 py-0.5 pl-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
-              currentSlug === section.slug
-                ? "border-foreground font-medium text-foreground"
-                : "border-transparent",
+              "mx-1 block truncate rounded-md py-0.5 pl-2 pr-1 text-sm text-muted-foreground transition-colors hover:text-foreground",
+              currentSlug === section.slug && "font-medium text-foreground",
             )}
           >
             {section.title}

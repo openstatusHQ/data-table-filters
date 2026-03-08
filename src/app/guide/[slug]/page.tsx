@@ -25,6 +25,7 @@ export default async function GuideSectionPage({
           "prose-pre:bg-foreground dark:prose-pre:bg-muted/50",
           "prose-figure:rounded-lg prose-figure:border prose-figure:border-border",
           "prose-blockquote:rounded-lg prose-blockquote:border prose-blockquote:border-border prose-blockquote:bg-muted/50 prose-blockquote:pe-6 prose-blockquote:font-normal prose-blockquote:not-italic",
+          "prose-h1:font-semibold prose-h2:font-semibold prose-h3:font-semibold prose-h4:font-semibold prose-h5:font-semibold prose-h6:font-semibold",
           "w-full min-w-0",
         )}
       >

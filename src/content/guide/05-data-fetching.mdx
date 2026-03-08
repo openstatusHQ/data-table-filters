@@ -1,0 +1,173 @@
+---
+title: "Data Fetching"
+description: "API response shape, useInfiniteQuery pattern, server prefetching, and faceted values"
+---
+
+# Data Fetching
+
+This section connects the dots between your [Database](/guide/database) queries and the [Components](/guide/components) that render the data.
+
+## API Route
+
+The API route parses filter state from the URL, runs the [Drizzle handler](/guide/database#handler), and returns a standardized response:
+
+```ts
+// app/drizzle/api/route.ts
+import { createDrizzleHandler } from "@/lib/drizzle";
+import SuperJSON from "superjson";
+
+const handler = createDrizzleHandler({
+  db,
+  table: logs,
+  schema: tableSchema.definition,
+  columnMapping,
+  cursorColumn: "date",
+});
+
+export async function GET(req: NextRequest) {
+  const search = searchParamsCache.parse(
+    Object.fromEntries(req.nextUrl.searchParams),
+  );
+  const result = await handler.execute(search);
+
+  return Response.json(
+    SuperJSON.stringify({
+      data: result.data,
+      meta: {
+        totalRowCount: result.totalRowCount,
+        filterRowCount: result.filterRowCount,
+        chartData: await getChartData(db, logs, result.allConditions),
+        facets: result.facets,
+      },
+      prevCursor: result.prevCursor,
+      nextCursor: result.nextCursor,
+    }),
+  );
+}
+```
+
+## API Response Shape
+
+Your API should return:
+
+```ts
+{
+  data: ColumnSchema[];
+  meta: {
+    totalRowCount: number;
+    filterRowCount: number;
+    chartData: BaseChartSchema[];
+    facets: Record<string, FacetMetadataSchema>;
+    metadata?: TMeta;
+  };
+  nextCursor: number | null;   // Timestamp of last item
+  prevCursor: number | null;   // Timestamp of first item (for live mode)
+}
+```
+
+We use [`superjson`](https://github.com/flightcontrolhq/superjson) to serialize `Date` objects and other non-JSON-safe values.
+
+## useInfiniteQuery Pattern
+
+```tsx
+function DataTableContent() {
+  const search = useFilterState<FilterState>();
+
+  const { data, isFetching, fetchNextPage, hasNextPage } = useInfiniteQuery(
+    dataOptions(search),
+  );
+
+  const flatData = React.useMemo(
+    () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
+    [data?.pages],
+  );
+
+  // Destructure non-filter fields (sort, pagination, UI state) from the state.
+  // Everything left in `filter` maps to actual column filters.
+  const { sort, cursor, direction, uuid, live, size, ...filter } = search;
+
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({ id: key, value }))
+      .filter(({ value }) => {
+        if (value === null || value === undefined) return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        return true;
+      });
+  }, [filter]);
+
+  return (
+    <DataTableInfinite
+      data={flatData}
+      defaultColumnFilters={defaultColumnFilters}
+      defaultColumnSorting={sort ? [sort] : undefined}
+      // ...
+    />
+  );
+}
+```
+
+## Server Prefetch
+
+Server-side prefetching with React Query's `HydrationBoundary`:
+
+```tsx
+// page.tsx
+import { getQueryClient } from "@/providers/get-query-client";
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+
+export default async function Page({ searchParams }) {
+  const search = await searchParamsCache.parse(searchParams);
+  const queryClient = getQueryClient();
+  await queryClient.prefetchInfiniteQuery(dataOptions(search));
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Client />
+    </HydrationBoundary>
+  );
+}
+```
+
+## Faceted Values
+
+Server-side faceted values provide accurate counts and ranges for filter options. The API returns them in `meta.facets`:
+
+```ts
+type FacetMetadataSchema = {
+  rows: Array<{ value: any; total: number }>;
+  total: number;
+  min?: number;
+  max?: number;
+};
+```
+
+Checkbox filters get dynamic options with counts. Slider filters get dynamic min/max bounds. If a filter field already has hard-coded `options`, they are preserved.
+
+Inject facets into your filter fields at runtime:
+
+```tsx
+const dynamicFilterFields = React.useMemo(() => {
+  return filterFields.map((field) => {
+    const facetsField = facets?.[field.value as string];
+    if (!facetsField) return field;
+    if (field.options && field.options.length > 0) return field;
+
+    const options = facetsField.rows.map(({ value }) => ({
+      label: `${value}`,
+      value,
+    }));
+
+    if (field.type === "slider") {
+      return {
+        ...field,
+        min: facetsField.min ?? field.min,
+        max: facetsField.max ?? field.max,
+        options,
+      };
+    }
+
+    return { ...field, options };
+  });
+}, [facets]);
+```
