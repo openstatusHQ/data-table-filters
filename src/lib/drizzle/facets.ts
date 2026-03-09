@@ -101,7 +101,6 @@ export async function computeFacets(
       maxVal = Math.max(...result.map((r) => Number(r.value)));
     }
 
-    console.timeEnd(`[drizzle] facet: ${key}`);
     return [
       key,
       {
