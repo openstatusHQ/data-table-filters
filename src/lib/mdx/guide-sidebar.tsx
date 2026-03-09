@@ -26,15 +26,21 @@ function SectionList({
   return (
     <ul className="space-y-1.5">
       {sections.map((section) => (
-        <li key={section.slug}>
+        <li
+          key={section.slug}
+          className={cn(
+            "border-l-2",
+            currentSlug === section.slug
+              ? "border-foreground"
+              : "border-transparent",
+          )}
+        >
           <Link
             href={`/guide/${section.slug}`}
             onClick={onNavigate}
             className={cn(
-              "block border-l-2 py-0.5 pl-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
-              currentSlug === section.slug
-                ? "border-foreground font-medium text-foreground"
-                : "border-transparent",
+              "ml-2 mr-1 block rounded-sm p-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
+              currentSlug === section.slug && "font-medium text-foreground",
             )}
           >
             {section.title}
@@ -53,7 +59,7 @@ export function GuideSidebar({ sections }: { sections: SectionMeta[] }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <nav className="sticky top-20 hidden max-h-[calc(100vh-6rem)] overflow-y-auto md:block">
+      <nav className="sticky top-10 hidden max-h-[calc(100vh-6rem)] overflow-y-auto md:block">
         <p className="mb-3 text-sm font-medium">Guide</p>
         <SectionList sections={sections} currentSlug={currentSlug} />
       </nav>

@@ -1,30 +1,35 @@
 ---
 title: "Data Fetching"
-description: "API response shape, useInfiniteQuery pattern, and server prefetching"
+description: "TanStack React Query integration with useInfiniteQuery, query options factory, and server prefetching"
 ---
 
-## Data Fetching
+# Data Fetching
 
-### API Response Shape
+Data fetching is powered by [TanStack React Query](https://tanstack.com/query) using `useInfiniteQuery` for cursor-based pagination. A factory function creates the query options so you don't have to wire up cursors, serialization, or caching manually.
 
-Your API should return:
+### Query Options Factory
+
+`createDataTableQueryOptions` generates `infiniteQueryOptions` for your table. It handles cursor management, search param serialization, and [SuperJSON](https://github.com/flightcontrolhq/superjson) deserialization:
 
 ```ts
-{
-  data: ColumnSchema[];
-  meta: {
-    totalRowCount: number;
-    filterRowCount: number;
-    chartData: BaseChartSchema[];
-    facets: Record<string, FacetMetadataSchema>;
-    metadata?: TMeta;
-  };
-  nextCursor: number | null;   // Timestamp of last item
-  prevCursor: number | null;   // Timestamp of first item (for live mode)
-}
+import { createDataTableQueryOptions } from "@/lib/data-table";
+
+const _dataOptions = createDataTableQueryOptions<ColumnSchema[], MyMeta>({
+  queryKeyPrefix: "my-table",
+  apiEndpoint: "/my-table/api",
+  searchParamsSerializer: searchParamsSerializer,
+});
+
+export const dataOptions = (search: SearchParamsType) =>
+  _dataOptions(search as unknown as Record<string, unknown>);
 ```
 
-We use [`superjson`](https://github.com/flightcontrolhq/superjson) to serialize `Date` objects and other non-JSON-safe values.
+The factory configures:
+
+- **Query key** — derived from serialized search params (excludes `cursor`, `direction`, `uuid`, `live` for stable cache keys)
+- **Initial cursor** — `Date.now()` (most recent data first)
+- **Page params** — `getNextPageParam` / `getPreviousPageParam` from `nextCursor` / `prevCursor`
+- **Caching** — `keepPreviousData` for smooth filter transitions, 5-minute stale time, no refetch on window focus
 
 ### useInfiniteQuery Pattern
 
@@ -36,12 +41,13 @@ function DataTableContent() {
     dataOptions(search),
   );
 
+  // Flatten pages into a single array
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
     [data?.pages],
   );
 
-  // Derive defaultColumnFilters from state (exclude non-filter fields)
+  // Derive column filters from state (exclude non-filter fields)
   const { sort, cursor, direction, uuid, live, size, ...filter } = search;
 
   const defaultColumnFilters = React.useMemo(() => {
@@ -59,15 +65,20 @@ function DataTableContent() {
       data={flatData}
       defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
+      isFetching={isFetching}
       // ...
     />
   );
 }
 ```
 
+When the user scrolls to the bottom, `DataTableInfinite` calls `fetchNextPage`. React Query fetches the next page using the `nextCursor` from the last page's response and appends it to `data.pages`.
+
 ### Server Prefetch
 
-Server-side prefetching with React Query's `HydrationBoundary`:
+Server-side prefetching with React Query's `HydrationBoundary` avoids a loading spinner on first render:
 
 ```tsx
 // page.tsx
@@ -86,3 +97,5 @@ export default async function Page({ searchParams }) {
   );
 }
 ```
+
+The query is prefetched on the server and dehydrated into the HTML. On the client, `useInfiniteQuery` picks up the cached data immediately — no extra network request.

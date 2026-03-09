@@ -1,11 +1,11 @@
 ---
-title: "BYOS"
-description: "Bring Your Own Store — pluggable state management for filter state"
+title: "State Management"
+description: "Pluggable adapter pattern for filter state — nuqs (URL), Zustand, memory, or custom"
 ---
 
-## BYOS (Bring Your Own Store)
+# State Management
 
-BYOS is an adapter pattern that decouples filter state management from the table components. Use **nuqs** (URL-based), **Zustand** (client-side), **memory** (ephemeral), or build your own adapter.
+An adapter pattern that decouples filter state management from the table components. Use **nuqs** (URL-based), **Zustand** (client-side), **memory** (ephemeral), or build your own adapter.
 
 ### Schema Definition
 
@@ -213,7 +213,7 @@ resetAllFilters();
 
 #### useReactTableSync
 
-Bidirectional sync between BYOS filter state and React Table's `columnFilters`. Useful when you need React Table's internal filtering to stay in sync with adapter state.
+Bidirectional sync between adapter filter state and React Table's `columnFilters`. Useful when you need React Table's internal filtering to stay in sync with adapter state.
 
 ```tsx
 import { useReactTableSync } from "@/lib/store";

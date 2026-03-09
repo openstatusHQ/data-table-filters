@@ -27,6 +27,17 @@ function createHeading(level: number) {
   return Heading;
 }
 
+function Table({
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<"table">) {
+  return (
+    <div className="table-wrapper">
+      <table {...props}>{children}</table>
+    </div>
+  );
+}
+
 const components = {
   h1: createHeading(1),
   h2: createHeading(2),
@@ -34,6 +45,7 @@ const components = {
   h4: createHeading(4),
   h5: createHeading(5),
   h6: createHeading(6),
+  table: Table,
 };
 
 /** @type {import('rehype-pretty-code').Options} */
