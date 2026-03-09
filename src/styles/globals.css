@@ -104,3 +104,11 @@
 .prose *:hover > .anchor {
   @apply visible;
 }
+
+.prose pre {
+  @apply overflow-x-auto;
+}
+
+.prose .table-wrapper {
+  @apply w-full overflow-x-auto;
+}

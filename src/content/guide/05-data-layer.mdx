@@ -1,0 +1,148 @@
+---
+title: "Data Layer"
+description: "Server-side concepts for filtering, faceted search, cursor pagination, and chart data"
+---
+
+# Data Layer
+
+These concepts apply regardless of your ORM — Drizzle, Prisma, or raw SQL. The [Drizzle ORM](/guide/drizzle-orm) guide shows a concrete implementation.
+
+### API Response Shape
+
+Your API endpoint should return this shape (serialized with [SuperJSON](https://github.com/flightcontrolhq/superjson) to preserve `Date` objects):
+
+```ts
+{
+  data: ColumnSchema[];
+  meta: {
+    totalRowCount: number;      // Total rows in the table (unfiltered)
+    filterRowCount: number;     // Rows matching current filters
+    chartData: BaseChartSchema[];
+    facets: Record<string, FacetMetadataSchema>;
+    metadata?: TMeta;           // Custom metadata (e.g. percentiles)
+  };
+  nextCursor: number | null;    // Timestamp (ms) of last row
+  prevCursor: number | null;    // Timestamp (ms) of first row
+}
+```
+
+### Three-Pass Filtering
+
+A strategy to keep slider bounds stable when users adjust them. Without it, dragging a slider collapses its own min/max range.
+
+**Pass 1 — Date only**
+Apply only the date range filter. This gives the base time window for all facet computation.
+
+**Pass 2 — Date + non-slider filters**
+Add checkbox, input, and other non-slider filters. Use these conditions to compute slider facet bounds (min/max). Because slider values are excluded, moving a slider doesn't shrink its own range.
+
+**Pass 3 — All filters (including sliders)**
+The final set of conditions used for the data query, counts, and non-slider facets.
+
+```
+Date filters ──────────────────────────┐
+                                       ├─▶ Pass 1 → (used for date-only facets)
+                                       │
++ Non-slider filters ─────────────────├─▶ Pass 2 → Slider min/max bounds
+                                       │
++ Slider filters ─────────────────────└─▶ Pass 3 → Data, counts, checkbox facets
+```
+
+### Faceted Search
+
+Facets provide grouped counts for filter options and min/max ranges for sliders. They're returned in `meta.facets`:
+
+```ts
+type FacetMetadataSchema = {
+  rows: Array<{ value: string | number | boolean; total: number }>;
+  total: number;
+  min?: number; // For slider and numeric columns
+  max?: number;
+};
+```
+
+**Checkbox facets** — grouped counts per value (e.g. `{ success: 120, error: 8 }`). Computed from Pass 3 conditions.
+
+**Slider facets** — `min`/`max` of the column. Computed from Pass 2 conditions so they don't collapse.
+
+**Array columns** — unnest the array values before grouping (e.g. PostgreSQL `unnest()`).
+
+All facet queries can run in parallel for better performance.
+
+#### Client-Side Usage
+
+Inject server-side facets into your filter fields at runtime so checkboxes show counts and sliders get dynamic bounds:
+
+```tsx
+const dynamicFilterFields = React.useMemo(() => {
+  return filterFields.map((field) => {
+    const facetsField = facets?.[field.value as string];
+    if (!facetsField) return field;
+    if (field.options && field.options.length > 0) return field;
+
+    const options = facetsField.rows.map(({ value }) => ({
+      label: `${value}`,
+      value,
+    }));
+
+    if (field.type === "slider") {
+      return {
+        ...field,
+        min: facetsField.min ?? field.min,
+        max: facetsField.max ?? field.max,
+        options,
+      };
+    }
+
+    return { ...field, options };
+  });
+}, [facets]);
+```
+
+### Cursor Pagination
+
+Cursor-based pagination (not offset) is used for infinite scroll. It's stable under concurrent inserts and performs better on large tables.
+
+- Uses a timestamp column (e.g. `date`) as the cursor
+- **Next page** (older rows): `WHERE date < cursor ORDER BY date DESC LIMIT size`
+- **Previous page** (newer rows, for live mode): `WHERE date > cursor ORDER BY date ASC LIMIT size` (then reverse the results)
+- Client sends `cursor` + `direction`, server returns `nextCursor` + `prevCursor`
+
+### Chart Data
+
+Optional time-series aggregation for the timeline chart. Group rows into time buckets and count by category:
+
+```ts
+type BaseChartSchema = {
+  timestamp: number; // UNIX ms (bucket start)
+  [key: string]: number; // e.g. "success", "warning", "error"
+};
+```
+
+Use `date_bin()` (PostgreSQL) or equivalent for intelligent bucketing. The interval should adapt to the date range — smaller ranges get finer buckets.
+
+### Indexing
+
+Add database indexes on columns used for filtering, sorting, and pagination:
+
+- **Cursor column** (e.g. `date`) — required for cursor pagination performance
+- **Frequently filtered columns** (e.g. `level`, `status`) — speeds up WHERE clauses
+- **Composite indexes** — useful when filters are often combined
+
+Use `EXPLAIN ANALYZE` to verify your indexes are being used.
+
+```ts
+import { index, pgTable } from "drizzle-orm/pg-core";
+
+export const logs = pgTable(
+  "logs",
+  {
+    // ... columns
+  },
+  (table) => [
+    index("logs_date_idx").on(table.date),
+    index("logs_level_idx").on(table.level),
+    index("logs_status_idx").on(table.status),
+  ],
+);
+```

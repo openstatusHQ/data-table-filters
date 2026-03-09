@@ -43,6 +43,7 @@ export async function computeFacets(
         .where(whereCondition);
 
       const row = result[0];
+
       return [
         key,
         {
@@ -68,6 +69,7 @@ export async function computeFacets(
       );
 
       const total = result.reduce((sum, r) => sum + Number(r.total), 0);
+
       return [
         key,
         {

@@ -5,7 +5,7 @@ description: "Type-safe builder for defining your entire table in one place"
 
 # Table Schema
 
-The table schema is a type-safe builder for defining your entire table in one place. Instead of manually wiring up `columns.tsx`, `filterFields`, `sheetFields`, and a BYOS schema separately, a single schema definition generates all of them.
+The table schema is a type-safe builder for defining your entire table in one place. Instead of manually wiring up `columns.tsx`, `filterFields`, `sheetFields`, and a filter state schema separately, a single schema definition generates all of them.
 
 ## Defining a Schema
 
@@ -223,7 +223,7 @@ const allColumns = [
 
 ### generateFilterSchema
 
-Bridges the table schema to BYOS by generating a filter schema. Add non-column state fields (sort, pagination, live mode) alongside:
+Bridges the table schema to filter state by generating a filter schema. Add non-column state fields (sort, pagination, live mode) alongside:
 
 ```tsx
 import { createSchema, field } from "@/lib/store/schema";
@@ -236,11 +236,11 @@ export const filterSchema = createSchema({
 });
 ```
 
-> The `/infinite` route writes the BYOS schema manually instead of using `generateFilterSchema` for better TypeScript inference. Both approaches work — use `generateFilterSchema` for convenience, manual for full control.
+> The `/infinite` route writes the filter state schema manually instead of using `generateFilterSchema` for better TypeScript inference. Both approaches work — use `generateFilterSchema` for convenience, manual for full control.
 
-The mapping from column types to BYOS field types:
+The mapping from column types to filter state field types:
 
-| Column + Filter                   | BYOS Field                                      |
+| Column + Filter                   | filter state Field                              |
 | --------------------------------- | ----------------------------------------------- |
 | `col.string()` + `"input"`        | `field.string()`                                |
 | `col.number()` + `"input"`        | `field.number()`                                |

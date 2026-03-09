@@ -55,9 +55,9 @@ const filterFields = generateFilterFields(tableSchema.definition);
 
 The data-table is built on three layers:
 
-1. **[Table Schema](/guide/table-schema)** — a declarative builder that defines columns, filters, display, sorting, and row details in one place
-2. **[Components](/guide/components)** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
-3. **[State Management](/guide/state-management)** — a pluggable BYOS (Bring Your Own Store) system for filter state (URL, Zustand, or custom)
+1. **Table Schema** — a declarative builder that defines columns, filters, display, sorting, and row details in one place
+2. **State Management** — a pluggable adapter system for filter state (URL, Zustand, or custom)
+3. **Components** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
 
 For server-side data, a **[Database](/guide/database)** adapter (Drizzle ORM) provides helper functions to build `WHERE` conditions, sorting, cursor pagination, and faceted counts. The **[Data Fetching](/guide/data-fetching)** section covers the API response shape and React Query integration.
 

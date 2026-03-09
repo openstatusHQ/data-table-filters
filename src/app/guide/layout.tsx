@@ -36,7 +36,7 @@ export default async function GuideLayout({
       <div className="border-b border-dashed border-border" />
       <div
         className={cn(
-          "relative mx-auto max-w-6xl",
+          "relative mx-auto w-full max-w-6xl",
           "md:grid md:grid-cols-[220px_1fr] md:gap-8",
           "xl:grid-cols-[220px_1fr_220px]",
         )}

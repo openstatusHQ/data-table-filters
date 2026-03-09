@@ -1,39 +1,19 @@
 ---
 title: "Debugging"
-description: "Performance debugging with react-scan, devtools, and TanStack Query"
+description: "Performance debugging with react-scan and TanStack Query devtools"
 ---
 
 # Debugging
 
-## Environment Variables
-
-Enable debugging tools via `.env.local`:
+We use `react-scan` for performance debugging:
 
 ```
+# .env.local
 NEXT_PUBLIC_REACT_SCAN=true
+```
+
+TanStack Query devtools appear automatically in development. For table debug logs:
+
+```
 NEXT_PUBLIC_TABLE_DEBUG=true
 ```
-
-- `NEXT_PUBLIC_REACT_SCAN` — enables [react-scan](https://github.com/aidenybai/react-scan) to highlight unnecessary re-renders
-- `NEXT_PUBLIC_TABLE_DEBUG` — enables TanStack Table debug logging (column state changes, filter updates, etc.)
-
-## Store DevTools
-
-A built-in devtools panel for inspecting filter state in development:
-
-```tsx
-import { DevTools } from "@/lib/store/devtools";
-
-<DevTools position="bottom-right" defaultOpen={false} />;
-```
-
-The panel provides two tabs:
-
-- **State Inspector** — shows current filter state with default values highlighted, plus copy-to-clipboard
-- **History** — tracks state mutations over time for debugging filter interactions
-
-Only renders in development (`process.env.NODE_ENV !== "production"`).
-
-## TanStack Query
-
-TanStack Query devtools appear automatically in development. They show query cache state, refetch status, and stale/fresh timing — useful for debugging data fetching and infinite scroll behavior.
