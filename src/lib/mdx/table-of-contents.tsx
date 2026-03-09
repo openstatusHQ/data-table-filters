@@ -47,6 +47,9 @@ export function TableOfContents({ headings }: { headings: TOCItem[] }) {
             )}
             style={{ paddingLeft: `${(heading.depth - 2) * 12}px` }}
           >
+            {activeId === heading.slug && (
+              <div className="absolute bottom-1 left-0 top-1 w-0.5 rounded-full bg-foreground" />
+            )}
             <a
               href={`#${heading.slug}`}
               className={cn(

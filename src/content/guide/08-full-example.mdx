@@ -5,7 +5,9 @@ description: "Complete end-to-end example combining table schema, state manageme
 
 # Full Example
 
-Putting it all together with the table schema builder:
+This wires together everything from the previous sections. Each step links back to its guide page for details.
+
+## 1. Define Your Table ([Table Schema](/guide/table-schema))
 
 ```tsx
 // table-schema.tsx
@@ -15,11 +17,8 @@ import {
   type InferTableType,
 } from "@/lib/table-schema";
 
-const LEVELS = ["error", "warn", "info", "debug"] as const;
-const METHODS = ["GET", "POST", "DELETE"] as const;
-
 export const tableSchema = createTableSchema({
-  level: col.presets.logLevel(LEVELS),
+  level: col.presets.logLevel(["error", "warn", "info", "debug"]),
   date: col.presets.timestamp().label("Date").size(200).sheet(),
   latency: col.presets
     .duration("ms")
@@ -28,18 +27,19 @@ export const tableSchema = createTableSchema({
     .size(110)
     .sheet(),
   status: col.presets.httpStatus().label("Status").size(60),
-  method: col.presets.httpMethod(METHODS).size(69),
+  method: col.presets.httpMethod(["GET", "POST", "DELETE"]).size(69),
   host: col.string().label("Host").size(125).sheet(),
 });
 
 export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
 ```
 
+## 2. Create Filter Schema ([State Management](/guide/state-management))
+
 ```tsx
 // schema.ts
 import { createSchema, field } from "@/lib/store/schema";
 import { generateFilterSchema } from "@/lib/table-schema";
-import { tableSchema } from "./table-schema";
 
 export const filterSchema = createSchema({
   ...generateFilterSchema(tableSchema.definition).definition,
@@ -51,6 +51,42 @@ export const filterSchema = createSchema({
 export type FilterState = typeof filterSchema._type;
 ```
 
+## 3. Set Up the API Route ([Database](/guide/database) + [Data Fetching](/guide/data-fetching))
+
+```tsx
+// app/api/route.ts
+import { createDrizzleHandler } from "@/lib/drizzle";
+
+const handler = createDrizzleHandler({
+  db,
+  table: logs,
+  schema: tableSchema.definition,
+  columnMapping,
+  cursorColumn: "date",
+});
+
+export async function GET(req: NextRequest) {
+  const search = searchParamsCache.parse(
+    Object.fromEntries(req.nextUrl.searchParams),
+  );
+  const result = await handler.execute(search);
+  return Response.json(
+    SuperJSON.stringify({
+      data: result.data,
+      meta: {
+        totalRowCount: result.totalRowCount,
+        filterRowCount: result.filterRowCount,
+        facets: result.facets,
+      },
+      prevCursor: result.prevCursor,
+      nextCursor: result.nextCursor,
+    }),
+  );
+}
+```
+
+## 4. Render ([Components](/guide/components))
+
 ```tsx
 // client.tsx
 import { DataTableStoreProvider, useFilterState } from "@/lib/store";
@@ -59,19 +95,12 @@ import {
   generateColumns,
   generateFilterFields,
   generateSheetFields,
-  getDefaultColumnVisibility,
 } from "@/lib/table-schema";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import type { ColumnSchema, FilterState } from "./schema";
-import { filterSchema } from "./schema";
-import { tableSchema } from "./table-schema";
 
 const columns = generateColumns<ColumnSchema>(tableSchema.definition);
 const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
 const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
-const defaultColumnVisibility = getDefaultColumnVisibility(
-  tableSchema.definition,
-);
 
 export function Client() {
   const adapter = useNuqsAdapter(filterSchema.definition, { id: "logs" });
@@ -94,16 +123,11 @@ function DataTableContent() {
   );
 
   const { sort, live, size, ...filter } = search;
-  const defaultColumnFilters = React.useMemo(() => {
-    return Object.entries(filter)
-      .map(([key, value]) => ({ id: key, value }))
-      .filter(
-        ({ value }) =>
-          value !== null &&
-          value !== undefined &&
-          !(Array.isArray(value) && value.length === 0),
-      );
-  }, [filter]);
+  const defaultColumnFilters = Object.entries(filter)
+    .map(([key, value]) => ({ id: key, value }))
+    .filter(
+      ({ value }) => value != null && !(Array.isArray(value) && !value.length),
+    );
 
   return (
     <DataTableInfinite
@@ -111,7 +135,6 @@ function DataTableContent() {
       data={flatData}
       defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
-      defaultColumnVisibility={defaultColumnVisibility}
       filterFields={filterFields}
       sheetFields={sheetFields}
       schema={filterSchema.definition}
@@ -119,9 +142,15 @@ function DataTableContent() {
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
       refetch={refetch}
-      renderSheetTitle={(props) => props.row?.original.host}
-      meta={{}}
     />
   );
 }
 ```
+
+## Live Examples
+
+| Route                  | Pagination      | Data Source | Live Mode | Chart |
+| ---------------------- | --------------- | ----------- | --------- | ----- |
+| [/default](/default)   | Client-side     | In-memory   | No        | No    |
+| [/infinite](/infinite) | Infinite scroll | Mock API    | Yes       | Yes   |
+| [/drizzle](/drizzle)   | Infinite scroll | PostgreSQL  | No        | Yes   |

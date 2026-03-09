@@ -7,7 +7,7 @@ description: "Pluggable adapter pattern for filter state — nuqs (URL), Zustand
 
 An adapter pattern that decouples filter state management from the table components. Use **nuqs** (URL-based), **Zustand** (client-side), **memory** (ephemeral), or build your own adapter.
 
-### Schema Definition
+## Schema Definition
 
 The schema is the single source of truth for filter field types, defaults, and serialization.
 
@@ -40,7 +40,7 @@ export const filterSchema = createSchema({
 export type FilterState = typeof filterSchema._type;
 ```
 
-### Field Types
+## Field Types
 
 ```ts
 // Primitives (default to null)
@@ -67,11 +67,21 @@ field.array(field.string())
   .delimiter(",")                           // URL serialization separator
 ```
 
-### Adapters
+## Adapters
 
-#### nuqs Adapter (URL-based)
+Goal is to BYOS (Bring Your Own Store) - so if you want to use a specific state management, you can. Here are some adapters we've implemented for you.
 
-Syncs filter state to URL search params. Enables shareable URLs and browser history.
+### nuqs Adapter (URL-based)
+
+Syncs filter state to URL search params. Enables shareable URLs, browser history, and server-side parsing. Best for most use cases.
+
+| Option       | Default  | Description                                 |
+| ------------ | -------- | ------------------------------------------- |
+| `id`         | required | Table identifier (namespaces URL params)    |
+| `shallow`    | `true`   | Don't trigger Next.js navigation on change  |
+| `history`    | `"push"` | `"push"` or `"replace"` for browser history |
+| `throttleMs` | `50`     | Throttle URL updates (ms)                   |
+| `scroll`     | `false`  | Scroll to top on filter change              |
 
 ```tsx
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
@@ -107,9 +117,9 @@ export default async function Page({ searchParams }) {
 }
 ```
 
-#### Zustand Adapter (Client-side)
+### Zustand Adapter (Client-side)
 
-Integrates with existing Zustand stores.
+Integrates with existing Zustand stores. Use when you already have a Zustand store and want filter state to live alongside your app state, or when you don't want filters in the URL.
 
 ```tsx
 import {
@@ -135,9 +145,9 @@ function Client() {
 }
 ```
 
-#### Memory Adapter (Ephemeral)
+### Memory Adapter (Ephemeral)
 
-Lightweight in-memory state. No URL sync, no external store. Useful for embedded tables or the builder.
+Lightweight in-memory state. No URL sync, no external store. State resets on unmount. Useful for embedded tables, the builder, or preview contexts where you don't want to pollute the URL.
 
 ```tsx
 import { useMemoryAdapter } from "@/lib/store/adapters/memory";
@@ -145,7 +155,7 @@ import { useMemoryAdapter } from "@/lib/store/adapters/memory";
 const adapter = useMemoryAdapter(filterSchema.definition);
 ```
 
-#### Custom Adapters
+### Custom Adapters
 
 Implement the `StoreAdapter` interface:
 
@@ -167,9 +177,9 @@ interface StoreAdapter<T extends Record<string, unknown>> {
 }
 ```
 
-### Provider & Hooks
+## Provider & Hooks
 
-#### DataTableStoreProvider
+### DataTableStoreProvider
 
 Wraps your components with the adapter context:
 
@@ -177,7 +187,7 @@ Wraps your components with the adapter context:
 <DataTableStoreProvider adapter={adapter}>{children}</DataTableStoreProvider>
 ```
 
-#### useFilterState
+### useFilterState
 
 Read filter state. Uses `useSyncExternalStore` for optimal React 18+ compatibility.
 
@@ -190,7 +200,7 @@ const live = useFilterState<FilterState, boolean>((s) => s.live);
 const regions = useFilterState<FilterState, string[]>((s) => s.regions);
 ```
 
-#### useFilterActions
+### useFilterActions
 
 Modify filter state.
 
@@ -211,7 +221,7 @@ resetFilter("regions");
 resetAllFilters();
 ```
 
-#### useReactTableSync
+### useReactTableSync
 
 Bidirectional sync between adapter filter state and React Table's `columnFilters`. Useful when you need React Table's internal filtering to stay in sync with adapter state.
 
@@ -226,7 +236,7 @@ useReactTableSync({
 });
 ```
 
-#### useFilterField
+### useFilterField
 
 Work with a single field. Combines read and write.
 

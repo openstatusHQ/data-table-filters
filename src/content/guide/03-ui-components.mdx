@@ -5,7 +5,9 @@ description: "Pre-built filter controls, command palette, infinite scroll table,
 
 # UI Components
 
-### DataTableInfinite
+See the [/infinite](/infinite) example for a live demo with all components in action.
+
+## DataTableInfinite
 
 The main infinite scroll table component. Located at `src/app/infinite/data-table-infinite.tsx`.
 
@@ -36,7 +38,7 @@ The main infinite scroll table component. Located at `src/app/infinite/data-tabl
 />
 ```
 
-### DataTableFilterControls
+## DataTableFilterControls
 
 The left sidebar with accordion-based filter controls. Renders the appropriate UI component for each filter type:
 
@@ -47,7 +49,7 @@ The left sidebar with accordion-based filter controls. Renders the appropriate U
 
 Toggle with `Cmd+B`. For responsive layouts, `DataTableFilterControlsDrawer` provides a mobile-friendly drawer alternative.
 
-### DataTableFilterCommand
+## DataTableFilterCommand
 
 The command palette for text-based filtering. Opens with `Cmd+K`.
 
@@ -62,7 +64,7 @@ Supports filter syntax:
 <DataTableFilterCommand schema={filterSchema.definition} tableId="my-table" />
 ```
 
-### DataTableSheetDetails
+## DataTableSheetDetails
 
 Row detail drawer. Opens when a row is selected. Supports keyboard navigation between rows.
 
@@ -75,7 +77,7 @@ Row detail drawer. Opens when a row is selected. Supports keyboard navigation be
 </DataTableSheetDetails>
 ```
 
-### Cell Components
+## Cell Components
 
 Built-in cell renderers (used automatically by `generateColumns`):
 
@@ -90,7 +92,7 @@ Built-in cell renderers (used automatically by `generateColumns`):
 
 All support an optional `colorMap` for value-based coloring.
 
-### Filter Functions
+## Filter Functions
 
 Register custom filter functions on your table:
 
@@ -106,7 +108,7 @@ filterFns: {
 - `inDateRange` — matches dates within [start, end] range
 - `arrSome` — matches if row value is in the filter array
 
-### Extending TanStack Table Types
+## Extending TanStack Table Types
 
 ```tsx
 import "@tanstack/react-table";
