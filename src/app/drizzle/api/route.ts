@@ -100,7 +100,6 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getChartData(
   db: any,
   table: typeof logs,
@@ -144,12 +143,13 @@ async function getChartData(
   const intervalMs = evaluateIntervalMs(durationMs);
   const intervalSeconds = Math.max(1, Math.floor(intervalMs / 1000));
 
-  const result: {
+  type ChartRow = {
     bucket: Date;
     success: number;
     warning: number;
     error: number;
-  }[] = await db.execute(
+  };
+  const raw = await db.execute(
     sql`SELECT
         date_bin(${intervalSeconds + " seconds"}::interval, ${table.date}, ${minDate.toISOString()}::timestamptz) as bucket,
         COUNT(*) FILTER (WHERE ${table.level} = 'success')::int as success,
@@ -160,6 +160,9 @@ async function getChartData(
       GROUP BY bucket
       ORDER BY bucket ASC`,
   );
+  const result: ChartRow[] = Array.isArray(raw)
+    ? raw
+    : (raw as { rows: ChartRow[] }).rows;
 
   return result.map((r) => ({
     timestamp: new Date(r.bucket).getTime(),

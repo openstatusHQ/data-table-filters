@@ -63,20 +63,23 @@ export const logs = pgTable("logs", {
 });
 ```
 
-Set up the database client. Use `prepare: false` when connecting through a pooler (Supabase transaction mode, PgBouncer, Neon):
+Set up the database client using the `node-postgres` driver:
 
 ```ts
 // db/drizzle/index.ts
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 
-const client = postgres(process.env.DATABASE_URL!, {
-  prepare: false, // Required for connection poolers
-});
+const connectionString = process.env.DATABASE_URL;
 
-export const db = drizzle(client, { schema });
+if (!connectionString) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
+
+export const db = drizzle(connectionString, { schema });
 ```
+
+> **Note:** If you're using a connection pooler (Supabase transaction mode, PgBouncer, Neon), make sure to use the transaction pooler URL (port `6543` for Supabase). Install `pg` as a dependency: `pnpm add pg @types/pg`.
 
 ### Step 2: Column Mapping
 

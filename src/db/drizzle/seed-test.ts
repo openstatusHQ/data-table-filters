@@ -1,6 +1,5 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { logs } from "./schema";
 import { seedRows } from "./seed-data";
 
@@ -10,14 +9,12 @@ async function seedTest() {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
-  const client = postgres(connectionString);
-  const db = drizzle(client);
+  const db = drizzle(connectionString);
 
   console.log("Seeding test database with 8 deterministic rows...");
-  await db.insert(logs).values(seedRows);
+  await db.insert(logs as any).values(seedRows);
   console.log("Test seed complete!");
 
-  await client.end();
   process.exit(0);
 }
 

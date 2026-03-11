@@ -1,6 +1,5 @@
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { createMockLogs } from "../mock";
 import { logs } from "./schema";
 
@@ -33,8 +32,7 @@ async function seed() {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
-  const client = postgres(connectionString);
-  const db = drizzle(client);
+  const db = drizzle(connectionString);
 
   console.log("Seeding database...");
 
@@ -47,14 +45,13 @@ async function seed() {
   const BATCH_SIZE = 500;
   for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
     const batch = allRows.slice(i, i + BATCH_SIZE);
-    await db.insert(logs).values(batch);
+    await db.insert(logs as any).values(batch);
     console.log(
       `Inserted ${Math.min(i + BATCH_SIZE, allRows.length)}/${allRows.length}`,
     );
   }
 
   console.log("Seeding complete!");
-  await client.end();
   process.exit(0);
 }
 

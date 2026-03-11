@@ -1,15 +1,13 @@
 import { logs } from "@/db/drizzle/schema";
 import { seedRows } from "@/db/drizzle/seed-data";
-import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { ColumnMapping } from "../types";
 
 export const hasDatabase = !!process.env.DATABASE_URL;
 
 export { seedRows };
 
-let client: ReturnType<typeof postgres>;
-let db: PostgresJsDatabase;
+let db: NodePgDatabase;
 
 /** Column mapping used across all tests — mirrors the real app's mapping. */
 export const testMapping: ColumnMapping = {
@@ -46,10 +44,9 @@ export async function setupTestDb() {
     );
   }
 
-  client = postgres(connectionString);
-  db = drizzle(client);
+  db = drizzle(connectionString);
 }
 
 export async function destroyTestDb() {
-  if (client) await client.end();
+  // node-postgres with drizzle manages its own pool; no manual cleanup needed
 }

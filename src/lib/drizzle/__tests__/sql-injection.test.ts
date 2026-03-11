@@ -27,12 +27,16 @@ describe.skipIf(!hasDatabase)("SQL injection resistance", () => {
   }
 
   async function tableExists(): Promise<boolean> {
-    const result: { exists: boolean }[] = await getDb().execute(
+    const raw = await getDb().execute(
       sql`SELECT EXISTS (
         SELECT 1 FROM information_schema.tables
         WHERE table_name = 'logs'
       ) as exists`,
     );
+    const rows = Array.isArray(raw)
+      ? (raw as { exists: boolean }[])
+      : (raw as unknown as { rows: { exists: boolean }[] }).rows;
+    const result = rows;
     return result[0]?.exists === true;
   }
 
