@@ -57,7 +57,7 @@ export async function computeFacets(
 
     // Array columns: unnest + GROUP BY
     if (column.dataType === "array") {
-      const result: { value: string; total: number }[] = await db.execute(
+      const raw = await db.execute(
         sql`SELECT val as value, COUNT(*)::int as total
             FROM (
               SELECT unnest(${column}) as val
@@ -67,6 +67,9 @@ export async function computeFacets(
             GROUP BY val
             ORDER BY total DESC`,
       );
+      const result: { value: string; total: number }[] = Array.isArray(raw)
+        ? raw
+        : (raw as { rows: { value: string; total: number }[] }).rows;
 
       const total = result.reduce((sum, r) => sum + Number(r.total), 0);
 
@@ -83,14 +86,21 @@ export async function computeFacets(
     }
 
     // Standard column: GROUP BY
+    const raw = await db.execute(
+      sql`SELECT ${column} as value, COUNT(*)::int as total
+          FROM ${table}
+          ${whereCondition ? sql`WHERE ${whereCondition}` : sql``}
+          GROUP BY ${column}
+          ORDER BY total DESC`,
+    );
     const result: { value: string | number | boolean; total: number }[] =
-      await db.execute(
-        sql`SELECT ${column} as value, COUNT(*)::int as total
-            FROM ${table}
-            ${whereCondition ? sql`WHERE ${whereCondition}` : sql``}
-            GROUP BY ${column}
-            ORDER BY total DESC`,
-      );
+      Array.isArray(raw)
+        ? raw
+        : (
+            raw as {
+              rows: { value: string | number | boolean; total: number }[];
+            }
+          ).rows;
 
     const total = result.reduce((sum, r) => sum + Number(r.total), 0);
 
