@@ -15,7 +15,6 @@ import type { PgDatabase } from "drizzle-orm/pg-core";
  */
 export type ColumnMapping = Record<string, Column>;
 
- 
 export type DrizzleDB = PgDatabase<any, any, any>;
 
 /** Sort descriptor matching the URL state shape. */

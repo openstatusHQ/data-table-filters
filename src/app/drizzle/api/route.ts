@@ -100,7 +100,6 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 }
 
- 
 async function getChartData(
   db: any,
   table: typeof logs,
