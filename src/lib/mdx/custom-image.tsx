@@ -20,8 +20,7 @@ export function CustomImage({
 
   // Check if dark variant exists in public directory
   const hasDarkImage =
-    darkSrc !== src &&
-    existsSync(join(process.cwd(), "public", darkSrc));
+    darkSrc !== src && existsSync(join(process.cwd(), "public", darkSrc));
 
   if (hasDarkImage) {
     return (

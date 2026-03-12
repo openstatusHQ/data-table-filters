@@ -4,6 +4,7 @@ import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
 import { useHotKey } from "@/hooks/use-hot-key";
+import { useLiveMode } from "@/hooks/use-live-mode";
 import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
@@ -20,7 +21,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import * as React from "react";
-import { useLiveMode } from "@/hooks/use-live-mode";
 import { dataOptions } from "./query-options";
 import type { ColumnSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";

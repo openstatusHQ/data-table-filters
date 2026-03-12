@@ -1,15 +1,15 @@
 "use client";
 
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import {
+  getFacetedMinMaxValues,
+  getFacetedUniqueValues,
+} from "@/lib/data-table/faceted";
 import { getLevelRowClassName } from "@/lib/request/level";
 import { DataTableStoreProvider, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import * as React from "react";
-import {
-  getFacetedMinMaxValues,
-  getFacetedUniqueValues,
-} from "@/lib/data-table/faceted";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { dataOptions } from "./query-options";
