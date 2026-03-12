@@ -16,7 +16,7 @@ export function SheetDetailsContentSkeleton<TData, TMeta>({
           key={field.id.toString()}
           className="flex items-center justify-between gap-4 py-2 text-sm"
         >
-          <dt className="shrink-0 text-muted-foreground">{field.label}</dt>
+          <dt className="text-muted-foreground shrink-0">{field.label}</dt>
           <div>
             <Skeleton className={cn("h-5 w-52", field.skeletonClassName)} />
           </div>

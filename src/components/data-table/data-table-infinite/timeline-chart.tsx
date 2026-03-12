@@ -21,15 +21,15 @@ export const description = "A stacked bar chart";
 const chartConfig = {
   success: {
     label: <TooltipLabel level="success" />,
-    color: "hsl(var(--success))",
+    color: "var(--success)",
   },
   warning: {
     label: <TooltipLabel level="warning" />,
-    color: "hsl(var(--warning))",
+    color: "var(--warning)",
   },
   error: {
     label: <TooltipLabel level="error" />,
-    color: "hsl(var(--error))",
+    color: "var(--error)",
   },
 } satisfies ChartConfig;
 
@@ -165,7 +165,7 @@ export function TimelineChart<TChart extends BaseChartSchema>({
             x1={refAreaLeft}
             x2={refAreaRight}
             strokeOpacity={0.3}
-            fill="hsl(var(--foreground))"
+            fill="var(--foreground)"
             fillOpacity={0.08}
           />
         )}
@@ -197,8 +197,8 @@ function TooltipLabel({
 }) {
   return (
     <div className="mr-2 flex w-20 items-center justify-between gap-2 font-mono">
-      <div className="capitalize text-foreground/70">{level}</div>
-      <div className="text-xs text-muted-foreground/70">
+      <div className="text-foreground/70 capitalize">{level}</div>
+      <div className="text-muted-foreground/70 text-xs">
         {getLevelLabel(level)}
       </div>
     </div>

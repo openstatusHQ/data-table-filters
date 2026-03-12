@@ -50,8 +50,8 @@ export function TableOfContents({ headings }: { headings: TOCItem[] }) {
             <a
               href={`#${heading.slug}`}
               className={cn(
-                "ml-2 mr-1 block truncate rounded-sm p-0.5 text-muted-foreground transition-colors hover:text-foreground",
-                activeId === heading.slug && "font-medium text-foreground",
+                "text-muted-foreground hover:text-foreground mr-1 ml-2 block truncate rounded-sm p-0.5 transition-colors",
+                activeId === heading.slug && "text-foreground font-medium",
               )}
             >
               {heading.text}

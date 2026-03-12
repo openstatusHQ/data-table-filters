@@ -8,7 +8,6 @@ import {
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import { UTCDate } from "@date-fns/utc";
-import { HoverCardPortal } from "@radix-ui/react-hover-card";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Check, Copy } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
@@ -37,30 +36,28 @@ export function DataTableColumnTimestamp({
   return (
     <HoverCard openDelay={0} closeDelay={0}>
       <HoverCardTrigger asChild>
-        <div className={cn("whitespace-nowrap font-mono", className)}>
+        <div className={cn("font-mono whitespace-nowrap", className)}>
           {format(date, "LLL dd, y HH:mm:ss")}
         </div>
       </HoverCardTrigger>
       {/* REMINDER: allows us to port the content to the document.body, which is helpful when using opacity-50 on the row element */}
-      <HoverCardPortal>
-        <HoverCardContent
-          className="z-10 w-auto p-2"
-          {...{ side, align, alignOffset, sideOffset }}
-        >
-          <dl className="flex flex-col gap-1">
-            <Row value={String(date.getTime())} label="Timestamp" />
-            <Row
-              value={format(new UTCDate(date), "LLL dd, y HH:mm:ss")}
-              label="UTC"
-            />
-            <Row value={format(date, "LLL dd, y HH:mm:ss")} label={timezone} />
-            <Row
-              value={formatDistanceToNowStrict(date, { addSuffix: true })}
-              label="Relative"
-            />
-          </dl>
-        </HoverCardContent>
-      </HoverCardPortal>
+      <HoverCardContent
+        className="z-10 w-auto p-2"
+        {...{ side, align, alignOffset, sideOffset }}
+      >
+        <dl className="flex flex-col gap-1">
+          <Row value={String(date.getTime())} label="Timestamp" />
+          <Row
+            value={format(new UTCDate(date), "LLL dd, y HH:mm:ss")}
+            label="UTC"
+          />
+          <Row value={format(date, "LLL dd, y HH:mm:ss")} label={timezone} />
+          <Row
+            value={formatDistanceToNowStrict(date, { addSuffix: true })}
+            label="Relative"
+          />
+        </dl>
+      </HoverCardContent>
     </HoverCard>
   );
 }

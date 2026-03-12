@@ -48,7 +48,7 @@ export function DataTableViewOptions() {
           size="icon"
           role="combobox"
           aria-expanded={open}
-          className="h-9 w-9"
+          className="shadow-none"
         >
           <Settings2 className="h-4 w-4" />
           <span className="sr-only">View</span>
@@ -69,7 +69,7 @@ export function DataTableViewOptions() {
                 onValueChange={(items) =>
                   table.setColumnOrder(items.map((c) => c.id))
                 }
-                overlay={<div className="h-8 w-full rounded-md bg-muted/60" />}
+                overlay={<div className="bg-muted/60 h-8 w-full rounded-md" />}
                 onDragStart={() => setDrag(true)}
                 onDragEnd={() => setDrag(false)}
                 onDragCancel={() => setDrag(false)}
@@ -92,20 +92,20 @@ export function DataTableViewOptions() {
                       >
                         <div
                           className={cn(
-                            "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                            "border-foreground! mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
                             column.getIsVisible()
                               ? "bg-primary text-primary-foreground"
                               : "opacity-50 [&_svg]:invisible",
                           )}
                         >
-                          <Check className={cn("h-4 w-4")} />
+                          <Check className={cn("text-background size-3")} />
                         </div>
                         <span>{column.columnDef.meta?.label || column.id}</span>
                         {enableColumnOrdering && !search ? (
                           <SortableDragHandle
                             variant="ghost"
                             size="icon"
-                            className="ml-auto size-5 text-muted-foreground hover:text-foreground focus:bg-muted focus:text-foreground"
+                            className="text-muted-foreground hover:text-foreground focus:bg-muted focus:text-foreground ml-auto size-5"
                           >
                             <GripVertical
                               className="size-4"

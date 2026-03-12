@@ -75,7 +75,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("p95");
       if (typeof value === "undefined") {
-        return <Minus className="h-4 w-4 text-muted-foreground/50" />;
+        return <Minus className="text-muted-foreground/50 h-4 w-4" />;
       }
       return (
         <div>
@@ -103,7 +103,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("active");
       if (value) return <Check className="h-4 w-4" />;
-      return <Minus className="h-4 w-4 text-muted-foreground/50" />;
+      return <Minus className="text-muted-foreground/50 h-4 w-4" />;
     },
     filterFn: (row, id, value) => {
       const rowValue = row.getValue(id);
@@ -119,7 +119,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("public");
       if (value) return <Check className="h-4 w-4" />;
-      return <Minus className="h-4 w-4 text-muted-foreground/50" />;
+      return <Minus className="text-muted-foreground/50 h-4 w-4" />;
     },
     filterFn: (row, id, value) => {
       const rowValue = row.getValue(id);
@@ -137,7 +137,7 @@ export const columns: ColumnDef<ColumnSchema>[] = [
     cell: ({ row }) => {
       const value = row.getValue("date");
       return (
-        <div className="text-xs text-muted-foreground" suppressHydrationWarning>
+        <div className="text-muted-foreground text-xs" suppressHydrationWarning>
           {format(new Date(`${value}`), "LLL dd, y HH:mm")}
         </div>
       );

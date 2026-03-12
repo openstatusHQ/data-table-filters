@@ -5,7 +5,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { TooltipPortal } from "@radix-ui/react-tooltip";
 import React, { useEffect, useRef, useState } from "react";
 
 interface TextWithTooltipProps {
@@ -61,9 +60,7 @@ export function TextWithTooltip({
             {text}
           </div>
         </TooltipTrigger>
-        <TooltipPortal>
-          <TooltipContent>{text}</TooltipContent>
-        </TooltipPortal>
+        <TooltipContent>{text}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

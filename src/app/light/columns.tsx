@@ -37,9 +37,9 @@ export const columns: ColumnDef<ColumnType>[] = [
     maxSize: 27,
     meta: {
       headerClassName:
-        "w-[--header-level-size] max-w-[--header-level-size] min-w-[--header-level-size]",
+        "w-(--header-level-size) max-w-(--header-level-size) min-w-(--header-level-size)",
       cellClassName:
-        "w-[--col-level-size] max-w-[--col-level-size] min-w-[--col-level-size]",
+        "w-(--col-level-size) max-w-(--col-level-size) min-w-(--col-level-size)",
     },
   },
   {

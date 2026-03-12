@@ -157,7 +157,7 @@ export function DataTableSheetContent<TData, TMeta>({
                   field.className,
                 )}
               >
-                <dt className="shrink-0 text-muted-foreground">
+                <dt className="text-muted-foreground shrink-0">
                   {field.label}
                 </dt>
                 <dd className="w-full text-right font-mono">{rendered}</dd>
@@ -177,7 +177,7 @@ export function DataTableSheetContent<TData, TMeta>({
                   field.className,
                 )}
               >
-                <dt className="shrink-0 text-muted-foreground">
+                <dt className="text-muted-foreground shrink-0">
                   {field.label}
                 </dt>
                 <dd className="w-full text-right font-mono">{rendered}</dd>

@@ -14,7 +14,7 @@ export function DataTableColumnRegion({
   const region = regions[value] ?? { label: value, flag: "" };
   return reverse ? (
     <>
-      <span className="text-xs text-muted-foreground">
+      <span className="text-muted-foreground text-xs">
         {showFlag && region.flag} {region.label}
       </span>{" "}
       <span>{value}</span>
@@ -22,7 +22,7 @@ export function DataTableColumnRegion({
   ) : (
     <>
       <span>{value}</span>{" "}
-      <span className="text-xs text-muted-foreground">
+      <span className="text-muted-foreground text-xs">
         {showFlag && region.flag} {region.label}
       </span>
     </>

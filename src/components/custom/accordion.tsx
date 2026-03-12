@@ -7,43 +7,47 @@ import * as React from "react";
 
 const Accordion = AccordionPrimitive.Root;
 
-const AccordionItem = React.forwardRef<
-  React.ElementRef<typeof AccordionPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
->(({ className, ...props }, ref) => (
-  <AccordionPrimitive.Item
-    ref={ref}
-    className={cn("border-b", className)}
-    {...props}
-  />
-));
-AccordionItem.displayName = "AccordionItem";
-
-const AccordionTrigger = React.forwardRef<
-  React.ElementRef<typeof AccordionPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Header className="flex">
-    <AccordionPrimitive.Trigger
-      ref={ref}
-      className={cn(
-        "flex flex-1 items-center justify-between py-4 font-medium transition-transform hover:underline [&[data-state=open]>svg]:rotate-180",
-        "rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        className,
-      )}
+function AccordionItem({
+  className,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Item>) {
+  return (
+    <AccordionPrimitive.Item
+      data-slot="accordion-item"
+      className={cn("border-b", className)}
       {...props}
-    >
-      {children}
-      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-    </AccordionPrimitive.Trigger>
-  </AccordionPrimitive.Header>
-));
-AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
+    />
+  );
+}
 
-const AccordionContent = React.forwardRef<
-  React.ElementRef<typeof AccordionPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+function AccordionTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+  return (
+    <AccordionPrimitive.Header className="flex">
+      <AccordionPrimitive.Trigger
+        data-slot="accordion-trigger"
+        className={cn(
+          "flex flex-1 items-center justify-between py-4 font-medium transition-transform hover:underline [&[data-state=open]>svg]:rotate-180",
+          "ring-offset-background focus-visible:ring-ring rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+      </AccordionPrimitive.Trigger>
+    </AccordionPrimitive.Header>
+  );
+}
+
+function AccordionContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -54,7 +58,7 @@ const AccordionContent = React.forwardRef<
 
   return (
     <AccordionPrimitive.Content
-      ref={ref}
+      data-slot="accordion-content"
       className={cn(
         "overflow-hidden text-sm transition-all",
         // Only apply animations after initial mount to prevent flicker
@@ -64,10 +68,9 @@ const AccordionContent = React.forwardRef<
       )}
       {...props}
     >
-      <div className="pb-4 pt-0">{children}</div>
+      <div className="pt-0 pb-4">{children}</div>
     </AccordionPrimitive.Content>
   );
-});
-AccordionContent.displayName = AccordionPrimitive.Content.displayName;
+}
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };

@@ -22,7 +22,7 @@ export function StateInspector({
 }: StateInspectorProps) {
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
         Current State
       </div>
       <div className="space-y-1">
@@ -39,7 +39,7 @@ export function StateInspector({
               <span className="font-mono font-medium">{key}</span>
               <span
                 className={cn(
-                  "break-all text-right font-mono",
+                  "text-right font-mono break-all",
                   isDefault ? "text-muted-foreground" : "text-primary",
                 )}
               >

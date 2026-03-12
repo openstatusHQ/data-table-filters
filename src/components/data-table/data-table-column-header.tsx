@@ -1,9 +1,11 @@
-import { Button, type ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Column } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import type React from "react";
 
-interface DataTableColumnHeaderProps<TData, TValue> extends ButtonProps {
+interface DataTableColumnHeaderProps<TData, TValue>
+  extends React.ComponentProps<typeof Button> {
   column: Column<TData, TValue>;
   title: string;
 }
@@ -21,7 +23,6 @@ export function DataTableColumnHeader<TData, TValue>({
   return (
     <Button
       variant="ghost"
-      size="sm"
       onClick={() => {
         column.toggleSorting(undefined);
       }}
@@ -35,7 +36,7 @@ export function DataTableColumnHeader<TData, TValue>({
       <span className="flex flex-col">
         <ChevronUp
           className={cn(
-            "-mb-0.5 h-3 w-3",
+            "-mb-0.5! size-3!",
             column.getIsSorted() === "asc"
               ? "text-accent-foreground"
               : "text-muted-foreground",
@@ -43,7 +44,7 @@ export function DataTableColumnHeader<TData, TValue>({
         />
         <ChevronDown
           className={cn(
-            "-mt-0.5 h-3 w-3",
+            "-mt-0.5! size-3!",
             column.getIsSorted() === "desc"
               ? "text-accent-foreground"
               : "text-muted-foreground",

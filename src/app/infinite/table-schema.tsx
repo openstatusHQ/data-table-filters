@@ -41,7 +41,7 @@ export const tableSchema = createTableSchema({
         const value = props.value as (typeof LEVELS)[number];
         return (
           <div className="flex w-full max-w-28 items-center justify-between gap-2 font-mono">
-            <span className="capitalize text-foreground/70 group-hover:text-accent-foreground">
+            <span className="text-foreground/70 group-hover:text-accent-foreground capitalize">
               {props.label}
             </span>
             <div className="flex items-center gap-2">
@@ -51,7 +51,7 @@ export const tableSchema = createTableSchema({
                   getLevelColor(value).bg,
                 )}
               />
-              <span className="text-xs text-muted-foreground/70">
+              <span className="text-muted-foreground/70 text-xs">
                 {getLevelLabel(value)}
               </span>
             </div>

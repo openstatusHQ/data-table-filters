@@ -145,7 +145,7 @@ export function DataTableSheetRowAction<
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "ring-offset-background focus-visible:ring-ring rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden",
           "relative",
           className,
         )}
@@ -162,7 +162,7 @@ export function DataTableSheetRowAction<
       >
         {children}
         {isCopied ? (
-          <div className="absolute inset-0 place-content-center bg-background/70">
+          <div className="bg-background/70 absolute inset-0 place-content-center">
             Value copied
           </div>
         ) : null}

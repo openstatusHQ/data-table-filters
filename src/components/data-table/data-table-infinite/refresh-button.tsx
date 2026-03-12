@@ -15,7 +15,7 @@ export function RefreshButton({ onClick }: RefreshButtonProps) {
       size="icon"
       disabled={isLoading}
       onClick={onClick}
-      className="h-9 w-9"
+      className="shadow-none"
     >
       {isLoading ? (
         <LoaderCircle className="h-4 w-4 animate-spin" />

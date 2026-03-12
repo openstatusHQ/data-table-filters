@@ -25,11 +25,11 @@ export function SheetTimingPhases({
           key={phase}
           className="grid grid-cols-3 items-center justify-between gap-2 text-xs"
         >
-          <div className="truncate font-mono uppercase text-foreground">
+          <div className="text-foreground truncate font-mono uppercase">
             {getTimingLabel(phase)}
           </div>
           <div className="col-span-2 flex gap-2">
-            <div className="mr-8 font-mono text-muted-foreground">
+            <div className="text-muted-foreground mr-8 font-mono">
               {timingPercentage[phase]}
             </div>
             <div className="flex flex-1 items-center justify-end gap-2">

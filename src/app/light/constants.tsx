@@ -39,9 +39,9 @@ export const filterFields = [
           <DataTableColumnLevelIndicator
             value={props.value as (typeof _LEVELS)[number]}
           />
-          <div className="capitalize text-foreground/70">{props.value}</div>
+          <div className="text-foreground/70 capitalize">{props.value}</div>
         </div>
-        <div className="text-xs text-muted-foreground/70">
+        <div className="text-muted-foreground/70 text-xs">
           {getLevelLabel(props.value as (typeof _LEVELS)[number])}
         </div>
       </div>

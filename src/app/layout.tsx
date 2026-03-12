@@ -39,7 +39,7 @@ export default function RootLayout({
           />
         </head>
       ) : null}
-      <body className="min-h-screen bg-background antialiased">
+      <body className="bg-background min-h-screen antialiased">
         <PlausibleProvider domain="data-table.openstatus.dev">
           <ReactQueryProvider>
             <NuqsAdapter>
