@@ -136,7 +136,7 @@ export function DataTable<TData, TValue>({
       <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
         <div
           className={cn(
-            "hidden w-full p-1 sm:block sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-64 md:max-w-64",
+            "hidden w-full p-1 sm:block sm:max-w-52 sm:min-w-52 sm:self-start md:max-w-64 md:min-w-64",
             "group-data-[expanded=false]/controls:hidden",
           )}
         >

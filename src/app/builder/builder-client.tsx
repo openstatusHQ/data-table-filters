@@ -276,8 +276,7 @@ export function BuilderClient() {
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
-                      className="h-6 gap-1.5 px-2 text-xs text-muted-foreground"
+                      className="text-muted-foreground h-6 gap-1.5 px-2 text-xs"
                       onClick={handleRandom}
                     >
                       <Shuffle className="h-3 w-3" />
@@ -313,7 +312,6 @@ export function BuilderClient() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="mr-1 h-3 w-3" />
@@ -329,7 +327,6 @@ export function BuilderClient() {
             <Button
               type="submit"
               disabled={generating || !dataForm.formState.isValid}
-              size="sm"
               className="w-full"
             >
               {generating ? "Generating…" : "Generate Schema"}
@@ -339,10 +336,10 @@ export function BuilderClient() {
 
         {/* AI tab (stub) */}
         <TabsContent value="ai" className="mt-0">
-          <div className="flex flex-col gap-3 rounded-md border border-dashed border-border p-3">
+          <div className="border-border flex flex-col gap-3 rounded-md border border-dashed p-3">
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium">AI Schema Generation</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Describe your data in plain English and get a schema generated
                 automatically — no JSON needed.
               </p>
@@ -351,9 +348,9 @@ export function BuilderClient() {
               placeholder="e.g. A table of HTTP logs with method, status, latency and timestamp…"
               disabled
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Coming soon. Until then, use the{" "}
-              <strong className="font-medium text-foreground">Data</strong> tab
+              <strong className="text-foreground font-medium">Data</strong> tab
               to paste JSON and infer a schema automatically.
             </p>
           </div>
@@ -376,10 +373,9 @@ export function BuilderClient() {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
                   onClick={handleExport}
                   disabled={!schemaJson}
-                  className="h-6 gap-1.5 px-2 text-xs text-muted-foreground"
+                  className="text-muted-foreground h-6 gap-1.5 px-2 text-xs"
                 >
                   {isCopied ? "Copied!" : "Export TS"}
                 </Button>
@@ -402,7 +398,6 @@ export function BuilderClient() {
         <Button
           type="submit"
           disabled={!schemaForm.formState.isValid}
-          size="sm"
           variant="secondary"
           className="w-full"
         >
@@ -415,10 +410,10 @@ export function BuilderClient() {
   return (
     <div className="flex h-screen max-h-screen w-full max-w-full flex-row">
       {/* Left panel — desktop */}
-      <div className="hidden shrink-0 flex-col gap-2 overflow-y-auto sm:flex sm:min-w-52 sm:max-w-52 md:min-w-72 md:max-w-72">
-        <div className="border-b border-border bg-background px-4 py-2">
+      <div className="hidden shrink-0 flex-col gap-2 overflow-y-auto sm:flex sm:max-w-52 sm:min-w-52 md:max-w-72 md:min-w-72">
+        <div className="border-border bg-background border-b px-4 py-2">
           <div className="flex h-[46px] items-center justify-start gap-3">
-            <Link href="/" className="font-medium text-foreground">
+            <Link href="/" className="text-foreground font-medium">
               Back
             </Link>
           </div>
@@ -436,9 +431,9 @@ export function BuilderClient() {
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Paste JSON data and click{" "}
-              <strong className="font-medium text-foreground">
+              <strong className="text-foreground font-medium">
                 Generate Schema
               </strong>{" "}
               to see a live table here.
@@ -453,7 +448,7 @@ export function BuilderClient() {
           <DrawerTrigger asChild>
             <Button
               size="icon"
-              className="fixed bottom-4 right-4 z-40 h-12 w-12 rounded-full shadow-lg"
+              className="fixed right-4 bottom-4 z-40 h-12 w-12 rounded-full shadow-lg"
             >
               <Blocks className="h-5 w-5" />
             </Button>

@@ -8,7 +8,7 @@ export function DataTableColumnStatusCode({
   value?: number | string;
 }) {
   if (!value) {
-    return <Minus className="h-4 w-4 text-muted-foreground/50" />;
+    return <Minus className="text-muted-foreground/50 h-4 w-4" />;
   }
   if (typeof value === "number") {
     const colors = getStatusColor(value);

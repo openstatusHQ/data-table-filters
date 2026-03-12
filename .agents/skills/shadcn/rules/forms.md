@@ -77,7 +77,7 @@ Never place a `Button` directly inside or adjacent to an `Input` with custom pos
 ```tsx
 <div className="relative">
   <Input placeholder="Search..." className="pr-10" />
-  <Button className="absolute right-0 top-0" size="icon">
+  <Button className="absolute top-0 right-0" size="icon">
     <SearchIcon />
   </Button>
 </div>

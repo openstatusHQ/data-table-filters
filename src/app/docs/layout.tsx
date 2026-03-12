@@ -24,7 +24,7 @@ export default async function DocsLayout({
         <Link
           href="https://openstatus.dev"
           target="_blank"
-          className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed border-border bg-white sm:h-12 sm:w-12"
+          className="border-border relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed bg-white sm:h-12 sm:w-12"
         >
           <Image
             src="/logos/OpenStatus.png"
@@ -34,7 +34,7 @@ export default async function DocsLayout({
           />
         </Link>
       </div>
-      <div className="border-b border-dashed border-border" />
+      <div className="border-border border-b border-dashed" />
       <div
         className={cn(
           "relative mx-auto w-full max-w-6xl",
@@ -45,7 +45,7 @@ export default async function DocsLayout({
         <DocsSidebar sections={sections} />
         {children}
       </div>
-      <div className="border-b border-dashed border-border" />
+      <div className="border-border border-b border-dashed" />
       <SocialsFooter />
     </main>
   );

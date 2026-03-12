@@ -1,6 +1,5 @@
 "use client";
 
-import { Kbd } from "@/components/custom/kbd";
 import {
   Sheet,
   SheetClose,
@@ -11,6 +10,7 @@ import {
 } from "@/components/custom/sheet";
 import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -112,7 +112,7 @@ export function DataTableSheetDetails({
         className="overflow-y-auto p-0 sm:max-w-md"
         hideClose
       >
-        <SheetHeader className="sticky top-0 z-10 border-b bg-background p-4">
+        <SheetHeader className="bg-background sticky top-0 z-10 border-b p-4">
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className={cn(titleClassName, "truncate text-left")}>
               {isLoading && !selectedRowKey ? (
@@ -138,7 +138,7 @@ export function DataTableSheetDetails({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>
-                      Navigate <Kbd variant="outline">↑</Kbd>
+                      Navigate <Kbd>↑</Kbd>
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -159,7 +159,7 @@ export function DataTableSheetDetails({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>
-                      Navigate <Kbd variant="outline">↓</Kbd>
+                      Navigate <Kbd>↓</Kbd>
                     </p>
                   </TooltipContent>
                 </Tooltip>

@@ -39,8 +39,8 @@ function SectionList({
             href={`/docs/${section.slug}`}
             onClick={onNavigate}
             className={cn(
-              "ml-2 mr-1 block rounded-sm p-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
-              currentSlug === section.slug && "font-medium text-foreground",
+              "text-muted-foreground hover:text-foreground mr-1 ml-2 block rounded-sm p-0.5 text-sm transition-colors",
+              currentSlug === section.slug && "text-foreground font-medium",
             )}
           >
             {section.title}

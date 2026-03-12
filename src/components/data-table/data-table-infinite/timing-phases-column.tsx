@@ -13,7 +13,6 @@ import {
   timingPhases,
 } from "@/lib/request/timing";
 import { cn } from "@/lib/utils";
-import { HoverCardPortal } from "@radix-ui/react-hover-card";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export const timingPhasesColumn: ColumnDef<ColumnSchema> = {
@@ -50,41 +49,35 @@ export const timingPhasesColumn: ColumnDef<ColumnSchema> = {
             ))}
           </div>
         </HoverCardTrigger>
-        <HoverCardPortal>
-          <HoverCardContent
-            side="bottom"
-            align="end"
-            className="z-10 w-auto p-2"
-          >
-            <div className="flex flex-col gap-1">
-              {timingPhases.map((phase) => {
-                const color = getTimingColor(phase);
-                const percentageValue = percentage[phase];
-                return (
-                  <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className={cn(color, "h-2 w-2 rounded-full")} />
-                      <div className="font-mono uppercase text-accent-foreground">
-                        {getTimingLabel(phase)}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="font-mono text-muted-foreground">
-                        {percentageValue}
-                      </div>
-                      <div className="font-mono">
-                        {new Intl.NumberFormat("en-US", {
-                          maximumFractionDigits: 3,
-                        }).format(timing[phase])}
-                        <span className="text-muted-foreground">ms</span>
-                      </div>
+        <HoverCardContent side="bottom" align="end" className="z-10 w-auto p-2">
+          <div className="flex flex-col gap-1">
+            {timingPhases.map((phase) => {
+              const color = getTimingColor(phase);
+              const percentageValue = percentage[phase];
+              return (
+                <div key={phase} className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className={cn(color, "h-2 w-2 rounded-full")} />
+                    <div className="text-accent-foreground font-mono uppercase">
+                      {getTimingLabel(phase)}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </HoverCardContent>
-        </HoverCardPortal>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-muted-foreground font-mono">
+                      {percentageValue}
+                    </div>
+                    <div className="font-mono">
+                      {new Intl.NumberFormat("en-US", {
+                        maximumFractionDigits: 3,
+                      }).format(timing[phase])}
+                      <span className="text-muted-foreground">ms</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </HoverCardContent>
       </HoverCard>
     );
   },

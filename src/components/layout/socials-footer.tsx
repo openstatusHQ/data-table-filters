@@ -11,29 +11,29 @@ export function SocialsFooter() {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-center gap-2 p-1">
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <NextLink href="/">
-            <Home className="h-4 w-4" />
+            <Home />
           </NextLink>
         </Button>
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <NextLink href="https://github.com/openstatusHQ/data-table-filters">
-            <Github className="h-4 w-4" />
+            <Github />
           </NextLink>
         </Button>
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <NextLink href="https://twitter.com/openstatusHQ">
-            <X className="h-4 w-4" />
+            <X />
           </NextLink>
         </Button>
-        <Button variant="ghost" size="sm" className="w-9 px-0" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <NextLink href="https://bsky.app/profile/openstatus.dev">
-            <Bluesky className="h-4 w-4" />
+            <Bluesky />
           </NextLink>
         </Button>
-        <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4" />
+        <ModeToggle />
       </div>
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         Powered by <Link href="https://openstatus.dev">OpenStatus</Link>
       </p>
     </div>

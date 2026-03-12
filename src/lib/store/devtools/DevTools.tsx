@@ -231,21 +231,21 @@ function DevToolsWithContext({
   return (
     <div
       className={cn(
-        "fixed z-50 w-80 rounded-lg border bg-background shadow-lg",
+        "bg-background fixed z-50 w-80 rounded-lg border shadow-lg",
         positionClasses[position || "bottom-right"],
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b px-3 py-2">
         <div className="flex items-center gap-2">
-          <Bug className="h-4 w-4 text-primary" />
+          <Bug className="text-primary h-4 w-4" />
           <span className="text-sm font-medium">Filter DevTools</span>
-          <span className="text-xs text-muted-foreground">({tableId})</span>
+          <span className="text-muted-foreground text-xs">({tableId})</span>
         </div>
         <button
           type="button"
           onClick={() => setIsOpen(false)}
-          className="rounded p-1 hover:bg-muted"
+          className="hover:bg-muted rounded p-1"
         >
           <X className="h-4 w-4" />
         </button>
@@ -259,7 +259,7 @@ function DevToolsWithContext({
           className={cn(
             "flex-1 px-3 py-1.5 text-xs font-medium transition-colors",
             activeTab === "state"
-              ? "border-b-2 border-primary text-primary"
+              ? "border-primary text-primary border-b-2"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
@@ -271,7 +271,7 @@ function DevToolsWithContext({
           className={cn(
             "flex-1 px-3 py-1.5 text-xs font-medium transition-colors",
             activeTab === "history"
-              ? "border-b-2 border-primary text-primary"
+              ? "border-primary text-primary border-b-2"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
@@ -293,7 +293,7 @@ function DevToolsWithContext({
           <button
             type="button"
             onClick={handleReset}
-            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1.5"
             title="Reset to defaults"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -301,7 +301,7 @@ function DevToolsWithContext({
           <button
             type="button"
             onClick={handleCopy}
-            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1.5"
             title="Copy state as JSON"
           >
             <Copy className="h-3.5 w-3.5" />
@@ -310,7 +310,7 @@ function DevToolsWithContext({
             type="button"
             onClick={handleTogglePause}
             className={cn(
-              "rounded p-1.5 hover:bg-muted",
+              "hover:bg-muted rounded p-1.5",
               paused
                 ? "text-yellow-500"
                 : "text-muted-foreground hover:text-foreground",
@@ -324,7 +324,7 @@ function DevToolsWithContext({
             )}
           </button>
         </div>
-        <div className="text-xs text-muted-foreground">
+        <div className="text-muted-foreground text-xs">
           {copied && <span className="text-green-500">Copied!</span>}
           {paused && <span className="text-yellow-500">Paused</span>}
         </div>
@@ -357,7 +357,7 @@ function DevToolsToggle({
       onClick={() => setIsOpen(!isOpen)}
       disabled={disabled}
       className={cn(
-        "fixed z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-transform hover:scale-110",
+        "bg-primary text-primary-foreground fixed z-50 rounded-full p-2 shadow-lg transition-transform hover:scale-110",
         positionClasses[position || "bottom-right"],
         disabled && "cursor-not-allowed opacity-50",
       )}

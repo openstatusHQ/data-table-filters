@@ -321,14 +321,14 @@ export function DataTableInfinite<TData, TValue, TMeta>({
       >
         <div
           className={cn(
-            "h-full w-full flex-col sm:sticky sm:top-0 sm:max-h-screen sm:min-h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72",
+            "h-full w-full flex-col sm:sticky sm:top-0 sm:max-h-screen sm:min-h-screen sm:max-w-52 sm:min-w-52 sm:self-start md:max-w-72 md:min-w-72",
             "group-data-[expanded=false]/controls:hidden",
             "hidden sm:flex",
           )}
         >
-          <div className="border-b border-border bg-background p-2 md:sticky md:top-0">
+          <div className="border-border bg-background border-b p-2 md:sticky md:top-0">
             <div className="flex h-[46px] items-center justify-between gap-3">
-              <p className="px-2 font-medium text-foreground">Filters</p>
+              <p className="text-foreground px-2 font-medium">Filters</p>
               <div>
                 {table.getState().columnFilters.length ? (
                   <DataTableResetButton />
@@ -339,7 +339,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
           <div className="flex-1 p-2 sm:overflow-y-scroll">
             <DataTableFilterControls />
           </div>
-          <div className="border-t border-border bg-background p-4 md:sticky md:bottom-0">
+          <div className="border-border bg-background border-t p-4 md:sticky md:bottom-0">
             <SocialsFooter
               showConfigurationDropdown={showConfigurationDropdown}
               prefetchEnabled={prefetchEnabled}
@@ -349,15 +349,15 @@ export function DataTableInfinite<TData, TValue, TMeta>({
         </div>
         <div
           className={cn(
-            "flex max-w-full flex-1 flex-col border-border sm:border-l",
+            "border-border flex max-w-full flex-1 flex-col sm:border-l",
             // Chrome issue
-            "group-data-[expanded=true]/controls:sm:max-w-[calc(100vw_-_208px)] group-data-[expanded=true]/controls:md:max-w-[calc(100vw_-_288px)]",
+            "sm:group-data-[expanded=true]/controls:max-w-[calc(100vw-208px)] md:group-data-[expanded=true]/controls:max-w-[calc(100vw-288px)]",
           )}
         >
           <div
             ref={topBarRef}
             className={cn(
-              "flex flex-col gap-4 bg-background p-2",
+              "bg-background flex flex-col gap-4 p-2",
               "sticky top-0 z-10 pb-4",
             )}
           >
@@ -389,15 +389,15 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               onScroll={onScroll}
               // REMINDER: https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
               className="border-separate border-spacing-0"
-              containerClassName="max-h-[calc(100vh_-_var(--top-bar-height))]"
+              containerClassName="max-h-[calc(100vh-var(--top-bar-height))]"
             >
-              <TableHeader className={cn("sticky top-0 z-20 bg-background")}>
+              <TableHeader className={cn("bg-background sticky top-0 z-20")}>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow
                     key={headerGroup.id}
                     className={cn(
                       "bg-muted/50 hover:bg-muted/50",
-                      "[&>*]:border-t [&>:not(:last-child)]:border-r",
+                      "*:border-t [&>:not(:last-child)]:border-r",
                     )}
                   >
                     {headerGroup.headers.map((header) => {
@@ -413,7 +413,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                               : undefined
                           }
                           className={cn(
-                            "relative select-none truncate border-b border-border [&>.cursor-col-resize]:last:opacity-0",
+                            "border-border relative truncate border-b select-none last:[&>.cursor-col-resize]:opacity-0",
                             header.column.columnDef.meta?.headerClassName,
                           )}
                           aria-sort={
@@ -436,8 +436,8 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                               onMouseDown={header.getResizeHandler()}
                               onTouchStart={header.getResizeHandler()}
                               className={cn(
-                                "user-select-none absolute -right-2 top-0 z-10 flex h-full w-4 cursor-col-resize touch-none justify-center",
-                                "before:absolute before:inset-y-0 before:w-px before:translate-x-px before:bg-border",
+                                "user-select-none absolute top-0 -right-2 z-10 flex h-full w-4 cursor-col-resize touch-none justify-center",
+                                "before:bg-border before:absolute before:inset-y-0 before:w-px before:translate-x-px",
                               )}
                             />
                           )}
@@ -450,7 +450,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               <TableBody
                 id="content"
                 tabIndex={-1}
-                className="outline-1 -outline-offset-1 outline-primary transition-colors focus-visible:outline"
+                className="outline-primary outline-1 -outline-offset-1 transition-colors outline-none focus-visible:outline-solid"
                 // REMINDER: avoids scroll (skipping the table header) when using skip to content
                 style={{
                   scrollMarginTop: "calc(var(--top-bar-height) + 40px)",
@@ -489,7 +489,6 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                       <Button
                         disabled={isFetching || isLoading}
                         onClick={() => fetchNextPage()}
-                        size="sm"
                         variant="outline"
                       >
                         {isFetching ? (
@@ -498,7 +497,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
                         Load More
                       </Button>
                     ) : (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         No more data to load (
                         <span className="font-mono font-medium">
                           {formatCompactNumber(filterRows)}
@@ -579,7 +578,7 @@ function Row<TData>({
       }}
       className={cn(
         "[&>:not(:last-child)]:border-r",
-        "outline-1 -outline-offset-1 outline-primary transition-colors focus-visible:bg-muted/50 focus-visible:outline data-[state=selected]:outline",
+        "outline-primary focus-visible:bg-muted/50 outline-1 -outline-offset-1 transition-colors outline-none focus-visible:outline-solid data-[state=selected]:outline-solid",
         table.options.meta?.getRowClassName?.(row),
       )}
     >
@@ -595,7 +594,7 @@ function Row<TData>({
               : undefined
           }
           className={cn(
-            "truncate border-b border-border",
+            "border-border truncate border-b",
             cell.column.columnDef.meta?.cellClassName,
           )}
         >

@@ -1,4 +1,3 @@
-import { Kbd } from "@/components/custom/kbd";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -10,6 +9,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
@@ -50,7 +50,7 @@ export function DataTableFilterControlsDrawer() {
           <TooltipContent side="right">
             <p>
               Toggle controls with{" "}
-              <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">
+              <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-1">
                 <span className="mr-1">⌘</span>
                 <span>B</span>
               </Kbd>

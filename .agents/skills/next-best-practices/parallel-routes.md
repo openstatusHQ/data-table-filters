@@ -145,7 +145,7 @@ export function Modal({ children }: { children: React.ReactNode }) {
       <div className="mx-4 w-full max-w-2xl rounded-lg bg-white p-6">
         <button
           onClick={() => router.back()} // Correct!
-          className="absolute right-4 top-4"
+          className="absolute top-4 right-4"
         >
           Close
         </button>

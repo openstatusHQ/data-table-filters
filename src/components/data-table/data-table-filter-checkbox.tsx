@@ -45,7 +45,7 @@ export function DataTableFilterCheckbox<TData>({
   // REMINDER: if no options are defined, while fetching data, we should show a skeleton
   if (isLoading && !filterOptions?.length)
     return (
-      <div className="grid divide-y rounded-lg border border-border">
+      <div className="border-border grid divide-y rounded-lg border">
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
@@ -70,7 +70,7 @@ export function DataTableFilterCheckbox<TData>({
         />
       ) : null}
       {/* FIXME: due to the added max-h and overflow-y-auto, the hover state and border is laying on top of the scroll bar */}
-      <div className="max-h-[200px] overflow-y-auto rounded-lg border border-border empty:border-none">
+      <div className="border-border max-h-[200px] overflow-y-auto rounded-lg border empty:border-none">
         {filterOptions
           // TODO: we shoudn't sort the options here, instead filterOptions should be sorted by default
           // .sort((a, b) => a.label.localeCompare(b.label))
@@ -81,7 +81,7 @@ export function DataTableFilterCheckbox<TData>({
               <div
                 key={String(option.value)}
                 className={cn(
-                  "group relative flex items-center space-x-2 px-2 py-2.5 hover:bg-accent/50",
+                  "group hover:bg-accent/50 relative flex items-center space-x-2 px-2 py-2.5",
                   index !== filterOptions.length - 1 ? "border-b" : undefined,
                 )}
               >
@@ -96,10 +96,11 @@ export function DataTableFilterCheckbox<TData>({
                       newValue?.length ? newValue : undefined,
                     );
                   }}
+                  className="border-foreground! shadow-none"
                 />
                 <Label
                   htmlFor={`${value}-${option.value}`}
-                  className="flex w-full items-center justify-center gap-1 truncate text-foreground/70 group-hover:text-accent-foreground"
+                  className="text-foreground/70 group-hover:text-accent-foreground flex w-full items-center justify-center gap-1 truncate"
                 >
                   {Component ? (
                     <Component {...option} />
@@ -117,8 +118,8 @@ export function DataTableFilterCheckbox<TData>({
                     type="button"
                     onClick={() => column?.setFilterValue([option.value])}
                     className={cn(
-                      "absolute inset-y-0 right-0 hidden font-normal text-muted-foreground backdrop-blur-sm hover:text-foreground group-hover:block",
-                      "rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 hidden font-normal backdrop-blur-xs group-hover:block",
+                      "ring-offset-background focus-visible:ring-ring rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden",
                     )}
                   >
                     <span className="px-2">only</span>
