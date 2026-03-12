@@ -4,6 +4,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import remarkGfm from "remark-gfm";
 import { CustomImage } from "./custom-image";
 import { slugify } from "./get-content";
+import { Pre } from "./pre";
 
 function createHeading(level: number) {
   const Heading = ({ children }: { children: React.ReactNode }) => {
@@ -48,6 +49,7 @@ const components = {
   h6: createHeading(6),
   table: Table,
   img: CustomImage,
+  pre: Pre,
 };
 
 /** @type {import('rehype-pretty-code').Options} */

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm registry:build && next build",
     "start": "next start",
     "lint": "eslint .",
     "tsc": "tsc",
@@ -14,7 +14,8 @@
     "db:drizzle:migrate": "drizzle-kit migrate --config src/db/drizzle/drizzle.config.ts",
     "db:drizzle:seed": "tsx src/db/drizzle/seed.ts",
     "db:drizzle:seed-test": "tsx src/db/drizzle/seed-test.ts",
-    "db:drizzle:studio": "drizzle-kit studio --config src/db/drizzle/drizzle.config.ts"
+    "db:drizzle:studio": "drizzle-kit studio --config src/db/drizzle/drizzle.config.ts",
+    "registry:build": "npx shadcn@latest build"
   },
   "dependencies": {
     "@date-fns/utc": "^2.1.0",

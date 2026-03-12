@@ -1,0 +1,55 @@
+---
+title: "Quick Start"
+description: "Get a filterable data table running in your project with one install command"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "How do I install data-table-filters?"
+    answer: "Run `npx shadcn@latest add https://data-table-filters.com/r/data-table.json` to install the core block with ~52 files, including the table engine, memory store adapter, and all 4 filter types."
+  - question: "What are the prerequisites?"
+    answer: "You need a React project with shadcn/ui initialized and Tailwind CSS v4. The shadcn CLI handles all dependency resolution automatically."
+---
+
+# Quick Start
+
+## Install
+
+Start by installing the core `data-table` block — it includes the table engine, memory store adapter, and all 4 filter types:
+
+```bash
+npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
+```
+
+Then add any extension block from the [registry](#blocks) below.
+
+## Agent Skill
+
+Install the skill and let your AI agent handle the setup:
+
+```bash
+npx skills add https://github.com/openstatushq/data-table-filters/skills
+```
+
+Then prompt your agent:
+
+> Add a data table with filters to my project
+
+It detects your stack, installs the right blocks, and wires them up.
+
+## Blocks
+
+The following blocks can be installed via shadcn CLI.
+
+`BASE_URL = "https://data-table.openstatus.dev/r";`
+
+| Name                        | URL                                                                                                   | Components |
+| --------------------------- | ----------------------------------------------------------------------------------------------------- | ---------: |
+| `data-table`                | [/data-table.json](https://data-table.openstatus.dev/r/data-table.json)                               |         51 |
+| `data-table-filter-command` | [/data-table-filter-command.json](https://data-table.openstatus.dev/r/data-table-filter-command.json) |          2 |
+| `data-table-cell`           | [/data-table-cell.json](https://data-table.openstatus.dev/r/data-table-cell.json)                     |         10 |
+| `data-table-sheet`          | [/data-table-sheet.json](https://data-table.openstatus.dev/r/data-table-sheet.json)                   |          5 |
+| `data-table-nuqs`           | [/data-table-nuqs.json](https://data-table.openstatus.dev/r/data-table-nuqs.json)                     |          4 |
+| `data-table-zustand`        | [/data-table-zustand.json](https://data-table.openstatus.dev/r/data-table-zustand.json)               |          3 |
+| `data-table-schema`         | [/data-table-schema.json](https://data-table.openstatus.dev/r/data-table-schema.json)                 |         12 |
+| `data-table-drizzle`        | [/data-table-drizzle.json](https://data-table.openstatus.dev/r/data-table-drizzle.json)               |          7 |
+| `data-table-query`          | [/data-table-query.json](https://data-table.openstatus.dev/r/data-table-query.json)                   |          3 |
