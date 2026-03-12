@@ -1,6 +1,15 @@
 ---
 title: "Data Layer"
 description: "Server-side concepts for filtering, faceted search, cursor pagination, and chart data"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "How does server-side filtering work?"
+    answer: "A three-pass filtering strategy is used: first applying date filters only, then date plus non-slider filters, and finally all filters. This allows faceted counts to remain accurate at each filter level."
+  - question: "Why use cursor pagination instead of offset?"
+    answer: "Cursor-based pagination provides consistent performance regardless of page depth and avoids issues with data shifting between pages when new rows are inserted."
+  - question: "How does faceted search work?"
+    answer: "Faceted search computes grouped counts and min/max ranges for filter fields, enabling dynamic filter UIs that show available options and their counts."
 ---
 
 # Data Layer

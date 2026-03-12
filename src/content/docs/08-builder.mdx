@@ -1,6 +1,13 @@
 ---
 title: "Builder"
 description: "Visually build a table schema from JSON data or CSV"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "How does the schema builder work?"
+    answer: "The builder follows a 5-step process: paste your JSON or CSV data, let the type inference engine generate a schema, preview the live table, edit the JSON schema as needed, and export the final TypeScript code."
+  - question: "Can AI tools use the builder output?"
+    answer: "Yes, the builder supports serialization via toJSON and fromJSON, plus a schemaToTypeScript export. The function-free JSON descriptor format is designed for easy consumption by AI agents."
 ---
 
 # Builder

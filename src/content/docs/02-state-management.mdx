@@ -1,6 +1,15 @@
 ---
 title: "State Management"
 description: "Pluggable adapter pattern for filter state — nuqs (URL), Zustand, memory, or custom"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "What state management options are supported?"
+    answer: "Four adapters are available out of the box: nuqs (URL-based state), Zustand (client-side store), Memory (ephemeral in-memory state), and a Custom adapter interface for building your own."
+  - question: "How do filters sync to the URL?"
+    answer: "The nuqs adapter serializes filter state into URL search parameters, making filter configurations shareable and bookmarkable."
+  - question: "Can I create a custom state adapter?"
+    answer: "Yes, you can implement the StoreAdapter interface to create a fully custom adapter that integrates with any state management solution."
 ---
 
 # State Management

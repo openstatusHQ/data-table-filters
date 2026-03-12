@@ -9,6 +9,9 @@ export type SectionMeta = {
   description: string;
   slug: string;
   order: number;
+  author: string;
+  publishedAt: string;
+  faq?: { question: string; answer: string }[];
 };
 
 export function slugify(str: string) {
@@ -63,6 +66,9 @@ export async function getAllSections(
       description: data.description,
       slug,
       order,
+      author: data.author,
+      publishedAt: data.publishedAt,
+      faq: data.faq,
     });
   }
 
@@ -94,6 +100,9 @@ export async function getSection(
       description: data.description,
       slug,
       order,
+      author: data.author,
+      publishedAt: data.publishedAt,
+      faq: data.faq,
     },
   };
 }

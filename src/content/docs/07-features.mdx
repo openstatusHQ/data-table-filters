@@ -1,6 +1,15 @@
 ---
 title: "Features"
 description: "Timeline chart, live mode, and keyboard shortcuts"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "What keyboard shortcuts are available?"
+    answer: "Supported shortcuts include Cmd+K (command palette), Cmd+B (toggle sidebar), Cmd+U (clear filters), Cmd+J (toggle live mode), Esc (close dialogs), and Cmd+. (toggle debug panel)."
+  - question: "Does the timeline chart support zoom?"
+    answer: "Yes, click and drag across the chart to select a time range. The selection is applied as a date filter, zooming the table into that window. The axis format adapts automatically to the visible time span."
+  - question: "What is live mode?"
+    answer: "Live mode polls the server every 5 seconds and prepends new rows to the top of the table, providing a real-time data experience without manual refreshing."
 ---
 
 # Features
@@ -17,6 +26,10 @@ type BaseChartSchema = {
 ```
 
 Pass chart data via the `chartData` and `chartDataColumnId` props on `DataTableInfinite`. Selecting a range on the chart sets the corresponding date filter.
+
+#### Zoom
+
+The timeline chart supports click-and-drag zoom. Click and drag across bars to select a time range — a shaded `ReferenceArea` highlights your selection as you drag. On mouse up, the selected range is applied as a date filter on the table, zooming into that time window. The axis tick format adapts automatically based on the visible time span (seconds for ≤10 min, hours for ≤1 day, day+hour for ≤1 week, full date otherwise).
 
 ### Live Mode
 

@@ -1,6 +1,15 @@
 ---
 title: "Table Schema"
 description: "Type-safe builder for defining your entire table in one place"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "What column types does the table schema support?"
+    answer: "The schema supports string, number, boolean, timestamp, enum, array, and record column types, each with built-in filter behavior."
+  - question: "What are table schema presets?"
+    answer: "Presets are pre-configured column definitions for common patterns like log levels, HTTP methods, HTTP status codes, durations, timestamps, trace IDs, and pathnames."
+  - question: "What do the generators produce from a table schema?"
+    answer: "Four generators are available: generateColumns (TanStack column defs), generateFilterFields (filter UI config), generateFilterSchema (validation schema), and generateSheetFields (detail drawer fields)."
 ---
 
 # Table Schema

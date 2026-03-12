@@ -1,6 +1,13 @@
 ---
 title: "Drizzle ORM"
 description: "Step-by-step walkthrough for building a server-side data table with Drizzle ORM and PostgreSQL"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "How do I build a server-side data table with Drizzle ORM?"
+    answer: "Follow the 6-step guide: define a Drizzle table schema, create column mappings, set up the table schema for UI, configure an API route with createDrizzleHandler, wire up the client component with useInfiniteQuery, and wrap it in a page with HydrationBoundary."
+  - question: "What helper functions does the Drizzle integration provide?"
+    answer: "The integration includes buildWhereConditions (filter translation), buildOrderBy (sorting), buildCursorPagination (cursor-based page navigation), and computeFacets (faceted search counts and ranges)."
 ---
 
 # Drizzle ORM

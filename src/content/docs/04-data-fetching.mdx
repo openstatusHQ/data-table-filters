@@ -1,6 +1,13 @@
 ---
 title: "Data Fetching"
 description: "TanStack React Query integration with useInfiniteQuery, query options factory, and server prefetching"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "How does data fetching work with the data table?"
+    answer: "Data fetching uses TanStack React Query's useInfiniteQuery with a query options factory (createDataTableQueryOptions) for cursor-based pagination, automatic caching, and server prefetching via HydrationBoundary."
+  - question: "What caching strategy is used?"
+    answer: "The default caching uses keepPreviousData for smooth transitions, a 5-minute stale time, and no refetch on window focus to minimize unnecessary requests."
 ---
 
 # Data Fetching
