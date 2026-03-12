@@ -1,8 +1,12 @@
 "use client";
 
-import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { Slider } from "@/components/custom/slider";
 import { useDataTable } from "@/components/data-table/data-table-provider";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
 import { isArrayOfNumbers } from "@/lib/is-array";
@@ -65,20 +69,23 @@ export function DataTableFilterSlider<TData>({
           >
             Min.
           </Label>
-          <InputWithAddons
-            placeholder="from"
-            trailing={unit}
-            containerClassName="mb-2 h-9 rounded-lg"
-            type="number"
-            name={`min-${value}`}
-            id={`min-${value}`}
-            value={`${input?.[0] ?? min}`}
-            min={min}
-            max={max}
-            onChange={(e) =>
-              setInput((prev) => [Number(e.target.value), prev?.[1] || max])
-            }
-          />
+          <InputGroup className="mb-2 h-9 rounded-lg font-mono shadow-none">
+            <InputGroupInput
+              placeholder="from"
+              type="number"
+              name={`min-${value}`}
+              id={`min-${value}`}
+              value={`${input?.[0] ?? min}`}
+              min={min}
+              max={max}
+              onChange={(e) =>
+                setInput((prev) => [Number(e.target.value), prev?.[1] || max])
+              }
+            />
+            {unit ? (
+              <InputGroupAddon align="inline-end">{unit}</InputGroupAddon>
+            ) : null}
+          </InputGroup>
         </div>
         <div className="grid w-full gap-1.5">
           <Label
@@ -87,20 +94,23 @@ export function DataTableFilterSlider<TData>({
           >
             Max.
           </Label>
-          <InputWithAddons
-            placeholder="to"
-            trailing={unit}
-            containerClassName="mb-2 h-9 rounded-lg"
-            type="number"
-            name={`max-${value}`}
-            id={`max-${value}`}
-            value={`${input?.[1] ?? max}`}
-            min={min}
-            max={max}
-            onChange={(e) =>
-              setInput((prev) => [prev?.[0] || min, Number(e.target.value)])
-            }
-          />
+          <InputGroup className="mb-2 h-9 rounded-lg font-mono shadow-none">
+            <InputGroupInput
+              placeholder="to"
+              type="number"
+              name={`max-${value}`}
+              id={`max-${value}`}
+              value={`${input?.[1] ?? max}`}
+              min={min}
+              max={max}
+              onChange={(e) =>
+                setInput((prev) => [prev?.[0] || min, Number(e.target.value)])
+              }
+            />
+            {unit ? (
+              <InputGroupAddon align="inline-end">{unit}</InputGroupAddon>
+            ) : null}
+          </InputGroup>
         </div>
       </div>
       <Slider

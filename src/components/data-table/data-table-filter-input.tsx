@@ -1,7 +1,11 @@
 "use client";
 
-import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { useDataTable } from "@/components/data-table/data-table-provider";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Search } from "lucide-react";
@@ -41,15 +45,18 @@ export function DataTableFilterInput<TData>({
       <Label htmlFor={value} className="text-muted-foreground sr-only px-2">
         {value}
       </Label>
-      <InputWithAddons
-        placeholder="Search"
-        leading={<Search className="mt-0.5 h-4 w-4" />}
-        containerClassName="h-9 rounded-lg"
-        name={value}
-        id={value}
-        value={input || ""}
-        onChange={(e) => setInput(e.target.value)}
-      />
+      <InputGroup className="h-9 rounded-lg shadow-none">
+        <InputGroupAddon>
+          <Search className="mt-0.5 h-4 w-4" />
+        </InputGroupAddon>
+        <InputGroupInput
+          placeholder="Search"
+          name={value}
+          id={value}
+          value={input || ""}
+          onChange={(e) => setInput(e.target.value)}
+        />
+      </InputGroup>
     </div>
   );
 }

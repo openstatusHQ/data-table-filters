@@ -1,8 +1,17 @@
 "use client";
 
+import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import { LiveButton } from "@/components/data-table/data-table-infinite/live-button";
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
+import { RefreshButton } from "@/components/data-table/data-table-infinite/refresh-button";
+import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
+import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
+import { useDataTable } from "@/components/data-table/data-table-provider";
+import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
+import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
+import type { SheetField } from "@/components/data-table/types";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLiveMode } from "@/hooks/use-live-mode";
 import {
@@ -10,13 +19,11 @@ import {
   getFacetedUniqueValues,
 } from "@/lib/data-table/faceted";
 import { getLevelRowClassName } from "@/lib/request/level";
-import {
-  DataTableStoreProvider,
-  useFilterState,
-  type AdapterType,
-} from "@/lib/store";
+import type { AdapterType } from "@/lib/store/adapter/types";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { useZustandAdapter } from "@/lib/store/adapters/zustand";
+import { useFilterState } from "@/lib/store/hooks/useFilterState";
+import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
 import {
   generateColumns,
   generateFilterFields,
@@ -24,6 +31,7 @@ import {
   getDefaultColumnVisibility,
 } from "@/lib/table-schema";
 import { cn } from "@/lib/utils";
+import type { FetchPreviousPageOptions } from "@tanstack/react-query";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { dataOptions } from "./query-options";
@@ -181,17 +189,13 @@ function ClientInner({
       defaultColumnSorting={sort ? [sort] : undefined}
       defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
       defaultColumnVisibility={defaultColumnVisibility}
-      meta={metadata ?? {}}
       filterFields={dynamicFilterFields}
-      sheetFields={sheetFields}
       isFetching={isFetching}
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
       fetchPreviousPage={fetchPreviousPage}
       refetch={refetch}
-      chartData={chartData}
-      chartDataColumnId="date"
       getRowClassName={(row) => {
         const rowTimestamp = row.original.date.getTime();
         const isPast = rowTimestamp <= (liveMode.timestamp || -1);
@@ -206,12 +210,89 @@ function ClientInner({
         if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
         return <LiveRow colSpan={columns.length - 1} />;
       }}
-      renderSheetTitle={(props) => props.row?.original.pathname}
-      schema={filterSchema.definition}
-      adapterType={adapterType}
-      prefetchEnabled={prefetchEnabled}
-      showConfigurationDropdown
+      commandSlot={
+        <DataTableFilterCommand
+          schema={filterSchema.definition}
+          tableId="infinite"
+        />
+      }
+      toolbarActions={[
+        <RefreshButton key="refresh" onClick={refetch} />,
+        fetchPreviousPage ? (
+          <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />
+        ) : null,
+      ]}
+      chartSlot={
+        <TimelineChart
+          data={chartData ?? []}
+          className="-mb-2"
+          columnId="date"
+        />
+      }
+      footerSlot={
+        <SocialsFooter
+          showConfigurationDropdown
+          prefetchEnabled={prefetchEnabled}
+          adapterType={adapterType}
+        />
+      }
+      sheetSlot={
+        <InfiniteSheetSlot
+          sheetFields={sheetFields}
+          totalRows={totalDBRowCount ?? 0}
+          filterRows={filterDBRowCount ?? 0}
+          totalRowsFetched={totalFetched}
+          metadata={metadata ?? {}}
+        />
+      }
+      tableId="infinite"
     />
+  );
+}
+
+function InfiniteSheetSlot({
+  sheetFields: fields,
+  totalRows,
+  filterRows,
+  totalRowsFetched,
+  metadata,
+}: {
+  sheetFields: SheetField<ColumnSchema, any>[];
+  totalRows: number;
+  filterRows: number;
+  totalRowsFetched: number;
+  metadata: Record<string, unknown>;
+}) {
+  const { table, rowSelection, isLoading, filterFields } = useDataTable<
+    ColumnSchema,
+    unknown
+  >();
+  const selectedRowKey = Object.keys(rowSelection)?.[0];
+  const selectedRow = React.useMemo(() => {
+    if (isLoading && !selectedRowKey) return undefined;
+    return table
+      .getCoreRowModel()
+      .flatRows.find((row) => row.id === selectedRowKey);
+  }, [selectedRowKey, isLoading, table]);
+
+  return (
+    <DataTableSheetDetails
+      title={selectedRow?.original.pathname}
+      titleClassName="font-mono"
+    >
+      <MemoizedDataTableSheetContent
+        table={table}
+        data={selectedRow?.original}
+        filterFields={filterFields}
+        fields={fields}
+        metadata={{
+          totalRows,
+          filterRows,
+          totalRowsFetched,
+          ...metadata,
+        }}
+      />
+    </DataTableSheetDetails>
   );
 }
 

@@ -19,7 +19,7 @@ import {
   ADAPTER_COOKIE_NAME,
   PREFETCH_COOKIE_NAME,
 } from "@/lib/constants/cookies";
-import type { AdapterType } from "@/lib/store";
+import type { AdapterType } from "@/lib/store/adapter/types";
 import { Book, Cog, Command } from "lucide-react";
 import NextLink from "next/link";
 import { useState } from "react";
