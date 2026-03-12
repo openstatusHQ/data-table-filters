@@ -42,8 +42,8 @@ export function TableOfContents({ headings }: { headings: TOCItem[] }) {
             className={cn(
               "border-l-2",
               activeId === heading.slug
-                ? "border-foreground"
-                : "border-transparent",
+                ? "border-primary!"
+                : "border-transparent!",
             )}
             style={{ paddingLeft: `${(heading.depth - 2) * 12}px` }}
           >

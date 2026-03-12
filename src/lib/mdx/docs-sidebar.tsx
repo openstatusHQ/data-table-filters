@@ -31,8 +31,8 @@ function SectionList({
           className={cn(
             "border-l-2",
             currentSlug === section.slug
-              ? "border-foreground"
-              : "border-transparent",
+              ? "border-primary!"
+              : "border-transparent!",
           )}
         >
           <Link
