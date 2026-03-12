@@ -6,7 +6,7 @@
 import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
-} from "@/app/infinite/client";
+} from "@/lib/data-table/faceted";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
 import type {
   DataTableFilterField,

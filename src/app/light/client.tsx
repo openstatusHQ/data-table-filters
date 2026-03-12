@@ -9,7 +9,7 @@ import * as React from "react";
 import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
-} from "../infinite/client";
+} from "@/lib/data-table/faceted";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { dataOptions } from "./query-options";
