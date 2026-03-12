@@ -55,10 +55,10 @@ The command palette for text-based filtering. Opens with `Cmd+K`.
 
 Supports filter syntax:
 
+- Regular: `host:API`
 - Union: `regions:ams,gru`
 - Range: `latency:100-500`
-- Quoted: `host:"api.example.com"`
-- Free text search across all input fields
+- Quoted: `host:"API Server"` (for values with space)
 
 ```tsx
 <DataTableFilterCommand schema={filterSchema.definition} tableId="my-table" />

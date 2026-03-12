@@ -36,7 +36,7 @@ function SectionList({
           )}
         >
           <Link
-            href={`/guide/${section.slug}`}
+            href={`/guides/${section.slug}`}
             onClick={onNavigate}
             className={cn(
               "ml-2 mr-1 block rounded-sm p-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground",

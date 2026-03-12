@@ -5,7 +5,7 @@ description: "Step-by-step walkthrough for building a server-side data table wit
 
 # Drizzle ORM
 
-A step-by-step guide to wiring up the data table with [Drizzle ORM](https://orm.drizzle.team) and PostgreSQL. See the [live example](/drizzle) and the [Database](/guide/data-layer) page for the concepts behind the implementation.
+A step-by-step guide to wiring up the data table with [Drizzle ORM](https://orm.drizzle.team) and PostgreSQL. See the [live example](/drizzle) and the [Database](/guides/data-layer) page for the concepts behind the implementation.
 
 ### File Checklist
 
@@ -169,13 +169,13 @@ export const tableSchema = createTableSchema({
 });
 ```
 
-The filter type you choose here (`checkbox`, `slider`, `input`, `timerange`) determines how the [three-pass filtering strategy](/guide/data-layer#three-pass-filtering) handles each column.
+The filter type you choose here (`checkbox`, `slider`, `input`, `timerange`) determines how the [three-pass filtering strategy](/guides/data-layer#three-pass-filtering) handles each column.
 
 Additional methods: `hidden()` to hide by default, `sortable()` for sort support, `sheet()` for the row detail drawer, `resizable()` for resizable columns.
 
 ### Step 4: API Route
 
-The API route uses `createDrizzleHandler` which implements the [three-pass filtering strategy](/guide/data-layer#three-pass-filtering), faceted search, counts, and cursor pagination:
+The API route uses `createDrizzleHandler` which implements the [three-pass filtering strategy](/guides/data-layer#three-pass-filtering), faceted search, counts, and cursor pagination:
 
 ```ts
 // app/drizzle/api/route.ts

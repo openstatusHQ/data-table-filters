@@ -28,7 +28,7 @@ const nextConfig = {
       },
       {
         source: "/guide",
-        destination: "/guide/introduction",
+        destination: "/guides/introduction",
         permanent: true,
       },
     ];

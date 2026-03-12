@@ -112,3 +112,7 @@
 .prose .table-wrapper {
   @apply w-full overflow-x-auto;
 }
+
+.prose img {
+  @apply aspect-video rounded-lg border border-border;
+}

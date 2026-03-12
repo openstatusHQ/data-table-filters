@@ -11,9 +11,11 @@ day: "numeric",
 year: "numeric",
 })}
 
-> If you have any questions or feature requests, please open an issue on [GitHub](https://github.com/openstatusHQ/data-table-filters/issues). This is a **work in progress** and we are happy to hear from you.
+> This is a **work in progress** — our goal is to make it the fastest way to spin up a data-table view for logs and beyond. Questions, ideas, or feedback? [Open an issue on GitHub](https://github.com/openstatusHQ/data-table-filters/issues).
 
-This guide covers the data-table system end to end — from defining a table schema to rendering filters, columns, and row details. For a complete working example, see the [Full Example](/guide/full-example).
+![data-table with some filters and activated live mode](/assets/guides/data-table.png)
+
+This guide covers the data-table system end to end — from defining a table schema to rendering filters, columns, and row details. For a complete working example, see the [Full Example](/guides/full-example).
 
 ## Examples
 
@@ -59,7 +61,7 @@ The data-table is built on three layers:
 2. **State Management** — a pluggable adapter system for filter state (URL, Zustand, or custom)
 3. **Components** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
 
-For server-side data, a **[Database](/guide/database)** adapter (Drizzle ORM) provides helper functions to build `WHERE` conditions, sorting, cursor pagination, and faceted counts. The **[Data Fetching](/guide/data-fetching)** section covers the API response shape and React Query integration.
+For server-side data, a **[Database](/guides/database)** adapter (Drizzle ORM) provides helper functions to build `WHERE` conditions, sorting, cursor pagination, and faceted counts. The **[Data Fetching](/guides/data-fetching)** section covers the API response shape and React Query integration.
 
 ```
 Table Schema → Generators → Components

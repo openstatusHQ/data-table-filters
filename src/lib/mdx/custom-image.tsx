@@ -24,9 +24,9 @@ export function CustomImage({
 
   if (hasDarkImage) {
     return (
-      <figure>
+      <>
         <Image
-          className={`block dark:hidden ${className ?? ""}`}
+          className={`dark:hidden ${className ?? ""}`}
           src={src}
           alt={alt ?? "image"}
           width={imageWidth}
@@ -39,21 +39,17 @@ export function CustomImage({
           width={imageWidth}
           height={imageHeight}
         />
-        {alt && <figcaption>{alt}</figcaption>}
-      </figure>
+      </>
     );
   }
 
   return (
-    <figure>
-      <Image
-        className={className}
-        src={src}
-        alt={alt ?? "image"}
-        width={imageWidth}
-        height={imageHeight}
-      />
-      {alt && <figcaption>{alt}</figcaption>}
-    </figure>
+    <Image
+      className={className}
+      src={src}
+      alt={alt ?? "image"}
+      width={imageWidth}
+      height={imageHeight}
+    />
   );
 }

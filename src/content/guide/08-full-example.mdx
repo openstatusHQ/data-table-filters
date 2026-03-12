@@ -7,7 +7,9 @@ description: "Complete end-to-end example combining table schema, state manageme
 
 This wires together everything from the previous sections. Each step links back to its guide page for details.
 
-## 1. Define Your Table ([Table Schema](/guide/table-schema))
+## 1. Define Your Table
+
+Use `createTableSchema` to declare every column — display, filters, sorting, and row details — in one place. See [Table Schema](/guides/table-schema) for the full API.
 
 ```tsx
 // table-schema.tsx
@@ -34,7 +36,9 @@ export const tableSchema = createTableSchema({
 export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
 ```
 
-## 2. Create Filter Schema ([State Management](/guide/state-management))
+## 2. Create Filter Schema
+
+Bridge the table schema to filter state with `generateFilterSchema`, then add non-column fields like sort and pagination. See [State Management](/guides/state-management) for details.
 
 ```tsx
 // schema.ts
@@ -51,7 +55,9 @@ export const filterSchema = createSchema({
 export type FilterState = typeof filterSchema._type;
 ```
 
-## 3. Set Up the API Route ([Database](/guide/database) + [Data Fetching](/guide/data-fetching))
+## 3. Set Up the API Route
+
+Create an API handler with `createDrizzleHandler` that implements three-pass filtering, faceted search, and cursor pagination. See [Database](/guides/database) and [Data Fetching](/guides/data-fetching) for the underlying concepts.
 
 ```tsx
 // app/api/route.ts
@@ -85,7 +91,9 @@ export async function GET(req: NextRequest) {
 }
 ```
 
-## 4. Render ([Components](/guide/components))
+## 4. Render
+
+Wire up `useInfiniteQuery` with `DataTableInfinite` and populate filter fields dynamically from server-side facet data. See [Components](/guides/components) for all available props.
 
 ```tsx
 // client.tsx
@@ -153,4 +161,5 @@ function DataTableContent() {
 | ---------------------- | --------------- | ----------- | --------- | ----- |
 | [/default](/default)   | Client-side     | In-memory   | No        | No    |
 | [/infinite](/infinite) | Infinite scroll | Mock API    | Yes       | Yes   |
-| [/drizzle](/drizzle)   | Infinite scroll | PostgreSQL  | No        | Yes   |
+| [/drizzle](/drizzle)   | Infinite scroll | PostgreSQL  | Yes       | Yes   |
+| [/light](/light)       | Infinite scroll | Tinybird    | Yes       | Yes   |
