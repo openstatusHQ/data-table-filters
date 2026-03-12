@@ -1,17 +1,17 @@
 import { SocialsFooter } from "@/components/layout/socials-footer";
 import { Button } from "@/components/ui/button";
-import { getAllSections, GuideSidebar } from "@/lib/mdx";
+import { DocsSidebar, getAllSections } from "@/lib/mdx";
 import { cn } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function GuideLayout({
+export default async function DocsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const sections = await getAllSections("guide");
+  const sections = await getAllSections("docs");
 
   return (
     <main className="container mx-auto flex min-h-screen w-full flex-col gap-6 p-4 sm:p-6 xl:gap-8 xl:p-8">
@@ -42,7 +42,7 @@ export default async function GuideLayout({
           "xl:grid-cols-[220px_1fr_220px]",
         )}
       >
-        <GuideSidebar sections={sections} />
+        <DocsSidebar sections={sections} />
         {children}
       </div>
       <div className="border-b border-dashed border-border" />

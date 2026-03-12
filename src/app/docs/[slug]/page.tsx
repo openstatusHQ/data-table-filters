@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 export async function generateStaticParams() {
-  const sections = await getAllSections("guide");
+  const sections = await getAllSections("docs");
   return sections.map((s) => ({ slug: s.slug }));
 }
 
@@ -15,7 +15,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata | undefined> {
   const { slug } = await params;
-  const section = await getSection("guide", slug);
+  const section = await getSection("docs", slug);
   if (!section) return;
 
   const { title, description } = section.meta;
@@ -25,17 +25,17 @@ export async function generateMetadata({
     description,
     twitter: { ...twitterMetadata, title, description },
     openGraph: { ...ogMetadata, title, description },
-    alternates: { canonical: `/guides/${slug}` },
+    alternates: { canonical: `/docs/${slug}` },
   };
 }
 
-export default async function GuideSectionPage({
+export default async function DocsSectionPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const section = await getSection("guide", slug);
+  const section = await getSection("docs", slug);
   if (!section) notFound();
   const { source, headings } = section;
 

@@ -60,7 +60,7 @@ export function SocialsFooter({
           />
         ) : (
           <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
-            <NextLink href="/guide">
+            <NextLink href="/docs/introduction">
               <Book className="h-4 w-4" />
             </NextLink>
           </Button>

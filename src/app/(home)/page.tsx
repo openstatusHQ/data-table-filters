@@ -357,8 +357,8 @@ function Hero() {
           .
         </h2>
         <p className="max-w-[740px] text-lg text-muted-foreground">
-          Learn more in the <Link href="/guide">Guide</Link>. Plug in any state
-          manager with BYOS (Bring Your Own Store). Try the{" "}
+          Learn more in the <Link href="/docs/introduction">Docs</Link>. Plug in
+          any state manager with BYOS (Bring Your Own Store). Try the{" "}
           <Link href="/builder">Builder</Link> to generate your schema.
         </p>
       </div>
@@ -382,6 +382,15 @@ const changelog: {
   date: Date;
   description: React.ReactNode;
 }[] = [
+  {
+    date: new Date("03-12-2026"),
+    description: (
+      <>
+        New <Link href="/docs/introduction">documentation</Link> page to help
+        you get started
+      </>
+    ),
+  },
   {
     date: new Date("03-30-2025"),
     description: (

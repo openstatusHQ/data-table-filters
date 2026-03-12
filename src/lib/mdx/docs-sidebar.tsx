@@ -36,7 +36,7 @@ function SectionList({
           )}
         >
           <Link
-            href={`/guides/${section.slug}`}
+            href={`/docs/${section.slug}`}
             onClick={onNavigate}
             className={cn(
               "ml-2 mr-1 block rounded-sm p-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
@@ -51,7 +51,7 @@ function SectionList({
   );
 }
 
-export function GuideSidebar({ sections }: { sections: SectionMeta[] }) {
+export function DocsSidebar({ sections }: { sections: SectionMeta[] }) {
   const pathname = usePathname();
   const currentSlug = pathname.split("/").pop() ?? "";
   const [open, setOpen] = useState(false);
@@ -60,7 +60,7 @@ export function GuideSidebar({ sections }: { sections: SectionMeta[] }) {
     <>
       {/* Desktop sidebar */}
       <nav className="sticky top-10 hidden max-h-[calc(100vh-6rem)] overflow-y-auto md:block">
-        <p className="mb-3 text-sm font-medium">Guide</p>
+        <p className="mb-3 text-sm font-medium">Docs</p>
         <SectionList sections={sections} currentSlug={currentSlug} />
       </nav>
 
@@ -73,13 +73,13 @@ export function GuideSidebar({ sections }: { sections: SectionMeta[] }) {
           onClick={() => setOpen(true)}
         >
           <Menu className="h-5 w-5" />
-          <span className="sr-only">Open guide navigation</span>
+          <span className="sr-only">Open docs navigation</span>
         </Button>
 
         <Drawer open={open} onOpenChange={setOpen}>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>Guide</DrawerTitle>
+              <DrawerTitle>Docs</DrawerTitle>
             </DrawerHeader>
             <div className="px-4 pb-6">
               <SectionList
