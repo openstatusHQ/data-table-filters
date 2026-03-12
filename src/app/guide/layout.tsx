@@ -1,3 +1,4 @@
+import { SocialsFooter } from "@/components/layout/socials-footer";
 import { Button } from "@/components/ui/button";
 import { getAllSections, GuideSidebar } from "@/lib/mdx";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,8 @@ export default async function GuideLayout({
         <GuideSidebar sections={sections} />
         {children}
       </div>
+      <div className="border-b border-dashed border-border" />
+      <SocialsFooter />
     </main>
   );
 }
