@@ -2,6 +2,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import React from "react";
 import rehypePrettyCode from "rehype-pretty-code";
 import remarkGfm from "remark-gfm";
+import { CustomImage } from "./custom-image";
 import { slugify } from "./get-content";
 
 function createHeading(level: number) {
@@ -46,6 +47,7 @@ const components = {
   h5: createHeading(5),
   h6: createHeading(6),
   table: Table,
+  img: CustomImage,
 };
 
 /** @type {import('rehype-pretty-code').Options} */

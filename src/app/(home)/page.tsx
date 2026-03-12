@@ -11,17 +11,17 @@ export default function Home() {
       <div className="px-2.5">
         <Hero />
       </div>
-      <div className="border-b border-dashed border-border" />
+      <div className="border-border border-b border-dashed" />
       <div className="grid gap-8 xl:grid-cols-2 xl:gap-12">
         <div className="relative">
           <Badge
             variant="outline"
-            className="absolute -top-3 right-3 border-dashed border-border bg-background px-1.5 font-mono"
+            className="border-border bg-background absolute -top-3 right-3 border-dashed px-1.5 font-mono"
           >
             nuqs | zustand
           </Badge>
           <NextLink href="/default" className="group flex flex-col gap-2.5">
-            <div className="flex flex-col justify-center rounded-lg border border-border/70 bg-muted/40 px-5 py-6 group-hover:border-border group-hover:bg-muted/50 md:px-10 md:py-12 xl:aspect-video">
+            <div className="border-border/70 bg-muted/40 group-hover:border-border group-hover:bg-muted/50 flex flex-col justify-center rounded-lg border px-5 py-6 md:px-10 md:py-12 xl:aspect-video">
               <div className="flex w-full flex-col gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
                 <div className="flex flex-1 flex-row items-end gap-2.5">
                   <div className="-my-2 hidden sm:block">
@@ -40,13 +40,13 @@ export default function Home() {
               <p className="font-medium group-hover:underline">
                 Default Data-Table
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 A{" "}
                 <span className="underline decoration-yellow-500 decoration-wavy underline-offset-2">
                   simple
                 </span>{" "}
                 data-table with a{" "}
-                <span className="font-medium text-foreground">client-side</span>{" "}
+                <span className="text-foreground font-medium">client-side</span>{" "}
                 filter and pagination.
               </p>
             </div>
@@ -55,23 +55,23 @@ export default function Home() {
         <div className="relative">
           <Badge
             variant="outline"
-            className="absolute -top-3 right-3 border-dashed border-border bg-background px-1.5 font-mono"
+            className="border-border bg-background absolute -top-3 right-3 border-dashed px-1.5 font-mono"
           >
             nuqs | zustand
           </Badge>
           <NextLink href="/infinite" className="group flex flex-col gap-2.5">
-            <div className="flex flex-col justify-center rounded-lg border border-border/70 bg-muted/40 px-5 py-6 group-hover:border-border group-hover:bg-muted/50 md:px-10 md:py-12 xl:aspect-video">
-              <div className="flex w-full flex-row items-end gap-2.5 transition-all duration-300 group-hover:scale-[1.02] sm:divide-x">
+            <div className="border-border/70 bg-muted/40 group-hover:border-border group-hover:bg-muted/50 flex flex-col justify-center rounded-lg border px-5 py-6 md:px-10 md:py-12 xl:aspect-video">
+              <div className="flex w-full flex-row items-end gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
                 <div className="hidden sm:block">
-                  <Controls className="w-24 border-b border-transparent" />
+                  <Controls className="w-24 border-b border-transparent!" />
                 </div>
-                <div className="flex flex-1 flex-col gap-2">
+                <div className="flex flex-1 flex-col gap-2 sm:border-l">
                   <div className="flex flex-col gap-2 px-2.5">
                     <CommandInput />
                     <Timeline />
                     <Toolbar />
                   </div>
-                  <GridTable className="border-l-1 md:border-l-0" />
+                  <GridTable className="border-l md:border-l-0" />
                 </div>
               </div>
             </div>
@@ -79,13 +79,13 @@ export default function Home() {
               <p className="font-medium group-hover:underline">
                 Infinite Data-Table
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 A{" "}
                 <span className="underline decoration-blue-500 decoration-wavy underline-offset-2">
                   cooked
                 </span>{" "}
                 infinite scroll data-table with a{" "}
-                <span className="font-medium text-foreground">server-side</span>{" "}
+                <span className="text-foreground font-medium">server-side</span>{" "}
                 filter, row selection and live mode.
               </p>
             </div>
@@ -98,7 +98,7 @@ export default function Home() {
           <Examples />
         </div>
       </div>
-      <div className="border-b border-dashed border-border" />
+      <div className="border-border border-b border-dashed" />
       <SocialsFooter />
     </div>
   );
@@ -106,26 +106,26 @@ export default function Home() {
 
 function DefaultTable() {
   return (
-    <div className="divide-y overflow-hidden rounded-lg border border-border">
-      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
+    <div className="border-border divide-y overflow-hidden rounded-lg border">
+      <div className="hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 flex gap-2 px-2.5 py-2">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm sm:w-24" />
         <div className="h-2.5 w-16 rounded-sm" />
       </div>
-      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 flex gap-2 px-2.5 py-2">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-16 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm sm:w-24" />
         <div className="h-2.5 w-16 rounded-sm" />
       </div>
-      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 flex gap-2 px-2.5 py-2">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm sm:w-24" />
         <div className="h-2.5 w-16 rounded-sm" />
       </div>
-      <div className="flex gap-2 px-2.5 py-2 hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:last-child]:bg-foreground/60 [&>*:not(:last-child):nth-child(even)]:bg-foreground/70 [&>*:not(:last-child):nth-child(odd)]:bg-muted-foreground/30 flex gap-2 px-2.5 py-2">
         <div className="size-2.5 rounded-sm" />
         <div className="h-2.5 w-16 rounded-sm" />
         <div className="h-2.5 w-12 rounded-sm sm:w-24" />
@@ -139,11 +139,11 @@ function GridTable({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "divide-y overflow-hidden border border-l-0 border-border",
+        "border-border divide-y overflow-hidden border border-l-0",
         className,
       )}
     >
-      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30 grid grid-cols-6 divide-x [&>*:last-child>div]:ml-auto">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
@@ -160,7 +160,7 @@ function GridTable({ className }: { className?: string }) {
           <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30 grid grid-cols-6 divide-x [&>*:last-child>div]:ml-auto">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
@@ -177,7 +177,7 @@ function GridTable({ className }: { className?: string }) {
           <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30 grid grid-cols-6 divide-x [&>*:last-child>div]:ml-auto">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
@@ -194,7 +194,7 @@ function GridTable({ className }: { className?: string }) {
           <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30 grid grid-cols-6 divide-x [&>*:last-child>div]:ml-auto">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
@@ -211,7 +211,7 @@ function GridTable({ className }: { className?: string }) {
           <div className="h-2.5 w-full rounded-sm sm:w-8" />
         </div>
       </div>
-      <div className="grid grid-cols-6 divide-x hover:bg-muted [&>*:last-child>div]:ml-auto [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30">
+      <div className="hover:bg-muted [&>*:nth-child(even)>div]:bg-foreground/70 [&>*:nth-child(odd)>div]:bg-muted-foreground/30 grid grid-cols-6 divide-x [&>*:last-child>div]:ml-auto">
         <div className="px-2.5 py-2">
           <div className="size-2.5 rounded-sm" />
         </div>
@@ -234,12 +234,12 @@ function GridTable({ className }: { className?: string }) {
 
 function CommandInput() {
   return (
-    <div className="flex justify-between rounded-lg border border-border px-2.5 py-2 hover:bg-muted">
+    <div className="border-border hover:bg-muted flex justify-between rounded-lg border px-2.5 py-2">
       <div className="flex gap-2.5">
-        <div className="h-2.5 w-12 rounded-sm bg-foreground/70" />
-        <div className="h-2.5 w-8 rounded-sm bg-foreground/70" />
+        <div className="bg-foreground/70 h-2.5 w-12 rounded-sm" />
+        <div className="bg-foreground/70 h-2.5 w-8 rounded-sm" />
       </div>
-      <div className="h-2.5 w-4 rounded-sm bg-muted-foreground/40" />
+      <div className="bg-muted-foreground/40 h-2.5 w-4 rounded-sm" />
     </div>
   );
 }
@@ -247,8 +247,8 @@ function CommandInput() {
 function Toolbar() {
   return (
     <div className="flex justify-between gap-2.5">
-      <div className="h-2.5 w-8 rounded-sm bg-muted-foreground/40" />
-      <div className="h-2.5 w-2.5 rounded-sm bg-muted-foreground/40" />
+      <div className="bg-muted-foreground/40 h-2.5 w-8 rounded-sm" />
+      <div className="bg-muted-foreground/40 h-2.5 w-2.5 rounded-sm" />
     </div>
   );
 }
@@ -268,7 +268,7 @@ function Timeline() {
           <div
             key={i}
             className={cn(
-              "flex-1 rounded-sm bg-muted-foreground/20 hover:bg-muted-foreground/30",
+              "bg-muted-foreground/20 hover:bg-muted-foreground/30 flex-1 rounded-sm",
               height,
             )}
           />
@@ -280,37 +280,37 @@ function Timeline() {
 
 function Controls({ className }: { className?: string }) {
   return (
-    <div className={cn("divide-y divide-transparent", className)}>
+    <div className={cn("divide-y divide-transparent!", className)}>
       <div className="flex flex-col gap-2 py-2">
         <div className="flex justify-between gap-2.5">
-          <div className="h-2.5 w-10 rounded-sm bg-foreground/50" />
-          <div className="size-2.5 rounded-sm bg-foreground/50" />
+          <div className="bg-foreground/50 h-2.5 w-10 rounded-sm" />
+          <div className="bg-foreground/50 size-2.5 rounded-sm" />
         </div>
-        <div className="h-2.5 w-full rounded-sm bg-foreground/70" />
+        <div className="bg-foreground/70 h-2.5 w-full rounded-sm" />
       </div>
       <div className="group/controls flex justify-between gap-2.5 py-2">
-        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
-        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
       </div>
       <div className="group/controls flex justify-between gap-2.5 py-2">
-        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
-        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
       </div>
       <div className="group/controls flex justify-between gap-2.5 py-2">
-        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
-        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
       </div>
       <div className="group/controls flex justify-between gap-2.5 py-2">
-        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
-        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
       </div>
       <div className="group/controls flex justify-between gap-2.5 py-2">
-        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
-        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
       </div>
       <div className="group/controls flex justify-between gap-2.5 py-2">
-        <div className="h-2.5 w-10 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
-        <div className="size-2.5 rounded-sm bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 h-2.5 w-10 rounded-sm" />
+        <div className="bg-muted-foreground/30 group-hover/controls:bg-muted-foreground/50 size-2.5 rounded-sm" />
       </div>
     </div>
   );
@@ -319,11 +319,11 @@ function Controls({ className }: { className?: string }) {
 function Pagination() {
   return (
     <div className="flex justify-end gap-2.5">
-      <div className="h-2.5 w-8 rounded-sm bg-muted-foreground/30" />
-      <div className="size-2.5 rounded-sm bg-foreground/50" />
-      <div className="size-2.5 rounded-sm bg-foreground/50" />
-      <div className="size-2.5 rounded-sm bg-foreground/70" />
-      <div className="size-2.5 rounded-sm bg-foreground/70" />
+      <div className="bg-muted-foreground/30 h-2.5 w-8 rounded-sm" />
+      <div className="bg-foreground/50 size-2.5 rounded-sm" />
+      <div className="bg-foreground/50 size-2.5 rounded-sm" />
+      <div className="bg-foreground/70 size-2.5 rounded-sm" />
+      <div className="bg-foreground/70 size-2.5 rounded-sm" />
     </div>
   );
 }
@@ -332,11 +332,11 @@ function Hero() {
   return (
     <div className="flex flex-col-reverse items-start justify-between gap-8 sm:flex-row">
       <div className="max-w-4xl space-y-3">
-        <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+        <h1 className="text-foreground text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <h2 className="max-w-[750px] text-lg text-muted-foreground">
+        <h2 className="text-muted-foreground max-w-[750px] text-lg">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
@@ -356,16 +356,16 @@ function Hero() {
           </Link>
           .
         </h2>
-        <p className="max-w-[740px] text-lg text-muted-foreground">
-          Learn more in the <Link href="/guide">Guide</Link>. Plug in any state
-          manager with BYOS (Bring Your Own Store). Try the{" "}
+        <p className="text-muted-foreground max-w-[740px] text-lg">
+          Learn more in the <Link href="/docs/introduction">Docs</Link>. Plug in
+          any state manager with BYOS (Bring Your Own Store). Try the{" "}
           <Link href="/builder">Builder</Link> to generate your schema.
         </p>
       </div>
       <NextLink
         href="https://openstatus.dev"
         target="_blank"
-        className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed border-border bg-white sm:h-12 sm:w-12"
+        className="border-border relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed bg-white sm:h-12 sm:w-12"
       >
         <Image
           src="/logos/OpenStatus.png"
@@ -382,6 +382,15 @@ const changelog: {
   date: Date;
   description: React.ReactNode;
 }[] = [
+  {
+    date: new Date("03-12-2026"),
+    description: (
+      <>
+        New <Link href="/docs/introduction">documentation</Link> page to help
+        you get started
+      </>
+    ),
+  },
   {
     date: new Date("03-30-2025"),
     description: (
@@ -425,7 +434,7 @@ function Changelog() {
         {changelog.map((item, i) => {
           return (
             <li key={i} className="flex flex-col gap-0.5">
-              <time className="font-mono text-sm text-muted-foreground">
+              <time className="text-muted-foreground font-mono text-sm">
                 {item.date.toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
@@ -447,7 +456,7 @@ function Examples() {
       <p className="font-medium">More Examples</p>
       <ul
         role="list"
-        className="grid list-inside list-disc gap-2 marker:text-muted-foreground"
+        className="marker:text-muted-foreground grid list-inside list-disc gap-2"
       >
         <li>
           <Link href="/light">OpenStatus Light Viewer</Link>

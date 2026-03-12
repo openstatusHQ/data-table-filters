@@ -32,7 +32,7 @@ export function HistoryPanel({
     return (
       <div
         className={cn(
-          "py-4 text-center text-xs text-muted-foreground",
+          "text-muted-foreground py-4 text-center text-xs",
           className,
         )}
       >
@@ -43,7 +43,7 @@ export function HistoryPanel({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
         History ({history.length})
       </div>
       <div className="max-h-[200px] space-y-1 overflow-y-auto">

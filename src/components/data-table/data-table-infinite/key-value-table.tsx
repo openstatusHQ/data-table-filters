@@ -13,7 +13,7 @@ interface KeyValueTableProps {
 export function KeyValueTable({ data }: KeyValueTableProps) {
   return (
     <div className="mx-auto max-w-lg">
-      <div className="overflow-hidden rounded-lg border border-border bg-background">
+      <div className="border-border bg-background overflow-hidden rounded-lg border">
         <Table>
           <TableBody>
             {Object.entries(data).map(([key, value]) => {
@@ -31,7 +31,7 @@ function RowAction({ label, value }: { label: string; value: string }) {
 
   return (
     <TableRow
-      className="group text-left *:border-border hover:bg-transparent [&>:not(:last-child)]:border-r"
+      className="group *:border-border text-left hover:bg-transparent [&>:not(:last-child)]:border-r"
       onClick={(e) => {
         e.stopPropagation();
         copy(value);
@@ -42,7 +42,7 @@ function RowAction({ label, value }: { label: string; value: string }) {
       </TableCell>
       <TableCell className="relative py-1 font-mono">
         {value}
-        <div className="invisible absolute right-1.5 top-1.5 rounded-sm border border-border bg-background p-0.5 backdrop-blur-sm group-hover:visible">
+        <div className="border-border bg-background invisible absolute top-1.5 right-1.5 rounded-sm border p-0.5 backdrop-blur-xs group-hover:visible">
           {!isCopied ? (
             <Copy className="h-3 w-3" />
           ) : (

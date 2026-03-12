@@ -1,10 +1,10 @@
 "use client";
 
-import { kbdVariants } from "@/components/custom/kbd";
 import type { DatePreset } from "@/components/data-table/types";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -64,13 +64,12 @@ export function DatePickerWithRange({
           <Button
             id="date"
             variant="outline"
-            size="sm"
             className={cn(
-              "max-w-full justify-start truncate text-left font-normal hover:bg-muted/50",
+              "hover:bg-muted/50 max-w-full justify-start truncate text-left font-normal shadow-none",
               !date && "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <CalendarIcon className="h-4 w-4" />
             {date?.from ? (
               date.to ? (
                 <span className="truncate">
@@ -130,7 +129,7 @@ function DatePresets({
 }) {
   return (
     <div className="flex flex-col gap-2 p-3">
-      <p className="mx-3 text-xs uppercase text-muted-foreground">Date Range</p>
+      <p className="text-muted-foreground mx-3 text-xs uppercase">Date Range</p>
       <div className="grid gap-1">
         {presets.map(({ label, shortcut, from, to }) => {
           const isActive = selected?.from === from && selected?.to === to;
@@ -138,15 +137,14 @@ function DatePresets({
             <Button
               key={label}
               variant={isActive ? "outline" : "ghost"}
-              size="sm"
               onClick={() => onSelect({ from, to })}
               className={cn(
                 "flex items-center justify-between gap-6",
-                !isActive && "border border-transparent",
+                !isActive && "border border-transparent!",
               )}
             >
               <span className="mr-auto">{label}</span>
-              <span className={cn(kbdVariants(), "uppercase")}>{shortcut}</span>
+              <Kbd className="uppercase">{shortcut}</Kbd>
             </Button>
           );
         })}
@@ -201,14 +199,7 @@ function DatePresetsSelect({
                 className="flex items-center justify-between [&>span:last-child]:flex [&>span:last-child]:w-full [&>span:last-child]:justify-between"
               >
                 <span>{label}</span>
-                <span
-                  className={cn(
-                    kbdVariants(),
-                    "ml-2 h-5 uppercase leading-snug",
-                  )}
-                >
-                  {shortcut}
-                </span>
+                <Kbd className="ml-2 uppercase">{shortcut}</Kbd>
               </SelectItem>
             );
           })}
@@ -246,7 +237,7 @@ function CustomDateRange({
 
   return (
     <div className="flex flex-col gap-2 p-3">
-      <p className="text-xs uppercase text-muted-foreground">Custom Range</p>
+      <p className="text-muted-foreground text-xs uppercase">Custom Range</p>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="grid w-full gap-1.5">
           <Label htmlFor="from">Start</Label>

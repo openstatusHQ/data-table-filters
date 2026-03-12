@@ -1,0 +1,262 @@
+---
+title: "Table Schema"
+description: "Type-safe builder for defining your entire table in one place"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "What column types does the table schema support?"
+    answer: "The schema supports string, number, boolean, timestamp, enum, array, and record column types, each with built-in filter behavior."
+  - question: "What are table schema presets?"
+    answer: "Presets are pre-configured column definitions for common patterns like log levels, HTTP methods, HTTP status codes, durations, timestamps, trace IDs, and pathnames."
+  - question: "What do the generators produce from a table schema?"
+    answer: "Four generators are available: generateColumns (TanStack column defs), generateFilterFields (filter UI config), generateFilterSchema (validation schema), and generateSheetFields (detail drawer fields)."
+---
+
+# Table Schema
+
+The table schema is a type-safe builder for defining your entire table in one place. Instead of manually wiring up `columns.tsx`, `filterFields`, `sheetFields`, and a filter state schema separately, a single schema definition generates all of them.
+
+## Defining a Schema
+
+```tsx
+import {
+  col,
+  createTableSchema,
+  type InferTableType,
+} from "@/lib/table-schema";
+
+const LEVELS = ["error", "warn", "info", "debug"] as const;
+const METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
+
+export const tableSchema = createTableSchema({
+  level: col.presets.logLevel(LEVELS).description("Log severity"),
+  date: col.presets.timestamp().label("Date").size(200).sheet(),
+  latency: col.presets
+    .duration("ms")
+    .label("Latency")
+    .sortable()
+    .size(110)
+    .sheet(),
+  status: col.presets.httpStatus().label("Status").size(60),
+  method: col.presets.httpMethod(METHODS).size(69),
+  host: col.string().label("Host").size(125).sheet(),
+  path: col.presets.pathname().label("Path").size(130).sheet(),
+  traceId: col.presets.traceId().label("Request ID").hidden().sheet(),
+  headers: col.record().label("Headers").sheetOnly().sheet(),
+});
+
+// Row type inferred from the schema
+export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
+```
+
+## Column Factories
+
+Choose the factory based on your data type:
+
+```ts
+col.string(); // string  — text display, input filter
+col.number(); // number  — number display, input filter
+col.boolean(); // boolean — boolean display, checkbox filter
+col.timestamp(); // Date    — timestamp display, timerange filter
+col.enum(values); // union   — badge display, checkbox filter
+col.array(item); // array   — badge display, checkbox filter
+col.record(); // Record  — text display, not filterable
+```
+
+Each factory returns a `ColBuilder<T, F>` where `T` is the inferred TypeScript type and `F` constrains which filter types are valid at compile time:
+
+| Factory                       | Allowed Filters                     | Notes                                           |
+| ----------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `col.string()`                | `"input"`                           | Text search                                     |
+| `col.number()`                | `"input"`, `"slider"`, `"checkbox"` | Slider for ranges, checkbox for discrete values |
+| `col.boolean()`               | `"checkbox"`                        | Pre-wired with true/false options               |
+| `col.timestamp()`             | `"timerange"`                       | Date range picker                               |
+| `col.enum(values)`            | `"checkbox"`                        | Options auto-derived from values                |
+| `col.array(col.enum(values))` | `"checkbox"`                        | Multi-value tags, regions, labels               |
+| `col.record()`                | _none_ (`never`)                    | Use `.sheetOnly()` for detail drawers           |
+
+## Presets
+
+Pre-configured builders for common patterns. All remain fully customizable via chaining.
+
+```ts
+col.presets.logLevel(["error", "warn", "info", "debug"]);
+// → enum + badge + checkbox + defaultOpen
+
+col.presets.httpMethod(["GET", "POST", "PUT", "DELETE"]);
+// → enum + text display + checkbox
+
+col.presets.httpStatus();
+// → number + checkbox with common codes (200, 201, 204, 301, ..., 504)
+// Custom codes: col.presets.httpStatus([200, 400, 500])
+
+col.presets.duration("ms");
+// → number + formatted display with unit + slider (0–5000)
+// Custom bounds: col.presets.duration("s", { min: 0, max: 60 })
+
+col.presets.timestamp();
+// → Date + relative time display + timerange filter + sortable
+
+col.presets.traceId();
+// → string + code display + not filterable
+
+col.presets.pathname();
+// → string + text display + input filter
+```
+
+## Builder Methods
+
+All methods return a new builder instance (immutable) for fluent chaining.
+
+### Label & Description
+
+```ts
+col
+  .string()
+  .label("Host") // Column header label (required)
+  .description("Origin server"); // For AI agents / MCP tools (not shown in UI)
+```
+
+### Display
+
+Controls how the cell value renders. Built-in display types:
+
+| Type                | Use case                                               |
+| ------------------- | ------------------------------------------------------ |
+| `"text"`            | Plain text with overflow tooltip (default for strings) |
+| `"code"`            | Monospace — IDs, paths, hashes                         |
+| `"number"`          | Formatted number with optional `unit` suffix           |
+| `"badge"`           | Colored chip (default for enums)                       |
+| `"timestamp"`       | Relative time ("3m ago"), absolute on hover            |
+| `"boolean"`         | Checkmark / dash icon                                  |
+| `"status-code"`     | HTTP status code coloring                              |
+| `"level-indicator"` | Severity dot indicator                                 |
+| `"custom"`          | Developer-supplied JSX (not serializable)              |
+
+```ts
+col.number().display("number", { unit: "ms" })
+col.enum(v).display("badge", { colorMap: { error: "#ef4444", warn: "#f59e0b" } })
+col.enum(v).display("custom", {
+  cell: (value, row) => <MyComponent value={value} />,
+})
+```
+
+### Filtering
+
+```ts
+col.string().filterable("input")
+col.number().filterable("slider", { min: 0, max: 5000 })
+col.enum(v).filterable("checkbox")
+col.enum(v).filterable("checkbox", {
+  options: v.map(v => ({ label: v, value: v })),
+  component: (props) => <StatusBadge value={props.value} />,
+})
+col.timestamp().filterable("timerange")
+
+col.string().notFilterable()        // Disables filtering (F becomes never)
+col.enum(v).defaultOpen()           // Expand in filter sidebar by default
+col.timestamp().commandDisabled()   // Exclude from command palette
+```
+
+Passing a filter type not in `F` is a **compile-time error** — e.g. `col.string().filterable("slider")` won't compile.
+
+### Visibility & Layout
+
+```ts
+col.string().hidden(); // Hidden by default (toggleable in column menu)
+col.enum(v).hideHeader(); // Hide header label, keep column visible
+col.string().resizable(); // Enable drag-to-resize
+col.string().size(125); // Fixed width in pixels (initial width if resizable)
+```
+
+### Sorting & Optionality
+
+```ts
+col.number().sortable(); // Click-to-sort on column header
+col.string().optional(); // T becomes T | undefined in InferTableType
+```
+
+### Sheet (Row Detail Drawer)
+
+```ts
+col.string().sheet()        // Include in detail drawer
+col.string().sheet({ label: "Server", skeletonClassName: "w-24" })
+col.number().sheet({
+  component: (row) => <>{row.latency}ms</>,
+  skeletonClassName: "w-16",
+})
+col.record().sheetOnly()    // hidden + notFilterable + enableHiding: false
+```
+
+## Generators
+
+The schema drives four generators that produce everything the table components need.
+
+```tsx
+import {
+  generateColumns,
+  generateFilterFields,
+  generateFilterSchema,
+  generateSheetFields,
+  getDefaultColumnVisibility,
+} from "@/lib/table-schema";
+
+// TanStack Table ColumnDef[]
+const columns = generateColumns<ColumnSchema>(tableSchema.definition);
+
+// Filter sidebar and command palette fields
+const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
+
+// Row detail drawer fields
+const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
+
+// Initial column visibility from .hidden() columns
+const defaultColumnVisibility = getDefaultColumnVisibility(
+  tableSchema.definition,
+);
+```
+
+You can append custom virtual columns that span multiple fields:
+
+```tsx
+const allColumns = [
+  ...generateColumns<ColumnSchema>(tableSchema.definition),
+  {
+    id: "timing",
+    header: "Timing Phases",
+    cell: ({ row }) => <TimingBar row={row} />,
+    size: 130,
+  },
+];
+```
+
+### generateFilterSchema
+
+Bridges the table schema to filter state by generating a filter schema. Add non-column state fields (sort, pagination, live mode) alongside:
+
+```tsx
+import { createSchema, field } from "@/lib/store/schema";
+
+export const filterSchema = createSchema({
+  ...generateFilterSchema(tableSchema.definition).definition,
+  sort: field.sort(),
+  live: field.boolean().default(false),
+  size: field.number().default(40),
+});
+```
+
+> The `/infinite` route writes the filter state schema manually instead of using `generateFilterSchema` for better TypeScript inference. Both approaches work — use `generateFilterSchema` for convenience, manual for full control.
+
+The mapping from column types to filter state field types:
+
+| Column + Filter                   | filter state Field                              |
+| --------------------------------- | ----------------------------------------------- |
+| `col.string()` + `"input"`        | `field.string()`                                |
+| `col.number()` + `"input"`        | `field.number()`                                |
+| `col.number()` + `"slider"`       | `field.array(field.number()).delimiter("-")`    |
+| `col.number()` + `"checkbox"`     | `field.array(field.number()).delimiter(",")`    |
+| `col.enum(v)` + `"checkbox"`      | `field.array(field.stringLiteral(v))`           |
+| `col.boolean()` + `"checkbox"`    | `field.array(field.boolean()).delimiter(",")`   |
+| `col.timestamp()` + `"timerange"` | `field.array(field.timestamp()).delimiter("-")` |
+
+See the [Builder](/docs/builder) page for visual schema creation, serialization, and AI integration.

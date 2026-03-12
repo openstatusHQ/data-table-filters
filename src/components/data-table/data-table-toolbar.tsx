@@ -1,8 +1,8 @@
 "use client";
 
-import { Kbd } from "@/components/custom/kbd";
 import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
@@ -40,7 +40,6 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
           <Tooltip delayDuration={100}>
             <TooltipTrigger asChild>
               <Button
-                size="sm"
                 variant="ghost"
                 onClick={() => setOpen((prev) => !prev)}
                 className="hidden gap-2 sm:flex"
@@ -61,7 +60,7 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
             <TooltipContent side="right">
               <p>
                 Toggle controls with{" "}
-                <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">
+                <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-1">
                   <span className="mr-1">⌘</span>
                   <span>B</span>
                 </Kbd>
@@ -73,7 +72,7 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
           <DataTableFilterControlsDrawer />
         </div>
         <div>
-          <p className="hidden text-sm text-muted-foreground sm:block">
+          <p className="text-muted-foreground hidden text-sm sm:block">
             <span className="font-mono font-medium">
               {formatCompactNumber(rows.filtered)}
             </span>{" "}
@@ -83,7 +82,7 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
             </span>{" "}
             row(s) <span className="sr-only sm:not-sr-only">filtered</span>
           </p>
-          <p className="block text-sm text-muted-foreground sm:hidden">
+          <p className="text-muted-foreground block text-sm sm:hidden">
             <span className="font-mono font-medium">
               {formatCompactNumber(rows.filtered)}
             </span>{" "}

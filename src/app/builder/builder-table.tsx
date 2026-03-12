@@ -3,15 +3,15 @@
 // REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
 "use no memo";
 
-import {
-  getFacetedMinMaxValues,
-  getFacetedUniqueValues,
-} from "@/app/infinite/client";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
 import type {
   DataTableFilterField,
   SheetField,
 } from "@/components/data-table/types";
+import {
+  getFacetedMinMaxValues,
+  getFacetedUniqueValues,
+} from "@/lib/data-table/faceted";
 import type { FacetMetadataSchema } from "@/lib/data-table/types";
 import { DataTableStoreProvider, field, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";

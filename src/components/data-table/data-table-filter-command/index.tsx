@@ -1,6 +1,5 @@
 "use client";
 
-import { Kbd } from "@/components/custom/kbd";
 import { useDataTable } from "@/components/data-table/data-table-provider";
 import {
   Command,
@@ -11,6 +10,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { Kbd } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -140,31 +140,31 @@ export function DataTableFilterCommand({
       <button
         type="button"
         className={cn(
-          "group flex w-full items-center rounded-lg border border-input bg-background px-3 text-muted-foreground ring-offset-background focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 hover:bg-accent/50 hover:text-accent-foreground",
+          "group border-input bg-background text-muted-foreground ring-offset-background focus-within:ring-ring hover:bg-accent/50 hover:text-accent-foreground flex w-full items-center rounded-lg border px-3 focus-within:ring-2 focus-within:ring-offset-2 focus-within:outline-hidden",
           open ? "hidden" : "visible",
         )}
         onClick={() => setOpen(true)}
       >
         {isLoading ? (
-          <LoaderCircle className="mr-2 h-4 w-4 shrink-0 animate-spin text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
+          <LoaderCircle className="text-muted-foreground group-hover:text-popover-foreground mr-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
         ) : (
-          <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground opacity-50 group-hover:text-popover-foreground" />
+          <Search className="text-muted-foreground group-hover:text-popover-foreground mr-2 h-4 w-4 shrink-0 opacity-50" />
         )}
-        <span className="h-11 w-full max-w-sm truncate py-3 text-left text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50 md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
+        <span className="h-11 w-full max-w-sm truncate py-3 text-left text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
           {inputValue.trim() ? (
             <span className="text-foreground">{inputValue}</span>
           ) : (
             <span>Search data table...</span>
           )}
         </span>
-        <Kbd className="ml-auto text-muted-foreground group-hover:text-accent-foreground">
+        <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-auto">
           <span className="mr-1">⌘</span>
           <span>K</span>
         </Kbd>
       </button>
       <Command
         className={cn(
-          "overflow-visible rounded-lg border border-border shadow-md dark:bg-muted/50 [&>div]:border-none",
+          "border-border dark:bg-muted/50 overflow-visible rounded-lg border shadow-md [&>div]:border-none",
           open ? "visible" : "hidden",
         )}
         filter={(value, search, keywords) =>
@@ -208,7 +208,7 @@ export function DataTableFilterCommand({
           className="text-foreground"
         />
         <div className="relative">
-          <div className="absolute top-2 z-10 w-full overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+          <div className="border-border bg-popover text-popover-foreground animate-in absolute top-2 z-10 w-full overflow-hidden rounded-lg border shadow-md outline-hidden">
             {/* default height is 300px but in case of more, we'd like to tease the user */}
             <CommandList className="max-h-[310px]">
               <CommandGroup heading="Filter">
@@ -286,7 +286,7 @@ export function DataTableFilterCommand({
                       >
                         {`${optionValue}`}
                         {facetedValue?.has(optionValue) ? (
-                          <span className="ml-auto font-mono text-muted-foreground">
+                          <span className="text-muted-foreground ml-auto font-mono">
                             {formatCompactNumber(
                               facetedValue.get(optionValue) || 0,
                             )}
@@ -319,7 +319,7 @@ export function DataTableFilterCommand({
                         className="group"
                       >
                         {item.search}
-                        <span className="ml-auto truncate text-muted-foreground/80 group-aria-[selected=true]:block">
+                        <span className="text-muted-foreground/80 ml-auto truncate group-aria-selected:block">
                           {formatDistanceToNow(item.timestamp, {
                             addSuffix: true,
                           })}
@@ -340,7 +340,7 @@ export function DataTableFilterCommand({
                               ),
                             );
                           }}
-                          className="ml-1 hidden rounded-md p-0.5 hover:bg-background group-aria-[selected=true]:block"
+                          className="hover:bg-background ml-1 hidden rounded-md p-0.5 group-aria-selected:block"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -351,29 +351,28 @@ export function DataTableFilterCommand({
               <CommandEmpty>No results found.</CommandEmpty>
             </CommandList>
             <div
-              className="flex flex-wrap justify-between gap-3 border-t bg-accent/50 px-2 py-1.5 text-sm text-accent-foreground"
+              className="bg-accent/50 text-accent-foreground flex flex-wrap justify-between gap-3 border-t px-2 py-1.5 text-sm"
               cmdk-footer=""
             >
               <div className="flex flex-wrap gap-3">
                 <span>
-                  Use <Kbd variant="outline">↑</Kbd>{" "}
-                  <Kbd variant="outline">↓</Kbd> to navigate
+                  Use <Kbd>↑</Kbd> <Kbd>↓</Kbd> to navigate
                 </span>
                 <span>
-                  <Kbd variant="outline">Enter</Kbd> to query
+                  <Kbd>Enter</Kbd> to query
                 </span>
                 <span>
-                  <Kbd variant="outline">Esc</Kbd> to close
+                  <Kbd>Esc</Kbd> to close
                 </span>
                 <Separator orientation="vertical" className="my-auto h-3" />
                 <span>
-                  Union: <Kbd variant="outline">regions:a,b</Kbd>
+                  Union: <Kbd>regions:a,b</Kbd>
                 </span>
                 <span>
-                  Range: <Kbd variant="outline">p95:59-340</Kbd>
+                  Range: <Kbd>p95:59-340</Kbd>
                 </span>
                 <span>
-                  Spaces: <Kbd variant="outline">name:&quot;a b&quot;</Kbd>
+                  Spaces: <Kbd>name:&quot;a b&quot;</Kbd>
                 </span>
               </div>
               {lastSearches.length ? (
@@ -410,7 +409,7 @@ function CommandItemSuggestions<TData>({
   switch (field.type) {
     case "checkbox": {
       return (
-        <span className="ml-1 hidden truncate text-muted-foreground/80 group-aria-[selected=true]:block">
+        <span className="text-muted-foreground/80 ml-1 hidden truncate group-aria-selected:block">
           {getFacetedUniqueValues
             ? Array.from(getFacetedUniqueValues(table, value)?.keys() || [])
                 .map((value) => `[${value}]`)
@@ -425,14 +424,14 @@ function CommandItemSuggestions<TData>({
         field.max,
       ];
       return (
-        <span className="ml-1 hidden truncate text-muted-foreground/80 group-aria-[selected=true]:block">
+        <span className="text-muted-foreground/80 ml-1 hidden truncate group-aria-selected:block">
           [{min} - {max}]
         </span>
       );
     }
     case "input": {
       return (
-        <span className="ml-1 hidden truncate text-muted-foreground/80 group-aria-[selected=true]:block">
+        <span className="text-muted-foreground/80 ml-1 hidden truncate group-aria-selected:block">
           [{`${String(field.value)}`} input]
         </span>
       );

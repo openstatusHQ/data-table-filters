@@ -26,13 +26,13 @@ export function Skeleton() {
       {/* Left Sidebar - Filters */}
       <div
         className={cn(
-          "h-full w-full flex-col sm:sticky sm:top-0 sm:max-h-screen sm:min-h-screen sm:min-w-52 sm:max-w-52 sm:self-start md:min-w-72 md:max-w-72",
+          "h-full w-full flex-col sm:sticky sm:top-0 sm:max-h-screen sm:min-h-screen sm:max-w-52 sm:min-w-52 sm:self-start md:max-w-72 md:min-w-72",
           "hidden sm:flex",
         )}
       >
-        <div className="border-b border-border bg-background p-2 md:sticky md:top-0">
+        <div className="border-border bg-background border-b p-2 md:sticky md:top-0">
           <div className="flex h-[46px] items-center justify-between gap-3">
-            <p className="px-2 font-medium text-foreground">Filters</p>
+            <p className="text-foreground px-2 font-medium">Filters</p>
           </div>
         </div>
         <div className="flex-1 p-2 sm:overflow-y-scroll">
@@ -63,7 +63,7 @@ export function Skeleton() {
             ))}
           </div>
         </div>
-        <div className="border-t border-border bg-background p-4 md:sticky md:bottom-0">
+        <div className="border-border bg-background border-t p-4 md:sticky md:bottom-0">
           {/* Socials Footer Skeleton */}
           <div className="flex items-center justify-center gap-2">
             <DefaultSkeleton className="h-5 w-5 rounded-full" />
@@ -76,18 +76,18 @@ export function Skeleton() {
       {/* Main Content Area */}
       <div
         className={cn(
-          "flex max-w-full flex-1 flex-col border-border sm:border-l",
+          "border-border flex max-w-full flex-1 flex-col sm:border-l",
         )}
       >
         {/* Top Bar */}
         <div
           className={cn(
-            "flex flex-col gap-4 bg-background p-2",
+            "bg-background flex flex-col gap-4 p-2",
             "sticky top-0 z-10 pb-4",
           )}
         >
           {/* Search Command Palette */}
-          <DefaultSkeleton className="h-11 w-full rounded-lg border border-border" />
+          <DefaultSkeleton className="border-border h-11 w-full rounded-lg border" />
 
           {/* Toolbar */}
           <div className="flex items-center justify-between">
@@ -107,7 +107,7 @@ export function Skeleton() {
           <div className="-mb-2 aspect-auto h-[60px] w-full">
             <div className="relative h-full">
               {/* Chart bars area - positioned at top */}
-              <div className="absolute inset-x-0 top-0 flex h-[45px] items-end gap-[1px]">
+              <div className="absolute inset-x-0 top-0 flex h-[45px] items-end gap-px">
                 {chartBarsHeights.map((height, i) => (
                   <DefaultSkeleton
                     key={i}
@@ -117,7 +117,7 @@ export function Skeleton() {
                 ))}
               </div>
               {/* Axis labels area - positioned at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 flex h-[15px] items-center justify-between px-1">
+              <div className="absolute right-0 bottom-0 left-0 flex h-[15px] items-center justify-between px-1">
                 <DefaultSkeleton className="h-3 w-12" />
                 <DefaultSkeleton className="h-3 w-12" />
                 <DefaultSkeleton className="h-3 w-12" />
@@ -130,49 +130,49 @@ export function Skeleton() {
         <div className="z-0">
           <Table
             className="border-separate border-spacing-0"
-            containerClassName="max-h-[calc(100vh_-_var(--top-bar-height))]"
+            containerClassName="max-h-[calc(100vh-var(--top-bar-height))]"
           >
-            <TableHeader className={cn("sticky top-0 z-20 bg-background")}>
+            <TableHeader className={cn("bg-background sticky top-0 z-20")}>
               <TableRow
                 className={cn(
                   "bg-muted/50 hover:bg-muted/50",
-                  "[&>*]:border-t [&>:not(:last-child)]:border-r",
+                  "*:border-t [&>:not(:last-child)]:border-r",
                 )}
               >
                 {/* Level */}
-                <TableHead className="w-[27px] min-w-[27px] max-w-[27px] border-b border-border">
+                <TableHead className="border-border w-[27px] max-w-[27px] min-w-[27px] border-b">
                   <DefaultSkeleton className="h-4 w-4" />
                 </TableHead>
                 {/* Date */}
-                <TableHead className="w-[200px] min-w-[200px] max-w-[200px] border-b border-border">
+                <TableHead className="border-border w-[200px] max-w-[200px] min-w-[200px] border-b">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Status */}
-                <TableHead className="w-[60px] min-w-[60px] max-w-[60px] border-b border-border">
+                <TableHead className="border-border w-[60px] max-w-[60px] min-w-[60px] border-b">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Method */}
-                <TableHead className="w-[69px] min-w-[69px] max-w-[69px] border-b border-border">
+                <TableHead className="border-border w-[69px] max-w-[69px] min-w-[69px] border-b">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Host */}
-                <TableHead className="w-[125px] min-w-[125px] border-b border-border">
+                <TableHead className="border-border w-[125px] min-w-[125px] border-b">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Pathname */}
-                <TableHead className="w-[130px] min-w-[130px] border-b border-border">
+                <TableHead className="border-border w-[130px] min-w-[130px] border-b">
                   <DefaultSkeleton className="h-4 w-16" />
                 </TableHead>
                 {/* Latency */}
-                <TableHead className="w-[100px] border-b border-border">
+                <TableHead className="border-border w-[100px] border-b">
                   <DefaultSkeleton className="h-4 w-14" />
                 </TableHead>
                 {/* Region */}
-                <TableHead className="w-[100px] border-b border-border">
+                <TableHead className="border-border w-[100px] border-b">
                   <DefaultSkeleton className="h-4 w-12" />
                 </TableHead>
                 {/* Timing Phases */}
-                <TableHead className="border-b border-border">
+                <TableHead className="border-border border-b">
                   <DefaultSkeleton className="h-4 w-24" />
                 </TableHead>
               </TableRow>
@@ -181,22 +181,22 @@ export function Skeleton() {
               {Array.from({ length: 24 }).map((_, i) => (
                 <TableRow
                   key={i}
-                  className="hover:bg-transparent [&>*]:border-b [&>:not(:last-child)]:border-r"
+                  className="*:border-b hover:bg-transparent [&>:not(:last-child)]:border-r"
                 >
                   {/* Level */}
-                  <TableCell className="w-[27px] min-w-[27px] max-w-[27px]">
+                  <TableCell className="w-[27px] max-w-[27px] min-w-[27px]">
                     <DefaultSkeleton className="h-2 w-2 rounded-full" />
                   </TableCell>
                   {/* Date */}
-                  <TableCell className="w-[200px] min-w-[200px] max-w-[200px] font-mono">
+                  <TableCell className="w-[200px] max-w-[200px] min-w-[200px] font-mono">
                     <DefaultSkeleton className="h-4 w-[180px]" />
                   </TableCell>
                   {/* Status */}
-                  <TableCell className="w-[60px] min-w-[60px] max-w-[60px] font-mono">
+                  <TableCell className="w-[60px] max-w-[60px] min-w-[60px] font-mono">
                     <DefaultSkeleton className="h-5 w-8 rounded" />
                   </TableCell>
                   {/* Method */}
-                  <TableCell className="w-[69px] min-w-[69px] max-w-[69px] font-mono">
+                  <TableCell className="w-[69px] max-w-[69px] min-w-[69px] font-mono">
                     <DefaultSkeleton className="h-4 w-10" />
                   </TableCell>
                   {/* Host */}

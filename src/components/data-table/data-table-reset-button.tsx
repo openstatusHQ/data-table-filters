@@ -1,7 +1,7 @@
 "use client";
 
-import { Kbd } from "@/components/custom/kbd";
 import { useDataTable } from "@/components/data-table/data-table-provider";
+import { Kbd } from "@/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
@@ -20,11 +20,7 @@ export function DataTableResetButton() {
     <TooltipProvider>
       <Tooltip delayDuration={100}>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => table.resetColumnFilters()}
-          >
+          <Button variant="ghost" onClick={() => table.resetColumnFilters()}>
             <X className="mr-2 h-4 w-4" />
             Reset
           </Button>
@@ -32,7 +28,7 @@ export function DataTableResetButton() {
         <TooltipContent side="left">
           <p>
             Reset filters with{" "}
-            <Kbd className="ml-1 text-muted-foreground group-hover:text-accent-foreground">
+            <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-1">
               <span className="mr-1">⌘</span>
               <span>Esc</span>
             </Kbd>

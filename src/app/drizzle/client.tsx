@@ -1,8 +1,10 @@
 "use client";
 
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
 import { useHotKey } from "@/hooks/use-hot-key";
+import { useLiveMode } from "@/hooks/use-live-mode";
 import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
@@ -64,6 +66,8 @@ function ClientInner() {
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
     [data?.pages],
   );
+
+  const liveMode = useLiveMode(flatData);
 
   const lastPage = data?.pages?.[data?.pages.length - 1];
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
@@ -135,10 +139,20 @@ function ClientInner() {
       refetch={refetch}
       chartData={chartData}
       chartDataColumnId="date"
-      getRowClassName={(row) => getLevelRowClassName(row.original.level)}
+      getRowClassName={(row) => {
+        const rowTimestamp = row.original.date.getTime();
+        const isPast = rowTimestamp <= (liveMode.timestamp || -1);
+        const levelClassName = getLevelRowClassName(row.original.level);
+        return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
+      }}
       getRowId={(row) => row.uuid}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+      renderLiveRow={(props) => {
+        if (!liveMode.timestamp) return null;
+        if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
+        return <LiveRow colSpan={columns.length - 1} />;
+      }}
       renderSheetTitle={(props) => props.row?.original.pathname}
       schema={filterSchema.definition}
       adapterType="nuqs"

@@ -61,7 +61,7 @@ export function DataTableFilterSlider<TData>({
         <div className="grid w-full gap-1.5">
           <Label
             htmlFor={`min-${value}`}
-            className="px-2 text-muted-foreground"
+            className="text-muted-foreground px-2"
           >
             Min.
           </Label>
@@ -83,7 +83,7 @@ export function DataTableFilterSlider<TData>({
         <div className="grid w-full gap-1.5">
           <Label
             htmlFor={`max-${value}`}
-            className="px-2 text-muted-foreground"
+            className="text-muted-foreground px-2"
           >
             Max.
           </Label>

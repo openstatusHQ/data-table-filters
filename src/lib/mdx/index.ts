@@ -7,4 +7,4 @@ export {
   type TOCItem,
 } from "./get-content";
 export { TableOfContents } from "./table-of-contents";
-export { GuideSidebar } from "./guide-sidebar";
+export { DocsSidebar } from "./docs-sidebar";

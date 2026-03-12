@@ -36,22 +36,22 @@ export function SocialsFooter({
   return (
     <div className="flex flex-col gap-2">
       <div className="grid w-full grid-cols-3 items-center justify-center gap-2 p-1 md:grid-cols-6">
-        <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <NextLink href="https://github.com/openstatusHQ/data-table-filters">
-            <Github className="h-4 w-4" />
+            <Github />
           </NextLink>
         </Button>
-        <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <NextLink href="https://twitter.com/openstatusHQ">
-            <X className="h-4 w-4" />
+            <X />
           </NextLink>
         </Button>
-        <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
+        <Button variant="ghost" size="icon" asChild>
           <NextLink href="https://bsky.app/profile/openstatus.dev">
-            <Bluesky className="h-4 w-4" />
+            <Bluesky />
           </NextLink>
         </Button>
-        <ModeToggle className="h-8 w-8 [&>svg]:h-4 [&>svg]:w-4" />
+        <ModeToggle className="[&>svg]:h-4 [&>svg]:w-4" />
         <HotkeyDropdown />
         {showConfigurationDropdown ? (
           <ConfigurationDropdown
@@ -59,20 +59,20 @@ export function SocialsFooter({
             adapterType={adapterType}
           />
         ) : (
-          <Button variant="ghost" size="sm" className="h-8 w-8 px-0" asChild>
-            <NextLink href="/guide">
-              <Book className="h-4 w-4" />
+          <Button variant="ghost" size="icon" asChild>
+            <NextLink href="/docs/introduction">
+              <Book />
             </NextLink>
           </Button>
         )}
       </div>
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-center text-xs">
         Powered by{" "}
         <Link href="https://openstatus.dev" hideArrow>
           OpenStatus
         </Link>
       </p>
-      <p className="text-center text-[10px] text-muted-foreground">
+      <p className="text-muted-foreground text-center text-[10px]">
         The project is in active development. For feedback, please{" "}
         <Link
           href="https://github.com/openstatusHQ/data-table-filters/issues/new"
@@ -119,8 +119,8 @@ function HotkeyDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
-          <Command className="h-4 w-4" />
+        <Button variant="ghost" size="icon">
+          <Command />
           <span className="sr-only">Open keyboard shortcuts</span>
         </Button>
       </DropdownMenuTrigger>
@@ -179,12 +179,8 @@ function ConfigurationDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 px-0 [&>svg]:h-4 [&>svg]:w-4"
-        >
-          <Cog className="h-4 w-4" />
+        <Button variant="ghost" size="icon">
+          <Cog />
           <span className="sr-only">Open configuration dropdown</span>
         </Button>
       </DropdownMenuTrigger>

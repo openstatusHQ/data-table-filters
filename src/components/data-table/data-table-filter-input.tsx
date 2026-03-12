@@ -38,7 +38,7 @@ export function DataTableFilterInput<TData>({
 
   return (
     <div className="grid w-full gap-1.5">
-      <Label htmlFor={value} className="sr-only px-2 text-muted-foreground">
+      <Label htmlFor={value} className="text-muted-foreground sr-only px-2">
         {value}
       </Label>
       <InputWithAddons

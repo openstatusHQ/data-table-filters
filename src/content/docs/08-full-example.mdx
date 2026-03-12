@@ -1,0 +1,172 @@
+---
+title: "Full Example"
+description: "Complete end-to-end example combining table schema, state management, and components"
+author: "openstatus"
+publishedAt: "2026-03-12"
+faq:
+  - question: "What does a complete data table setup look like?"
+    answer: "A full setup involves four steps: define the table with createTableSchema, create a filter schema with generateFilterSchema, set up an API route with createDrizzleHandler, and render using useInfiniteQuery with DataTableInfinite."
+  - question: "What example variants are available?"
+    answer: "Four live examples are provided covering different combinations of client/server rendering, pagination types (infinite scroll vs. standard), data sources, and feature sets."
+---
+
+# Full Example
+
+This wires together everything from the previous sections. Each step links back to its guide page for details.
+
+## 1. Define Your Table
+
+Use `createTableSchema` to declare every column — display, filters, sorting, and row details — in one place. See [Table Schema](/docs/table-schema) for the full API.
+
+```tsx
+// table-schema.tsx
+import {
+  col,
+  createTableSchema,
+  type InferTableType,
+} from "@/lib/table-schema";
+
+export const tableSchema = createTableSchema({
+  level: col.presets.logLevel(["error", "warn", "info", "debug"]),
+  date: col.presets.timestamp().label("Date").size(200).sheet(),
+  latency: col.presets
+    .duration("ms")
+    .label("Latency")
+    .sortable()
+    .size(110)
+    .sheet(),
+  status: col.presets.httpStatus().label("Status").size(60),
+  method: col.presets.httpMethod(["GET", "POST", "DELETE"]).size(69),
+  host: col.string().label("Host").size(125).sheet(),
+});
+
+export type ColumnSchema = InferTableType<typeof tableSchema.definition>;
+```
+
+## 2. Create Filter Schema
+
+Bridge the table schema to filter state with `generateFilterSchema`, then add non-column fields like sort and pagination. See [State Management](/docs/state-management) for details.
+
+```tsx
+// schema.ts
+import { createSchema, field } from "@/lib/store/schema";
+import { generateFilterSchema } from "@/lib/table-schema";
+
+export const filterSchema = createSchema({
+  ...generateFilterSchema(tableSchema.definition).definition,
+  sort: field.sort(),
+  live: field.boolean().default(false),
+  size: field.number().default(40),
+});
+
+export type FilterState = typeof filterSchema._type;
+```
+
+## 3. Set Up the API Route
+
+Create an API handler with `createDrizzleHandler` that implements three-pass filtering, faceted search, and cursor pagination. See [Database](/docs/database) and [Data Fetching](/docs/data-fetching) for the underlying concepts.
+
+```tsx
+// app/api/route.ts
+import { createDrizzleHandler } from "@/lib/drizzle";
+
+const handler = createDrizzleHandler({
+  db,
+  table: logs,
+  schema: tableSchema.definition,
+  columnMapping,
+  cursorColumn: "date",
+});
+
+export async function GET(req: NextRequest) {
+  const search = searchParamsCache.parse(
+    Object.fromEntries(req.nextUrl.searchParams),
+  );
+  const result = await handler.execute(search);
+  return Response.json(
+    SuperJSON.stringify({
+      data: result.data,
+      meta: {
+        totalRowCount: result.totalRowCount,
+        filterRowCount: result.filterRowCount,
+        facets: result.facets,
+      },
+      prevCursor: result.prevCursor,
+      nextCursor: result.nextCursor,
+    }),
+  );
+}
+```
+
+## 4. Render
+
+Wire up `useInfiniteQuery` with `DataTableInfinite` and populate filter fields dynamically from server-side facet data. See [Components](/docs/components) for all available props.
+
+```tsx
+// client.tsx
+import { DataTableStoreProvider, useFilterState } from "@/lib/store";
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import {
+  generateColumns,
+  generateFilterFields,
+  generateSheetFields,
+} from "@/lib/table-schema";
+import { useInfiniteQuery } from "@tanstack/react-query";
+
+const columns = generateColumns<ColumnSchema>(tableSchema.definition);
+const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
+const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
+
+export function Client() {
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "logs" });
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableContent />
+    </DataTableStoreProvider>
+  );
+}
+
+function DataTableContent() {
+  const search = useFilterState<FilterState>();
+  const { data, isFetching, fetchNextPage, hasNextPage, refetch } =
+    useInfiniteQuery(dataOptions(search));
+
+  const flatData = React.useMemo(
+    () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
+    [data?.pages],
+  );
+
+  const { sort, live, size, ...filter } = search;
+  const defaultColumnFilters = Object.entries(filter)
+    .map(([key, value]) => ({ id: key, value }))
+    .filter(
+      ({ value }) => value != null && !(Array.isArray(value) && !value.length),
+    );
+
+  return (
+    <DataTableInfinite
+      columns={columns}
+      data={flatData}
+      defaultColumnFilters={defaultColumnFilters}
+      defaultColumnSorting={sort ? [sort] : undefined}
+      filterFields={filterFields}
+      sheetFields={sheetFields}
+      schema={filterSchema.definition}
+      isFetching={isFetching}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage}
+      refetch={refetch}
+    />
+  );
+}
+```
+
+## Live Examples
+
+| Route                  | Pagination      | Data Source | Live Mode | Chart |
+| ---------------------- | --------------- | ----------- | --------- | ----- |
+| [/default](/default)   | Client-side     | In-memory   | No        | No    |
+| [/infinite](/infinite) | Infinite scroll | Mock API    | Yes       | Yes   |
+| [/drizzle](/drizzle)   | Infinite scroll | PostgreSQL  | Yes       | Yes   |
+| [/light](/light)       | Infinite scroll | Tinybird    | Yes       | Yes   |
