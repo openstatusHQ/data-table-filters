@@ -16,9 +16,11 @@ description: >
 
 # Data Table Filters
 
+A shadcn registry for building filterable, sortable data tables with infinite scroll and virtualization. Start with the core block, then extend with optional blocks for command palette, cell renderers, sheet panels, store adapters, schema generation, Drizzle ORM helpers, and React Query integration.
+
 ## Registry Blocks
 
-All blocks install via `npx shadcn@latest add <url>`. The CLI handles dependencies, path rewriting, and CSS variable injection.
+Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencies, path rewriting, and CSS variable injection.
 
 | Block                         | Install URL                                           | What it adds                                                                                   |
 | ----------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
