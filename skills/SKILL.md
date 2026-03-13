@@ -41,6 +41,8 @@ All URLs use base `https://data-table.openstatus.dev`.
 3. Scaffold a minimal working table (see below)
 4. Extend with additional blocks as needed
 
+> **Next.js?** Use the [data-table-filters repo](https://github.com/openstatushq/data-table-filters) as a reference — it's a full Next.js app with all blocks wired up.
+
 ### Minimal Working Table (Memory Adapter)
 
 ```tsx
