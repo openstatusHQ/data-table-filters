@@ -1,5 +1,5 @@
 import { ADAPTER_COOKIE_NAME } from "@/lib/constants/cookies";
-import type { AdapterType } from "@/lib/store";
+import type { AdapterType } from "@/lib/store/adapter/types";
 import { cookies } from "next/headers";
 import * as React from "react";
 import { Client } from "./client";

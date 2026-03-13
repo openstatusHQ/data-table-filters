@@ -11,17 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/custom/table";
-import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
 import { DataTableFilterControls } from "@/components/data-table/data-table-filter-controls";
 import { DataTableProvider } from "@/components/data-table/data-table-provider";
 import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
-import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
-import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
-import type {
-  DataTableFilterField,
-  SheetField,
-} from "@/components/data-table/types";
+import type { DataTableFilterField } from "@/components/data-table/types";
 import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -29,17 +23,14 @@ import {
   getColumnOrderKey,
   getColumnVisibilityKey,
 } from "@/lib/constants/local-storage";
-import type { BaseChartSchema } from "@/lib/data-table/types";
 import { formatCompactNumber } from "@/lib/format";
-import type { AdapterType } from "@/lib/store";
-import { useFilterState } from "@/lib/store";
-import type { SchemaDefinition } from "@/lib/store/schema/types";
+import { useFilterState } from "@/lib/store/hooks/useFilterState";
 import { arrSome, inDateRange } from "@/lib/table/filterfns";
 import { cn } from "@/lib/utils";
 import {
-  FetchPreviousPageOptions,
-  RefetchOptions,
   type FetchNextPageOptions,
+  type FetchPreviousPageOptions,
+  type RefetchOptions,
 } from "@tanstack/react-query";
 import type {
   ColumnDef,
@@ -63,13 +54,9 @@ import {
 } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
-import { LiveButton } from "./data-table-infinite/live-button";
-import { RefreshButton } from "./data-table-infinite/refresh-button";
-import { SocialsFooter } from "./data-table-infinite/socials-footer";
-import { TimelineChart } from "./data-table-infinite/timeline-chart";
 
 // TODO: add a possible chartGroupBy
-export interface DataTableInfiniteProps<TData, TValue, TMeta> {
+export interface DataTableInfiniteProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   getRowClassName?: (row: Row<TData>) => string;
   // REMINDER: make sure to pass the correct id to access the rows
@@ -80,7 +67,6 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   defaultRowSelection?: RowSelectionState;
   defaultColumnVisibility?: VisibilityState;
   filterFields?: DataTableFilterField<TData>[];
-  sheetFields?: SheetField<TData, TMeta>[];
   // REMINDER: close to the same signature as the `getFacetedUniqueValues` of the `useReactTable`
   getFacetedUniqueValues?: (
     table: TTable<TData>,
@@ -93,9 +79,6 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   totalRows?: number;
   filterRows?: number;
   totalRowsFetched?: number;
-  meta: TMeta;
-  chartData?: BaseChartSchema[];
-  chartDataColumnId?: string;
   isFetching?: boolean;
   isLoading?: boolean;
   hasNextPage?: boolean;
@@ -107,21 +90,17 @@ export interface DataTableInfiniteProps<TData, TValue, TMeta> {
   ) => Promise<unknown>;
   refetch: (options?: RefetchOptions | undefined) => void;
   renderLiveRow?: (props?: { row: Row<TData> }) => React.ReactNode;
-  renderSheetTitle: (props: { row?: Row<TData> }) => React.ReactNode;
-  // TODO:
-  renderChart?: () => React.ReactNode;
-  // Schema definition for BYOS filter command
-  schema: SchemaDefinition;
   // Used to store column order and visibility in local storage for specific data-table namespace
   tableId?: string;
-  // Show the prefetch toggle button in the toolbar
-  showConfigurationDropdown?: boolean;
-  // Adapter toggle and prefetch toggle (for demo purposes)
-  adapterType?: AdapterType;
-  prefetchEnabled?: boolean;
+  // Optional slots for extensibility
+  commandSlot?: React.ReactNode;
+  sheetSlot?: React.ReactNode;
+  toolbarActions?: React.ReactNode;
+  chartSlot?: React.ReactNode;
+  footerSlot?: React.ReactNode;
 }
 
-export function DataTableInfinite<TData, TValue, TMeta>({
+export function DataTableInfinite<TData, TValue>({
   columns,
   getRowClassName,
   getRowId,
@@ -131,7 +110,6 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   defaultRowSelection = {},
   defaultColumnVisibility = {},
   filterFields = [],
-  sheetFields = [],
   isFetching,
   isLoading,
   fetchNextPage,
@@ -141,19 +119,16 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   totalRows = 0,
   filterRows = 0,
   totalRowsFetched = 0,
-  chartData = [],
-  chartDataColumnId,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
-  meta,
   renderLiveRow,
-  renderSheetTitle,
-  schema,
   tableId = "infinite",
-  showConfigurationDropdown = false,
-  adapterType = "nuqs",
-  prefetchEnabled = false,
-}: DataTableInfiniteProps<TData, TValue, TMeta>) {
+  commandSlot,
+  sheetSlot,
+  toolbarActions,
+  chartSlot,
+  footerSlot,
+}: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
   const [sorting, setSorting] =
@@ -231,22 +206,6 @@ export function DataTableInfinite<TData, TValue, TMeta>({
   });
 
   // NOTE: Filter, sort, and selection syncing is now handled by DataTableStoreSync
-
-  const selectedRow = React.useMemo(() => {
-    if ((isLoading || isFetching) && !data.length) return;
-    const selectedRowKey = Object.keys(rowSelection)?.[0];
-    return table
-      .getCoreRowModel()
-      .flatRows.find((row) => row.id === selectedRowKey);
-  }, [rowSelection, table, isLoading, isFetching, data]);
-
-  // Reset row selection if selected row is no longer in data
-  React.useEffect(() => {
-    if (isLoading || isFetching) return;
-    if (Object.keys(rowSelection)?.length && !selectedRow) {
-      setRowSelection({});
-    }
-  }, [rowSelection, selectedRow, isLoading, isFetching]);
 
   /**
    * https://tanstack.com/table/v8/docs/guide/column-sizing#advanced-column-resizing-performance
@@ -339,13 +298,11 @@ export function DataTableInfinite<TData, TValue, TMeta>({
           <div className="flex-1 p-2 sm:overflow-y-scroll">
             <DataTableFilterControls />
           </div>
-          <div className="border-border bg-background border-t p-4 md:sticky md:bottom-0">
-            <SocialsFooter
-              showConfigurationDropdown={showConfigurationDropdown}
-              prefetchEnabled={prefetchEnabled}
-              adapterType={adapterType}
-            />
-          </div>
+          {footerSlot ? (
+            <div className="border-border bg-background border-t p-4 md:sticky md:bottom-0">
+              {footerSlot}
+            </div>
+          ) : null}
         </div>
         <div
           className={cn(
@@ -361,27 +318,12 @@ export function DataTableInfinite<TData, TValue, TMeta>({
               "sticky top-0 z-10 pb-4",
             )}
           >
-            <DataTableFilterCommand schema={schema} tableId={tableId} />
+            {commandSlot}
             {/* TBD: better flexibility with compound components? */}
             <DataTableToolbar
-              renderActions={() => [
-                <RefreshButton key="refresh" onClick={refetch} />,
-                fetchPreviousPage ? (
-                  <LiveButton
-                    key="live"
-                    fetchPreviousPage={fetchPreviousPage}
-                  />
-                ) : null,
-              ]}
+              renderActions={toolbarActions ? () => toolbarActions : undefined}
             />
-            {/* TODO: move up to client component */}
-            {chartDataColumnId ? (
-              <TimelineChart
-                data={chartData}
-                className="-mb-2"
-                columnId={chartDataColumnId}
-              />
-            ) : null}
+            {chartSlot}
           </div>
           <div className="z-0">
             <Table
@@ -516,26 +458,7 @@ export function DataTableInfinite<TData, TValue, TMeta>({
           </div>
         </div>
       </div>
-      <DataTableSheetDetails
-        title={renderSheetTitle({ row: selectedRow })}
-        titleClassName="font-mono"
-      >
-        <MemoizedDataTableSheetContent
-          table={table}
-          data={selectedRow?.original}
-          filterFields={filterFields}
-          fields={sheetFields}
-          // TODO: check if we should memoize this
-          // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
-          metadata={{
-            totalRows,
-            filterRows,
-            totalRowsFetched,
-            // REMINDER: includes `currentPercentiles`
-            ...meta,
-          }}
-        />
-      </DataTableSheetDetails>
+      {sheetSlot}
     </DataTableProvider>
   );
 }

@@ -1,13 +1,20 @@
 "use client";
 
+import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
+import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
+import { useDataTable } from "@/components/data-table/data-table-provider";
+import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
+import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
 import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
 } from "@/lib/data-table/faceted";
 import { getLevelRowClassName } from "@/lib/request/level";
-import { DataTableStoreProvider, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import { useFilterState } from "@/lib/store/hooks/useFilterState";
+import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { columns } from "./columns";
@@ -17,6 +24,13 @@ import { filterSchema } from "./schema";
 
 // Infer FilterState from schema
 type FilterState = typeof filterSchema._type;
+
+type ColumnType =
+  (typeof columns)[number] extends import("@tanstack/react-table").ColumnDef<
+    infer T
+  >
+    ? T
+    : never;
 
 export function Client() {
   const adapter = useNuqsAdapter(filterSchema.definition, { id: "light" });
@@ -104,23 +118,87 @@ function ClientInner() {
       getRowId={(row) =>
         `${row.region}-${row.timestamp}-${row.url}-${row.latency}`
       }
-      meta={metadata}
-      chartData={chartData}
-      chartDataColumnId="timestamp"
       filterFields={filterFields}
-      sheetFields={sheetFields}
       isFetching={isFetching}
       isLoading={isLoading}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
-      // NOTE: we are not using live mode
-      fetchPreviousPage={undefined}
       refetch={refetch}
-      renderSheetTitle={(props) => props.row?.original.url}
-      schema={filterSchema.definition}
       tableId="light"
+      commandSlot={
+        <DataTableFilterCommand
+          schema={filterSchema.definition}
+          tableId="light"
+        />
+      }
+      chartSlot={
+        <TimelineChart
+          data={chartData ?? []}
+          className="-mb-2"
+          columnId="timestamp"
+        />
+      }
+      footerSlot={
+        <SocialsFooter
+          showConfigurationDropdown={false}
+          prefetchEnabled={false}
+          adapterType="nuqs"
+        />
+      }
+      sheetSlot={
+        <LightSheetSlot
+          totalRows={totalDBRowCount ?? 0}
+          filterRows={filterDBRowCount ?? 0}
+          totalRowsFetched={totalFetched}
+          metadata={metadata}
+        />
+      }
     />
+  );
+}
+
+function LightSheetSlot({
+  totalRows,
+  filterRows,
+  totalRowsFetched,
+  metadata,
+}: {
+  totalRows: number;
+  filterRows: number;
+  totalRowsFetched: number;
+  metadata: unknown;
+}) {
+  const { table, rowSelection, isLoading, filterFields } = useDataTable<
+    ColumnType,
+    unknown
+  >();
+  const selectedRowKey = Object.keys(rowSelection)?.[0];
+  const selectedRow = React.useMemo(() => {
+    if (isLoading && !selectedRowKey) return undefined;
+    return table
+      .getCoreRowModel()
+      .flatRows.find((row) => row.id === selectedRowKey);
+  }, [selectedRowKey, isLoading, table]);
+
+  return (
+    <DataTableSheetDetails
+      title={selectedRow?.original.url}
+      titleClassName="font-mono"
+    >
+      <MemoizedDataTableSheetContent
+        table={table}
+        data={selectedRow?.original}
+        filterFields={filterFields}
+        fields={sheetFields}
+        metadata={{
+          totalRows,
+          filterRows,
+          totalRowsFetched,
+          ...(metadata as Record<string, unknown>),
+        }}
+      />
+    </DataTableSheetDetails>
   );
 }

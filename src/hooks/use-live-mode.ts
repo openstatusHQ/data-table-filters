@@ -1,4 +1,4 @@
-import { useFilterState } from "@/lib/store";
+import { useFilterState } from "@/lib/store/hooks/useFilterState";
 import * as React from "react";
 
 // TODO: make a BaseObject (incl. date and uuid e.g. for every upcoming branch of infinite table)

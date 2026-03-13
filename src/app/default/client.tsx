@@ -1,9 +1,10 @@
 "use client";
 
 import type { DataTableFilterField } from "@/components/data-table/types";
-import { DataTableStoreProvider, type AdapterType } from "@/lib/store";
+import type { AdapterType } from "@/lib/store/adapter/types";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { useZustandAdapter } from "@/lib/store/adapters/zustand";
+import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
 import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
 import { DataTable } from "./data-table";

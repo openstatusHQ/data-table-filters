@@ -19,7 +19,6 @@ import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import type { DataTableFilterField } from "@/components/data-table/types";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { getColumnVisibilityKey } from "@/lib/constants/local-storage";
-import type { AdapterType } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type {
   ColumnDef,

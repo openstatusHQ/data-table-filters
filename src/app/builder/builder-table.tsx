@@ -3,7 +3,11 @@
 // REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
 "use no memo";
 
+import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import { useDataTable } from "@/components/data-table/data-table-provider";
+import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
+import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
 import type {
   DataTableFilterField,
   SheetField,
@@ -13,8 +17,10 @@ import {
   getFacetedUniqueValues,
 } from "@/lib/data-table/faceted";
 import type { FacetMetadataSchema } from "@/lib/data-table/types";
-import { DataTableStoreProvider, field, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import { useFilterState } from "@/lib/store/hooks/useFilterState";
+import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
+import { field } from "@/lib/store/schema";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import {
   createTableSchema,
@@ -164,7 +170,6 @@ function BuilderTableQuery({
       columns={columns}
       data={flatData}
       filterFields={dynamicFilterFields}
-      sheetFields={sheetFields}
       totalRows={totalDBRowCount}
       filterRows={filterDBRowCount}
       totalRowsFetched={totalFetched}
@@ -173,18 +178,65 @@ function BuilderTableQuery({
       refetch={refetch}
       isFetching={isFetching}
       isLoading={isLoading}
-      meta={{}}
-      chartData={[]}
-      chartDataColumnId={undefined}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
-      renderSheetTitle={({ row }) =>
-        row ? String(Object.values(row.original)[0] ?? "") : ""
-      }
-      schema={schema}
       tableId="builder"
       getRowId={(row) => (row as Record<string, unknown>).__rowId as string}
+      commandSlot={<DataTableFilterCommand schema={schema} tableId="builder" />}
+      sheetSlot={
+        <BuilderSheetSlot
+          sheetFields={sheetFields}
+          totalRows={totalDBRowCount ?? 0}
+          filterRows={filterDBRowCount ?? 0}
+          totalRowsFetched={totalFetched}
+        />
+      }
     />
+  );
+}
+
+function BuilderSheetSlot({
+  sheetFields: fields,
+  totalRows,
+  filterRows,
+  totalRowsFetched,
+}: {
+  sheetFields: SheetField<BuilderRow>[];
+  totalRows: number;
+  filterRows: number;
+  totalRowsFetched: number;
+}) {
+  const { table, rowSelection, isLoading, filterFields } = useDataTable<
+    BuilderRow,
+    unknown
+  >();
+  const selectedRowKey = Object.keys(rowSelection)?.[0];
+  const selectedRow = React.useMemo(() => {
+    if (isLoading && !selectedRowKey) return undefined;
+    return table
+      .getCoreRowModel()
+      .flatRows.find((row) => row.id === selectedRowKey);
+  }, [selectedRowKey, isLoading, table]);
+
+  return (
+    <DataTableSheetDetails
+      title={
+        selectedRow ? String(Object.values(selectedRow.original)[0] ?? "") : ""
+      }
+      titleClassName="font-mono"
+    >
+      <MemoizedDataTableSheetContent
+        table={table}
+        data={selectedRow?.original}
+        filterFields={filterFields}
+        fields={fields}
+        metadata={{
+          totalRows,
+          filterRows,
+          totalRowsFetched,
+        }}
+      />
+    </DataTableSheetDetails>
   );
 }
 

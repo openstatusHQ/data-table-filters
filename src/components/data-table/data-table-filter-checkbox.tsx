@@ -1,8 +1,12 @@
 "use client";
 
-import { InputWithAddons } from "@/components/custom/input-with-addons";
 import { useDataTable } from "@/components/data-table/data-table-provider";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCompactNumber } from "@/lib/format";
@@ -61,13 +65,16 @@ export function DataTableFilterCheckbox<TData>({
   return (
     <div className="grid gap-2">
       {options && options.length > 4 ? (
-        <InputWithAddons
-          placeholder="Search"
-          leading={<Search className="mt-0.5 h-4 w-4" />}
-          containerClassName="h-9 rounded-lg"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-        />
+        <InputGroup className="h-9 rounded-lg shadow-none">
+          <InputGroupAddon>
+            <Search className="mt-0.5 h-4 w-4" />
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="Search"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+          />
+        </InputGroup>
       ) : null}
       {/* FIXME: due to the added max-h and overflow-y-auto, the hover state and border is laying on top of the scroll bar */}
       <div className="border-border max-h-[200px] overflow-y-auto rounded-lg border empty:border-none">

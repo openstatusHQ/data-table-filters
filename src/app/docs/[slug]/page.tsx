@@ -1,4 +1,10 @@
-import { getAllSections, getSection, Mdx, TableOfContents } from "@/lib/mdx";
+import {
+  DocsPagination,
+  getAllSections,
+  getSection,
+  Mdx,
+  TableOfContents,
+} from "@/lib/mdx";
 import {
   BASE_URL,
   ogMetadata,
@@ -47,7 +53,10 @@ export default async function DocsSectionPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const section = await getSection("docs", slug);
+  const [section, sections] = await Promise.all([
+    getSection("docs", slug),
+    getAllSections("docs"),
+  ]);
   if (!section) notFound();
   const { source, headings } = section;
 
@@ -82,6 +91,7 @@ export default async function DocsSectionPage({
         )}
       >
         <Mdx source={source} />
+        <DocsPagination sections={sections} currentSlug={slug} />
       </div>
       <TableOfContents headings={headings} />
     </>

@@ -3,7 +3,7 @@ import {
   ADAPTER_COOKIE_NAME,
   PREFETCH_COOKIE_NAME,
 } from "@/lib/constants/cookies";
-import type { AdapterType } from "@/lib/store";
+import type { AdapterType } from "@/lib/store/adapter/types";
 import { getQueryClient } from "@/providers/get-query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { cookies } from "next/headers";
