@@ -1,6 +1,6 @@
 import {
-  getAllSections,
   DocsPagination,
+  getAllSections,
   getSection,
   Mdx,
   TableOfContents,
