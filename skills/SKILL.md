@@ -10,7 +10,7 @@ description: >
   adapters (nuqs/zustand/memory), (4) generating table schemas from a data model,
   (5) wiring up server-side filtering with Drizzle ORM, (6) connecting the React Query
   fetch layer, (7) troubleshooting integration issues. Triggers on mentions of
-  "data-table-filters", "data-table-filters.com", filterable data tables with shadcn,
+  "data-table-filters", "data-table.openstatus.dev", filterable data tables with shadcn,
   or any of the registry block names.
 ---
 
@@ -22,7 +22,7 @@ All blocks install via `npx shadcn@latest add <url>`. The CLI handles dependenci
 
 | Block                         | Install URL                                        | What it adds                                                                                   |
 | ----------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **data-table**                | `https://data-table-filters.com/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (~52 files)                          |
+| **data-table**                | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (~52 files)                          |
 | **data-table-filter-command** | `.../r/data-table-filter-command.json`             | Command palette with history + keyboard shortcuts                                              |
 | **data-table-cell**           | `.../r/data-table-cell.json`                       | 8 cell renderers (text, code, badge, boolean, number, status-code, level-indicator, timestamp) |
 | **data-table-sheet**          | `.../r/data-table-sheet.json`                      | Row detail side panel (auto-installs cells)                                                    |
@@ -32,12 +32,12 @@ All blocks install via `npx shadcn@latest add <url>`. The CLI handles dependenci
 | **data-table-drizzle**        | `.../r/data-table-drizzle.json`                    | Drizzle ORM server-side helpers (auto-installs schema)                                         |
 | **data-table-query**          | `.../r/data-table-query.json`                      | React Query infinite query integration                                                         |
 
-All URLs use base `https://data-table-filters.com`.
+All URLs use base `https://data-table.openstatus.dev`.
 
 ## Quick Start
 
 1. Run `scripts/detect-stack.sh` to detect the user's project setup
-2. Install core: `npx shadcn@latest add https://data-table-filters.com/r/data-table.json`
+2. Install core: `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json`
 3. Scaffold a minimal working table (see below)
 4. Extend with additional blocks as needed
 

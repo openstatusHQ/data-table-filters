@@ -8,3 +8,4 @@ export {
 } from "./get-content";
 export { TableOfContents } from "./table-of-contents";
 export { DocsSidebar } from "./docs-sidebar";
+export { DocsPagination } from "./docs-pagination";
