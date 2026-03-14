@@ -37,13 +37,12 @@ export default function Home() {
               </div>
             </div>
             <div className="px-2.5 py-2">
-              <p className="font-medium group-hover:underline">
-                Infinite Data-Table
-              </p>
+              <p className="font-medium">Infinite Data-Table</p>
               <p className="text-muted-foreground text-sm">
                 A{" "}
-                <span className="underline decoration-blue-500 decoration-wavy underline-offset-2">
-                  cooked
+                <span className="relative inline-block font-medium text-green-700 italic transition-colors group-hover:text-green-50 dark:text-green-400 dark:group-hover:text-green-950">
+                  <span className="absolute inset-0 scale-x-105 -skew-x-12 bg-green-500/10 transition-colors group-hover:bg-green-600 dark:bg-green-500/10 dark:group-hover:bg-green-400"></span>
+                  <span className="relative">cooked&nbsp;</span>
                 </span>{" "}
                 infinite scroll data-table with a{" "}
                 <span className="text-foreground font-medium">server-side</span>{" "}
@@ -76,13 +75,12 @@ export default function Home() {
               </div>
             </div>
             <div className="px-2.5 py-2">
-              <p className="font-medium group-hover:underline">
-                Default Data-Table
-              </p>
+              <p className="font-medium">Default Data-Table</p>
               <p className="text-muted-foreground text-sm">
                 A{" "}
-                <span className="underline decoration-yellow-500 decoration-wavy underline-offset-2">
-                  simple
+                <span className="relative inline-block font-medium text-indigo-700 italic transition-colors group-hover:text-indigo-50 dark:text-indigo-400 dark:group-hover:text-indigo-950">
+                  <span className="absolute inset-0 scale-x-105 -skew-x-12 bg-indigo-500/10 transition-colors group-hover:bg-indigo-600 dark:bg-indigo-500/10 dark:group-hover:bg-indigo-400"></span>
+                  <span className="relative"> simple&nbsp;</span>
                 </span>{" "}
                 data-table with a{" "}
                 <span className="text-foreground font-medium">client-side</span>{" "}
@@ -357,13 +355,15 @@ function Hero() {
           .
         </h2>
         <p className="text-foreground italic sm:text-lg">
-          It&apos;s not a library. It&apos;s a playbook.{" "}
+          <span className="mr-2">
+            It&apos;s not a library. It&apos;s a playbook.{" "}
+          </span>
           <NextLink
             href="/docs/introduction"
-            className="group text-foreground hover:text-background relative ml-2 inline-block font-medium"
+            className="group text-foreground hover:text-background relative inline-block font-medium"
           >
             <span className="bg-muted group-hover:bg-foreground absolute inset-0 scale-x-105 -skew-x-12"></span>
-            <span className="relative">Learn more in the Docs.</span>
+            <span className="relative">Learn more in the Docs.&nbsp;</span>
           </NextLink>
         </p>
       </div>

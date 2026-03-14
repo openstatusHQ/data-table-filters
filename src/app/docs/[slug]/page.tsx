@@ -85,7 +85,7 @@ export default async function DocsSectionPage({
         className={cn(
           "prose prose-lg dark:prose-invert",
           "prose-pre:rounded-lg prose-pre:border prose-pre:border-border prose-pre:bg-foreground dark:prose-pre:bg-muted/50",
-          "prose-blockquote:rounded-lg prose-blockquote:border prose-blockquote:border-border prose-blockquote:bg-muted/50 prose-blockquote:pe-6 prose-blockquote:font-normal prose-blockquote:not-italic",
+          "prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:border-border! prose-blockquote:border-l-2",
           "w-full min-w-0 overflow-x-auto",
           "prose-h1:font-semibold prose-h2:font-semibold prose-h3:font-semibold prose-h4:font-semibold prose-h5:font-semibold prose-h6:font-semibold",
         )}

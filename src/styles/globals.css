@@ -206,6 +206,24 @@ body {
   @apply overflow-x-auto;
 }
 
+[data-rehype-pretty-code-figure] pre,
+[data-rehype-pretty-code-figure] code,
+[data-rehype-pretty-code-figure] code span {
+  --_light-fg: var(--shiki-light, inherit);
+  --_light-bg: var(--shiki-light-bg, transparent);
+  --_dark-fg: var(--shiki-dark, inherit);
+  --_dark-bg: var(--shiki-dark-bg, transparent);
+  color: var(--_light-fg);
+  background-color: var(--_light-bg);
+}
+
+.dark [data-rehype-pretty-code-figure] pre,
+.dark [data-rehype-pretty-code-figure] code,
+.dark [data-rehype-pretty-code-figure] code span {
+  color: var(--_dark-fg);
+  background-color: var(--_dark-bg);
+}
+
 .prose .table-wrapper {
   @apply w-full overflow-x-auto;
 }

@@ -1,3 +1,4 @@
+import { Link } from "@/components/custom/link";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import React from "react";
 import rehypePrettyCode from "rehype-pretty-code";
@@ -47,14 +48,20 @@ const components = {
   h4: createHeading(4),
   h5: createHeading(5),
   h6: createHeading(6),
+  a: Link,
   table: Table,
   img: CustomImage,
   pre: Pre,
 };
 
 /** @type {import('rehype-pretty-code').Options} */
-const prettyCodeOptions = {
+const prettyCodeOptions: import("rehype-pretty-code").Options = {
   keepBackground: false,
+  theme: {
+    light: "github-light-high-contrast",
+    dark: "github-dark-high-contrast",
+  },
+  defaultLang: "plaintext",
 };
 
 export function Mdx({ source }: { source: string }) {
