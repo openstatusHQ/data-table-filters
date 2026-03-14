@@ -336,7 +336,7 @@ function Hero() {
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <h2 className="text-muted-foreground text-balance sm:text-xl">
+        <h2 className="text-muted-foreground max-w-[900px] sm:text-xl">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
