@@ -69,10 +69,10 @@ export function DocsSidebar({ sections }: { sections: SectionMeta[] }) {
         <Button
           variant="outline"
           size="icon"
-          className="fixed bottom-4 left-4 z-40 h-12 w-12 rounded-full shadow-lg"
+          className="dark:bg-background fixed bottom-4 left-4 z-40 h-12 w-12 rounded-full shadow-lg"
           onClick={() => setOpen(true)}
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="size-6" />
           <span className="sr-only">Open docs navigation</span>
         </Button>
 

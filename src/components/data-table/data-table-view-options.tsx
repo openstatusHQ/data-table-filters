@@ -92,7 +92,7 @@ export function DataTableViewOptions() {
                       >
                         <div
                           className={cn(
-                            "border-foreground! mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
+                            "border-foreground! flex h-4 w-4 items-center justify-center rounded-sm border",
                             column.getIsVisible()
                               ? "bg-primary text-primary-foreground"
                               : "opacity-50 [&_svg]:invisible",
@@ -101,6 +101,7 @@ export function DataTableViewOptions() {
                           <Check className={cn("text-background size-3")} />
                         </div>
                         <span>{column.columnDef.meta?.label || column.id}</span>
+                        <span data-slot="command-shortcut" className="hidden" />
                         {enableColumnOrdering && !search ? (
                           <SortableDragHandle
                             variant="ghost"

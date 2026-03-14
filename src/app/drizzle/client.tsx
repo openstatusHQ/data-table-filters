@@ -34,6 +34,7 @@ import * as React from "react";
 import { dataOptions } from "./query-options";
 import type { ColumnSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
+import type { SearchParamsType } from "./search-params";
 import { tableSchema } from "./table-schema";
 
 const columns = [
@@ -47,10 +48,13 @@ const defaultColumnVisibility = getDefaultColumnVisibility(
   tableSchema.definition,
 );
 
-export function Client() {
+export function Client({ initialState }: { initialState: SearchParamsType }) {
   useResetFocus();
 
-  const adapter = useNuqsAdapter(filterSchema.definition, { id: "drizzle" });
+  const adapter = useNuqsAdapter(filterSchema.definition, {
+    id: "drizzle",
+    initialState,
+  });
 
   return (
     <DataTableStoreProvider adapter={adapter}>

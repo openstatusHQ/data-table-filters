@@ -20,7 +20,7 @@ function Link({ className, href, children, hideArrow, ...props }: LinkProps) {
     <NextLink
       className={cn(
         "group text-foreground decoration-border hover:decoration-foreground underline underline-offset-4",
-        "ring-offset-background focus:ring-ring rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-hidden",
+        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-md transition-all outline-none focus-visible:ring-[3px]",
         className,
       )}
       href={href}

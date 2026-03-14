@@ -32,7 +32,7 @@ const adapter = useMemoryAdapter(schema.definition);
 
 ## nuqs (URL State)
 
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-nuqs.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-nuqs.json`
 
 ### Hook
 
@@ -68,9 +68,13 @@ export default async function Page({
 }
 ```
 
-### Framework Setup
+### Framework Setup (Required)
 
-**Next.js App Router** — Add `<NuqsAdapter>` to root layout:
+Both steps below are **required** for nuqs to work:
+
+**1. Add `<NuqsAdapter>` to root layout** — the adapter silently fails without this.
+
+**Next.js App Router:**
 
 ```tsx
 // app/layout.tsx
@@ -103,13 +107,140 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 // Wrap app root
 ```
 
+**2. Wrap table component in `<Suspense>`** — nuqs calls `useSearchParams()` internally, which requires a Suspense boundary in Next.js App Router (build fails without it).
+
+```tsx
+// app/page.tsx
+import { Suspense } from "react";
+
+export default function Page() {
+  return (
+    <Suspense>
+      <MyTable />
+    </Suspense>
+  );
+}
+```
+
+### SSR Hydration — `initialState` Pattern
+
+When using nuqs with Next.js App Router, filters from URL params (e.g. `?status=todo`) may not apply on the initial render — causing a visible flash. This happens because `useState(defaultColumnFilters)` only reads its initial value once on the server, where nuqs returns defaults.
+
+**Fix:** Parse search params on the server and pass them as `initialState` to the nuqs adapter.
+
+**1. Schema** (`schema.ts`) — shared between server and client:
+
+```tsx
+import { createSchema, field } from "@/lib/store/schema";
+
+export const filterSchema = createSchema({
+  status: field
+    .array(field.stringLiteral(["todo", "in-progress", "done"]))
+    .default([]),
+  priority: field.array(field.number()).default([]),
+  title: field.string(), // Use field.string() with null default, NOT .default("")
+  sort: field.sort(),
+});
+```
+
+> **Important:** Use `field.string()` (null default) for input filters, not `field.string().default("")`. The empty string default causes nuqs to always return `""` instead of `null` when the param is absent, creating phantom filters.
+
+**2. Search params** (`search-params.ts`) — server-side:
+
+```tsx
+import {
+  createNuqsSearchParams,
+  type inferParserType,
+} from "@/lib/store/adapters/nuqs/server";
+import { filterSchema } from "./schema";
+
+export const { searchParamsParser, searchParamsCache, searchParamsSerializer } =
+  createNuqsSearchParams(filterSchema.definition);
+
+export type SearchParamsType = inferParserType<typeof searchParamsParser>;
+```
+
+**3. Server page** (`page.tsx`) — parses search params and passes to client:
+
+```tsx
+import { Suspense } from "react";
+import { MyTable } from "./client";
+import { searchParamsCache } from "./search-params";
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[]>>;
+}) {
+  const search = searchParamsCache.parse(await searchParams);
+  return (
+    <Suspense>
+      <MyTable initialState={search} />
+    </Suspense>
+  );
+}
+```
+
+**4. Client component** (`client.tsx`) — outer/inner pattern:
+
+```tsx
+"use client";
+
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import { useFilterState } from "@/lib/store/hooks/useFilterState";
+import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
+import { filterSchema, type FilterState } from "./schema";
+import type { SearchParamsType } from "./search-params";
+
+// Outer: creates adapter seeded with server-parsed initial state
+export function MyTable({ initialState }: { initialState: SearchParamsType }) {
+  const adapter = useNuqsAdapter(filterSchema.definition, {
+    id: "my-table",
+    initialState: initialState as Partial<FilterState>,
+  });
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <MyTableInner />
+    </DataTableStoreProvider>
+  );
+}
+
+// Inner: inside provider, reads BYOS state (seeded correctly from first render)
+function MyTableInner() {
+  const search = useFilterState<FilterState>();
+  const { sort, ...filter } = search;
+
+  const defaultColumnFilters = React.useMemo(() => {
+    return Object.entries(filter)
+      .map(([key, value]) => ({ id: key, value }))
+      .filter(({ value }) => {
+        if (value === null || value === undefined) return false;
+        if (value === "") return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        return true;
+      });
+  }, [filter]);
+
+  return (
+    <DataTableInfinite
+      defaultColumnFilters={defaultColumnFilters}
+      defaultColumnSorting={sort ? [sort] : undefined}
+      // ...other props
+    />
+  );
+}
+```
+
+The outer/inner split is needed so `useFilterState()` runs inside `DataTableStoreProvider`.
+
 **When to use:** User-facing tables where filter state should be in the URL (shareable links, bookmarkable filters, browser back/forward).
 
 ---
 
 ## zustand (Client State)
 
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-zustand.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-zustand.json`
 
 ### Create Store with Filter Slice
 

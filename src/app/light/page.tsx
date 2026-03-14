@@ -18,7 +18,7 @@ export default async function Page({
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <Client />
+      <Client initialState={search} />
     </HydrationBoundary>
   );
 }

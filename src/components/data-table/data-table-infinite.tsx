@@ -116,8 +116,8 @@ export function DataTableInfinite<TData, TValue>({
   hasNextPage,
   fetchPreviousPage,
   refetch,
-  totalRows = 0,
-  filterRows = 0,
+  totalRows,
+  filterRows,
   totalRowsFetched = 0,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
@@ -154,7 +154,7 @@ export function DataTableInfinite<TData, TValue>({
         Math.ceil(e.currentTarget.scrollTop + e.currentTarget.clientHeight) >=
         e.currentTarget.scrollHeight;
 
-      if (onPageBottom && !isFetching && totalRowsFetched < filterRows) {
+      if (onPageBottom && !isFetching && totalRowsFetched < (filterRows ?? 0)) {
         fetchNextPage();
       }
     },
@@ -442,11 +442,11 @@ export function DataTableInfinite<TData, TValue>({
                       <p className="text-muted-foreground text-sm">
                         No more data to load (
                         <span className="font-mono font-medium">
-                          {formatCompactNumber(filterRows)}
+                          {formatCompactNumber(filterRows ?? 0)}
                         </span>{" "}
                         of{" "}
                         <span className="font-mono font-medium">
-                          {formatCompactNumber(totalRows)}
+                          {formatCompactNumber(totalRows ?? 0)}
                         </span>{" "}
                         rows)
                       </p>

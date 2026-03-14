@@ -41,7 +41,7 @@ export function PopoverPercentile({
     <Popover>
       <PopoverTrigger
         className={cn(
-          "ring-offset-background focus-visible:ring-ring flex items-center gap-1 rounded-md font-mono focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden",
+          "focus-visible:border-ring focus-visible:ring-ring/50 flex items-center gap-1 rounded-md font-mono transition-all outline-none focus-visible:ring-[3px]",
           className,
         )}
       >

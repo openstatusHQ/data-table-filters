@@ -37,6 +37,7 @@ import * as React from "react";
 import { dataOptions } from "./query-options";
 import type { ColumnSchema, FilterState } from "./schema";
 import { filterSchema } from "./schema";
+import { SearchParamsType } from "./search-params";
 import { useFilterStore } from "./store";
 import { tableSchema } from "./table-schema";
 
@@ -56,9 +57,11 @@ const defaultColumnVisibility = getDefaultColumnVisibility(
 export function Client({
   defaultAdapterType = "nuqs",
   defaultPrefetchEnabled = false,
+  initialState,
 }: {
   defaultAdapterType?: AdapterType;
   defaultPrefetchEnabled?: boolean;
+  initialState?: SearchParamsType;
 }) {
   useResetFocus();
 
@@ -66,16 +69,31 @@ export function Client({
   return (
     <React.Fragment>
       {defaultAdapterType === "nuqs" ? (
-        <NuqsClient prefetchEnabled={defaultPrefetchEnabled} />
+        <NuqsClient
+          prefetchEnabled={defaultPrefetchEnabled}
+          initialState={initialState}
+        />
       ) : (
-        <ZustandClient prefetchEnabled={defaultPrefetchEnabled} />
+        <ZustandClient
+          prefetchEnabled={defaultPrefetchEnabled}
+          initialState={initialState}
+        />
       )}
     </React.Fragment>
   );
 }
 
-function NuqsClient({ prefetchEnabled }: { prefetchEnabled: boolean }) {
-  const adapter = useNuqsAdapter(filterSchema.definition, { id: "infinite" });
+function NuqsClient({
+  prefetchEnabled,
+  initialState,
+}: {
+  prefetchEnabled: boolean;
+  initialState?: SearchParamsType;
+}) {
+  const adapter = useNuqsAdapter(filterSchema.definition, {
+    id: "infinite",
+    initialState,
+  });
 
   return (
     <DataTableStoreProvider adapter={adapter}>
@@ -84,9 +102,16 @@ function NuqsClient({ prefetchEnabled }: { prefetchEnabled: boolean }) {
   );
 }
 
-function ZustandClient({ prefetchEnabled }: { prefetchEnabled: boolean }) {
+function ZustandClient({
+  prefetchEnabled,
+  initialState,
+}: {
+  prefetchEnabled: boolean;
+  initialState?: SearchParamsType;
+}) {
   const adapter = useZustandAdapter(useFilterStore, filterSchema.definition, {
     id: "infinite",
+    initialState,
   });
 
   return (

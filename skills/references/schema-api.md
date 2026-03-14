@@ -1,6 +1,6 @@
 # Schema API
 
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-schema.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-schema.json`
 
 ## Table of Contents
 
@@ -149,6 +149,20 @@ const sheetFields = generateSheetFields<Row>(tableSchema.definition);
 | `generateFilterFields()` | `DataTableFilterField<T>[]` | Filter UI configuration           |
 | `generateFilterSchema()` | Store schema definition     | BYOS adapter filter schema        |
 | `generateSheetFields()`  | `SheetField<T>[]`           | Sheet detail panel fields         |
+
+### Sheet Fields & Filter Dropdowns
+
+`generateSheetFields()` auto-derives each field's `type` from its filter config. This controls whether the sheet row gets a filter dropdown:
+
+| `SheetField.type` | Derived from               | Sheet dropdown options                          |
+| ----------------- | -------------------------- | ----------------------------------------------- |
+| `"readonly"`      | No filter config           | No dropdown — plain display + copy only         |
+| `"checkbox"`      | `.filterable("checkbox")`  | "Include" (adds value to array filter)          |
+| `"input"`         | `.filterable("input")`     | "Include" (sets text filter)                    |
+| `"slider"`        | `.filterable("slider")`    | "Less or equal", "Greater or equal", "Equal to" |
+| `"timerange"`     | `.filterable("timerange")` | "Exact timestamp", "Same hour", "Same day"      |
+
+Use `generateSheetFields()` whenever possible — it handles this mapping automatically. If manually defining `sheetFields`, set `type` to match the corresponding `filterFields` entry to get the dropdown.
 
 ### Filter Schema for Store Adapters
 

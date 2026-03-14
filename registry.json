@@ -194,6 +194,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/react-table.d.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/constants/date-preset.ts",
           "type": "registry:lib"
         },
@@ -290,7 +294,7 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table.json",
         "command",
         "kbd",
         "separator"
@@ -345,7 +349,7 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table.json",
         "tooltip",
         "hover-card"
       ],
@@ -379,8 +383,8 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json",
-        "https://data-table-filters.com/r/data-table-cell.json",
+        "https://data-table.openstatus.dev/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table-cell.json",
         "button",
         "dropdown-menu",
         "kbd",
@@ -419,7 +423,7 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json"
+        "https://data-table.openstatus.dev/r/data-table.json"
       ],
       "dependencies": ["nuqs"]
     },
@@ -443,7 +447,7 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json"
+        "https://data-table.openstatus.dev/r/data-table.json"
       ],
       "dependencies": ["zustand"]
     },
@@ -503,8 +507,8 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json",
-        "https://data-table-filters.com/r/data-table-cell.json"
+        "https://data-table.openstatus.dev/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table-cell.json"
       ],
       "dependencies": ["@tanstack/react-table"]
     },
@@ -544,8 +548,8 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json",
-        "https://data-table-filters.com/r/data-table-schema.json"
+        "https://data-table.openstatus.dev/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table-schema.json"
       ],
       "dependencies": ["drizzle-orm", "date-fns"]
     },
@@ -569,7 +573,7 @@
         }
       ],
       "registryDependencies": [
-        "https://data-table-filters.com/r/data-table.json"
+        "https://data-table.openstatus.dev/r/data-table.json"
       ],
       "dependencies": [
         "@tanstack/react-query",

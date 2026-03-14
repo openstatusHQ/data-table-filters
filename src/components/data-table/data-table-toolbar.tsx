@@ -26,8 +26,6 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
     useDataTable();
   const { open, setOpen } = useControls();
   useHotKey(() => setOpen((prev) => !prev), "b");
-  const filters = table.getState().columnFilters;
-
   const rows = {
     total: totalRows ?? table.getCoreRowModel().rows.length,
     filtered: filterRows ?? table.getFilteredRowModel().rows.length,
@@ -91,7 +89,7 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
         </div>
       </div>
       <div className="ml-auto flex items-center gap-2">
-        {filters.length ? <DataTableResetButton /> : null}
+        {columnFilters.length ? <DataTableResetButton /> : null}
         {renderActions?.()}
         <DataTableViewOptions />
       </div>
