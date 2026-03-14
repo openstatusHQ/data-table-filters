@@ -145,7 +145,7 @@ export function DataTableSheetRowAction<
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "ring-offset-background focus-visible:ring-ring rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden",
+          "focus-visible:border-ring focus-visible:ring-ring/50 rounded-md transition-all outline-none focus-visible:ring-[3px]",
           "relative",
           className,
         )}
@@ -167,7 +167,7 @@ export function DataTableSheetRowAction<
           </div>
         ) : null}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="left">
+      <DropdownMenuContent align="start" side="left" className="w-48">
         {renderOptions()}
         <DropdownMenuSeparator />
         <DropdownMenuItem

@@ -45,6 +45,7 @@ export default async function Page({
   return (
     <HydrationBoundary state={dehydrate(getQueryClient())}>
       <Client
+        initialState={search}
         defaultAdapterType={adapterType}
         defaultPrefetchEnabled={prefetchEnabled}
       />
@@ -67,6 +68,7 @@ async function PrefetchedContent({
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <Client
+        initialState={search}
         defaultAdapterType={defaultAdapterType}
         defaultPrefetchEnabled={defaultPrefetchEnabled}
       />

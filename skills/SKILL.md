@@ -47,10 +47,11 @@ All URLs use base `https://data-table.openstatus.dev`.
 
 ### Minimal Working Table (Memory Adapter)
 
+> **Note:** `DataTableInfinite` internally renders `DataTableProvider`, which already wraps children with `ControlsProvider` and `DataTableStoreSync`. You do NOT need to add these separately. The only wrapper you need is `DataTableStoreProvider` (for the BYOS adapter).
+
 ```tsx
 "use client";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
-import { DataTableProvider } from "@/components/data-table/data-table-provider";
 import type { DataTableFilterField } from "@/components/data-table/types";
 import { useMemoryAdapter } from "@/lib/store/adapters/memory";
 import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
@@ -167,6 +168,9 @@ See [references/fetch-layer.md](references/fetch-layer.md).
 
 - **Missing CSS vars**: Core injects `--color-success/warning/error/info`. Check cssVars applied to CSS.
 - **Import path mismatches**: shadcn CLI rewrites `@/` paths per `components.json` aliases.
-- **nuqs framework setup**: Next.js App Router requires `<NuqsAdapter>` in root layout.
+- **nuqs: silent failure or crash**: Two required setup steps — `<NuqsAdapter>` in root layout AND `<Suspense>` around the table component. See [references/store-adapters.md](references/store-adapters.md).
+- **nuqs: filters not applied from URL on load**: Pass server-parsed search params as `initialState` to the nuqs adapter. See the SSR Hydration section in [references/store-adapters.md](references/store-adapters.md).
+- **nuqs: phantom filters with empty string**: Use `field.string()` (null default), not `field.string().default("")`.
+- **Sheet dropdown missing**: `SheetField.type` must match the filter type (not `"readonly"`) to get the filter dropdown. Use `generateSheetFields()` to auto-derive from filter config.
 - **Filter not rendering**: Verify filter type string matches `FILTER_COMPONENTS` key.
 - **Tailwind v4**: Registry targets v4. Class syntax differs from v3.

@@ -1,6 +1,6 @@
 # Component Catalog
 
-All extension blocks install via `npx shadcn@latest add <url>` (base: `https://data-table-filters.com`).
+All extension blocks install via `npx shadcn@latest add <url>` (base: `https://data-table.openstatus.dev`).
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ All extension blocks install via `npx shadcn@latest add <url>` (base: `https://d
 ## Command Palette
 
 **Block:** `data-table-filter-command`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-filter-command.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-filter-command.json`
 **Auto-resolves:** core block, shadcn `command` + `kbd` + `separator`, `date-fns`, `lucide-react`
 
 ### Props
@@ -54,7 +54,7 @@ The command palette uses `useDataTable()` internally to access table context. No
 ## Cell Renderers
 
 **Block:** `data-table-cell`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-cell.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-cell.json`
 **Auto-resolves:** core block, shadcn `tooltip` + `hover-card`, `sonner`, `@date-fns/utc`
 
 ### Available Cells
@@ -93,7 +93,7 @@ const columns: ColumnDef<MyData>[] = [
 ## Sheet Detail Panel
 
 **Block:** `data-table-sheet`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-sheet.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-sheet.json`
 **Auto-resolves:** core block + cell renderers block, shadcn `button` + `dropdown-menu` + `kbd` + `separator` + `skeleton` + `tooltip`
 
 ### Components
@@ -142,19 +142,19 @@ See [store-adapters.md](store-adapters.md) for full setup details.
 ### nuqs (URL state)
 
 **Block:** `data-table-nuqs`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-nuqs.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-nuqs.json`
 
 ### zustand (client state)
 
 **Block:** `data-table-zustand`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-zustand.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-zustand.json`
 
 ---
 
 ## Schema System
 
 **Block:** `data-table-schema`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-schema.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-schema.json`
 
 See [schema-api.md](schema-api.md) for full API.
 
@@ -163,7 +163,7 @@ See [schema-api.md](schema-api.md) for full API.
 ## Drizzle Helpers
 
 **Block:** `data-table-drizzle`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-drizzle.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-drizzle.json`
 
 See [drizzle-integration.md](drizzle-integration.md) for handler API.
 
@@ -172,7 +172,7 @@ See [drizzle-integration.md](drizzle-integration.md) for handler API.
 ## Query Layer
 
 **Block:** `data-table-query`
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-query.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-query.json`
 
 See [fetch-layer.md](fetch-layer.md) for setup.
 

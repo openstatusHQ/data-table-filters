@@ -21,6 +21,7 @@ import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
 import { dataOptions } from "./query-options";
 import { filterSchema } from "./schema";
+import type { SearchParamsType } from "./search-params";
 
 // Infer FilterState from schema
 type FilterState = typeof filterSchema._type;
@@ -32,8 +33,11 @@ type ColumnType =
     ? T
     : never;
 
-export function Client() {
-  const adapter = useNuqsAdapter(filterSchema.definition, { id: "light" });
+export function Client({ initialState }: { initialState?: SearchParamsType }) {
+  const adapter = useNuqsAdapter(filterSchema.definition, {
+    id: "light",
+    initialState,
+  });
 
   return (
     <DataTableStoreProvider adapter={adapter}>

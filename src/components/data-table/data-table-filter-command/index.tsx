@@ -5,7 +5,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
   CommandSeparator,
@@ -18,6 +17,7 @@ import { getCommandHistoryKey } from "@/lib/constants/local-storage";
 import { formatCompactNumber } from "@/lib/format";
 import type { SchemaDefinition } from "@/lib/store/schema/types";
 import { cn } from "@/lib/utils";
+import { Command as CommandPrimitive } from "cmdk";
 import { formatDistanceToNow } from "date-fns";
 import { LoaderCircle, Search, X } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -140,7 +140,7 @@ export function DataTableFilterCommand({
       <button
         type="button"
         className={cn(
-          "group border-input bg-background text-muted-foreground ring-offset-background focus-within:ring-ring hover:bg-accent/50 hover:text-accent-foreground flex w-full items-center rounded-lg border px-3 focus-within:ring-2 focus-within:ring-offset-2 focus-within:outline-hidden",
+          "group border-input bg-background text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground focus-within:border-ring focus-within:ring-ring/50 flex w-full items-center rounded-lg border px-3 transition-all outline-none focus-within:ring-[3px]",
           open ? "hidden" : "visible",
         )}
         onClick={() => setOpen(true)}
@@ -172,41 +172,47 @@ export function DataTableFilterCommand({
         }
         // loop
       >
-        <CommandInput
-          ref={inputRef}
-          value={inputValue}
-          onValueChange={setInputValue}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") inputRef?.current?.blur();
-          }}
-          onBlur={() => {
-            setOpen(false);
-            // FIXME: doesnt reflect the jumps
-            // FIXME: will save non-existing searches
-            // TODO: extract into function
-            const search = inputValue.trim();
-            if (!search) return;
-            const timestamp = Date.now();
-            const searchIndex = lastSearches.findIndex(
-              (item) => item.search === search,
-            );
-            if (searchIndex !== -1) {
-              lastSearches[searchIndex].timestamp = timestamp;
-              setLastSearches(lastSearches);
+        <div
+          data-slot="command-input-wrapper"
+          className="flex items-center gap-2 border-b px-3"
+        >
+          <Search className="size-4 shrink-0 opacity-50" />
+          <CommandPrimitive.Input
+            ref={inputRef}
+            value={inputValue}
+            onValueChange={setInputValue}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Escape") inputRef?.current?.blur();
+            }}
+            onBlur={() => {
+              setOpen(false);
+              // FIXME: doesnt reflect the jumps
+              // FIXME: will save non-existing searches
+              // TODO: extract into function
+              const search = inputValue.trim();
+              if (!search) return;
+              const timestamp = Date.now();
+              const searchIndex = lastSearches.findIndex(
+                (item) => item.search === search,
+              );
+              if (searchIndex !== -1) {
+                lastSearches[searchIndex].timestamp = timestamp;
+                setLastSearches(lastSearches);
+                return;
+              }
+              setLastSearches([...lastSearches, { search, timestamp }]);
               return;
-            }
-            setLastSearches([...lastSearches, { search, timestamp }]);
-            return;
-          }}
-          onInput={(e) => {
-            const caretPosition = e.currentTarget?.selectionStart || -1;
-            const value = e.currentTarget?.value || "";
-            const word = getWordByCaretPosition({ value, caretPosition });
-            setCurrentWord(word);
-          }}
-          placeholder="Search data table..."
-          className="text-foreground"
-        />
+            }}
+            onInput={(e: React.FormEvent<HTMLInputElement>) => {
+              const caretPosition = e.currentTarget?.selectionStart || -1;
+              const value = e.currentTarget?.value || "";
+              const word = getWordByCaretPosition({ value, caretPosition });
+              setCurrentWord(word);
+            }}
+            placeholder="Search data table..."
+            className="text-foreground placeholder:text-muted-foreground flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
         <div className="relative">
           <div className="border-border bg-popover text-popover-foreground animate-in absolute top-2 z-10 w-full overflow-hidden rounded-lg border shadow-md outline-hidden">
             {/* default height is 300px but in case of more, we'd like to tease the user */}

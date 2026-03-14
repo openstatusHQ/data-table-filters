@@ -20,45 +20,6 @@ export default function Home() {
           >
             nuqs | zustand
           </Badge>
-          <NextLink href="/default" className="group flex flex-col gap-2.5">
-            <div className="border-border/70 bg-muted/40 group-hover:border-border group-hover:bg-muted/50 flex flex-col justify-center rounded-lg border px-5 py-6 md:px-10 md:py-12 xl:aspect-video">
-              <div className="flex w-full flex-col gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
-                <div className="flex flex-1 flex-row items-end gap-2.5">
-                  <div className="-my-2 hidden sm:block">
-                    <Controls className="w-24" />
-                  </div>
-                  <div className="flex flex-1 flex-col gap-2">
-                    <CommandInput />
-                    <Toolbar />
-                    <DefaultTable />
-                    <Pagination />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="px-2.5 py-2">
-              <p className="font-medium group-hover:underline">
-                Default Data-Table
-              </p>
-              <p className="text-muted-foreground text-sm">
-                A{" "}
-                <span className="underline decoration-yellow-500 decoration-wavy underline-offset-2">
-                  simple
-                </span>{" "}
-                data-table with a{" "}
-                <span className="text-foreground font-medium">client-side</span>{" "}
-                filter and pagination.
-              </p>
-            </div>
-          </NextLink>
-        </div>
-        <div className="relative">
-          <Badge
-            variant="outline"
-            className="border-border bg-background absolute -top-3 right-3 border-dashed px-1.5 font-mono"
-          >
-            nuqs | zustand
-          </Badge>
           <NextLink href="/infinite" className="group flex flex-col gap-2.5">
             <div className="border-border/70 bg-muted/40 group-hover:border-border group-hover:bg-muted/50 flex flex-col justify-center rounded-lg border px-5 py-6 md:px-10 md:py-12 xl:aspect-video">
               <div className="flex w-full flex-row items-end gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
@@ -87,6 +48,45 @@ export default function Home() {
                 infinite scroll data-table with a{" "}
                 <span className="text-foreground font-medium">server-side</span>{" "}
                 filter, row selection and live mode.
+              </p>
+            </div>
+          </NextLink>
+        </div>
+        <div className="relative">
+          <Badge
+            variant="outline"
+            className="border-border bg-background absolute -top-3 right-3 border-dashed px-1.5 font-mono"
+          >
+            nuqs | zustand
+          </Badge>
+          <NextLink href="/default" className="group flex flex-col gap-2.5">
+            <div className="border-border/70 bg-muted/40 group-hover:border-border group-hover:bg-muted/50 flex flex-col justify-center rounded-lg border px-5 py-6 md:px-10 md:py-12 xl:aspect-video">
+              <div className="flex w-full flex-col gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
+                <div className="flex flex-1 flex-row items-end gap-2.5">
+                  <div className="-my-2 hidden sm:block">
+                    <Controls className="w-24" />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <CommandInput />
+                    <Toolbar />
+                    <DefaultTable />
+                    <Pagination />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-2.5 py-2">
+              <p className="font-medium group-hover:underline">
+                Default Data-Table
+              </p>
+              <p className="text-muted-foreground text-sm">
+                A{" "}
+                <span className="underline decoration-yellow-500 decoration-wavy underline-offset-2">
+                  simple
+                </span>{" "}
+                data-table with a{" "}
+                <span className="text-foreground font-medium">client-side</span>{" "}
+                filter and pagination.
               </p>
             </div>
           </NextLink>
@@ -336,7 +336,7 @@ function Hero() {
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <h2 className="text-muted-foreground max-w-[750px] text-lg">
+        <h2 className="text-muted-foreground text-xl text-balance">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
@@ -356,10 +356,15 @@ function Hero() {
           </Link>
           .
         </h2>
-        <p className="text-muted-foreground max-w-[740px] text-lg">
-          Learn more in the <Link href="/docs/introduction">Docs</Link>. Plug in
-          any state manager with BYOS (Bring Your Own Store). Try the{" "}
-          <Link href="/builder">Builder</Link> to generate your schema.
+        <p className="text-foreground text-lg italic">
+          It&apos;s not a library. It&apos;s a playbook.{" "}
+          <NextLink
+            href="/docs/introduction"
+            className="group text-foreground hover:text-background relative ml-1 inline-block font-medium"
+          >
+            <span className="bg-muted group-hover:bg-foreground absolute inset-0 scale-x-105 -skew-x-12"></span>
+            <span className="relative">Learn more in the Docs.</span>
+          </NextLink>
         </p>
       </div>
       <NextLink

@@ -1,4 +1,5 @@
 import { DataTableFilterField } from "@/components/data-table/types";
+import { ControlsProvider } from "@/providers/controls";
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -9,7 +10,6 @@ import type {
   VisibilityState,
 } from "@tanstack/react-table";
 import { createContext, useContext, useMemo } from "react";
-import { ControlsProvider } from "../../providers/controls";
 import { DataTableStoreSync } from "./data-table-store-sync";
 
 // REMINDER: read about how to move controlled state out of the useReactTable hook

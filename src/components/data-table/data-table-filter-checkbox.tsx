@@ -126,7 +126,7 @@ export function DataTableFilterCheckbox<TData>({
                     onClick={() => column?.setFilterValue([option.value])}
                     className={cn(
                       "text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 hidden font-normal backdrop-blur-xs group-hover:block",
-                      "ring-offset-background focus-visible:ring-ring rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden",
+                      "focus-visible:border-ring focus-visible:ring-ring/50 rounded-md transition-all outline-none focus-visible:ring-[3px]",
                     )}
                   >
                     <span className="px-2">only</span>

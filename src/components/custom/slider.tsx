@@ -28,7 +28,7 @@ function Slider({
       </SliderPrimitive.Track>
       {initialValue.map((_, index) => (
         <React.Fragment key={index}>
-          <SliderPrimitive.Thumb className="border-primary bg-background ring-offset-background focus-visible:ring-ring block h-4 w-4 rounded-full border-2 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50" />
+          <SliderPrimitive.Thumb className="border-primary bg-background focus-visible:border-ring focus-visible:ring-ring/50 block h-4 w-4 rounded-full border-2 transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50" />
         </React.Fragment>
       ))}
     </SliderPrimitive.Root>

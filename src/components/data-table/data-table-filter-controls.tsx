@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import * as React from "react";
 import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
 import { DataTableFilterInput } from "./data-table-filter-input";
 import { DataTableFilterResetButton } from "./data-table-filter-reset-button";
@@ -28,9 +29,21 @@ export const FILTER_COMPONENTS: Record<string, React.ComponentType<any>> = {
 
 export function DataTableFilterControls() {
   const { filterFields } = useDataTable();
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Accordion
       type="multiple"
+      className={
+        isMounted
+          ? undefined
+          : "[&_[data-slot=accordion-content]]:!animate-none"
+      }
       defaultValue={filterFields
         ?.filter(({ defaultOpen }) => defaultOpen)
         ?.map(({ value }) => value as string)}
