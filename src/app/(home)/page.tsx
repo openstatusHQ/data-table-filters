@@ -336,7 +336,7 @@ function Hero() {
           Powerful <span className="text-nowrap">Data-Table</span> for React
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <h2 className="text-muted-foreground text-xl text-balance">
+        <h2 className="text-muted-foreground text-balance sm:text-xl">
           Extensible, fast, and easy-to-use filters with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
@@ -356,11 +356,11 @@ function Hero() {
           </Link>
           .
         </h2>
-        <p className="text-foreground text-lg italic">
+        <p className="text-foreground italic sm:text-lg">
           It&apos;s not a library. It&apos;s a playbook.{" "}
           <NextLink
             href="/docs/introduction"
-            className="group text-foreground hover:text-background relative ml-1 inline-block font-medium"
+            className="group text-foreground hover:text-background relative ml-2 inline-block font-medium"
           >
             <span className="bg-muted group-hover:bg-foreground absolute inset-0 scale-x-105 -skew-x-12"></span>
             <span className="relative">Learn more in the Docs.</span>
@@ -388,7 +388,7 @@ const changelog: {
   description: React.ReactNode;
 }[] = [
   {
-    date: new Date("03-12-2026"),
+    date: new Date("03-14-2026"),
     description: (
       <>
         New <Link href="/docs/introduction">documentation</Link> page to help
