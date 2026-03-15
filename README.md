@@ -14,17 +14,17 @@ Install blocks via the shadcn registry:
 npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
 ```
 
-| Block | Install URL | What it adds |
-|-------|-------------|-------------|
-| `data-table` | `.../r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter |
-| `data-table-filter-command` | `.../r/data-table-filter-command.json` | Command palette with history + keyboard shortcuts |
-| `data-table-cell` | `.../r/data-table-cell.json` | 8 cell renderers (text, code, badge, boolean, number, status-code, level-indicator, timestamp) |
-| `data-table-sheet` | `.../r/data-table-sheet.json` | Row detail side panel |
-| `data-table-nuqs` | `.../r/data-table-nuqs.json` | nuqs URL state adapter |
-| `data-table-zustand` | `.../r/data-table-zustand.json` | zustand state adapter |
-| `data-table-schema` | `.../r/data-table-schema.json` | Declarative schema system with `col.*` factories |
-| `data-table-drizzle` | `.../r/data-table-drizzle.json` | Drizzle ORM server-side helpers |
-| `data-table-query` | `.../r/data-table-query.json` | React Query infinite query integration |
+| Block                       | Install URL                            | What it adds                                                                                   |
+| --------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `data-table`                | `.../r/data-table.json`                | Core: table engine, store, 4 filter types, memory adapter                                      |
+| `data-table-filter-command` | `.../r/data-table-filter-command.json` | Command palette with history + keyboard shortcuts                                              |
+| `data-table-cell`           | `.../r/data-table-cell.json`           | 8 cell renderers (text, code, badge, boolean, number, status-code, level-indicator, timestamp) |
+| `data-table-sheet`          | `.../r/data-table-sheet.json`          | Row detail side panel                                                                          |
+| `data-table-nuqs`           | `.../r/data-table-nuqs.json`           | nuqs URL state adapter                                                                         |
+| `data-table-zustand`        | `.../r/data-table-zustand.json`        | zustand state adapter                                                                          |
+| `data-table-schema`         | `.../r/data-table-schema.json`         | Declarative schema system with `col.*` factories                                               |
+| `data-table-drizzle`        | `.../r/data-table-drizzle.json`        | Drizzle ORM server-side helpers                                                                |
+| `data-table-query`          | `.../r/data-table-query.json`          | React Query infinite query integration                                                         |
 
 All URLs use base `https://data-table.openstatus.dev`.
 
