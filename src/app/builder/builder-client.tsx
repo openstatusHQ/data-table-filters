@@ -287,7 +287,7 @@ export function BuilderClient() {
                     {...field}
                     id={field.name}
                     className={cn(
-                      "font-mono text-xs",
+                      "field-sizing-fixed font-mono text-xs",
                       fieldState.invalid && "border-destructive",
                     )}
                     rows={7}
@@ -385,7 +385,7 @@ export function BuilderClient() {
                 id={field.name}
                 rows={7}
                 className={cn(
-                  "font-mono text-xs",
+                  "field-sizing-fixed font-mono text-xs",
                   fieldState.invalid && "border-destructive",
                 )}
                 placeholder='{ "columns": [] }'
