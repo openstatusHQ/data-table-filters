@@ -390,6 +390,17 @@ const changelog: {
   description: React.ReactNode;
 }[] = [
   {
+    date: new Date("03-16-2026"),
+    description: (
+      <>
+        Blog post about why{" "}
+        <Link href="https://www.openstatus.dev/blog/nobody-should-hand-code-a-data-table">
+          nobody should hand-code a data table in 2026
+        </Link>
+      </>
+    ),
+  },
+  {
     date: new Date("03-14-2026"),
     description: (
       <>
