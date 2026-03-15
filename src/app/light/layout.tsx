@@ -39,25 +39,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 function ButtonPile() {
   return (
     <div className="group/pile relative pt-1.5">
-      <Button asChild className="group">
+      <Button asChild className="group gap-0! [&_svg]:shrink!">
         <a
           href="https://github.com/openstatusHQ/data-table-filters"
           target="_blank"
           rel="noreferrer"
         >
           <span className="mr-1">View GitHub Repo</span>
-          <ArrowRight className="relative mb-px inline h-4 w-0 transition-all group-hover:w-4" />
-          <ChevronRight className="relative mb-px inline h-4 w-4 transition-all group-hover:w-0" />
+          <ArrowRight className="relative mb-px inline h-4 w-0! transition-all group-hover:w-4!" />
+          <ChevronRight className="relative mb-px inline h-4 w-4! transition-all group-hover:w-0!" />
         </a>
       </Button>
       <Button
         asChild
-        className="group absolute top-0 -right-1.5 -z-10 opacity-70 transition-transform group-hover/pile:-translate-x-1.5 group-hover/pile:-translate-y-10 group-hover/pile:opacity-100"
+        className="group absolute top-0 -right-1.5 -z-10 gap-0! opacity-70 transition-transform group-hover/pile:-translate-x-1.5 group-hover/pile:-translate-y-10 group-hover/pile:opacity-100 [&_svg]:shrink!"
       >
         <a href="https://light.openstatus.dev" target="_blank" rel="noreferrer">
           <span className="mr-1">Explore Light OS</span>
-          <ArrowRight className="relative mb-px inline h-4 w-0 transition-all group-hover:w-4" />
-          <ChevronRight className="relative mb-px inline h-4 w-4 transition-all group-hover:w-0" />
+          <ArrowRight className="relative mb-px inline h-4 w-0! transition-all group-hover:w-4!" />
+          <ChevronRight className="relative mb-px inline h-4 w-4! transition-all group-hover:w-0!" />
         </a>
       </Button>
     </div>
