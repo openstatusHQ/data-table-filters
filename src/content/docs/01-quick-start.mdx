@@ -12,7 +12,21 @@ faq:
 
 # Quick Start
 
-## Install
+## Agent Skill
+
+Install the skill and let your AI agent handle the setup:
+
+```bash
+npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters
+```
+
+Let the agent handle the rest:
+
+> Add a data table with filters to my project
+
+It detects your stack, installs the right blocks, and wires them up.
+
+## Install Components
 
 Start by installing the core `data-table` block — it includes the table engine, memory store adapter, and all 4 filter types:
 
@@ -21,20 +35,6 @@ npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
 ```
 
 Then add any extension block from the [registry](#blocks) below.
-
-## Agent Skill
-
-Install the skill and let your AI agent handle the setup:
-
-```bash
-npx skills add https://github.com/openstatushq/data-table-filters/skills
-```
-
-Then prompt your agent:
-
-> Add a data table with filters to my project
-
-It detects your stack, installs the right blocks, and wires them up.
 
 ## Blocks
 

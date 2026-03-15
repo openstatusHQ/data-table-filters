@@ -15,15 +15,15 @@ export function DataTableLayout({ children }: { children: React.ReactNode }) {
       </Button>
       {children}
       <div className="fixed right-4 bottom-4 z-50">
-        <Button asChild className="group">
+        <Button asChild className="group gap-0! [&_svg]:shrink!">
           <a
             href="https://github.com/openstatusHQ/data-table-filters"
             target="_blank"
             rel="noreferrer"
           >
             <span className="mr-1">View GitHub Repo</span>
-            <ArrowRight className="relative mb-px inline h-4 w-0 transition-all group-hover:w-4" />
-            <ChevronRight className="relative mb-px inline h-4 w-4 transition-all group-hover:w-0" />
+            <ArrowRight className="relative mb-px inline h-4 w-0! transition-all group-hover:w-4!" />
+            <ChevronRight className="relative mb-px inline h-4 w-4! transition-all group-hover:w-0!" />
           </a>
         </Button>
       </div>
