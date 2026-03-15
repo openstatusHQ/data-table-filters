@@ -14,15 +14,21 @@ faq:
 
 _**It’s not a library. It’s a playbook.**_
 
-Build production-grade data tables for large datasets — with proven patterns you can copy into your codebase.
+Stop hand-rolling data tables. Copy proven patterns, install the [agent skill](/docs/quick-start#agent-skill) and start shipping.
 
-Install the [agent skill](/docs/quick-start#agent-skill) and let it handle the rest.
+Built on the stack that actually scales:
 
-> This is a **work in progress** — our goal is to make it the fastest way to spin up a data-table view for logs and beyond. Questions, ideas, or feedback? [Open an issue on GitHub](https://github.com/openstatusHQ/data-table-filters/issues).
+- **[shadcn registry](https://ui.shadcn.com)** — drop components directly into your codebase
+- **[TanStack Table](https://tanstack.com/table) + [Query](https://tanstack.com/query)** — sorting, filtering, infinite scroll, done
+- **[Drizzle ORM](/docs/drizzle-orm)** — server-side `WHERE`, cursors, and faceted counts out of the box
+- **[nuqs](https://nuqs.47ng.com) / [Zustand](https://zustand.docs.pmnd.rs/getting-started/introduction)** — URL or memory state, your call
+- **[Agent SKILL.md](/docs/quick-start#agent-skill)** — describe your schema, let the agent wire it up
+
+Define a schema. Generate columns, filters, and sheet details. Done.
 
 ![data-table with some filters and activated live mode](/assets/docs/data-table.png)
 
-This guide covers the system end to end — from defining a table schema to rendering filters, columns, and row details. Get started with the [Quick Start](/docs/quick-start) or jump to a [Full Example](/docs/full-example).
+This guide covers the system end to end — from defining a table schema to rendering filters, columns, and row details. Get started with the [Quick Start](/docs/quick-start) and jump to a [Full Example](/docs/full-example).
 
 ## Examples
 
@@ -31,6 +37,8 @@ This guide covers the system end to end — from defining a table schema to rend
 - [Infinite](/infinite) — infinite scroll with cursor pagination (mock)
 - [Light](/light) — lightweight frontend for [light.openstatus.dev](https://light.openstatus.dev)
 - [Builder](/builder) — interactive schema builder
+
+> Questions, ideas, or feedback? [Open an issue on GitHub](https://github.com/openstatusHQ/data-table-filters/issues).
 
 ---
 
@@ -66,7 +74,7 @@ The data-table is built on three layers:
 
 1. **Table Schema** — a declarative builder that defines columns, filters, display, sorting, and row details in one place
 2. **State Management** — a pluggable adapter system for filter state (URL, Zustand, or custom)
-3. **Components** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
+3. **UI Components** — pre-built filter controls, command palette, infinite scroll table, and row detail drawer
 
 For server-side data, the [Drizzle ORM](/docs/drizzle-orm) helpers handle `WHERE` conditions, sorting, cursor pagination, and faceted counts. The [Data Fetching](/docs/data-fetching) layer covers the API response shape and React Query integration.
 

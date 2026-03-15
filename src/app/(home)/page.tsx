@@ -354,9 +354,11 @@ function Hero() {
           </Link>
           .
         </h2>
-        <p className="text-foreground italic sm:text-lg">
+        <p className="text-foreground max-w-[900px] text-balance italic sm:text-lg">
           <span className="mr-2">
-            It&apos;s not a library. It&apos;s a playbook.{" "}
+            It&apos;s not a library. It&apos;s a playbook. Stop hand-rolling
+            data tables. Copy proven patterns, install the agent skill,
+            ship.{" "}
           </span>
           <NextLink
             href="/docs/introduction"
