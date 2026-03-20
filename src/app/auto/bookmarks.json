@@ -1,0 +1,1802 @@
+[
+  {
+    "favorite": true,
+    "name": "React Performance Patterns",
+    "url": "https://reactpatterns.dev",
+    "category": "news",
+    "rating": 1,
+    "marked_at": "2026-01-20T05:00:53.457Z",
+    "tags": ["blog", "api"]
+  },
+  {
+    "favorite": true,
+    "name": "CSS Grid Complete Guide",
+    "url": "https://css-grid.guide",
+    "category": "reference",
+    "rating": 1,
+    "marked_at": "2026-01-19T09:15:24.415Z",
+    "tags": ["tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "TypeScript Deep Dive",
+    "url": "https://ts-deepdive.com",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-01-22T10:44:06.327Z",
+    "tags": ["docs", "devtools", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Tailwind CSS Docs",
+    "url": "https://tailwindcss.com/docs",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-03-15T02:15:09.511Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": true,
+    "name": "Next.js App Router Guide",
+    "url": "https://nextjs-guide.dev",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2025-12-24T02:44:52.252Z",
+    "tags": ["tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "TanStack Table Docs",
+    "url": "https://tanstack.com/table",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2025-12-23T14:17:44.359Z",
+    "tags": ["ai"]
+  },
+  {
+    "favorite": true,
+    "name": "Drizzle ORM Quickstart",
+    "url": "https://orm.drizzle.team",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2025-12-25T00:49:25.928Z",
+    "tags": ["blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Zustand State Management",
+    "url": "https://zustand-docs.dev",
+    "category": "design",
+    "rating": 1,
+    "marked_at": "2026-02-15T07:06:31.601Z",
+    "tags": ["tutorial", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Vitest Testing Framework",
+    "url": "https://vitest.dev",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2026-02-27T02:29:32.057Z",
+    "tags": ["oss", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Figma Design System Tips",
+    "url": "https://figma-tips.design",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-01-22T18:01:56.777Z",
+    "tags": ["devtools", "docs", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Vercel Deployment Guide",
+    "url": "https://vercel.com/guides",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-01-08T15:09:24.457Z",
+    "tags": ["backend"]
+  },
+  {
+    "favorite": true,
+    "name": "PostgreSQL Performance Tuning",
+    "url": "https://pgtuning.dev",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-01-10T08:24:22.222Z",
+    "tags": ["api", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "Radix UI Primitives",
+    "url": "https://radix-ui.com",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-02-01T03:10:27.053Z",
+    "tags": ["video", "frontend", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "shadcn/ui Components",
+    "url": "https://ui.shadcn.com",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-01-24T03:21:37.594Z",
+    "tags": ["tutorial", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "MDN Web Docs",
+    "url": "https://developer.mozilla.org",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-03-11T17:08:00.207Z",
+    "tags": ["docs", "api"]
+  },
+  {
+    "favorite": false,
+    "name": "Node.js Best Practices",
+    "url": "https://node-best.dev",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2025-12-28T06:32:40.049Z",
+    "tags": ["frontend", "backend", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Docker Cheatsheet",
+    "url": "https://docker-cheat.dev",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-03-07T19:12:38.910Z",
+    "tags": ["video"]
+  },
+  {
+    "favorite": false,
+    "name": "Git Branching Strategies",
+    "url": "https://git-branching.guide",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-01-10T17:46:47.636Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Web Accessibility Handbook",
+    "url": "https://a11y-handbook.org",
+    "category": "design",
+    "rating": 1,
+    "marked_at": "2026-03-18T01:49:26.820Z",
+    "tags": ["frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "GraphQL Schema Design",
+    "url": "https://graphql-schema.guide",
+    "category": "news",
+    "rating": 2,
+    "marked_at": "2026-01-03T10:32:09.810Z",
+    "tags": ["devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Rust for JS Developers",
+    "url": "https://rust-for-js.dev",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2026-02-02T10:14:25.403Z",
+    "tags": ["oss", "ai", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Python Data Science Toolkit",
+    "url": "https://py-data-toolkit.org",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2025-12-22T04:15:13.872Z",
+    "tags": ["ai", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "AWS Lambda Patterns",
+    "url": "https://lambda-patterns.dev",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2026-02-17T21:08:42.596Z",
+    "tags": ["tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Kubernetes Quick Reference",
+    "url": "https://k8s-quickref.io",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-03-18T17:44:01.883Z",
+    "tags": ["frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Redis Caching Strategies",
+    "url": "https://redis-cache.guide",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-02-16T08:31:01.289Z",
+    "tags": ["frontend", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "WebSocket Real-Time Guide",
+    "url": "https://ws-realtime.dev",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-01-27T22:29:31.564Z",
+    "tags": ["oss", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "OAuth 2.0 Simplified",
+    "url": "https://oauth-simple.dev",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-02-06T07:30:32.856Z",
+    "tags": ["docs", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "SVG Animation Cookbook",
+    "url": "https://svg-animations.art",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2026-01-26T20:57:32.689Z",
+    "tags": ["backend", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Framer Motion Examples",
+    "url": "https://framer-examples.dev",
+    "category": "tools",
+    "rating": 2,
+    "marked_at": "2026-03-05T19:17:40.418Z",
+    "tags": ["tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Storybook Component Docs",
+    "url": "https://storybook.js.org",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-03-03T22:14:40.823Z",
+    "tags": ["backend"]
+  },
+  {
+    "favorite": false,
+    "name": "ESLint Config Guide",
+    "url": "https://eslint-config.guide",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-02-13T12:04:35.291Z",
+    "tags": ["tutorial", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "Prettier Formatting Rules",
+    "url": "https://prettier-rules.dev",
+    "category": "reference",
+    "rating": 3,
+    "marked_at": "2025-12-30T12:18:29.400Z",
+    "tags": ["ai", "frontend"]
+  },
+  {
+    "favorite": true,
+    "name": "pnpm vs npm vs yarn",
+    "url": "https://pkg-managers.dev",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-01-07T13:42:01.059Z",
+    "tags": ["frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Vite Build Tool Docs",
+    "url": "https://vite.dev/guide",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2026-01-18T07:55:56.912Z",
+    "tags": ["frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Turborepo Monorepo Setup",
+    "url": "https://turbo-setup.dev",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-01-06T23:59:44.851Z",
+    "tags": ["tutorial", "ai"]
+  },
+  {
+    "favorite": true,
+    "name": "Zod Validation Library",
+    "url": "https://zod.dev",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-02-22T16:08:37.664Z",
+    "tags": ["oss", "ai", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "tRPC End-to-End Types",
+    "url": "https://trpc.io",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-03-08T23:47:16.260Z",
+    "tags": ["tutorial", "ai", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Prisma ORM Guide",
+    "url": "https://prisma.io/docs",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2026-03-17T11:01:31.494Z",
+    "tags": ["frontend", "video", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Supabase Getting Started",
+    "url": "https://supabase.com/docs",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2025-12-31T04:08:24.576Z",
+    "tags": ["api", "blog", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "PlanetScale Database Guide",
+    "url": "https://planetscale-guide.dev",
+    "category": "news",
+    "rating": 2,
+    "marked_at": "2026-02-14T22:25:39.548Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Cloudflare Workers Intro",
+    "url": "https://cf-workers.dev",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-01-10T07:06:16.059Z",
+    "tags": ["ai", "tutorial", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Deno Fresh Framework",
+    "url": "https://fresh.deno.dev",
+    "category": "reference",
+    "rating": 1,
+    "marked_at": "2026-02-27T14:56:40.385Z",
+    "tags": ["frontend", "blog", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Bun Runtime Overview",
+    "url": "https://bun.sh/docs",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-02-14T20:52:59.092Z",
+    "tags": ["frontend", "tutorial", "devtools"]
+  },
+  {
+    "favorite": true,
+    "name": "Astro Static Site Builder",
+    "url": "https://astro.build/docs",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-03-10T06:03:11.429Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "SvelteKit Full-Stack Guide",
+    "url": "https://kit.svelte.dev",
+    "category": "design",
+    "rating": 1,
+    "marked_at": "2026-01-14T03:55:11.129Z",
+    "tags": ["ai", "docs", "api"]
+  },
+  {
+    "favorite": false,
+    "name": "Remix Data Loading Patterns",
+    "url": "https://remix-patterns.dev",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-02-09T12:09:04.531Z",
+    "tags": ["oss", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Hono Edge Framework",
+    "url": "https://hono.dev",
+    "category": "tech",
+    "rating": 5,
+    "marked_at": "2026-01-06T02:36:45.330Z",
+    "tags": ["frontend", "video", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "htmx Hypermedia Approach",
+    "url": "https://htmx.org/docs",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2026-02-17T21:40:59.876Z",
+    "tags": ["blog"]
+  },
+  {
+    "favorite": true,
+    "name": "Alpine.js Lightweight Interactivity",
+    "url": "https://alpinejs.dev",
+    "category": "tools",
+    "rating": 4,
+    "marked_at": "2025-12-31T12:04:20.753Z",
+    "tags": ["frontend", "ai", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Three.js 3D Web Graphics",
+    "url": "https://threejs.org/docs",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-03-19T05:21:28.586Z",
+    "tags": ["docs", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "D3.js Data Visualization",
+    "url": "https://d3js.org",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-03-19T09:53:33.642Z",
+    "tags": ["frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Chart.js Simple Charts",
+    "url": "https://chartjs.org/docs",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-03-19T01:34:06.358Z",
+    "tags": ["docs", "backend", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Recharts React Charting",
+    "url": "https://recharts.org",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2026-02-20T03:06:15.268Z",
+    "tags": ["ai", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Mapbox GL JS Guide",
+    "url": "https://mapbox-guide.dev",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-01-26T15:30:21.831Z",
+    "tags": ["backend", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Stripe Payment Integration",
+    "url": "https://stripe.com/docs",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2026-02-04T20:03:48.785Z",
+    "tags": ["blog", "backend", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Resend Email API",
+    "url": "https://resend.com/docs",
+    "category": "design",
+    "rating": 1,
+    "marked_at": "2026-03-18T20:49:08.294Z",
+    "tags": ["docs", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Upstash Serverless Redis",
+    "url": "https://upstash.com/docs",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-02-17T06:34:44.618Z",
+    "tags": ["api", "docs", "oss"]
+  },
+  {
+    "favorite": true,
+    "name": "Clerk Auth for Next.js",
+    "url": "https://clerk.com/docs",
+    "category": "design",
+    "rating": 5,
+    "marked_at": "2026-02-01T03:01:37.607Z",
+    "tags": ["video"]
+  },
+  {
+    "favorite": false,
+    "name": "Auth.js Authentication",
+    "url": "https://authjs.dev",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-02-23T18:50:20.403Z",
+    "tags": ["frontend", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Sentry Error Monitoring",
+    "url": "https://docs.sentry.io",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2025-12-23T23:08:24.637Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": false,
+    "name": "PostHog Product Analytics",
+    "url": "https://posthog.com/docs",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-02-17T09:02:20.741Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Linear Issue Tracking",
+    "url": "https://linear.app/docs",
+    "category": "news",
+    "rating": 2,
+    "marked_at": "2026-01-07T00:45:50.941Z",
+    "tags": ["ai", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Notion API Reference",
+    "url": "https://developers.notion.com",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2025-12-23T11:27:04.327Z",
+    "tags": ["oss", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "Slack Bot Development",
+    "url": "https://api.slack.com",
+    "category": "design",
+    "rating": 5,
+    "marked_at": "2026-02-08T04:23:54.900Z",
+    "tags": ["devtools", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "GitHub Actions CI/CD",
+    "url": "https://github-actions.guide",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-02-02T20:32:42.485Z",
+    "tags": ["blog", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Playwright E2E Testing",
+    "url": "https://playwright.dev",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-01-20T18:45:55.231Z",
+    "tags": ["ai", "frontend", "api"]
+  },
+  {
+    "favorite": true,
+    "name": "Cypress Component Testing",
+    "url": "https://cypress.io/docs",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-02-04T04:14:28.067Z",
+    "tags": ["devtools", "blog"]
+  },
+  {
+    "favorite": true,
+    "name": "React Testing Library",
+    "url": "https://testing-library.com",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2026-02-16T12:05:52.830Z",
+    "tags": ["frontend", "backend", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "MSW Mock Service Worker",
+    "url": "https://mswjs.io",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-02-12T15:15:14.605Z",
+    "tags": ["frontend", "docs", "tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Chromatic Visual Testing",
+    "url": "https://chromatic.com/docs",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-01-24T05:17:32.748Z",
+    "tags": ["oss", "video", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Lottie Web Animations",
+    "url": "https://lottie-web.dev",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-01-08T03:55:29.808Z",
+    "tags": ["api", "devtools", "video"]
+  },
+  {
+    "favorite": true,
+    "name": "GSAP Animation Platform",
+    "url": "https://gsap.com/docs",
+    "category": "news",
+    "rating": 2,
+    "marked_at": "2026-01-07T04:44:09.740Z",
+    "tags": ["docs", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Sass Preprocessor Guide",
+    "url": "https://sass-lang.com/guide",
+    "category": "tech",
+    "rating": 5,
+    "marked_at": "2026-02-21T09:31:48.574Z",
+    "tags": ["api", "ai", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "PostCSS Plugin Ecosystem",
+    "url": "https://postcss.org",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2026-01-12T00:06:30.539Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": false,
+    "name": "CSS Modules Best Practices",
+    "url": "https://css-modules.guide",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-03-01T11:31:54.969Z",
+    "tags": ["video"]
+  },
+  {
+    "favorite": false,
+    "name": "Emotion Styled Components",
+    "url": "https://emotion.sh/docs",
+    "category": "reference",
+    "rating": 1,
+    "marked_at": "2026-02-25T23:31:30.433Z",
+    "tags": ["oss", "api"]
+  },
+  {
+    "favorite": false,
+    "name": "Stitches CSS-in-JS",
+    "url": "https://stitches.dev",
+    "category": "tools",
+    "rating": 2,
+    "marked_at": "2026-02-18T22:23:41.060Z",
+    "tags": ["blog", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Panda CSS Zero-Runtime",
+    "url": "https://panda-css.com",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-03-18T16:17:46.888Z",
+    "tags": ["api"]
+  },
+  {
+    "favorite": true,
+    "name": "UnoCSS Instant Engine",
+    "url": "https://unocss.dev",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-01-13T06:15:41.845Z",
+    "tags": ["ai", "oss", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "Open Props CSS Variables",
+    "url": "https://open-props.style",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2026-03-10T11:38:56.434Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": true,
+    "name": "Color Theory for UI Design",
+    "url": "https://color-theory.design",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-01-06T00:46:25.237Z",
+    "tags": ["api", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Typography Scale Calculator",
+    "url": "https://type-scale.com",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2025-12-22T18:33:35.359Z",
+    "tags": ["api"]
+  },
+  {
+    "favorite": false,
+    "name": "Responsive Design Patterns",
+    "url": "https://responsive.design",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2026-01-31T09:54:06.960Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Dark Mode Implementation",
+    "url": "https://dark-mode.guide",
+    "category": "reference",
+    "rating": 3,
+    "marked_at": "2026-01-25T22:17:07.397Z",
+    "tags": ["blog", "docs", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Intersection Observer API",
+    "url": "https://intersection-obs.dev",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-02-20T21:58:20.835Z",
+    "tags": ["devtools", "video", "frontend"]
+  },
+  {
+    "favorite": true,
+    "name": "Web Workers Guide",
+    "url": "https://web-workers.guide",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-01-15T15:34:48.098Z",
+    "tags": ["frontend", "ai"]
+  },
+  {
+    "favorite": true,
+    "name": "Service Worker Offline",
+    "url": "https://sw-offline.dev",
+    "category": "reference",
+    "rating": 3,
+    "marked_at": "2026-01-11T19:10:22.926Z",
+    "tags": ["api", "oss"]
+  },
+  {
+    "favorite": true,
+    "name": "IndexedDB Storage Guide",
+    "url": "https://indexeddb.guide",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-01-08T08:11:08.860Z",
+    "tags": ["frontend", "backend", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Web Crypto API Reference",
+    "url": "https://web-crypto.guide",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-01-14T08:11:39.615Z",
+    "tags": ["backend"]
+  },
+  {
+    "favorite": true,
+    "name": "WebGL Fundamentals",
+    "url": "https://webgl-fundamentals.org",
+    "category": "tech",
+    "rating": 5,
+    "marked_at": "2026-01-02T13:49:53.619Z",
+    "tags": ["api", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "WASM Getting Started",
+    "url": "https://wasm-start.dev",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-03-06T11:02:26.010Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Edge Computing Overview",
+    "url": "https://edge-computing.guide",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-02-11T21:18:00.283Z",
+    "tags": ["frontend", "backend", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Microservices Architecture",
+    "url": "https://microservices.guide",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-02-16T18:29:42.175Z",
+    "tags": ["docs", "tutorial", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Event-Driven Design",
+    "url": "https://event-driven.dev",
+    "category": "news",
+    "rating": 1,
+    "marked_at": "2026-01-29T23:33:53.769Z",
+    "tags": ["oss", "api", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Domain-Driven Design Intro",
+    "url": "https://ddd-intro.dev",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2026-01-15T07:17:03.689Z",
+    "tags": ["ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Clean Architecture in TS",
+    "url": "https://clean-arch-ts.dev",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-02-23T14:43:01.683Z",
+    "tags": ["oss", "tutorial"]
+  },
+  {
+    "favorite": true,
+    "name": "SOLID Principles Guide",
+    "url": "https://solid-principles.dev",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-01-30T21:47:58.875Z",
+    "tags": ["video", "oss", "frontend"]
+  },
+  {
+    "favorite": true,
+    "name": "Design Patterns Illustrated",
+    "url": "https://patterns.dev",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-02-06T09:33:34.666Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": true,
+    "name": "Refactoring Techniques",
+    "url": "https://refactoring.guru",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2025-12-27T20:51:24.650Z",
+    "tags": ["blog", "video", "tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Code Review Best Practices",
+    "url": "https://code-review.guide",
+    "category": "design",
+    "rating": 5,
+    "marked_at": "2026-03-01T11:12:26.148Z",
+    "tags": ["blog", "tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Technical Writing Guide",
+    "url": "https://tech-writing.dev",
+    "category": "tech",
+    "rating": 5,
+    "marked_at": "2026-01-16T07:07:38.377Z",
+    "tags": ["tutorial", "oss", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Open Source Contributing",
+    "url": "https://oss-contributing.guide",
+    "category": "reference",
+    "rating": 3,
+    "marked_at": "2026-01-17T09:17:30.214Z",
+    "tags": ["docs", "frontend", "tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "React Performance Patterns 2",
+    "url": "https://reactpatterns.dev",
+    "category": "design",
+    "rating": 1,
+    "marked_at": "2026-03-01T05:48:42.515Z",
+    "tags": ["api"]
+  },
+  {
+    "favorite": false,
+    "name": "CSS Grid Complete Guide 2",
+    "url": "https://css-grid.guide",
+    "category": "reference",
+    "rating": 1,
+    "marked_at": "2026-01-24T17:34:13.654Z",
+    "tags": ["video"]
+  },
+  {
+    "favorite": false,
+    "name": "TypeScript Deep Dive 2",
+    "url": "https://ts-deepdive.com",
+    "category": "news",
+    "rating": 1,
+    "marked_at": "2026-02-01T09:47:01.816Z",
+    "tags": ["backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Tailwind CSS Docs 2",
+    "url": "https://tailwindcss.com/docs",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2026-01-06T09:31:57.702Z",
+    "tags": ["frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Next.js App Router Guide 2",
+    "url": "https://nextjs-guide.dev",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-01-26T14:48:41.782Z",
+    "tags": ["docs", "oss", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "TanStack Table Docs 2",
+    "url": "https://tanstack.com/table",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2025-12-26T08:31:29.136Z",
+    "tags": ["video", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Drizzle ORM Quickstart 2",
+    "url": "https://orm.drizzle.team",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2026-01-30T16:45:46.927Z",
+    "tags": ["video"]
+  },
+  {
+    "favorite": false,
+    "name": "Zustand State Management 2",
+    "url": "https://zustand-docs.dev",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-02-17T15:07:48.699Z",
+    "tags": ["oss", "frontend", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Vitest Testing Framework 2",
+    "url": "https://vitest.dev",
+    "category": "tools",
+    "rating": 4,
+    "marked_at": "2026-03-09T00:38:50.331Z",
+    "tags": ["video", "oss", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Figma Design System Tips 2",
+    "url": "https://figma-tips.design",
+    "category": "reference",
+    "rating": 3,
+    "marked_at": "2026-01-13T08:01:12.484Z",
+    "tags": ["devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Vercel Deployment Guide 2",
+    "url": "https://vercel.com/guides",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-01-25T15:43:42.388Z",
+    "tags": ["oss", "api"]
+  },
+  {
+    "favorite": true,
+    "name": "PostgreSQL Performance Tuning 2",
+    "url": "https://pgtuning.dev",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2026-01-01T12:30:01.783Z",
+    "tags": ["video", "tutorial", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Radix UI Primitives 2",
+    "url": "https://radix-ui.com",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-02-23T01:53:34.819Z",
+    "tags": ["oss", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "shadcn/ui Components 2",
+    "url": "https://ui.shadcn.com",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-01-10T08:08:19.196Z",
+    "tags": ["docs", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "MDN Web Docs 2",
+    "url": "https://developer.mozilla.org",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-02-03T11:47:27.276Z",
+    "tags": ["video", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Node.js Best Practices 2",
+    "url": "https://node-best.dev",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-01-04T14:55:43.692Z",
+    "tags": ["docs", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Docker Cheatsheet 2",
+    "url": "https://docker-cheat.dev",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-03-16T04:16:06.179Z",
+    "tags": ["blog", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Git Branching Strategies 2",
+    "url": "https://git-branching.guide",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-03-16T19:46:50.313Z",
+    "tags": ["api", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Web Accessibility Handbook 2",
+    "url": "https://a11y-handbook.org",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-02-12T04:06:14.652Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": true,
+    "name": "GraphQL Schema Design 2",
+    "url": "https://graphql-schema.guide",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-01-31T08:13:33.202Z",
+    "tags": ["ai", "frontend", "tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Rust for JS Developers 2",
+    "url": "https://rust-for-js.dev",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2026-01-22T18:50:54.046Z",
+    "tags": ["frontend", "video", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Python Data Science Toolkit 2",
+    "url": "https://py-data-toolkit.org",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-03-02T08:00:54.598Z",
+    "tags": ["oss", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "AWS Lambda Patterns 2",
+    "url": "https://lambda-patterns.dev",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-02-03T02:39:12.797Z",
+    "tags": ["video"]
+  },
+  {
+    "favorite": false,
+    "name": "Kubernetes Quick Reference 2",
+    "url": "https://k8s-quickref.io",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2026-01-26T08:42:25.197Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Redis Caching Strategies 2",
+    "url": "https://redis-cache.guide",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-01-16T16:08:02.139Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "WebSocket Real-Time Guide 2",
+    "url": "https://ws-realtime.dev",
+    "category": "design",
+    "rating": 5,
+    "marked_at": "2026-02-06T11:33:29.590Z",
+    "tags": ["ai", "blog"]
+  },
+  {
+    "favorite": true,
+    "name": "OAuth 2.0 Simplified 2",
+    "url": "https://oauth-simple.dev",
+    "category": "design",
+    "rating": 1,
+    "marked_at": "2026-01-11T03:55:05.086Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": false,
+    "name": "SVG Animation Cookbook 2",
+    "url": "https://svg-animations.art",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-01-23T13:25:08.004Z",
+    "tags": ["backend", "api"]
+  },
+  {
+    "favorite": false,
+    "name": "Framer Motion Examples 2",
+    "url": "https://framer-examples.dev",
+    "category": "news",
+    "rating": 1,
+    "marked_at": "2026-02-05T04:15:36.715Z",
+    "tags": ["blog", "frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Storybook Component Docs 2",
+    "url": "https://storybook.js.org",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-02-06T22:54:02.193Z",
+    "tags": ["docs", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "ESLint Config Guide 2",
+    "url": "https://eslint-config.guide",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-01-09T03:08:12.998Z",
+    "tags": ["frontend", "backend", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Prettier Formatting Rules 2",
+    "url": "https://prettier-rules.dev",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-02-20T08:56:32.890Z",
+    "tags": ["tutorial", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "pnpm vs npm vs yarn 2",
+    "url": "https://pkg-managers.dev",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2025-12-31T05:23:16.245Z",
+    "tags": ["frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Vite Build Tool Docs 2",
+    "url": "https://vite.dev/guide",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2026-01-04T01:48:16.675Z",
+    "tags": ["docs", "video", "devtools"]
+  },
+  {
+    "favorite": true,
+    "name": "Turborepo Monorepo Setup 2",
+    "url": "https://turbo-setup.dev",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-02-06T21:06:20.022Z",
+    "tags": ["backend", "oss", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Zod Validation Library 2",
+    "url": "https://zod.dev",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2026-02-21T04:20:12.650Z",
+    "tags": ["devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "tRPC End-to-End Types 2",
+    "url": "https://trpc.io",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2026-03-08T03:03:07.395Z",
+    "tags": ["tutorial", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Prisma ORM Guide 2",
+    "url": "https://prisma.io/docs",
+    "category": "news",
+    "rating": 4,
+    "marked_at": "2026-03-03T00:45:37.647Z",
+    "tags": ["ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Supabase Getting Started 2",
+    "url": "https://supabase.com/docs",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-02-11T07:59:44.281Z",
+    "tags": ["blog"]
+  },
+  {
+    "favorite": false,
+    "name": "PlanetScale Database Guide 2",
+    "url": "https://planetscale-guide.dev",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-02-10T22:35:44.910Z",
+    "tags": ["blog", "devtools", "api"]
+  },
+  {
+    "favorite": true,
+    "name": "Cloudflare Workers Intro 2",
+    "url": "https://cf-workers.dev",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-02-08T13:47:43.846Z",
+    "tags": ["frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Deno Fresh Framework 2",
+    "url": "https://fresh.deno.dev",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-01-23T10:07:00.251Z",
+    "tags": ["backend", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Bun Runtime Overview 2",
+    "url": "https://bun.sh/docs",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-03-10T13:45:47.905Z",
+    "tags": ["docs", "oss", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Astro Static Site Builder 2",
+    "url": "https://astro.build/docs",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-03-01T00:54:17.677Z",
+    "tags": ["devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "SvelteKit Full-Stack Guide 2",
+    "url": "https://kit.svelte.dev",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-02-12T05:58:30.425Z",
+    "tags": ["docs", "video"]
+  },
+  {
+    "favorite": true,
+    "name": "Remix Data Loading Patterns 2",
+    "url": "https://remix-patterns.dev",
+    "category": "design",
+    "rating": 1,
+    "marked_at": "2026-02-20T16:55:36.076Z",
+    "tags": ["api", "frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "Hono Edge Framework 2",
+    "url": "https://hono.dev",
+    "category": "tech",
+    "rating": 5,
+    "marked_at": "2026-01-25T19:51:05.873Z",
+    "tags": ["frontend", "backend", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "htmx Hypermedia Approach 2",
+    "url": "https://htmx.org/docs",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-03-16T18:18:45.330Z",
+    "tags": ["tutorial", "ai"]
+  },
+  {
+    "favorite": true,
+    "name": "Alpine.js Lightweight Interactivity 2",
+    "url": "https://alpinejs.dev",
+    "category": "tools",
+    "rating": 4,
+    "marked_at": "2026-01-03T09:39:55.499Z",
+    "tags": ["ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Three.js 3D Web Graphics 2",
+    "url": "https://threejs.org/docs",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-01-24T23:59:32.075Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "D3.js Data Visualization 2",
+    "url": "https://d3js.org",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-02-11T23:05:23.557Z",
+    "tags": ["api", "frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Chart.js Simple Charts 2",
+    "url": "https://chartjs.org/docs",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-01-03T05:02:44.277Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Recharts React Charting 2",
+    "url": "https://recharts.org",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-03-02T03:03:41.307Z",
+    "tags": ["frontend", "docs", "api"]
+  },
+  {
+    "favorite": false,
+    "name": "Mapbox GL JS Guide 2",
+    "url": "https://mapbox-guide.dev",
+    "category": "tools",
+    "rating": 2,
+    "marked_at": "2026-01-05T01:59:55.457Z",
+    "tags": ["frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Stripe Payment Integration 2",
+    "url": "https://stripe.com/docs",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-01-26T14:07:40.043Z",
+    "tags": ["ai", "docs", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Resend Email API 2",
+    "url": "https://resend.com/docs",
+    "category": "tech",
+    "rating": 5,
+    "marked_at": "2026-01-29T11:48:36.502Z",
+    "tags": ["frontend", "backend", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Upstash Serverless Redis 2",
+    "url": "https://upstash.com/docs",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-02-28T15:47:46.913Z",
+    "tags": ["blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Clerk Auth for Next.js 2",
+    "url": "https://clerk.com/docs",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-03-12T02:16:45.624Z",
+    "tags": ["frontend", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Auth.js Authentication 2",
+    "url": "https://authjs.dev",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-03-15T10:55:58.914Z",
+    "tags": ["backend", "ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Sentry Error Monitoring 2",
+    "url": "https://docs.sentry.io",
+    "category": "design",
+    "rating": 3,
+    "marked_at": "2026-03-13T18:08:11.696Z",
+    "tags": ["blog"]
+  },
+  {
+    "favorite": false,
+    "name": "PostHog Product Analytics 2",
+    "url": "https://posthog.com/docs",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-02-12T17:22:59.536Z",
+    "tags": ["oss", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Linear Issue Tracking 2",
+    "url": "https://linear.app/docs",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2025-12-28T01:32:17.675Z",
+    "tags": ["ai", "devtools", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Notion API Reference 2",
+    "url": "https://developers.notion.com",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-02-06T10:37:55.799Z",
+    "tags": ["frontend", "api"]
+  },
+  {
+    "favorite": true,
+    "name": "Slack Bot Development 2",
+    "url": "https://api.slack.com",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2025-12-28T22:38:02.790Z",
+    "tags": ["devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "GitHub Actions CI/CD 2",
+    "url": "https://github-actions.guide",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2026-01-27T17:00:32.214Z",
+    "tags": ["api", "docs", "tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Playwright E2E Testing 2",
+    "url": "https://playwright.dev",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-03-17T16:43:10.005Z",
+    "tags": ["blog", "ai", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Cypress Component Testing 2",
+    "url": "https://cypress.io/docs",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-02-04T14:51:23.196Z",
+    "tags": ["devtools", "backend", "docs"]
+  },
+  {
+    "favorite": true,
+    "name": "React Testing Library 2",
+    "url": "https://testing-library.com",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-01-30T22:19:55.512Z",
+    "tags": ["frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "MSW Mock Service Worker 2",
+    "url": "https://mswjs.io",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2025-12-31T06:00:10.084Z",
+    "tags": ["api", "oss", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Chromatic Visual Testing 2",
+    "url": "https://chromatic.com/docs",
+    "category": "tech",
+    "rating": 2,
+    "marked_at": "2026-03-14T00:27:56.596Z",
+    "tags": ["devtools", "blog", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Lottie Web Animations 2",
+    "url": "https://lottie-web.dev",
+    "category": "design",
+    "rating": 4,
+    "marked_at": "2026-03-20T02:37:54.216Z",
+    "tags": ["frontend"]
+  },
+  {
+    "favorite": false,
+    "name": "GSAP Animation Platform 2",
+    "url": "https://gsap.com/docs",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2025-12-24T08:49:17.981Z",
+    "tags": ["tutorial"]
+  },
+  {
+    "favorite": false,
+    "name": "Sass Preprocessor Guide 2",
+    "url": "https://sass-lang.com/guide",
+    "category": "reference",
+    "rating": 5,
+    "marked_at": "2026-02-27T19:41:34.375Z",
+    "tags": ["ai", "blog", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "PostCSS Plugin Ecosystem 2",
+    "url": "https://postcss.org",
+    "category": "news",
+    "rating": 2,
+    "marked_at": "2026-02-01T03:18:51.876Z",
+    "tags": ["frontend", "ai", "video"]
+  },
+  {
+    "favorite": false,
+    "name": "CSS Modules Best Practices 2",
+    "url": "https://css-modules.guide",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-03-14T04:06:31.789Z",
+    "tags": ["devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Emotion Styled Components 2",
+    "url": "https://emotion.sh/docs",
+    "category": "reference",
+    "rating": 4,
+    "marked_at": "2026-03-05T02:52:04.601Z",
+    "tags": ["frontend", "video", "backend"]
+  },
+  {
+    "favorite": true,
+    "name": "Stitches CSS-in-JS 2",
+    "url": "https://stitches.dev",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-01-28T03:30:46.301Z",
+    "tags": ["ai", "backend"]
+  },
+  {
+    "favorite": true,
+    "name": "Panda CSS Zero-Runtime 2",
+    "url": "https://panda-css.com",
+    "category": "tools",
+    "rating": 5,
+    "marked_at": "2026-02-28T03:10:44.006Z",
+    "tags": ["devtools", "frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "UnoCSS Instant Engine 2",
+    "url": "https://unocss.dev",
+    "category": "news",
+    "rating": 1,
+    "marked_at": "2026-01-13T11:48:34.564Z",
+    "tags": ["api", "tutorial", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Open Props CSS Variables 2",
+    "url": "https://open-props.style",
+    "category": "reference",
+    "rating": 3,
+    "marked_at": "2026-03-03T03:42:31.144Z",
+    "tags": ["docs", "tutorial"]
+  },
+  {
+    "favorite": true,
+    "name": "Color Theory for UI Design 2",
+    "url": "https://color-theory.design",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-01-28T14:29:44.772Z",
+    "tags": ["oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Typography Scale Calculator 2",
+    "url": "https://type-scale.com",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-02-07T09:06:38.015Z",
+    "tags": ["blog", "docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Responsive Design Patterns 2",
+    "url": "https://responsive.design",
+    "category": "tools",
+    "rating": 4,
+    "marked_at": "2026-02-09T22:51:03.464Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "Dark Mode Implementation 2",
+    "url": "https://dark-mode.guide",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-02-02T16:29:52.058Z",
+    "tags": ["backend", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Intersection Observer API 2",
+    "url": "https://intersection-obs.dev",
+    "category": "tools",
+    "rating": 3,
+    "marked_at": "2026-02-20T06:30:51.568Z",
+    "tags": ["api"]
+  },
+  {
+    "favorite": false,
+    "name": "Web Workers Guide 2",
+    "url": "https://web-workers.guide",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-02-04T10:20:07.127Z",
+    "tags": ["frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Service Worker Offline 2",
+    "url": "https://sw-offline.dev",
+    "category": "tech",
+    "rating": 3,
+    "marked_at": "2026-03-09T08:00:32.112Z",
+    "tags": ["docs"]
+  },
+  {
+    "favorite": false,
+    "name": "IndexedDB Storage Guide 2",
+    "url": "https://indexeddb.guide",
+    "category": "reference",
+    "rating": 2,
+    "marked_at": "2026-01-21T12:01:20.411Z",
+    "tags": ["backend", "blog"]
+  },
+  {
+    "favorite": false,
+    "name": "Web Crypto API Reference 2",
+    "url": "https://web-crypto.guide",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-01-27T17:22:32.131Z",
+    "tags": ["ai"]
+  },
+  {
+    "favorite": true,
+    "name": "WebGL Fundamentals 2",
+    "url": "https://webgl-fundamentals.org",
+    "category": "news",
+    "rating": 5,
+    "marked_at": "2026-01-31T10:44:05.470Z",
+    "tags": ["backend", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "WASM Getting Started 2",
+    "url": "https://wasm-start.dev",
+    "category": "tech",
+    "rating": 1,
+    "marked_at": "2026-03-07T02:10:48.342Z",
+    "tags": ["frontend", "api", "devtools"]
+  },
+  {
+    "favorite": false,
+    "name": "Edge Computing Overview 2",
+    "url": "https://edge-computing.guide",
+    "category": "design",
+    "rating": 2,
+    "marked_at": "2026-02-28T16:05:50.192Z",
+    "tags": ["blog", "oss"]
+  },
+  {
+    "favorite": false,
+    "name": "Microservices Architecture 2",
+    "url": "https://microservices.guide",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-02-18T11:58:44.971Z",
+    "tags": ["ai"]
+  },
+  {
+    "favorite": true,
+    "name": "Event-Driven Design 2",
+    "url": "https://event-driven.dev",
+    "category": "tech",
+    "rating": 4,
+    "marked_at": "2026-01-19T16:34:38.532Z",
+    "tags": ["blog", "frontend", "backend"]
+  },
+  {
+    "favorite": false,
+    "name": "Domain-Driven Design Intro 2",
+    "url": "https://ddd-intro.dev",
+    "category": "news",
+    "rating": 3,
+    "marked_at": "2026-03-08T08:19:28.265Z",
+    "tags": ["ai"]
+  },
+  {
+    "favorite": false,
+    "name": "Clean Architecture in TS 2",
+    "url": "https://clean-arch-ts.dev",
+    "category": "news",
+    "rating": 2,
+    "marked_at": "2026-02-07T12:05:46.383Z",
+    "tags": ["backend"]
+  },
+  {
+    "favorite": false,
+    "name": "SOLID Principles Guide 2",
+    "url": "https://solid-principles.dev",
+    "category": "reference",
+    "rating": 3,
+    "marked_at": "2026-03-05T04:55:28.379Z",
+    "tags": ["frontend", "ai", "api"]
+  },
+  {
+    "favorite": false,
+    "name": "Design Patterns Illustrated 2",
+    "url": "https://patterns.dev",
+    "category": "tools",
+    "rating": 1,
+    "marked_at": "2026-01-03T00:31:48.309Z",
+    "tags": ["api", "blog", "video"]
+  }
+]

@@ -9,6 +9,7 @@ import { useDataTable } from "@/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
 import type { SheetField } from "@/components/data-table/types";
+import { SocialsFooter } from "@/components/layout/socials-footer";
 import { useMemoryAdapter } from "@/lib/store/adapters/memory";
 import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
 import { field } from "@/lib/store/schema";
@@ -126,6 +127,7 @@ function DataTableAutoInner({
       sheetSlot={
         <AutoSheetSlot sheetFields={sheetFields} totalRows={data.length} />
       }
+      footerSlot={<SocialsFooter />}
     />
   );
 }
