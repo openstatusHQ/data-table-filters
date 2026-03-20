@@ -17,6 +17,7 @@ export type DisplayConfig =
   | { type: "text"; colorMap?: Record<string, string> }
   | { type: "code"; colorMap?: Record<string, string> }
   | { type: "boolean"; colorMap?: Record<string, string> }
+  | { type: "star"; colorMap?: Record<string, string> }
   | { type: "badge"; colorMap?: Record<string, string> }
   | { type: "timestamp"; colorMap?: Record<string, string> }
   | { type: "number"; unit?: string; colorMap?: Record<string, string> }
@@ -131,6 +132,7 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
       | "text"
       | "code"
       | "boolean"
+      | "star"
       | "badge"
       | "timestamp"
       | "status-code"
@@ -352,6 +354,7 @@ export type ColumnDescriptor = {
   arrayItemType?: { dataType: ColKind; enumValues?: readonly string[] };
   optional: boolean;
   hidden: boolean;
+  hideHeader?: boolean;
   enableHiding?: boolean;
   sortable: boolean;
   size?: number;

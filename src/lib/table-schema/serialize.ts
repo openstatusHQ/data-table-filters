@@ -81,6 +81,7 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
         };
       }
       if (c.size !== undefined) descriptor.size = c.size;
+      if (c.hideHeader) descriptor.hideHeader = true;
       if (c.enableHiding === false) descriptor.enableHiding = false;
       return descriptor;
     },
@@ -163,6 +164,7 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
       displayType === "text" ||
       displayType === "code" ||
       displayType === "boolean" ||
+      displayType === "star" ||
       displayType === "badge" ||
       displayType === "timestamp" ||
       displayType === "status-code" ||
@@ -200,6 +202,7 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     } else if (col_.hidden) {
       builder = builder.hidden();
     }
+    if (col_.hideHeader) builder = builder.hideHeader();
     if (col_.sortable) builder = builder.sortable();
     if (col_.optional) builder = builder.optional();
     if (col_.size !== undefined) builder = builder.size(col_.size);

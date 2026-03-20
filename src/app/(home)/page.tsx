@@ -466,6 +466,9 @@ function Examples() {
         className="marker:text-muted-foreground grid list-inside list-disc gap-2"
       >
         <li>
+          <Link href="/auto">Zero Config (Auto)</Link>
+        </li>
+        <li>
           <Link href="/light">OpenStatus Light Viewer</Link>
         </li>
         <li>

@@ -15,6 +15,7 @@ import type { SchemaDefinition, StoreSnapshot } from "../../schema/types";
 
 export function useMemoryAdapter<T extends Record<string, unknown>>(
   schema: SchemaDefinition,
+  options?: { id?: string },
 ): InternalStoreAdapter<T> {
   const defaults = useMemo(() => getSchemaDefaults(schema) as T, [schema]);
 
@@ -107,7 +108,7 @@ export function useMemoryAdapter<T extends Record<string, unknown>>(
       },
 
       getTableId() {
-        return "builder";
+        return options?.id ?? "memory";
       },
 
       getSchema() {

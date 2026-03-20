@@ -121,17 +121,18 @@ col
 
 Controls how the cell value renders. Built-in display types:
 
-| Type                | Use case                                               |
-| ------------------- | ------------------------------------------------------ |
-| `"text"`            | Plain text with overflow tooltip (default for strings) |
-| `"code"`            | Monospace — IDs, paths, hashes                         |
-| `"number"`          | Formatted number with optional `unit` suffix           |
-| `"badge"`           | Colored chip (default for enums)                       |
-| `"timestamp"`       | Relative time ("3m ago"), absolute on hover            |
-| `"boolean"`         | Checkmark / dash icon                                  |
-| `"status-code"`     | HTTP status code coloring                              |
-| `"level-indicator"` | Severity dot indicator                                 |
-| `"custom"`          | Developer-supplied JSX (not serializable)              |
+| Type                | Use case                                                |
+| ------------------- | ------------------------------------------------------- |
+| `"text"`            | Plain text with overflow tooltip (default for strings)  |
+| `"code"`            | Monospace — IDs, paths, hashes                          |
+| `"number"`          | Formatted number with optional `unit` suffix            |
+| `"badge"`           | Colored chip (default for enums)                        |
+| `"timestamp"`       | Relative time ("3m ago"), absolute on hover             |
+| `"boolean"`         | Checkmark / dash icon                                   |
+| `"star"`            | Filled yellow star (true) / outlined muted star (false) |
+| `"status-code"`     | HTTP status code coloring                               |
+| `"level-indicator"` | Severity dot indicator                                  |
+| `"custom"`          | Developer-supplied JSX (not serializable)               |
 
 ```ts
 col.number().display("number", { unit: "ms" })

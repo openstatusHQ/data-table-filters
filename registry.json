@@ -328,6 +328,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/data-table/data-table-cell/data-table-cell-star.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/data-table/data-table-cell/data-table-cell-number.tsx",
           "type": "registry:component"
         },
@@ -504,11 +508,16 @@
         {
           "path": "src/lib/table-schema/generators/sheet-fields.ts",
           "type": "registry:lib"
+        },
+        {
+          "path": "src/components/data-table/data-table-auto.tsx",
+          "type": "registry:component"
         }
       ],
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json",
-        "https://data-table.openstatus.dev/r/data-table-cell.json"
+        "https://data-table.openstatus.dev/r/data-table-cell.json",
+        "https://data-table.openstatus.dev/r/data-table-sheet.json"
       ],
       "dependencies": ["@tanstack/react-table"]
     },
