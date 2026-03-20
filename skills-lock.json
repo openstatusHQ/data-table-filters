@@ -1,10 +1,30 @@
 {
   "version": 1,
   "skills": {
+    "emil-design-eng": {
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "computedHash": "32f63a1e56fc41f53497f7b19d6391b7c3e55bedd884c5a4d10bc4eacd2310e4"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
+    "game-changing-features": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "aa6f4b25f60cbad65bd0826f09e0eded14e588da06172995277511e9a86ee2d7"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "computedHash": "f343ef02aa0ada0f8b13a77b6db7fb6a11f88d8067128215585500ef4fd3b5e0"
+    },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "computedHash": "76d07c4c0bebc162cc76ca7494bfe7a90e279f35832f7ce6dfc4ce16518fd560"
     },
     "mcp-builder": {
       "source": "anthropics/skills",
@@ -25,6 +45,11 @@
       "source": "vercel-labs/agent-browser",
       "sourceType": "github",
       "computedHash": "0e1196449595117435416d50c130e706cd86010fed959eb3a6d41cf989328506"
+    },
+    "tdd": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "computedHash": "ad055544599481182d0079c4198e85da26677cb408a677be2da04915375f0427"
     },
     "vercel-composition-patterns": {
       "source": "vercel-labs/agent-skills",
