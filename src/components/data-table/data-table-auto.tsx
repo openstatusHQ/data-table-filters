@@ -114,8 +114,6 @@ function DataTableAutoInner({
       data={data}
       filterFields={filterFields}
       defaultColumnVisibility={defaultColumnVisibility}
-      totalRows={data.length}
-      filterRows={data.length}
       totalRowsFetched={data.length}
       hasNextPage={false}
       fetchNextPage={noop}
