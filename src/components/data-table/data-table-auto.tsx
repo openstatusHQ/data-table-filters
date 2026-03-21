@@ -124,6 +124,19 @@ function DataTableAutoInner({
       sheetSlot={
         <AutoSheetSlot sheetFields={sheetFields} totalRows={data.length} />
       }
+      footerSlot={
+        <div className="text-muted-foreground text-sm">
+          powered by{" "}
+          <a
+            href="https://openstatus.dev"
+            target="_blank"
+            rel="noreferrer"
+            className="text-foreground hover:text-primary"
+          >
+            openstatus.dev
+          </a>
+        </div>
+      }
     />
   );
 }
