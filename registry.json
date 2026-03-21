@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "data-table-filters",
-  "homepage": "https://data-table-filters.com",
+  "homepage": "https://data-table.openstatus.dev",
   "items": [
     {
       "name": "data-table",
@@ -276,7 +276,7 @@
           "info": "hsl(198.63 88.66% 48.43%)"
         }
       },
-      "docs": "https://data-table-filters.com/docs"
+      "docs": "https://data-table.openstatus.dev/docs"
     },
     {
       "name": "data-table-filter-command",
