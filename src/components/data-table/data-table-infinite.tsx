@@ -265,7 +265,7 @@ export function DataTableInfinite<TData, TValue>({
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
       totalRows={totalRows}
-      filterRows={filterRows}
+      filterRows={filterRows ?? table.getFilteredRowModel().rows.length}
       getFacetedUniqueValues={getFacetedUniqueValues}
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >
