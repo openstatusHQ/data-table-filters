@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "data-table-filters",
-  "homepage": "https://data-table-filters.com",
+  "homepage": "https://data-table.openstatus.dev",
   "items": [
     {
       "name": "data-table",
@@ -276,7 +276,7 @@
           "info": "hsl(198.63 88.66% 48.43%)"
         }
       },
-      "docs": "https://data-table-filters.com/docs"
+      "docs": "https://data-table.openstatus.dev/docs"
     },
     {
       "name": "data-table-filter-command",
@@ -325,6 +325,10 @@
         },
         {
           "path": "src/components/data-table/data-table-cell/data-table-cell-boolean.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-cell/data-table-cell-star.tsx",
           "type": "registry:component"
         },
         {
@@ -504,11 +508,16 @@
         {
           "path": "src/lib/table-schema/generators/sheet-fields.ts",
           "type": "registry:lib"
+        },
+        {
+          "path": "src/components/data-table/data-table-auto.tsx",
+          "type": "registry:component"
         }
       ],
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json",
-        "https://data-table.openstatus.dev/r/data-table-cell.json"
+        "https://data-table.openstatus.dev/r/data-table-cell.json",
+        "https://data-table.openstatus.dev/r/data-table-sheet.json"
       ],
       "dependencies": ["@tanstack/react-table"]
     },

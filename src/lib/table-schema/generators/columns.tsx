@@ -6,6 +6,7 @@ import {
   DataTableCellCode,
   DataTableCellLevelIndicator,
   DataTableCellNumber,
+  DataTableCellStar,
   DataTableCellStatusCode,
   DataTableCellText,
   DataTableCellTimestamp,
@@ -89,7 +90,7 @@ function renderCell(
     case "badge": {
       if (Array.isArray(value)) {
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex-no-wrap flex gap-1">
             {value.map((item, i) => (
               <DataTableCellBadge
                 key={i}
@@ -111,6 +112,13 @@ function renderCell(
       const hex = colorMap?.[String(value)];
       return typeof value === "boolean" ? (
         <DataTableCellBoolean value={value} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "star": {
+      return typeof value === "boolean" ? (
+        <DataTableCellStar value={value} />
       ) : (
         fallback
       );
@@ -168,7 +176,7 @@ export function generateColumns<TData>(
     const filterFn = getFilterFn(config);
 
     const header = config.hideHeader
-      ? () => null
+      ? () => <span className="sr-only">{config.label}</span>
       : config.sortable
         ? ({
             column,

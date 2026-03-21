@@ -6,6 +6,7 @@ import {
   DataTableCellCode,
   DataTableCellLevelIndicator,
   DataTableCellNumber,
+  DataTableCellStar,
   DataTableCellStatusCode,
   DataTableCellText,
   DataTableCellTimestamp,
@@ -50,10 +51,17 @@ function renderSheetValue(
         String(rawValue)
       );
     }
+    case "star": {
+      return typeof rawValue === "boolean" ? (
+        <DataTableCellStar value={rawValue} />
+      ) : (
+        String(rawValue)
+      );
+    }
     case "badge": {
       if (Array.isArray(rawValue)) {
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap justify-end gap-1">
             {rawValue.map((item, i) => (
               <DataTableCellBadge
                 key={i}

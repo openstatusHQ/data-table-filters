@@ -12,6 +12,30 @@ faq:
 
 # Quick Start
 
+## Zero Config
+
+The fastest way to try data-table-filters — pass an array of objects, get a fully filtered table:
+
+```tsx
+import { DataTableAuto } from "@/components/data-table/data-table-auto";
+
+const data = [
+  {
+    name: "Alice",
+    role: "admin",
+    rating: 5,
+    created_at: "2026-01-15T10:00:00Z",
+  },
+  { name: "Bob", role: "user", rating: 3, created_at: "2026-02-20T14:30:00Z" },
+];
+
+<DataTableAuto data={data} />;
+```
+
+Columns, filters, display types, and cell renderers are auto-inferred from your data. When you need customization, [eject to the Builder](/builder) or define a [Table Schema](/docs/table-schema).
+
+See the [/auto](/auto) example for a live demo.
+
 ## Agent Skill
 
 Install the skill and let your AI agent handle the setup:

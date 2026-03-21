@@ -9,8 +9,9 @@ description: >
   store adapters, schema system, Drizzle helpers, query layer), (3) configuring store
   adapters (nuqs/zustand/memory), (4) generating table schemas from a data model,
   (5) wiring up server-side filtering with Drizzle ORM, (6) connecting the React Query
-  fetch layer, (7) troubleshooting integration issues. Triggers on mentions of
-  "data-table-filters", "data-table.openstatus.dev", filterable data tables with shadcn,
+  fetch layer, (7) auto-inferring schemas from raw JSON data with DataTableAuto / inferSchemaFromJSON,
+  (8) troubleshooting integration issues. Triggers on mentions of "data-table-filters",
+  "data-table-filters.com", filterable data tables with shadcn, DataTableAuto, auto-infer,
   or any of the registry block names.
 ---
 
@@ -145,6 +146,37 @@ Map data model → `createTableSchema` + `col.*`:
 Presets: `col.presets.logLevel()`, `.httpStatus()`, `.duration()`, `.timestamp()`, `.traceId()`, `.pathname()`, `.httpMethod()`.
 
 See [references/schema-api.md](references/schema-api.md).
+
+## Auto-Infer (Zero-Config from JSON)
+
+For raw JSON data with no predefined schema, use `DataTableAuto` or the lower-level `inferSchemaFromJSON` + `createTableSchema.fromJSON` pipeline. This auto-generates columns, filters, sheet fields, and column visibility from the data itself.
+
+### DataTableAuto Component
+
+Drop-in component — pass JSON data, get a fully functional table:
+
+```tsx
+import { DataTableAuto } from "@/components/data-table/data-table-auto";
+import data from "./data.json";
+
+export default function Page() {
+  return <DataTableAuto data={data} />;
+}
+```
+
+Includes command palette and sheet detail panel out of the box. See the `/auto` route in this repo for a working example.
+
+### Lower-Level API
+
+```tsx
+import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
+import { createTableSchema } from "@/lib/table-schema";
+
+const schemaJson = inferSchemaFromJSON(data);
+const { definition } = createTableSchema.fromJSON(schemaJson);
+```
+
+See [references/auto-infer.md](references/auto-infer.md) for inference heuristics, smart enhancements, and customization.
 
 ## Server-Side Integration
 

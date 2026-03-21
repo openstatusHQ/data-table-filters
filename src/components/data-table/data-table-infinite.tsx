@@ -23,6 +23,7 @@ import {
   getColumnOrderKey,
   getColumnVisibilityKey,
 } from "@/lib/constants/local-storage";
+import { getFacetedUniqueValuesFlattened } from "@/lib/data-table/faceted";
 import { formatCompactNumber } from "@/lib/format";
 import { useFilterState } from "@/lib/store/hooks/useFilterState";
 import { arrSome, inDateRange } from "@/lib/table/filterfns";
@@ -49,7 +50,6 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
   getFacetedMinMaxValues as getTTableFacetedMinMaxValues,
-  getFacetedUniqueValues as getTTableFacetedUniqueValues,
   useReactTable,
 } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
@@ -198,7 +198,7 @@ export function DataTableInfinite<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getTTableFacetedUniqueValues(),
+    getFacetedUniqueValues: getFacetedUniqueValuesFlattened(),
     getFacetedMinMaxValues: getTTableFacetedMinMaxValues(),
     filterFns: { inDateRange, arrSome },
     debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
@@ -265,7 +265,7 @@ export function DataTableInfinite<TData, TValue>({
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
       totalRows={totalRows}
-      filterRows={filterRows}
+      filterRows={filterRows ?? table.getFilteredRowModel().rows.length}
       getFacetedUniqueValues={getFacetedUniqueValues}
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >

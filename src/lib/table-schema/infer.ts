@@ -62,11 +62,74 @@ function keyToWords(key: string): string[] {
 }
 
 const ID_WORDS = new Set(["id", "uuid", "hash", "token", "key"]);
-const CODE_WORDS = new Set(["path", "url", "uri", "endpoint", "route", "host"]);
+const CODE_WORDS = new Set([
+  "path",
+  "url",
+  "uri",
+  "endpoint",
+  "route",
+  "host",
+  "link",
+  "href",
+  "website",
+]);
 const LATENCY_WORDS = new Set(["latency", "duration", "elapsed"]);
 const SIZE_WORDS = new Set(["size", "bytes", "length"]);
 const LEVEL_WORDS = new Set(["level", "severity"]);
 const TRACE_ID_WORDS = new Set(["trace", "span", "request"]);
+const FAVORITE_WORDS = new Set(["favorite", "starred", "bookmarked", "pinned"]);
+const EMAIL_WORDS = new Set(["email", "mail"]);
+const STATUS_WORDS = new Set(["status", "state"]);
+
+/** Semantic color mapping for status-like enum values. */
+const STATUS_COLORS: Record<string, string> = {
+  active: "#22c55e",
+  completed: "#22c55e",
+  success: "#22c55e",
+  published: "#22c55e",
+  approved: "#22c55e",
+  pending: "#f59e0b",
+  draft: "#f59e0b",
+  inactive: "#f59e0b",
+  paused: "#f59e0b",
+  error: "#ef4444",
+  failed: "#ef4444",
+  rejected: "#ef4444",
+  cancelled: "#ef4444",
+  archived: "#6b7280",
+  deleted: "#6b7280",
+  disabled: "#6b7280",
+};
+
+/** Neutral palette for enum values without semantic meaning. */
+const NEUTRAL_PALETTE = [
+  "#6366f1",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#06b6d4",
+  "#84cc16",
+  "#eab308",
+  "#ef4444",
+  "#64748b",
+];
+
+/** Generate a colorMap for enum values, using semantic colors where possible. */
+function generateColorMap(values: readonly string[]): Record<string, string> {
+  const colorMap: Record<string, string> = {};
+  let neutralIdx = 0;
+  for (const value of values) {
+    const lower = value.toLowerCase();
+    if (STATUS_COLORS[lower]) {
+      colorMap[value] = STATUS_COLORS[lower];
+    } else {
+      colorMap[value] = NEUTRAL_PALETTE[neutralIdx % NEUTRAL_PALETTE.length]!;
+      neutralIdx++;
+    }
+  }
+  return colorMap;
+}
 
 /** Post-process an inferred descriptor with smart display/config heuristics. */
 function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
@@ -81,6 +144,9 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
   const hasSizeWord = words.some((w) => SIZE_WORDS.has(w));
   const hasLevelWord = words.some((w) => LEVEL_WORDS.has(w));
   const isTraceId = hasIdWord && words.some((w) => TRACE_ID_WORDS.has(w));
+  const hasFavoriteWord = words.some((w) => FAVORITE_WORDS.has(w));
+  const hasEmailWord = words.some((w) => EMAIL_WORDS.has(w));
+  const hasStatusWord = words.some((w) => STATUS_WORDS.has(w));
 
   // ID-like columns → code display, not sortable
   if (hasIdWord) {
@@ -91,6 +157,15 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
       d.hidden = true;
       d.filter = null;
     }
+  }
+  // Favorite/starred booleans → star display, hide column header
+  else if (hasFavoriteWord && d.dataType === "boolean") {
+    d.display = { type: "star" };
+    d.hideHeader = true;
+  }
+  // Email columns → code display
+  else if (hasEmailWord && d.dataType === "string") {
+    d.display = { type: "code" };
   }
   // Path/URL-like columns → code display
   else if (hasCodeWord) {
@@ -117,6 +192,11 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
   // Log level / severity enums: expand filter by default (matches col.presets.logLevel())
   if (hasLevelWord && d.dataType === "enum" && d.filter) {
     d.filter = { ...d.filter, defaultOpen: true };
+  }
+
+  // Status/state enums → semantic colorMap on badge display
+  if (hasStatusWord && d.dataType === "enum" && d.enumValues) {
+    d.display = { type: "badge", colorMap: generateColorMap(d.enumValues) };
   }
 
   // Column sizing defaults

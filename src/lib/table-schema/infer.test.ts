@@ -549,3 +549,139 @@ describe("inferSchemaFromJSON — preset-aware enhancement", () => {
     expect(columns[0]?.hidden).toBe(false);
   });
 });
+
+// ── visual heuristics: favorites ────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — favorite/starred heuristics", () => {
+  it("sets 'star' display for 'favorite' boolean columns", () => {
+    const data = [{ favorite: true }, { favorite: false }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "star" });
+    expect(columns[0]?.hideHeader).toBe(true);
+  });
+
+  it("sets 'star' display for 'starred' boolean columns", () => {
+    const data = [{ starred: true }, { starred: false }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "star" });
+    expect(columns[0]?.hideHeader).toBe(true);
+  });
+
+  it("sets 'star' display for 'bookmarked' boolean columns", () => {
+    const data = [{ bookmarked: true }, { bookmarked: false }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "star" });
+    expect(columns[0]?.hideHeader).toBe(true);
+  });
+
+  it("does not apply favorite heuristic to non-boolean columns", () => {
+    const data = [{ favorite: "yes" }, { favorite: "no" }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "badge" });
+  });
+});
+
+// ── visual heuristics: email ────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — email heuristics", () => {
+  it("sets 'code' display for 'email' string columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      email: `user${i}@example.com`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+
+  it("sets 'code' display for 'mail' string columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      mail: `user${i}@example.com`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+});
+
+// ── visual heuristics: link/href/website ────────────────────────────────────
+
+describe("inferSchemaFromJSON — link/href/website heuristics", () => {
+  it("sets 'code' display for 'link' string columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      link: `https://example.com/${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+
+  it("sets 'code' display for 'href' string columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      href: `https://example.com/${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+
+  it("sets 'code' display for 'website' string columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      website: `https://example.com/${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "code" });
+  });
+});
+
+// ── visual heuristics: status/state enums ───────────────────────────────────
+
+describe("inferSchemaFromJSON — status/state enum heuristics", () => {
+  it("generates semantic colorMap for 'status' enum columns", () => {
+    const data = [
+      { status: "active" },
+      { status: "pending" },
+      { status: "error" },
+    ];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "badge",
+      colorMap: {
+        active: "#22c55e",
+        pending: "#f59e0b",
+        error: "#ef4444",
+      },
+    });
+  });
+
+  it("generates semantic colorMap for 'state' enum columns", () => {
+    const data = [
+      { state: "published" },
+      { state: "draft" },
+      { state: "archived" },
+    ];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "badge",
+      colorMap: {
+        published: "#22c55e",
+        draft: "#f59e0b",
+        archived: "#6b7280",
+      },
+    });
+  });
+
+  it("uses neutral palette for unknown status values", () => {
+    const data = [{ status: "alpha" }, { status: "beta" }];
+    const { columns } = inferSchemaFromJSON(data);
+    const colorMap = (columns[0]?.display as any)?.colorMap;
+    expect(colorMap).toBeDefined();
+    expect(colorMap.alpha).toBe("#6366f1");
+    expect(colorMap.beta).toBe("#8b5cf6");
+  });
+
+  it("does not apply status heuristic to non-enum columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      status: `status_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    // >10 distinct values → string, not enum → no colorMap
+    expect(columns[0]?.dataType).toBe("string");
+    expect((columns[0]?.display as any)?.colorMap).toBeUndefined();
+  });
+});

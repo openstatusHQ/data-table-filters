@@ -14,19 +14,46 @@ export function DataTableLayout({ children }: { children: React.ReactNode }) {
         </Link>
       </Button>
       {children}
-      <div className="fixed right-4 bottom-4 z-50">
-        <Button asChild className="group gap-0! [&_svg]:shrink!">
-          <a
-            href="https://github.com/openstatusHQ/data-table-filters"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span className="mr-1">View GitHub Repo</span>
-            <ArrowRight className="relative mb-px inline h-4 w-0! transition-all group-hover:w-4!" />
-            <ChevronRight className="relative mb-px inline h-4 w-4! transition-all group-hover:w-0!" />
-          </a>
-        </Button>
-      </div>
     </>
+  );
+}
+
+export function DataTableLayoutFloatingBar({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="group/pile fixed right-4 bottom-4 z-50 pt-1.5">
+      {children}
+    </div>
+  );
+}
+
+export function DataTableLayoutFloatingAction({
+  href,
+  children,
+  secondary,
+}: React.ComponentProps<typeof Link> & { secondary?: boolean }) {
+  const isInternal =
+    href?.toString().startsWith("/") || href?.toString().startsWith("#");
+  const externalLinkProps = !isInternal
+    ? { target: "_blank", rel: "noreferrer" }
+    : undefined;
+  return (
+    <Button
+      asChild
+      className={`group gap-0! [&_svg]:shrink! ${
+        secondary
+          ? "absolute top-0 -right-1.5 -z-10 opacity-70 transition-transform group-hover/pile:-translate-x-1.5 group-hover/pile:-translate-y-10 group-hover/pile:opacity-100"
+          : ""
+      }`}
+    >
+      <Link href={href} {...externalLinkProps}>
+        <span className="mr-1">{children}</span>
+        <ArrowRight className="relative mb-px inline h-4 w-0! transition-all group-hover:w-4!" />
+        <ChevronRight className="relative mb-px inline h-4 w-4! transition-all group-hover:w-0!" />
+      </Link>
+    </Button>
   );
 }

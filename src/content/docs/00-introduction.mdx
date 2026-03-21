@@ -32,6 +32,7 @@ This guide covers the system end to end — from defining a table schema to rend
 
 ## Examples
 
+- [Auto](/auto) — zero-config table from raw data (no schema needed)
 - [Drizzle](/drizzle) — server-side filtering with Drizzle ORM
 - [Default](/default) — client-side pagination without infinite scroll
 - [Infinite](/infinite) — infinite scroll with cursor pagination (mock)
@@ -43,6 +44,22 @@ This guide covers the system end to end — from defining a table schema to rend
 ---
 
 ## Quick Overview
+
+### Zero Config
+
+Pass data, get a fully filtered table — columns, filters, and display types are auto-inferred:
+
+```tsx
+import { DataTableAuto } from "@/components/data-table/data-table-auto";
+
+<DataTableAuto data={bookmarks} />;
+```
+
+See the [/auto](/auto) example for a live demo.
+
+### With Schema
+
+When you need full control, define a schema and wire up state management:
 
 ```tsx
 import { col, createTableSchema } from "@/lib/table-schema";
