@@ -26,7 +26,7 @@ export function DataTableResetButton() {
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>
+          <p className="text-nowrap">
             Reset filters with{" "}
             <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-1">
               <span className="mr-1">⌘</span>

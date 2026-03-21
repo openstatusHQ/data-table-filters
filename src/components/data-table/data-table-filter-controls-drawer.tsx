@@ -48,7 +48,7 @@ export function DataTableFilterControlsDrawer() {
             </DrawerTrigger>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>
+            <p className="text-nowrap">
               Toggle controls with{" "}
               <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-1">
                 <span className="mr-1">⌘</span>
