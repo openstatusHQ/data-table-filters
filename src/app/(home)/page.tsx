@@ -466,16 +466,16 @@ function Examples() {
         className="marker:text-muted-foreground grid list-inside list-disc gap-2"
       >
         <li>
-          <Link href="/auto">Zero Config (Auto)</Link>
+          <Link href="/auto">Zero Config (Auto Inferred)</Link>
         </li>
         <li>
-          <Link href="/light">OpenStatus Light Viewer</Link>
+          <Link href="/drizzle">Drizzle ORM (Postgres)</Link>
         </li>
         <li>
           <Link href="/builder">Table Builder</Link>
         </li>
         <li>
-          <Link href="/drizzle">Drizzle ORM (Postgres)</Link>
+          <Link href="/light">OpenStatus Light Viewer</Link>
         </li>
       </ul>
     </div>
