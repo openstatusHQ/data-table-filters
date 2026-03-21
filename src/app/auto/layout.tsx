@@ -10,8 +10,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <DataTableLayout>
       <LockBodyScroll />
       <DataTableLayoutFloatingBar>
-        <DataTableLayoutFloatingAction href="https://github.com/openstatusHQ/data-table-filters">
-          View GitHub Repo
+        <DataTableLayoutFloatingAction href="https://github.com/openstatusHQ/data-table-filters/blob/main/src/app/auto/page.tsx">
+          View Page Source
         </DataTableLayoutFloatingAction>
         <DataTableLayoutFloatingAction href="/" secondary>
           Go back to home
