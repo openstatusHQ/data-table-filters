@@ -157,10 +157,20 @@ function DataTableContent() {
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
       refetch={refetch}
+      commandSlot={
+        <DataTableFilterAICommand
+          schema={filterSchema.definition}
+          tableSchema={tableSchema.definition}
+          api="/api/ai-filters"
+          tableId="logs"
+        />
+      }
     />
   );
 }
 ```
+
+> The `commandSlot` above uses the AI-enhanced command palette. It handles both structured queries (`host:api`) and natural language (_"slow requests from eu"_) in the same input. See [AI Filters](/docs/ai-filters) for the full setup including the API route.
 
 ## Live Examples
 

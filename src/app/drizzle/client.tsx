@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
+import { DataTableFilterAICommand } from "@/components/data-table/data-table-filter-command-ai";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
 import { LiveButton } from "@/components/data-table/data-table-infinite/live-button";
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
@@ -164,8 +164,10 @@ function ClientInner() {
         return <LiveRow colSpan={columns.length - 1} />;
       }}
       commandSlot={
-        <DataTableFilterCommand
+        <DataTableFilterAICommand
           schema={filterSchema.definition}
+          tableSchema={tableSchema.definition}
+          api="/drizzle/api/ai"
           tableId="drizzle"
         />
       }

@@ -589,6 +589,86 @@
         "@tanstack/react-table",
         "superjson"
       ]
+    },
+    {
+      "name": "data-table-filter-command-ai",
+      "type": "registry:block",
+      "title": "Data Table AI Filter Command Palette",
+      "description": "AI-powered command palette that translates natural language queries into structured table filters. Provider-agnostic — works with any LLM via Vercel AI SDK.",
+      "files": [
+        {
+          "path": "src/components/data-table/data-table-filter-command-ai/index.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-filter-command-ai/text-shimmer.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-filter-command-ai/use-ai-filters.ts",
+          "type": "registry:hook"
+        },
+        {
+          "path": "src/lib/ai/index.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/ai/context.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/ai/prompt.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/ai/output-schema.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/ai/diff-partial.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/ai/parse-response.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/ai/detect.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/ai/create-ai-filter-handler.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "registryDependencies": [
+        "https://data-table.openstatus.dev/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table-filter-command.json",
+        "https://data-table.openstatus.dev/r/data-table-schema.json",
+        "command",
+        "kbd",
+        "separator"
+      ],
+      "dependencies": [
+        "ai",
+        "@ai-sdk/react",
+        "zod",
+        "date-fns",
+        "lucide-react",
+        "sonner"
+      ],
+      "tailwind": {
+        "config": {
+          "theme": {
+            "keyframes": {
+              "shimmer": {
+                "0%": { "backgroundPosition": "200% 50%" },
+                "100%": { "backgroundPosition": "-200% 50%" }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }
