@@ -20,8 +20,9 @@ export type AIContext = {
  * Extracts structured context from a table schema definition for use in LLM prompts.
  *
  * Returns metadata about each filterable column: field name, label, data type,
- * filter type, allowed values, bounds, and description. Non-filterable and
- * command-disabled columns are excluded.
+ * filter type, allowed values, bounds, and description. Non-filterable columns
+ * are excluded. Command-disabled columns are intentionally included so the AI
+ * can set filters (e.g. date ranges) that aren't available in the command palette.
  */
 export function generateAIContext(schema: TableSchemaDefinition): AIContext {
   const fields: AIFieldContext[] = [];

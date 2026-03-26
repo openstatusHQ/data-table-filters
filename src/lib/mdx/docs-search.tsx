@@ -22,6 +22,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import { Loader2, SearchIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { cn } from "../utils";
 import type { SectionMeta } from "./get-content";
 
 type SearchResult = {
@@ -57,7 +58,10 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen((o) => {
+          if (o) setSearch("");
+          return !o;
+        });
       }
     };
     document.addEventListener("keydown", down);
@@ -72,7 +76,11 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
       <Button
         variant="outline"
         onClick={() => setOpen(true)}
-        className="text-muted-foreground w-full border-dashed shadow-none"
+        className={cn(
+          "text-muted-foreground w-full border-dashed shadow-none",
+          open &&
+            "bg-accent text-accent-foreground dark:bg-input/30 dark:bg-input/50",
+        )}
       >
         <SearchIcon className="size-3.5" />
         <span className="flex-1 text-left">Search...</span>
@@ -129,51 +137,55 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
                 </CommandGroup>
               ) : results.length > 0 ? (
                 <CommandGroup heading="Results">
-                  {results.map((item) => {
-                    const escapedSearch = search.replace(
-                      /[.*+?^${}()|[\]\\]/g,
-                      "\\$&",
-                    );
-                    const titleHtml = item.title.replace(
-                      new RegExp(escapedSearch, "gi"),
-                      (match) => `<mark>${match}</mark>`,
-                    );
-                    const contentHtml = item.content.replace(
-                      new RegExp(escapedSearch, "gi"),
-                      (match) => `<mark>${match}</mark>`,
-                    );
-
-                    return (
-                      <CommandItem
-                        key={item.slug}
-                        value={item.title}
-                        onSelect={() => {
-                          router.push(item.href);
-                          setOpen(false);
-                          setSearch("");
-                        }}
-                      >
-                        <div className="grid min-w-0">
-                          <span
-                            className="block truncate"
-                            dangerouslySetInnerHTML={{ __html: titleHtml }}
-                          />
-                          {item.content && search ? (
-                            <span
-                              className="text-muted-foreground block truncate text-xs"
-                              dangerouslySetInnerHTML={{ __html: contentHtml }}
+                  {results.map((item) => (
+                    <CommandItem
+                      key={item.slug}
+                      value={item.title}
+                      onSelect={() => {
+                        router.push(item.href);
+                        setOpen(false);
+                        setSearch("");
+                      }}
+                    >
+                      <div className="grid min-w-0">
+                        <span className="block truncate">
+                          <HighlightMatch text={item.title} search={search} />
+                        </span>
+                        {item.content && search ? (
+                          <span className="text-muted-foreground block truncate text-xs">
+                            <HighlightMatch
+                              text={item.content}
+                              search={search}
                             />
-                          ) : null}
-                        </div>
-                      </CommandItem>
-                    );
-                  })}
+                          </span>
+                        ) : null}
+                      </div>
+                    </CommandItem>
+                  ))}
                 </CommandGroup>
               ) : null}
             </CommandList>
           </Command>
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+/** Splits `text` on `search` matches and wraps them in <mark> — no innerHTML needed. */
+function HighlightMatch({ text, search }: { text: string; search: string }) {
+  if (!search) return <>{text}</>;
+  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === search.toLowerCase() ? (
+          <mark key={i}>{part}</mark>
+        ) : (
+          part
+        ),
+      )}
     </>
   );
 }

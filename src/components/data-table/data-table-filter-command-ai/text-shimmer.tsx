@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 
 export type TextShimmerProps = {
-  as?: string;
+  as?: React.ElementType;
   duration?: number;
   spread?: number;
   children: React.ReactNode;
@@ -18,7 +18,7 @@ export function TextShimmer({
   ...props
 }: TextShimmerProps) {
   const dynamicSpread = Math.min(Math.max(spread, 5), 45);
-  const Component = as as React.ElementType;
+  const Component = as;
 
   return (
     <Component

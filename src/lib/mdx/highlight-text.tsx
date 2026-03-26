@@ -3,7 +3,17 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
 
+function clearHighlights(root: HTMLElement) {
+  for (const mark of Array.from(root.querySelectorAll("mark"))) {
+    const parent = mark.parentNode;
+    if (!parent) continue;
+    parent.replaceChild(document.createTextNode(mark.textContent ?? ""), mark);
+    parent.normalize();
+  }
+}
+
 function highlight(root: HTMLElement, query: string) {
+  clearHighlights(root);
   if (!query) return;
 
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

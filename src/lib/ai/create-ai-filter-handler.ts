@@ -45,7 +45,15 @@ export function createAIFilterHandler({
   const outputSchema = generateAIOutputSchema(schema);
 
   return async function POST(req: Request) {
-    const { query } = (await req.json()) as { query: string };
+    const body = await req.json();
+    const query = typeof body?.query === "string" ? body.query.trim() : "";
+
+    if (!query || query.length > 500) {
+      return Response.json(
+        { error: "Invalid query: must be a non-empty string (max 500 chars)" },
+        { status: 400 },
+      );
+    }
 
     const now = new Date().toISOString();
 

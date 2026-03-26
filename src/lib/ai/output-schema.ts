@@ -13,7 +13,8 @@ import { z } from "zod";
  * - `slider` → `z.tuple([z.number(), z.number()]).optional()`
  * - `timerange` → `z.tuple([z.string(), z.string()]).optional()`
  *
- * Command-disabled columns are excluded.
+ * Command-disabled columns are intentionally included so the AI can infer
+ * filters that aren't available in the command palette (e.g. date ranges).
  */
 export function generateAIOutputSchema(schema: TableSchemaDefinition) {
   const shape: Record<string, z.ZodType> = {};

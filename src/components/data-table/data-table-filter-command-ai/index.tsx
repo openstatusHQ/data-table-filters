@@ -126,9 +126,15 @@ export function DataTableFilterAICommand({
       for (const [key, value] of Object.entries(state)) {
         table.getColumn(key)?.setFilterValue(value);
       }
-      // Update input to reflect the applied filters
+      // Serialize from the validated state directly to avoid stale table state
+      const syntheticFilters = Object.entries(state).map(([id, value]) => ({
+        id,
+        value,
+      }));
       isSerializingRef.current = true;
-      setInputValue(columnParser.serialize(table.getState().columnFilters));
+      setInputValue(columnParser.serialize(syntheticFilters));
+    },
+    onComplete() {
       setAIQuery(null);
     },
     onStart() {
@@ -201,8 +207,11 @@ export function DataTableFilterAICommand({
       (item) => item.search === search,
     );
     if (searchIndex !== -1) {
-      lastSearches[searchIndex].timestamp = timestamp;
-      setLastSearches(lastSearches);
+      setLastSearches(
+        lastSearches.map((item, i) =>
+          i === searchIndex ? { ...item, timestamp } : item,
+        ),
+      );
       return;
     }
     setLastSearches([...lastSearches, { search, timestamp }]);

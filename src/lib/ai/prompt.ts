@@ -74,6 +74,9 @@ function formatPrompt(
     "- Only include fields relevant to the query. Omit fields the user didn't mention or imply.",
   );
   lines.push("- Return valid JSON only. No explanations.");
+  lines.push(
+    '- The user message includes the current date/time. Use it to resolve relative time expressions like "last hour", "yesterday", "past 7 days".',
+  );
 
   if (options?.now) {
     lines.push("");

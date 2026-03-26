@@ -6,7 +6,7 @@ import {
 } from "@/lib/ai";
 import type { TableSchemaDefinition } from "@/lib/table-schema";
 import { experimental_useObject as useObject } from "@ai-sdk/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 export type UseAIFiltersOptions = {
   /** The API endpoint that streams AI filter results */
@@ -21,6 +21,8 @@ export type UseAIFiltersOptions = {
   onError?: (error: Error) => void;
   /** Called before AI filters are applied — use to reset existing filters */
   onStart?: () => void;
+  /** Called when the stream ends, regardless of validation success — use for cleanup */
+  onComplete?: () => void;
 };
 
 export function useAIFilters({
@@ -30,27 +32,32 @@ export function useAIFilters({
   onFinish,
   onError,
   onStart,
+  onComplete,
 }: UseAIFiltersOptions) {
   const prevRef = useRef<Record<string, unknown>>({});
-  const outputSchema = generateAIOutputSchema(tableSchema);
+  const outputSchema = useMemo(
+    () => generateAIOutputSchema(tableSchema),
+    [tableSchema],
+  );
 
   const { submit, object, isLoading, error } = useObject({
     api,
     schema: outputSchema,
     onFinish({ object }) {
-      if (!object) return;
-      const validated = parseAIResponse(
-        tableSchema,
-        object as Record<string, unknown>,
-      );
-      if (validated) {
-        console.log("[ai-filters] final →", validated);
-        onFinish(validated);
-      }
       prevRef.current = {};
+      if (object) {
+        const validated = parseAIResponse(
+          tableSchema,
+          object as Record<string, unknown>,
+        );
+        if (validated) {
+          onFinish(validated);
+        }
+      }
+      onComplete?.();
     },
     onError(error) {
-      prevRef.current = {};
+      onComplete?.();
       onError?.(error);
     },
   });
@@ -61,7 +68,6 @@ export function useAIFilters({
     const next = object as Record<string, unknown>;
     const completed = diffPartialState(prevRef.current, next, tableSchema);
     for (const { key, value } of completed) {
-      console.log(`[ai-filters] stream → ${key}:`, value);
       onField(key, value);
     }
     prevRef.current = { ...next };
@@ -73,7 +79,6 @@ export function useAIFilters({
       const trimmed = query.trim();
       if (!trimmed) return false;
 
-      console.log("[ai-filters] infer →", trimmed);
       onStart?.();
       prevRef.current = {};
       submit({ query: trimmed });
