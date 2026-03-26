@@ -2,6 +2,7 @@ import {
   DocsPagination,
   getAllSections,
   getSection,
+  HighlightText,
   Mdx,
   TableOfContents,
 } from "@/lib/mdx";
@@ -90,7 +91,9 @@ export default async function DocsSectionPage({
           "prose-h1:font-semibold prose-h2:font-semibold prose-h3:font-semibold prose-h4:font-semibold prose-h5:font-semibold prose-h6:font-semibold",
         )}
       >
-        <Mdx source={source} />
+        <HighlightText>
+          <Mdx source={source} />
+        </HighlightText>
         <DocsPagination sections={sections} currentSlug={slug} />
       </div>
       <TableOfContents headings={headings} />
