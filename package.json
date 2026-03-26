@@ -18,6 +18,8 @@
     "registry:build": "npx shadcn@latest build"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.64",
+    "@ai-sdk/react": "^3.0.139",
     "@date-fns/utc": "^2.1.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
@@ -43,6 +45,7 @@
     "@tanstack/react-query-devtools": "^5.62.12",
     "@tanstack/react-table": "^8.20.6",
     "@tanstack/react-virtual": "^3.11.2",
+    "ai": "^6.0.137",
     "babel-plugin-react-compiler": "19.0.0-beta-27714ef-20250124",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -66,6 +69,7 @@
     "recharts": "^2.15.4",
     "rehype-pretty-code": "^0.14.0",
     "remark-gfm": "^4.0.1",
+    "sanitize-html": "^2.17.2",
     "schema-dts": "^1.1.5",
     "shiki": "^1.29.0",
     "sonner": "^1.7.2",
@@ -82,6 +86,7 @@
     "@types/node": "^22",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "@types/sanitize-html": "^2.16.1",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",

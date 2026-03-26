@@ -117,6 +117,8 @@ col
   .description("Origin server"); // For AI agents / MCP tools (not shown in UI)
 ```
 
+> Descriptions are essential for [AI filter](/docs/ai-filters) accuracy. Without them, the AI only sees field names and types, which can lead to ambiguous results. Add `.description()` to any column you want the AI to handle well.
+
 ### Display
 
 Controls how the cell value renders. Built-in display types:
@@ -158,6 +160,8 @@ col.string().notFilterable()        // Disables filtering (F becomes never)
 col.enum(v).defaultOpen()           // Expand in filter sidebar by default
 col.timestamp().commandDisabled()   // Exclude from command palette
 ```
+
+> Fields with `.commandDisabled()` are hidden from the manual command palette but **still available to the AI**. This is useful for fields like date ranges that are easier to express in natural language (e.g., _"last 24 hours"_). See [AI Filters — Schema Considerations](/docs/ai-filters#schema-considerations).
 
 Passing a filter type not in `F` is a **compile-time error** — e.g. `col.string().filterable("slider")` won't compile.
 

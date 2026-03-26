@@ -9,3 +9,5 @@ export {
 export { TableOfContents } from "./table-of-contents";
 export { DocsSidebar } from "./docs-sidebar";
 export { DocsPagination } from "./docs-pagination";
+export { DocsSearch } from "./docs-search";
+export { HighlightText } from "./highlight-text";

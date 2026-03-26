@@ -38,7 +38,7 @@ export default async function DocsLayout({
       <div className="border-border border-b border-dashed" />
       <div
         className={cn(
-          "relative mx-auto w-full max-w-6xl",
+          "relative mx-auto w-full max-w-6xl flex-1",
           "md:grid md:grid-cols-[220px_1fr] md:gap-8",
           "xl:grid-cols-[220px_1fr_220px]",
         )}

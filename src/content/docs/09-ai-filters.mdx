@@ -1,0 +1,218 @@
+---
+title: "AI Filters"
+description: "Translate natural language queries into structured table filters using any LLM"
+author: "openstatus"
+publishedAt: "2026-03-26"
+faq:
+  - question: "Which LLM providers are supported?"
+    answer: "Any provider compatible with the Vercel AI SDK works — Anthropic, OpenAI, Google, Mistral, and more. The library is provider-agnostic; you bring your own model."
+  - question: "Does AI filtering work with all filter types?"
+    answer: "Yes. AI filters support all four filter types: checkbox (enum selection), input (text/number search), slider (numeric ranges), and timerange (date ranges)."
+  - question: "What happens if the AI returns invalid values?"
+    answer: "Responses are validated and coerced automatically. Slider values are clamped to min/max bounds, invalid checkbox options are stripped, and malformed dates are rejected. If the entire response is invalid, no filters are applied."
+  - question: "Can I use AI filters alongside the regular command palette?"
+    answer: "Yes. The AI command palette extends the base command palette. Structured queries (like `host:api` or `regions:ams,gru`) are handled instantly by the existing parser. Only natural language input triggers the AI."
+  - question: "How does commandDisabled interact with AI?"
+    answer: "Fields with `commandDisabled()` are hidden from the manual command palette suggestions, but they are still included in the AI prompt. This means the AI can set filters on fields that users cannot manually select — useful for fields like date ranges that are better expressed in natural language."
+---
+
+# AI Filters
+
+The `data-table-filter-command-ai` block adds natural language filtering to your data table. Type a query like _"5xx errors in production last 24h"_ and the AI translates it into structured filters — applied progressively as the response streams in.
+
+Provider-agnostic. Works with any LLM via the [Vercel AI SDK](https://sdk.vercel.ai).
+
+## Installation
+
+```bash
+npx shadcn@latest add https://data-table-filters.com/r/data-table-filter-command-ai.json
+```
+
+This installs the AI command palette component and the `@/lib/ai` utilities.
+
+## Prerequisites
+
+- The **data-table-filter-command** block must be installed (auto-installed as a dependency)
+- The **data-table-schema** block must be installed — AI context is generated from your table schema
+- An LLM provider package (e.g., `@ai-sdk/anthropic`, `@ai-sdk/openai`)
+
+```bash
+pnpm add @ai-sdk/anthropic
+```
+
+## API Route Setup
+
+Create a POST route that streams AI-inferred filter state. The `createAIFilterHandler` factory generates the system prompt and Zod output schema from your table schema automatically.
+
+### Direct Provider
+
+```ts
+// app/api/ai-filters/route.ts
+import { anthropic } from "@ai-sdk/anthropic";
+import { createAIFilterHandler } from "@/lib/ai";
+import { tableSchema } from "../table-schema";
+
+export const POST = createAIFilterHandler({
+  model: anthropic("claude-sonnet-4-20250514"),
+  schema: tableSchema.definition,
+});
+```
+
+Set your API key in `.env`:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+Swap `anthropic(...)` for any Vercel AI SDK provider — `openai("gpt-4o-mini")`, `google("gemini-2.0-flash")`, etc.
+
+### Vercel AI Gateway
+
+The [live demo](/drizzle) uses the Vercel AI Gateway, which provides a unified endpoint for multiple providers:
+
+```ts
+// app/api/ai-filters/route.ts
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createAIFilterHandler } from "@/lib/ai";
+import { tableSchema } from "../table-schema";
+
+const anthropic = createAnthropic({
+  baseURL: "https://ai-gateway.vercel.sh/v1",
+  apiKey: process.env.AI_GATEWAY_API_KEY,
+});
+
+export const POST = createAIFilterHandler({
+  model: anthropic("anthropic/claude-sonnet-4-20250514"),
+  schema: tableSchema.definition,
+});
+```
+
+## Client Integration
+
+Drop `DataTableFilterAICommand` into the `commandSlot` prop of `DataTableInfinite`:
+
+```tsx
+import { DataTableFilterAICommand } from "@/components/data-table/data-table-filter-command-ai";
+
+<DataTableInfinite
+  // ... other props
+  commandSlot={
+    <DataTableFilterAICommand
+      schema={filterSchema.definition}
+      tableSchema={tableSchema.definition}
+      api="/api/ai-filters"
+      tableId="my-table"
+    />
+  }
+/>;
+```
+
+### Props
+
+| Prop          | Type                    | Description                                               |
+| ------------- | ----------------------- | --------------------------------------------------------- |
+| `schema`      | `SchemaDefinition`      | BYOS filter schema for structured query parsing           |
+| `tableSchema` | `TableSchemaDefinition` | Table schema for AI context and output schema generation  |
+| `api`         | `string`                | API endpoint path (e.g., `"/api/ai-filters"`)             |
+| `tableId`     | `string`                | Unique ID for localStorage history (default: `"default"`) |
+
+## How It Works
+
+The AI command palette shares the same input as the regular command palette. What happens when you press Enter depends on the input:
+
+1. **Structured input** (`host:api`, `regions:ams,gru`, `latency:100-500`) — parsed instantly by the existing command palette. No AI involved.
+2. **Natural language** (_"slow requests from eu regions"_) — sent to your API route. The AI streams back a structured JSON object matching your table schema's filter types.
+
+The response is **applied progressively** as it streams:
+
+- **Input** and **checkbox** filters update immediately as values arrive
+- **Slider** and **timerange** filters wait until both bounds are present before applying (to avoid flashing partial ranges)
+
+After the stream completes, a final validation pass clamps slider values to defined bounds, strips invalid checkbox options, and converts ISO date strings to Date objects.
+
+The command palette also stores the last 5 searches in localStorage (namespaced by `tableId`) for quick re-use.
+
+## Schema Considerations
+
+The quality of AI filter inference depends directly on the metadata in your table schema. Two things matter most:
+
+### Add descriptions to your columns
+
+Descriptions are essential for AI filtering accuracy. Without them, the AI only sees field names and types, which can lead to ambiguous results. A `description` tells the AI what each column represents:
+
+```ts
+const tableSchema = createTableSchema({
+  host: col
+    .string()
+    .label("Host")
+    .description("Origin server hostname, e.g. api.example.com")
+    .filterable("input"),
+  latency: col
+    .number()
+    .label("Latency")
+    .description("Response time in milliseconds")
+    .filterable("slider", { min: 0, max: 5000, unit: "ms" }),
+});
+```
+
+The description, label, allowed values, min/max bounds, and unit are all included in the AI prompt. The more context you provide, the better the inference.
+
+### `commandDisabled` fields are still available to AI
+
+Fields with `.commandDisabled()` are hidden from the manual command palette suggestions, but they are **still included in the AI prompt**. This is intentional — some fields are hard to use with `key:value` syntax but easy to express in natural language.
+
+For example, the `date` column in the [live demo](/drizzle) has `commandDisabled()` because manually typing ISO date ranges is impractical. But saying _"last 24 hours"_ or _"this week"_ works naturally with the AI.
+
+```ts
+date: col
+  .timestamp()
+  .label("Date")
+  .commandDisabled()  // Hidden from manual palette, available to AI
+  .sortable(),
+```
+
+## Customization
+
+### Swapping providers
+
+Replace the model in your API route. Any [Vercel AI SDK provider](https://sdk.vercel.ai/providers) works:
+
+```ts
+import { openai } from "@ai-sdk/openai";
+
+export const POST = createAIFilterHandler({
+  model: openai("gpt-4o-mini"),
+  schema: tableSchema.definition,
+});
+```
+
+### Prompt caching
+
+The handler automatically applies Anthropic prompt caching to the static system prompt via `cacheControl: { type: "ephemeral" }`. This means repeated queries reuse the cached prompt, reducing latency and cost. This works out of the box with Anthropic models — no configuration needed.
+
+### Using the library exports directly
+
+If you don't use the Vercel AI SDK, you can use the library exports to build a custom integration:
+
+```ts
+import {
+  generateAIPrompt,
+  generateAIOutputSchema,
+  parseAIResponse,
+} from "@/lib/ai";
+
+// Generate the prompt and Zod schema from your table schema
+const prompt = generateAIPrompt(tableSchema.definition, { now: new Date() });
+const schema = generateAIOutputSchema(tableSchema.definition);
+
+// Call your LLM with the prompt and schema
+const response = await yourLLM({ system: prompt, schema });
+
+// Validate and apply the response
+const state = parseAIResponse(tableSchema.definition, response);
+if (state) {
+  for (const [key, value] of Object.entries(state)) {
+    table.getColumn(key)?.setFilterValue(value);
+  }
+}
+```

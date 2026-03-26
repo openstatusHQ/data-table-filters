@@ -12,6 +12,7 @@ import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { DocsSearch } from "./docs-search";
 import type { SectionMeta } from "./get-content";
 
 function SectionList({
@@ -62,6 +63,9 @@ export function DocsSidebar({ sections }: { sections: SectionMeta[] }) {
       <nav className="sticky top-10 hidden max-h-[calc(100vh-6rem)] overflow-y-auto md:block">
         <p className="mb-3 text-sm font-medium">Docs</p>
         <SectionList sections={sections} currentSlug={currentSlug} />
+        <div className="mt-3">
+          <DocsSearch sections={sections} />
+        </div>
       </nav>
 
       {/* Mobile FAB + Sheet */}

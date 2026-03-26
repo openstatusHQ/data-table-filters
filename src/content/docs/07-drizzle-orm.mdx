@@ -18,18 +18,19 @@ A step-by-step guide to wiring up the data table with [Drizzle ORM](https://orm.
 
 Every file you need to create:
 
-| File                            | Purpose                                        |
-| ------------------------------- | ---------------------------------------------- |
-| `db/drizzle/schema.ts`          | Drizzle table definition (enums, columns)      |
-| `db/drizzle/index.ts`           | Database client                                |
-| `app/[route]/column-mapping.ts` | Maps schema keys → Drizzle columns             |
-| `app/[route]/table-schema.tsx`  | UI column config (display, filters, sorting)   |
-| `app/[route]/schema.ts`         | Zod validation + ColumnSchema type             |
-| `app/[route]/search-params.ts`  | URL search param parsers (derived from schema) |
-| `app/[route]/query-options.ts`  | React Query infinite query config              |
-| `app/[route]/api/route.ts`      | API handler with `createDrizzleHandler`        |
-| `app/[route]/client.tsx`        | Client component                               |
-| `app/[route]/page.tsx`          | Page wrapper                                   |
+| File                            | Purpose                                                          |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `db/drizzle/schema.ts`          | Drizzle table definition (enums, columns)                        |
+| `db/drizzle/index.ts`           | Database client                                                  |
+| `app/[route]/column-mapping.ts` | Maps schema keys → Drizzle columns                               |
+| `app/[route]/table-schema.tsx`  | UI column config (display, filters, sorting)                     |
+| `app/[route]/schema.ts`         | Zod validation + ColumnSchema type                               |
+| `app/[route]/search-params.ts`  | URL search param parsers (derived from schema)                   |
+| `app/[route]/query-options.ts`  | React Query infinite query config                                |
+| `app/[route]/api/route.ts`      | API handler with `createDrizzleHandler`                          |
+| `app/[route]/api/ai/route.ts`   | AI filter handler (optional, see [AI Filters](/docs/ai-filters)) |
+| `app/[route]/client.tsx`        | Client component                                                 |
+| `app/[route]/page.tsx`          | Page wrapper                                                     |
 
 ### Step 1: Define Your Drizzle Table
 
@@ -241,6 +242,8 @@ export async function GET(req: NextRequest): Promise<Response> {
 ```
 
 `createDrizzleHandler` accepts either `schema: tableSchema.definition` (auto-derives filter types) or explicit `sliderKeys`, `facetKeys`, and `dateKeys` arrays when the table schema can't be imported on the server.
+
+> To add AI-powered filtering, create a second route at `app/[route]/api/ai/route.ts` using `createAIFilterHandler` from `@/lib/ai`. It reuses the same `tableSchema` to generate the AI prompt and output schema. See [AI Filters — API Route Setup](/docs/ai-filters#api-route-setup).
 
 ### Step 5: Client Component
 
