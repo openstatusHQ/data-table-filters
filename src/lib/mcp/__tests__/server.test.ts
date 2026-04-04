@@ -18,7 +18,6 @@ const mockRows = [
   { id: 2, level: "info", host: "web.example.com", latency: 50 },
 ];
 
- 
 const mockGetData = vi.fn(async (_opts: any) => ({
   rows: mockRows,
   total: 2,

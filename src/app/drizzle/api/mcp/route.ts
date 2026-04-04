@@ -26,7 +26,9 @@ const handler = createTableMCPHandler({
     "Query HTTP request logs (Drizzle/Postgres) with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
   schema: mcpSchema,
   getData: async ({ filters }) => {
-    const result = await drizzleHandler.execute(filters);
+    const result = await drizzleHandler.execute(
+      filters as Record<string, unknown>,
+    );
 
     // TODO: extract response row mapping — columnMapping already defines
     // the camelCase↔dot-notation relationship, could be reused here

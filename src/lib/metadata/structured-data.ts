@@ -81,7 +81,6 @@ export function getJsonLDFAQPage(
   };
 }
 
- 
 export function createJsonLDGraph(items: (Record<string, any> | null)[]) {
   const filtered = items.filter(
     (item): item is Record<string, any> => item !== null,
