@@ -143,17 +143,17 @@ describe("createTableMCPHandler", () => {
       expect(content.total).toBe(2);
     });
 
-    it("returns stats format with facets", async () => {
+    it("returns metadata format with facets", async () => {
       const handler = createHandler();
       const body = await callHandler(handler, "tools/call", {
         name: "query_table",
-        arguments: { format: "stats" },
+        arguments: { format: "metadata" },
       });
       const content = JSON.parse(body.result.content[0].text);
       expect(content.total).toBe(2);
       expect(content.facets.level).toBeDefined();
       expect(content.facets.level.rows).toHaveLength(2);
-      // stats format should not include rows
+      // metadata format should not include rows
       expect(content.rows).toBeUndefined();
     });
 

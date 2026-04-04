@@ -20,7 +20,7 @@ function createServer<T extends SchemaDefinition, R = Record<string, unknown>>(
     config.description,
     {
       filters: filtersSchema.optional(),
-      format: z.enum(["json", "stats"]).default("json"),
+      format: z.enum(["json", "metadata"]).default("json"),
     },
     async ({ filters: rawFilters, format }) => {
       try {
@@ -33,7 +33,7 @@ function createServer<T extends SchemaDefinition, R = Record<string, unknown>>(
         });
 
         const output =
-          format === "stats"
+          format === "metadata"
             ? { total: result.total, facets: result.facets ?? {} }
             : { rows: result.rows, total: result.total };
 
