@@ -25,6 +25,8 @@ npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
 | `data-table-schema`         | `.../r/data-table-schema.json`         | Declarative schema system with `col.*` factories                                               |
 | `data-table-drizzle`        | `.../r/data-table-drizzle.json`        | Drizzle ORM server-side helpers                                                                |
 | `data-table-query`          | `.../r/data-table-query.json`          | React Query infinite query integration                                                         |
+| `data-table-filter-command-ai` | `.../r/data-table-filter-command-ai.json` | AI-powered natural language → filter inference                                              |
+| `data-table-mcp`            | `.../r/data-table-mcp.json`            | MCP server endpoint for AI agents                                                              |
 
 All URLs use base `https://data-table.openstatus.dev`.
 

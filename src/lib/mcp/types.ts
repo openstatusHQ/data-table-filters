@@ -1,0 +1,27 @@
+import type { FacetMetadataSchema } from "@/lib/data-table/types";
+import type { SchemaDefinition, InferSchemaType } from "@/lib/store/schema";
+
+export type OutputFormat = "json" | "stats";
+
+export interface GetDataOptions<T extends SchemaDefinition> {
+  filters: Partial<InferSchemaType<T>>;
+  page: number;
+  pageSize: number;
+}
+
+export interface GetDataResult<R = Record<string, unknown>> {
+  rows: R[];
+  total: number;
+  facets?: Record<string, FacetMetadataSchema>;
+}
+
+export interface TableMCPConfig<
+  T extends SchemaDefinition,
+  R = Record<string, unknown>,
+> {
+  schema: T;
+  getData: (options: GetDataOptions<T>) => Promise<GetDataResult<R>>;
+  description: string;
+  name?: string;
+  maxPageSize?: number;
+}

@@ -1,0 +1,192 @@
+---
+title: "MCP Server"
+description: "Expose your data table as a queryable MCP endpoint for AI agents"
+author: "openstatus"
+publishedAt: "2026-04-04"
+faq:
+  - question: "What is MCP?"
+    answer: "The Model Context Protocol (MCP) is an open standard that lets AI agents discover and call tools over HTTP. By exposing your data table as an MCP server, any MCP-compatible client (Claude Desktop, Cursor, custom agents) can query your data programmatically."
+  - question: "Does MCP replace the AI filters block?"
+    answer: "No. AI filters translate natural language into table filters on the client side. MCP exposes your data as a server-side tool that agents call directly — they're complementary. Use AI filters for human users typing queries, and MCP for agent-to-agent data access."
+  - question: "Which transport does it use?"
+    answer: "Streamable HTTP (2025-03-26 spec) via the official @modelcontextprotocol/sdk. The server runs stateless — no session tracking, fully serverless-compatible."
+  - question: "Can I expose multiple tables?"
+    answer: "Each MCP endpoint serves one table. To expose multiple tables, create separate route handlers (e.g., /api/mcp/logs, /api/mcp/orders), each with its own schema and getData function."
+  - question: "How does schema auto-conversion work?"
+    answer: "Your existing BYOS field definitions (field.string(), field.number(), field.array(field.stringLiteral(...)), etc.) are automatically converted to Zod schemas, which the MCP SDK then converts to JSON Schema for the tools/list response. Agents see typed filter parameters without any manual schema duplication."
+---
+
+# MCP Server
+
+The `data-table-mcp` block exposes your data table as an MCP endpoint. AI agents can discover the table's schema via `tools/list` and query it with filters, pagination, and faceted stats via a single `query_table` tool.
+
+Stateless. Serverless-compatible. Schema auto-generated from your existing field definitions.
+
+## Installation
+
+```bash
+npx shadcn@latest add https://data-table-filters.com/r/data-table-mcp.json
+```
+
+This installs `@/lib/mcp` and the `@modelcontextprotocol/sdk` dependency.
+
+## Prerequisites
+
+- The **data-table** block must be installed (provides the BYOS schema system)
+- A data source — any async function that accepts filters, page, and pageSize and returns rows + total
+
+## Route Setup
+
+Create a route handler that exports POST, GET, and DELETE for Streamable HTTP spec compliance:
+
+```ts
+// app/api/mcp/route.ts
+import { createTableMCPHandler } from "@/lib/mcp";
+import { createSchema, field } from "@/lib/store/schema";
+
+const schema = createSchema({
+  level: field.array(field.stringLiteral(["error", "warn", "info"])),
+  host: field.string(),
+  latency: field.array(field.number()).delimiter("-"),
+  status: field.array(field.number()).delimiter(","),
+  date: field.array(field.timestamp()).delimiter("-"),
+});
+
+const handler = createTableMCPHandler({
+  schema: schema.definition,
+  description: "Query HTTP request logs with filters for level, host, latency, status, and date range",
+  getData: async ({ filters, page, pageSize }) => {
+    // Your data source — database query, API call, in-memory filter, etc.
+    const { rows, total } = await fetchLogs(filters, { page, pageSize });
+    const facets = computeFacets(rows);
+    return { rows, total, facets };
+  },
+});
+
+export { handler as POST, handler as GET, handler as DELETE };
+```
+
+### With Drizzle ORM
+
+If you're using the `data-table-drizzle` block, wire up the existing handler:
+
+```ts
+import { createTableMCPHandler } from "@/lib/mcp";
+import { createDrizzleHandler } from "@/lib/drizzle";
+import { tableSchema } from "./table-schema";
+import { db } from "@/db";
+import { logs } from "@/db/schema";
+
+const drizzle = createDrizzleHandler({ db, table: logs, schema: tableSchema });
+
+const handler = createTableMCPHandler({
+  schema: tableSchema.definition,
+  description: "Query HTTP request logs",
+  getData: async ({ filters, page, pageSize }) => {
+    return drizzle.query({ filters, page, pageSize });
+  },
+});
+
+export { handler as POST, handler as GET, handler as DELETE };
+```
+
+## Config
+
+| Option        | Type                     | Default          | Description                              |
+| ------------- | ------------------------ | ---------------- | ---------------------------------------- |
+| `schema`      | `SchemaDefinition`       | —                | BYOS field definitions for filter params |
+| `description` | `string`                 | —                | Tool description (shown to agents)       |
+| `getData`     | `(opts) => Promise<...>` | —                | Data source function                     |
+| `name`        | `string`                 | `"data-table"`   | MCP server name in `serverInfo`          |
+| `maxPageSize` | `number`                 | `500`            | Upper bound for `pageSize` parameter     |
+
+## The `query_table` Tool
+
+The handler registers a single MCP tool with these parameters:
+
+| Parameter  | Type              | Default  | Description                         |
+| ---------- | ----------------- | -------- | ----------------------------------- |
+| `filters`  | object (optional) | `{}`     | Auto-generated from your schema     |
+| `page`     | integer           | `1`      | Page number (1-indexed)             |
+| `pageSize` | integer           | `50`     | Rows per page (max: `maxPageSize`)  |
+| `format`   | `"json" \| "stats"` | `"json"` | Output format                     |
+
+### Output formats
+
+**`json`** — returns rows with pagination metadata:
+```json
+{ "rows": [...], "total": 1234, "page": 1, "pageSize": 50 }
+```
+
+**`stats`** — returns total count and facet metadata (no rows):
+```json
+{ "total": 1234, "facets": { "level": { "rows": [{ "value": "error", "total": 42 }], "total": 1234 } } }
+```
+
+## Schema Mapping
+
+Your BYOS field types are automatically converted to typed tool parameters:
+
+| Field type                        | Tool parameter type                  |
+| --------------------------------- | ------------------------------------ |
+| `field.string()`                  | `string` (optional)                  |
+| `field.number()`                  | `number` (optional)                  |
+| `field.boolean()`                 | `boolean` (optional)                 |
+| `field.timestamp()`               | `number` (optional, Unix ms)         |
+| `field.stringLiteral(["a", "b"])` | `enum ["a", "b"]` (optional)         |
+| `field.array(field.number())`     | `array of number` (optional)         |
+| `field.array(field.stringLiteral(...))` | `array of enum` (optional)     |
+
+Timestamp fields accept Unix milliseconds over the wire and are deserialized to `Date` objects before reaching your `getData` function.
+
+## Connecting Clients
+
+### Claude Desktop
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "data-table": {
+      "url": "http://localhost:3000/api/mcp"
+    }
+  }
+}
+```
+
+### Verification (curl)
+
+```bash
+# Initialize
+curl -X POST http://localhost:3000/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}'
+
+# List tools (see auto-generated schema)
+curl -X POST http://localhost:3000/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+
+# Query with filters
+curl -X POST http://localhost:3000/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"level":["error"]},"page":1,"pageSize":5,"format":"stats"}}}'
+```
+
+## How It Works
+
+1. `createTableMCPHandler` converts your BYOS schema to a Zod schema at startup
+2. The MCP SDK auto-converts Zod to JSON Schema for `tools/list` responses
+3. On each request, a fresh `McpServer` + `WebStandardStreamableHTTPServerTransport` is created (stateless)
+4. Tool calls are validated by the SDK via Zod, then timestamp values are deserialized (`number` → `Date`)
+5. Your `getData` function is called with typed filters, page, and pageSize
+6. Results are formatted as JSON (`rows` + metadata) or stats (`total` + `facets`)
+
+## Dependencies
+
+- `@modelcontextprotocol/sdk` — MCP protocol implementation
+- `zod` — Schema validation (already installed with the core block)

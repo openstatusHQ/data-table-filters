@@ -4,16 +4,33 @@
 
 Make `data-table-filters` queryable by AI agents via the **Model Context Protocol (MCP)**. The existing type-safe schema system (`createSchema` / `field.*`), data pipeline (`filterData`, `sortData`, `getFacetsFromData`), and stateless API pattern are bridged into a clean MCP endpoint at `POST /api/mcp`.
 
-**Key decisions:**
+---
 
-- MCP Streamable HTTP transport (2025-03-26 spec), single Next.js API route
-- Developer passes the schema they want exposed (can be a subset — no "filter vs control" magic in the library)
-- Auto-generate MCP tool definitions from that schema
-- `GetDataResult` has optional `facets` (matching `FacetMetadataSchema`) — developer computes over full dataset before pagination; no separate `stats` field
-- Facets included in `query_table` response when `format='stats'` (no separate tool)
-- `createTableMCPHandler` auto-deserializes MCP inputs by walking schema types directly — no `parse()` (which expects URL strings); only converts timestamps (`number → Date`), all other JSON primitives pass through as-is
-- No new npm packages (JSON-RPC 2.0 implemented directly)
-- No auth, no SSE
+## Key Decisions (resolved via grill session 2026-04-04)
+
+| Decision | Resolution |
+|---|---|
+| JSON-RPC implementation | Use `@modelcontextprotocol/sdk` — no hand-rolled JSON-RPC |
+| Tools exposed | `query_table` only — `describe_schema` dropped (redundant with `tools/list`) |
+| Schema conversion | `FieldConfig → Zod` directly (`schema-to-zod.ts`), SDK converts Zod → JSON Schema for `tools/list` |
+| Output formats | `json` and `stats` only — markdown/csv dropped (agents prefer structured data) |
+| Formatters file | Killed — inline json/stats logic in `server.ts` (it's a ternary) |
+| Deserialization | Keep `deserialize.ts` as small dedicated file (timestamp `number → Date` boundary) |
+| filterData bugs | Fix in separate commit before MCP work |
+| `filters` typing | Generic — `Partial<InferSchemaType<T>>` threaded from schema |
+| `rows` typing | Second generic `R` with default `Record<string, unknown>` |
+| `maxPageSize` | Configurable via config, default 500 |
+| `description` | **Required** on `TableMCPConfig` |
+| Tool name | Hardcoded `query_table` (one table per endpoint) |
+| Facet types | Reuse existing `FacetMetadataSchema` types — no parallel definitions |
+| HTTP methods | POST + GET + DELETE exported from route (Streamable HTTP spec-compliant) |
+| Transport | Streamable HTTP (2025-03-26 spec) via SDK's `StreamableHTTPServerTransport` |
+| Sessions | Stateless — no session tracking, serverless-friendly |
+| Distribution | Separate optional registry block (`data-table-mcp`) |
+| MCP SDK dependency | Auto-installed via block registry metadata |
+| Public API | `createTableMCPHandler` + 3 types only (internals not exported) |
+| Error handling | try/catch around `getData`, surface via `isError: true` |
+| Testing | Unit tests for handler, schema-to-zod, and deserialization |
 
 ---
 
@@ -21,143 +38,124 @@ Make `data-table-filters` queryable by AI agents via the **Model Context Protoco
 
 ```
 src/lib/mcp/
-  types.ts          – TypeScript interfaces
-  schema-bridge.ts  – SchemaDefinition → JSON Schema (for tool inputSchema)
-  deserialize.ts    – MCP raw inputs → typed values (timestamps only; JSON primitives pass through)
-  formatters.ts     – Response format utilities (json, stats, markdown, csv)
-  server.ts         – createTableMCPHandler() factory
-  index.ts          – Barrel exports
+  types.ts          – TypeScript interfaces (generics for filters + rows)
+  schema-to-zod.ts  – FieldConfig → Zod schema (internal, not exported)
+  deserialize.ts    – MCP raw inputs → typed values (timestamps only)
+  server.ts         – createTableMCPHandler() factory + inline format logic
+  index.ts          – Barrel exports (tight public API)
 
 src/app/api/mcp/
-  route.ts          – Next.js POST handler (demo wiring)
+  route.ts          – Next.js route handler (POST + GET + DELETE)
 ```
 
 ---
 
-## File Details
-
-### `src/lib/mcp/types.ts`
+## Types
 
 ```ts
-export type OutputFormat = "json" | "stats" | "markdown" | "csv";
+import type { SchemaDefinition, InferSchemaType } from "@/lib/store/schema";
+// Reuse existing facet types — no parallel definitions
+import type { FacetMetadataSchema } from "...existing location...";
 
-export interface GetDataOptions {
-  filters: Record<string, unknown>; // already deserialized (Dates, etc.)
-  page: number; // 1-based
+export type OutputFormat = "json" | "stats";
+
+export interface GetDataOptions<T extends SchemaDefinition> {
+  filters: Partial<InferSchemaType<T>>;
+  page: number;
   pageSize: number;
 }
 
-export interface FacetRow {
-  value: unknown;
+export interface GetDataResult<R = Record<string, unknown>> {
+  rows: R[];
   total: number;
+  facets?: Record<string, FacetMeta>; // reuses existing facet types
 }
 
-export interface FacetMeta {
-  rows: FacetRow[];
-  total: number;
-  min?: number;
-  max?: number;
-}
-
-export interface GetDataResult {
-  rows: Record<string, unknown>[];
-  total: number;
-  facets?: Record<string, FacetMeta>; // matches FacetMetadataSchema from getFacetsFromData
-}
-
-export interface TableMCPConfig {
-  schema: SchemaDefinition; // filter-only schema (developer's choice)
-  getData: (options: GetDataOptions) => Promise<GetDataResult>;
-  name?: string;
-  description?: string;
+export interface TableMCPConfig<T extends SchemaDefinition, R = Record<string, unknown>> {
+  schema: T;
+  getData: (options: GetDataOptions<T>) => Promise<GetDataResult<R>>;
+  description: string;               // REQUIRED — agent discoverability
+  name?: string;                      // serverInfo.name, default "data-table"
+  maxPageSize?: number;               // default 500
 }
 ```
 
-### `src/lib/mcp/schema-bridge.ts`
+---
 
-Converts `FieldConfig` → JSON Schema recursively.
+## `schema-to-zod.ts` (internal)
 
-| Field type      | JSON Schema                                                         |
-| --------------- | ------------------------------------------------------------------- |
-| `string`        | `{ type: 'string' }`                                                |
-| `number`        | `{ type: 'number' }`                                                |
-| `boolean`       | `{ type: 'boolean' }`                                               |
-| `timestamp`     | `{ type: 'number', description: 'Unix timestamp in milliseconds' }` |
-| `stringLiteral` | `{ type: 'string', enum: config.literals }`                         |
-| `array`         | `{ type: 'array', items: <recurse itemConfig> }`                    |
-| `sort`          | `{ type: 'object', properties: { id: string, desc: boolean } }`     |
+Converts `FieldConfig` → Zod schema. SDK auto-converts Zod → JSON Schema for `tools/list`.
 
-### `src/lib/mcp/deserialize.ts`
+| Field type      | Zod output                                          |
+| --------------- | --------------------------------------------------- |
+| `string`        | `z.string().optional()`                             |
+| `number`        | `z.number().optional()`                             |
+| `boolean`       | `z.boolean().optional()`                            |
+| `timestamp`     | `z.number().optional().describe("Unix ms")`         |
+| `stringLiteral` | `z.enum(literals).optional()`                       |
+| `array` of X    | `z.array(zodX).optional()`                          |
 
-Walks the schema and converts raw MCP JSON values to typed values. Does **not** use `parse()` (which expects URL search param strings). MCP sends proper JSON so values are already the correct primitive types — only `timestamp` needs conversion.
+---
+
+## `deserialize.ts` (internal)
+
+Walks the schema and converts raw MCP JSON values to typed values. Only `timestamp` needs conversion — all other JSON primitives pass through as-is.
 
 - `timestamp` single value: `new Date(value as number)`
 - `array` of timestamps: `(value as number[]).map(ms => new Date(ms))`
-- All other types: pass through as-is (already correct JSON primitives)
+- All other types: pass through
 
-Uses `FieldConfig.type` and `FieldConfig.itemConfig` — no external dependencies.
+---
 
-### `src/lib/mcp/formatters.ts`
+## `server.ts` — `createTableMCPHandler()`
 
-All functions signature: `(result: GetDataResult) => object`
+Uses `@modelcontextprotocol/sdk` `McpServer` + `StreamableHTTPServerTransport`.
 
-- **`formatJson`** → `{ rows, total }`
-- **`formatStats`** → `{ rows, total, facets }` — includes developer-provided facets when present (no separate stats field)
-- **`formatMarkdown`** → `{ markdown, total }` — GitHub markdown table; raw rows dropped (agent has no use for them alongside the formatted string)
-- **`formatCsv`** → `{ csv, total }` — CSV with header row, quoted values when needed; raw rows dropped
-
-### `src/lib/mcp/server.ts` — `createTableMCPHandler()`
-
-Returns `async (body: unknown) => unknown | null`.
-
-**MCP tools exposed:**
-
-#### `query_table`
+**Single tool: `query_table`**
 
 ```
-filters    – auto-generated JSON Schema from developer's schema (all optional)
-page       – integer, default 1
-pageSize   – integer, default 50, max 500
-format     – 'json' | 'stats' | 'markdown' | 'csv', default 'json'
+filters    – auto-generated Zod schema from developer's schema (all optional)
+page       – z.number().int().default(1)
+pageSize   – z.number().int().default(50).max(config.maxPageSize ?? 500)
+format     – z.enum(["json", "stats"]).default("json")
 ```
 
-Flow: validate args → deserialize filters (auto) → call `getData()` → format response
+**Flow:** validate args (SDK handles via Zod) → deserialize filters → call `getData()` → format response (include facets if `stats`) → return
 
-#### `describe_schema`
-
-```
-(no arguments)
-```
-
-Returns the full JSON Schema of available filter fields with types and allowed values.
-**Agents should call this first** to understand what filters exist.
-
-**JSON-RPC methods handled:**
-
-| Method                      | Response                                        |
-| --------------------------- | ----------------------------------------------- |
-| `initialize`                | `{ protocolVersion, capabilities, serverInfo }` |
-| `notifications/initialized` | `null` (204 No Content)                         |
-| `tools/list`                | `{ tools: [query_table, describe_schema] }`     |
-| `tools/call`                | Tool result or JSON-RPC error                   |
-| anything else               | JSON-RPC error -32601                           |
-
-### `src/app/api/mcp/route.ts` — Demo wiring
-
-Creates a **filter-only schema** (excludes `sort`, `uuid`, `live`, `size`, `start`, `direction`, `cursor`), wires to the existing mock data pipeline:
+**Error handling:**
 
 ```ts
-import {
-  filterData,
-  getFacetsFromData,
-  sortData,
-} from "@/app/infinite/api/helpers";
-import { mock, mockLive } from "@/app/infinite/api/mock";
+try {
+  const result = await config.getData({ filters, page, pageSize });
+  // return formatted result
+} catch (e) {
+  return { content: [{ type: "text", text: `getData failed: ${e.message}` }], isError: true };
+}
+```
+
+---
+
+## `index.ts` — Public API
+
+```ts
+export { createTableMCPHandler } from "./server";
+export type { TableMCPConfig, GetDataOptions, GetDataResult } from "./types";
+```
+
+---
+
+## Route Handler — `src/app/api/mcp/route.ts`
+
+Exports `POST`, `GET`, and `DELETE` for Streamable HTTP spec compliance. Stateless — no session tracking.
+
+```ts
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
 import { createTableMCPHandler } from "@/lib/mcp";
 import { createSchema, field } from "@/lib/store/schema";
+import { filterData, getFacetsFromData, sortData } from "@/app/infinite/api/helpers";
+import { mock, mockLive } from "@/app/infinite/api/mock";
 
 const mcpSchema = createSchema({
   level: field.array(field.stringLiteral(LEVELS)),
@@ -172,13 +170,13 @@ const mcpSchema = createSchema({
 
 const handler = createTableMCPHandler({
   name: "data-table-filters",
-  description: "Query HTTP request logs",
+  description: "Query HTTP request logs with filters for level, method, host, pathname, latency, status, regions, and date range",
   schema: mcpSchema.definition,
   getData: async ({ filters, page, pageSize }) => {
     const totalData = [...mockLive, ...mock];
-    const filtered = filterData(totalData, filters); // filters already typed
+    const filtered = filterData(totalData, filters);
     const sorted = sortData(filtered, undefined);
-    const facets = getFacetsFromData(filtered); // full-dataset facets
+    const facets = getFacetsFromData(filtered);
     const total = filtered.length;
     const rows = sorted
       .slice((page - 1) * pageSize, page * pageSize)
@@ -187,41 +185,18 @@ const handler = createTableMCPHandler({
   },
 });
 
-export async function POST(req: Request) {
-  const body = await req.json();
-  const result = await handler(body);
-  if (result === null) return new Response(null, { status: 204 });
-  return Response.json(result);
-}
+export { handler as POST, handler as GET, handler as DELETE };
+// Note: actual HTTP method routing handled inside createTableMCPHandler
+// via StreamableHTTPServerTransport
 ```
 
 ---
 
-## Protocol Flow
+## Pre-requisite: filterData fixes (separate commit)
 
-```
-AI Agent                       POST /api/mcp
-   |-- initialize           -> return capabilities
-   |-- notifications/init   -> 204
-   |-- tools/list           -> [query_table, describe_schema]
-   |-- describe_schema      -> JSON Schema of all filter fields + allowed values
-   |-- query_table({
-   |     filters: { level: ["error"], latency: [100, 500] },
-   |     page: 1, pageSize: 20, format: "stats"
-   |   })                   -> { rows, total, facets }
-```
-
----
-
-## filterData fixes (pre-requisite)
-
-Two bugs in `src/app/infinite/api/helpers.ts` must be fixed before the MCP demo will work correctly:
+Two bugs in `src/app/infinite/api/helpers.ts`:
 
 ### 1. Missing filter cases for `host`, `method`, `pathname`
-
-These keys are in `filterKeys` but have no `if` block — filters sent by agents are silently ignored.
-
-Add inside the `return data.filter(...)` loop:
 
 ```ts
 if (key === "method" && Array.isArray(filter)) {
@@ -237,47 +212,21 @@ if (key === "pathname" && typeof filter === "string" && filter) {
 
 ### 2. Early `return true` in latency/timing block
 
-The existing latency block ends with `return true`, which short-circuits all remaining filter checks (e.g. if latency passes, `status`, `regions`, `date` are never evaluated). Remove that early return so execution falls through to subsequent filters.
-
-```ts
-// Before
-if (filter.length === 1 && row[key] !== filter[0]) {
-  return false;
-} else if (
-  filter.length === 2 &&
-  (row[key] < filter[0] || row[key] > filter[1])
-) {
-  return false;
-}
-return true; // ← REMOVE THIS
-
-// After
-if (filter.length === 1 && row[key] !== filter[0]) {
-  return false;
-} else if (
-  filter.length === 2 &&
-  (row[key] < filter[0] || row[key] > filter[1])
-) {
-  return false;
-}
-// fall through to next filter
-```
+Remove the `return true` that short-circuits remaining filter checks.
 
 ---
 
-## Critical Files
+## Testing
 
-| File                                                | Usage                                                                    |
-| --------------------------------------------------- | ------------------------------------------------------------------------ |
-| `src/lib/store/schema/types.ts`                     | `SchemaDefinition`, `FieldConfig`                                        |
-| `src/lib/store/schema/field.ts`                     | Field builder reference                                                  |
-| `src/app/infinite/api/helpers.ts`                   | `filterData`, `sortData`, `getFacetsFromData` — **requires fixes above** |
-| `src/app/infinite/api/mock.ts`                      | `mock`, `mockLive` — demo data                                           |
-| `src/constants/levels.ts`, `method.ts`, `region.ts` | Enum values for mcpSchema                                                |
+Unit tests for:
+
+- **`schema-to-zod.ts`** — each field type produces correct Zod schema, round-trips through parse
+- **`deserialize.ts`** — timestamp conversion, pass-through for other types, nested arrays
+- **`server.ts` / handler** — full request/response cycle: initialize, tools/list, query_table with filters, stats format, error handling, pagination bounds
 
 ---
 
-## Verification
+## Verification (manual)
 
 ```bash
 # Initialize
@@ -290,20 +239,10 @@ curl -X POST http://localhost:3000/api/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
 
-# Describe schema (agent discovery)
-curl -X POST http://localhost:3000/api/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"describe_schema","arguments":{}}}'
-
 # Query with filters + stats
 curl -X POST http://localhost:3000/api/mcp \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"level":["error"]},"page":1,"pageSize":5,"format":"stats"}}}'
-
-# Markdown output
-curl -X POST http://localhost:3000/api/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"regions":["ams"]},"format":"markdown","pageSize":10}}}'
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"level":["error"]},"page":1,"pageSize":5,"format":"stats"}}}'
 ```
 
 Claude Desktop config:
@@ -311,3 +250,11 @@ Claude Desktop config:
 ```json
 { "mcpServers": { "data-table": { "url": "http://localhost:3000/api/mcp" } } }
 ```
+
+---
+
+## Registry Block
+
+Shipped as `data-table-mcp` — separate optional block. Dependencies auto-installed via registry metadata:
+
+- `@modelcontextprotocol/sdk`
