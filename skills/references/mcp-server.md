@@ -4,7 +4,7 @@
 
 ## Overview
 
-Expose any data-table-filters table as an MCP endpoint. AI agents discover the schema via `tools/list` and query data with filters, pagination, and faceted stats via a single `query_table` tool. Stateless, serverless-compatible.
+Expose any data-table-filters table as an MCP endpoint. AI agents discover the schema via `tools/list` and query data with filters, cursor-based pagination, and faceted stats via a single `query_table` tool. Stateless, serverless-compatible.
 
 ## Library Exports (`@/lib/mcp`)
 
@@ -19,26 +19,107 @@ Internals (not exported): `schemaToZod` (FieldConfig → Zod), `deserializeFilte
 
 ## Route Setup
 
-```ts
-// app/api/mcp/route.ts
-import { createTableMCPHandler } from "@/lib/mcp";
-import { createSchema, field } from "@/lib/store/schema";
+The recommended pattern is to derive the MCP schema from your existing `filterSchema`, excluding UI-only fields (`live`, `uuid`) via destructuring. Each table co-locates its MCP route alongside its API route.
 
-const schema = createSchema({
-  level: field.array(field.stringLiteral(["error", "warn", "info"])),
-  host: field.string(),
-  latency: field.array(field.number()).delimiter("-"),
-  status: field.array(field.number()).delimiter(","),
-  date: field.array(field.timestamp()).delimiter("-"),
+### In-Memory Example (Infinite)
+
+```ts
+// app/infinite/api/mcp/route.ts
+import { createTableMCPHandler } from "@/lib/mcp";
+import { filterData, getFacetsFromData, sortData, splitData } from "@/app/infinite/api/helpers";
+import { filterSchema } from "@/app/infinite/filter-schema";
+import { mock, mockLive } from "@/app/infinite/api/mock";
+import type { SchemaDefinition } from "@/lib/store/schema";
+
+// Derive MCP schema from filterSchema, excluding UI-only fields
+const { live, uuid, ...mcpSchema } =
+  filterSchema.definition satisfies SchemaDefinition;
+
+const handler = createTableMCPHandler({
+  name: "data-table-filters",
+  description:
+    "Query HTTP request logs with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
+  schema: mcpSchema,
+  getData: async ({ filters }) => {
+    const totalData = [...mockLive, ...mock];
+    const filtered = filterData(totalData, filters);
+    const sorted = sortData(filtered, filters.sort ?? null);
+    const paginated = splitData(sorted, {
+      cursor: filters.cursor ?? null,
+      size: filters.size ?? 40,
+      direction: filters.direction ?? "next",
+    });
+    const facets = getFacetsFromData(filtered);
+    const total = filtered.length;
+    const rows = paginated.map((row) => ({
+      ...row,
+      date: row.date.toISOString(),
+    }));
+    return { rows, total, facets };
+  },
+});
+
+export { handler as POST, handler as GET, handler as DELETE };
+```
+
+### Drizzle/Postgres Example
+
+```ts
+// app/drizzle/api/mcp/route.ts
+import { createTableMCPHandler } from "@/lib/mcp";
+import { db } from "@/db/drizzle";
+import { logs } from "@/db/drizzle/schema";
+import { createDrizzleHandler } from "@/lib/drizzle";
+import { filterSchema } from "@/app/infinite/filter-schema";
+import { columnMapping } from "../../column-mapping";
+import { tableSchema } from "../../table-schema";
+import type { SchemaDefinition } from "@/lib/store/schema";
+
+const { live, uuid, ...mcpSchema } =
+  filterSchema.definition satisfies SchemaDefinition;
+
+const drizzleHandler = createDrizzleHandler({
+  db,
+  table: logs,
+  schema: tableSchema.definition,
+  columnMapping,
+  cursorColumn: "date",
+  defaultSize: 40,
 });
 
 const handler = createTableMCPHandler({
-  schema: schema.definition,
-  description: "Query HTTP request logs",
-  getData: async ({ filters, page, pageSize }) => {
-    const { rows, total } = await fetchLogs(filters, { page, pageSize });
-    const facets = computeFacets(rows);
-    return { rows, total, facets };
+  name: "data-table-drizzle",
+  description:
+    "Query HTTP request logs (Drizzle/Postgres) with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
+  schema: mcpSchema,
+  getData: async ({ filters }) => {
+    const result = await drizzleHandler.execute(
+      filters as Record<string, unknown>,
+    );
+
+    type LogRow = typeof logs.$inferSelect;
+    const rows = result.data.map((row) => {
+      const r = row as LogRow;
+      return {
+        uuid: r.uuid,
+        level: r.level,
+        method: r.method,
+        host: r.host,
+        pathname: r.pathname,
+        status: r.status,
+        latency: r.latency,
+        regions: r.regions,
+        date: r.date.toISOString(),
+        message: r.message ?? undefined,
+        "timing.dns": r.timingDns,
+        "timing.connection": r.timingConnection,
+        "timing.tls": r.timingTls,
+        "timing.ttfb": r.timingTtfb,
+        "timing.transfer": r.timingTransfer,
+      };
+    });
+
+    return { rows, total: result.filterRowCount, facets: result.facets };
   },
 });
 
@@ -49,22 +130,21 @@ Must export POST, GET, and DELETE for Streamable HTTP spec compliance.
 
 ## Config
 
-| Option        | Type                     | Default        | Description                          |
-| ------------- | ------------------------ | -------------- | ------------------------------------ |
-| `schema`      | `SchemaDefinition`       | required       | BYOS field definitions               |
-| `description` | `string`                 | required       | Tool description (shown to agents)   |
-| `getData`     | `(opts) => Promise<...>` | required       | Data source function                 |
-| `name`        | `string`                 | `"data-table"` | MCP server name                      |
-| `maxPageSize` | `number`                 | `500`          | Upper bound for pageSize             |
+| Option        | Type                     | Default        | Description                        |
+| ------------- | ------------------------ | -------------- | ---------------------------------- |
+| `schema`      | `SchemaDefinition`       | required       | BYOS field definitions             |
+| `description` | `string`                 | required       | Tool description (shown to agents) |
+| `getData`     | `(opts) => Promise<...>` | required       | Data source function               |
+| `name`        | `string`                 | `"data-table"` | MCP server name                    |
 
 ## Tool Parameters (`query_table`)
 
-| Parameter  | Type     | Default  | Description                      |
-| ---------- | -------- | -------- | -------------------------------- |
-| `filters`  | object?  | `{}`     | Auto-generated from BYOS schema  |
-| `page`     | integer  | `1`      | 1-indexed page number            |
-| `pageSize` | integer  | `50`     | Rows per page (max: maxPageSize) |
-| `format`   | enum     | `"json"` | `"json"` or `"stats"`           |
+| Parameter | Type    | Default  | Description                                          |
+| --------- | ------- | -------- | ---------------------------------------------------- |
+| `filters` | object? | `{}`     | Auto-generated from BYOS schema (includes pagination) |
+| `format`  | enum    | `"json"` | `"json"` or `"stats"`                                |
+
+Pagination is handled via filter fields: `cursor` (Unix ms timestamp), `size` (rows per page, default 40), `direction` (`"prev"` or `"next"`). Sorting via `sort` (e.g. `{ id: "latency", desc: true }`).
 
 ## Schema Mapping (FieldConfig → Zod → JSON Schema)
 
@@ -83,7 +163,7 @@ All filter fields are optional. Timestamps are deserialized from Unix ms to `Dat
 
 **json** (default):
 ```json
-{ "rows": [...], "total": 1234, "page": 1, "pageSize": 50 }
+{ "rows": [...], "total": 1234 }
 ```
 
 **stats** (facets only, no rows):
@@ -93,9 +173,20 @@ All filter fields are optional. Timestamps are deserialized from Unix ms to `Dat
 
 ## Client Configuration
 
-Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+Claude Code (`.mcp.json`):
 ```json
-{ "mcpServers": { "data-table": { "url": "http://localhost:3000/api/mcp" } } }
+{
+  "mcpServers": {
+    "data-table-infinite": {
+      "type": "http",
+      "url": "http://localhost:3000/infinite/api/mcp"
+    },
+    "data-table-drizzle": {
+      "type": "http",
+      "url": "http://localhost:3000/drizzle/api/mcp"
+    }
+  }
+}
 ```
 
 ## Architecture
@@ -107,6 +198,13 @@ src/lib/mcp/
   deserialize.ts    – timestamp number → Date (internal)
   server.ts         – createTableMCPHandler() factory
   index.ts          – Barrel exports
+  __tests__/        – Unit tests for handler, schema-to-zod, deserialize
+
+src/app/infinite/api/mcp/
+  route.ts          – In-memory demo MCP route
+
+src/app/drizzle/api/mcp/
+  route.ts          – Drizzle/Postgres MCP route
 ```
 
 Per-request: fresh McpServer + WebStandardStreamableHTTPServerTransport (stateless, no session tracking).

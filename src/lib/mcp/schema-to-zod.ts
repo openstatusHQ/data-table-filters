@@ -21,6 +21,10 @@ function fieldConfigToZod(config: FieldConfig<unknown>): ZodTypeAny {
           .optional();
       }
       return z.string().optional();
+    case "sort":
+      return z
+        .object({ id: z.string(), desc: z.boolean() })
+        .optional();
     case "array": {
       const itemZod = config.itemConfig
         ? fieldConfigToZod(config.itemConfig)

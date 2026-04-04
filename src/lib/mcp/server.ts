@@ -9,7 +9,7 @@ import { deserializeFilters } from "./deserialize";
 function createServer<
   T extends SchemaDefinition,
   R = Record<string, unknown>,
->(config: TableMCPConfig<T, R>, maxPageSize: number, filtersSchema: z.ZodObject<z.ZodRawShape>) {
+>(config: TableMCPConfig<T, R>, filtersSchema: z.ZodObject<z.ZodRawShape>) {
   const server = new McpServer({
     name: config.name ?? "data-table",
     version: "1.0.0",
@@ -20,13 +20,9 @@ function createServer<
     config.description,
     {
       filters: filtersSchema.optional(),
-      page: z.number().int().default(1),
-      pageSize: z.number().int().default(50).refine((n) => n <= maxPageSize, {
-        message: `pageSize must be <= ${maxPageSize}`,
-      }),
       format: z.enum(["json", "stats"]).default("json"),
     },
-    async ({ filters: rawFilters, page, pageSize, format }) => {
+    async ({ filters: rawFilters, format }) => {
       try {
         const filters = rawFilters
           ? deserializeFilters(config.schema, rawFilters)
@@ -34,14 +30,12 @@ function createServer<
 
         const result = await config.getData({
           filters: filters as Parameters<typeof config.getData>[0]["filters"],
-          page,
-          pageSize,
         });
 
         const output =
           format === "stats"
             ? { total: result.total, facets: result.facets ?? {} }
-            : { rows: result.rows, total: result.total, page, pageSize };
+            : { rows: result.rows, total: result.total };
 
         return {
           content: [{ type: "text" as const, text: JSON.stringify(output) }],
@@ -67,11 +61,10 @@ export function createTableMCPHandler<
   T extends SchemaDefinition,
   R = Record<string, unknown>,
 >(config: TableMCPConfig<T, R>) {
-  const maxPageSize = config.maxPageSize ?? 500;
   const filtersSchema = schemaToZod(config.schema);
 
   return async function handler(request: Request): Promise<Response> {
-    const server = createServer(config, maxPageSize, filtersSchema);
+    const server = createServer(config, filtersSchema);
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,

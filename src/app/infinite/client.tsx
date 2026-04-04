@@ -158,7 +158,7 @@ function ClientInner({
   const facets = lastPage?.meta?.facets;
   const totalFetched = flatData?.length;
 
-  const { sort, start, size, uuid, cursor, direction, live, ...filter } =
+  const { sort, size, uuid, cursor, direction, live, ...filter } =
     search;
 
   // REMINDER: this is currently needed for the cmdk search

@@ -143,7 +143,10 @@ export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
   }));
 }
 
-export function splitData(data: ColumnSchema[], search: SearchParamsType) {
+export function splitData(
+  data: ColumnSchema[],
+  search: Pick<SearchParamsType, "cursor" | "size" | "direction">,
+) {
   let newData: ColumnSchema[] = [];
   const now = new Date();
   // cursor undefined = "now"

@@ -11,14 +11,14 @@ faq:
   - question: "Which transport does it use?"
     answer: "Streamable HTTP (2025-03-26 spec) via the official @modelcontextprotocol/sdk. The server runs stateless — no session tracking, fully serverless-compatible."
   - question: "Can I expose multiple tables?"
-    answer: "Each MCP endpoint serves one table. To expose multiple tables, create separate route handlers (e.g., /api/mcp/logs, /api/mcp/orders), each with its own schema and getData function."
+    answer: "Each MCP endpoint serves one table. To expose multiple tables, create separate route handlers co-located with each table's API (e.g., /infinite/api/mcp, /drizzle/api/mcp), each with its own schema and getData function."
   - question: "How does schema auto-conversion work?"
     answer: "Your existing BYOS field definitions (field.string(), field.number(), field.array(field.stringLiteral(...)), etc.) are automatically converted to Zod schemas, which the MCP SDK then converts to JSON Schema for the tools/list response. Agents see typed filter parameters without any manual schema duplication."
 ---
 
 # MCP Server
 
-The `data-table-mcp` block exposes your data table as an MCP endpoint. AI agents can discover the table's schema via `tools/list` and query it with filters, pagination, and faceted stats via a single `query_table` tool.
+The `data-table-mcp` block exposes your data table as an MCP endpoint. AI agents can discover the table's schema via `tools/list` and query it with filters, cursor-based pagination, sorting, and faceted stats via a single `query_table` tool.
 
 Stateless. Serverless-compatible. Schema auto-generated from your existing field definitions.
 
@@ -33,32 +33,48 @@ This installs `@/lib/mcp` and the `@modelcontextprotocol/sdk` dependency.
 ## Prerequisites
 
 - The **data-table** block must be installed (provides the BYOS schema system)
-- A data source — any async function that accepts filters, page, and pageSize and returns rows + total
+- A data source — any async function that accepts filters and returns rows + total
 
 ## Route Setup
 
-Create a route handler that exports POST, GET, and DELETE for Streamable HTTP spec compliance:
+Create a route handler co-located with your table's API. Export POST, GET, and DELETE for Streamable HTTP spec compliance.
+
+The recommended pattern derives the MCP schema from your existing `filterSchema`, excluding UI-only fields (`live`, `uuid`) via destructuring. This automatically includes all filter fields, sorting, and cursor-based pagination.
+
+### In-Memory Example
 
 ```ts
-// app/api/mcp/route.ts
+// app/infinite/api/mcp/route.ts
 import { createTableMCPHandler } from "@/lib/mcp";
-import { createSchema, field } from "@/lib/store/schema";
+import { filterData, getFacetsFromData, sortData, splitData } from "@/app/infinite/api/helpers";
+import { filterSchema } from "@/app/infinite/filter-schema";
+import { mock, mockLive } from "@/app/infinite/api/mock";
+import type { SchemaDefinition } from "@/lib/store/schema";
 
-const schema = createSchema({
-  level: field.array(field.stringLiteral(["error", "warn", "info"])),
-  host: field.string(),
-  latency: field.array(field.number()).delimiter("-"),
-  status: field.array(field.number()).delimiter(","),
-  date: field.array(field.timestamp()).delimiter("-"),
-});
+// Derive MCP schema from filterSchema, excluding UI-only fields
+const { live, uuid, ...mcpSchema } =
+  filterSchema.definition satisfies SchemaDefinition;
 
 const handler = createTableMCPHandler({
-  schema: schema.definition,
-  description: "Query HTTP request logs with filters for level, host, latency, status, and date range",
-  getData: async ({ filters, page, pageSize }) => {
-    // Your data source — database query, API call, in-memory filter, etc.
-    const { rows, total } = await fetchLogs(filters, { page, pageSize });
-    const facets = computeFacets(rows);
+  name: "data-table-filters",
+  description:
+    "Query HTTP request logs with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
+  schema: mcpSchema,
+  getData: async ({ filters }) => {
+    const totalData = [...mockLive, ...mock];
+    const filtered = filterData(totalData, filters);
+    const sorted = sortData(filtered, filters.sort ?? null);
+    const paginated = splitData(sorted, {
+      cursor: filters.cursor ?? null,
+      size: filters.size ?? 40,
+      direction: filters.direction ?? "next",
+    });
+    const facets = getFacetsFromData(filtered);
+    const total = filtered.length;
+    const rows = paginated.map((row) => ({
+      ...row,
+      date: row.date.toISOString(),
+    }));
     return { rows, total, facets };
   },
 });
@@ -66,24 +82,64 @@ const handler = createTableMCPHandler({
 export { handler as POST, handler as GET, handler as DELETE };
 ```
 
-### With Drizzle ORM
-
-If you're using the `data-table-drizzle` block, wire up the existing handler:
+### Drizzle/Postgres Example
 
 ```ts
+// app/drizzle/api/mcp/route.ts
 import { createTableMCPHandler } from "@/lib/mcp";
+import { db } from "@/db/drizzle";
+import { logs } from "@/db/drizzle/schema";
 import { createDrizzleHandler } from "@/lib/drizzle";
-import { tableSchema } from "./table-schema";
-import { db } from "@/db";
-import { logs } from "@/db/schema";
+import { filterSchema } from "@/app/infinite/filter-schema";
+import { columnMapping } from "../../column-mapping";
+import { tableSchema } from "../../table-schema";
+import type { SchemaDefinition } from "@/lib/store/schema";
 
-const drizzle = createDrizzleHandler({ db, table: logs, schema: tableSchema });
+const { live, uuid, ...mcpSchema } =
+  filterSchema.definition satisfies SchemaDefinition;
+
+const drizzleHandler = createDrizzleHandler({
+  db,
+  table: logs,
+  schema: tableSchema.definition,
+  columnMapping,
+  cursorColumn: "date",
+  defaultSize: 40,
+});
 
 const handler = createTableMCPHandler({
-  schema: tableSchema.definition,
-  description: "Query HTTP request logs",
-  getData: async ({ filters, page, pageSize }) => {
-    return drizzle.query({ filters, page, pageSize });
+  name: "data-table-drizzle",
+  description:
+    "Query HTTP request logs (Drizzle/Postgres) with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
+  schema: mcpSchema,
+  getData: async ({ filters }) => {
+    const result = await drizzleHandler.execute(
+      filters as Record<string, unknown>,
+    );
+
+    type LogRow = typeof logs.$inferSelect;
+    const rows = result.data.map((row) => {
+      const r = row as LogRow;
+      return {
+        uuid: r.uuid,
+        level: r.level,
+        method: r.method,
+        host: r.host,
+        pathname: r.pathname,
+        status: r.status,
+        latency: r.latency,
+        regions: r.regions,
+        date: r.date.toISOString(),
+        message: r.message ?? undefined,
+        "timing.dns": r.timingDns,
+        "timing.connection": r.timingConnection,
+        "timing.tls": r.timingTls,
+        "timing.ttfb": r.timingTtfb,
+        "timing.transfer": r.timingTransfer,
+      };
+    });
+
+    return { rows, total: result.filterRowCount, facets: result.facets };
   },
 });
 
@@ -98,24 +154,32 @@ export { handler as POST, handler as GET, handler as DELETE };
 | `description` | `string`                 | —                | Tool description (shown to agents)       |
 | `getData`     | `(opts) => Promise<...>` | —                | Data source function                     |
 | `name`        | `string`                 | `"data-table"`   | MCP server name in `serverInfo`          |
-| `maxPageSize` | `number`                 | `500`            | Upper bound for `pageSize` parameter     |
 
 ## The `query_table` Tool
 
 The handler registers a single MCP tool with these parameters:
 
-| Parameter  | Type              | Default  | Description                         |
-| ---------- | ----------------- | -------- | ----------------------------------- |
-| `filters`  | object (optional) | `{}`     | Auto-generated from your schema     |
-| `page`     | integer           | `1`      | Page number (1-indexed)             |
-| `pageSize` | integer           | `50`     | Rows per page (max: `maxPageSize`)  |
-| `format`   | `"json" \| "stats"` | `"json"` | Output format                     |
+| Parameter | Type              | Default  | Description                     |
+| --------- | ----------------- | -------- | ------------------------------- |
+| `filters` | object (optional) | `{}`     | Auto-generated from your schema |
+| `format`  | `"json" \| "stats"` | `"json"` | Output format                |
+
+### Pagination & Sorting
+
+Pagination and sorting are part of the `filters` object, derived from your `filterSchema`:
+
+| Filter field | Type                     | Default    | Description                   |
+| ------------ | ------------------------ | ---------- | ----------------------------- |
+| `cursor`     | `number` (Unix ms)       | now        | Cursor timestamp              |
+| `size`       | `number`                 | `40`       | Rows per page                 |
+| `direction`  | `"prev" \| "next"`       | `"next"`   | Pagination direction          |
+| `sort`       | `{ id, desc }`           | —          | Sort descriptor               |
 
 ### Output formats
 
-**`json`** — returns rows with pagination metadata:
+**`json`** — returns rows with total count:
 ```json
-{ "rows": [...], "total": 1234, "page": 1, "pageSize": 50 }
+{ "rows": [...], "total": 1234 }
 ```
 
 **`stats`** — returns total count and facet metadata (no rows):
@@ -141,15 +205,20 @@ Timestamp fields accept Unix milliseconds over the wire and are deserialized to 
 
 ## Connecting Clients
 
-### Claude Desktop
+### Claude Code
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+Add to `.mcp.json` in your project root:
 
 ```json
 {
   "mcpServers": {
-    "data-table": {
-      "url": "http://localhost:3000/api/mcp"
+    "data-table-infinite": {
+      "type": "http",
+      "url": "http://localhost:3000/infinite/api/mcp"
+    },
+    "data-table-drizzle": {
+      "type": "http",
+      "url": "http://localhost:3000/drizzle/api/mcp"
     }
   }
 }
@@ -159,22 +228,22 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 
 ```bash
 # Initialize
-curl -X POST http://localhost:3000/api/mcp \
+curl -X POST http://localhost:3000/infinite/api/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}'
 
 # List tools (see auto-generated schema)
-curl -X POST http://localhost:3000/api/mcp \
+curl -X POST http://localhost:3000/infinite/api/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
 
 # Query with filters
-curl -X POST http://localhost:3000/api/mcp \
+curl -X POST http://localhost:3000/infinite/api/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"level":["error"]},"page":1,"pageSize":5,"format":"stats"}}}'
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"level":["error"],"size":5},"format":"stats"}}}'
 ```
 
 ## How It Works
@@ -183,8 +252,8 @@ curl -X POST http://localhost:3000/api/mcp \
 2. The MCP SDK auto-converts Zod to JSON Schema for `tools/list` responses
 3. On each request, a fresh `McpServer` + `WebStandardStreamableHTTPServerTransport` is created (stateless)
 4. Tool calls are validated by the SDK via Zod, then timestamp values are deserialized (`number` → `Date`)
-5. Your `getData` function is called with typed filters, page, and pageSize
-6. Results are formatted as JSON (`rows` + metadata) or stats (`total` + `facets`)
+5. Your `getData` function is called with typed filters (including pagination and sort)
+6. Results are formatted as JSON (`rows` + `total`) or stats (`total` + `facets`)
 
 ## Dependencies
 

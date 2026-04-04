@@ -137,13 +137,11 @@ describe("createTableMCPHandler", () => {
       const handler = createHandler();
       const body = await callHandler(handler, "tools/call", {
         name: "query_table",
-        arguments: { page: 1, pageSize: 10 },
+        arguments: {},
       });
       const content = JSON.parse(body.result.content[0].text);
       expect(content.rows).toEqual(mockRows);
       expect(content.total).toBe(2);
-      expect(content.page).toBe(1);
-      expect(content.pageSize).toBe(10);
     });
 
     it("returns stats format with facets", async () => {
@@ -196,7 +194,7 @@ describe("createTableMCPHandler", () => {
       expect(dates[1].getTime()).toBe(ts2);
     });
 
-    it("uses default page=1 and pageSize=50", async () => {
+    it("passes empty filters by default", async () => {
       mockGetData.mockClear();
       const handler = createHandler();
       await callHandler(handler, "tools/call", {
@@ -204,8 +202,7 @@ describe("createTableMCPHandler", () => {
         arguments: {},
       });
       const opts = mockGetData.mock.calls[0]![0]!;
-      expect(opts.page).toBe(1);
-      expect(opts.pageSize).toBe(50);
+      expect(opts.filters).toEqual({});
     });
 
     it("returns error when getData throws", async () => {

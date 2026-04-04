@@ -92,6 +92,15 @@ describe("schemaToZod", () => {
     });
   });
 
+  it("converts sort field to optional z.object({ id, desc })", () => {
+    const schema = { sort: field.sort() };
+    const zod = schemaToZod(schema);
+    expect(zod.parse({ sort: { id: "latency", desc: true } })).toEqual({
+      sort: { id: "latency", desc: true },
+    });
+    expect(zod.parse({})).toEqual({});
+  });
+
   it("returns empty object for empty schema", () => {
     const zod = schemaToZod({});
     expect(zod.parse({})).toEqual({});
