@@ -8,8 +8,8 @@ Expose any data-table-filters table as an MCP endpoint. AI agents discover the s
 
 ## Library Exports (`@/lib/mcp`)
 
-| Export                    | Purpose                                                     |
-| ------------------------- | ----------------------------------------------------------- |
+| Export                    | Purpose                                                      |
+| ------------------------- | ------------------------------------------------------------ |
 | `createTableMCPHandler()` | Factory — returns a `(Request) => Promise<Response>` handler |
 | `TableMCPConfig`          | Config type for the handler factory                          |
 | `GetDataOptions`          | Input type for the `getData` callback                        |
@@ -26,7 +26,12 @@ The recommended pattern is to derive the MCP schema from your existing `filterSc
 ```ts
 // app/infinite/api/mcp/route.ts
 import { createTableMCPHandler } from "@/lib/mcp";
-import { filterData, getFacetsFromData, sortData, splitData } from "@/app/infinite/api/helpers";
+import {
+  filterData,
+  getFacetsFromData,
+  sortData,
+  splitData,
+} from "@/app/infinite/api/helpers";
 import { filterSchema } from "@/app/infinite/filter-schema";
 import { mock, mockLive } from "@/app/infinite/api/mock";
 import type { SchemaDefinition } from "@/lib/store/schema";
@@ -139,22 +144,22 @@ Must export POST, GET, and DELETE for Streamable HTTP spec compliance.
 
 ## Tool Parameters (`query_table`)
 
-| Parameter | Type    | Default  | Description                                          |
-| --------- | ------- | -------- | ---------------------------------------------------- |
+| Parameter | Type    | Default  | Description                                           |
+| --------- | ------- | -------- | ----------------------------------------------------- |
 | `filters` | object? | `{}`     | Auto-generated from BYOS schema (includes pagination) |
-| `format`  | enum    | `"json"` | `"json"` or `"stats"`                                |
+| `format`  | enum    | `"json"` | `"json"` or `"stats"`                                 |
 
 Pagination is handled via filter fields: `cursor` (Unix ms timestamp), `size` (rows per page, default 40), `direction` (`"prev"` or `"next"`). Sorting via `sort` (e.g. `{ id: "latency", desc: true }`).
 
 ## Schema Mapping (FieldConfig → Zod → JSON Schema)
 
-| Field type                            | JSON Schema output             |
-| ------------------------------------- | ------------------------------ |
-| `field.string()`                      | `{ "type": "string" }`        |
-| `field.number()`                      | `{ "type": "number" }`        |
-| `field.boolean()`                     | `{ "type": "boolean" }`       |
-| `field.timestamp()`                   | `{ "type": "number" }` (Unix ms) |
-| `field.stringLiteral(["a", "b"])`     | `{ "type": "string", "enum": ["a", "b"] }` |
+| Field type                              | JSON Schema output                                |
+| --------------------------------------- | ------------------------------------------------- |
+| `field.string()`                        | `{ "type": "string" }`                            |
+| `field.number()`                        | `{ "type": "number" }`                            |
+| `field.boolean()`                       | `{ "type": "boolean" }`                           |
+| `field.timestamp()`                     | `{ "type": "number" }` (Unix ms)                  |
+| `field.stringLiteral(["a", "b"])`       | `{ "type": "string", "enum": ["a", "b"] }`        |
 | `field.array(field.stringLiteral(...))` | `{ "type": "array", "items": { "enum": [...] } }` |
 
 All filter fields are optional. Timestamps are deserialized from Unix ms to `Date` before reaching `getData`.
@@ -162,18 +167,26 @@ All filter fields are optional. Timestamps are deserialized from Unix ms to `Dat
 ## Output Formats
 
 **json** (default):
+
 ```json
 { "rows": [...], "total": 1234 }
 ```
 
 **stats** (facets only, no rows):
+
 ```json
-{ "total": 1234, "facets": { "level": { "rows": [{"value": "error", "total": 42}], "total": 1234 } } }
+{
+  "total": 1234,
+  "facets": {
+    "level": { "rows": [{ "value": "error", "total": 42 }], "total": 1234 }
+  }
+}
 ```
 
 ## Client Configuration
 
 Claude Code (`.mcp.json`):
+
 ```json
 {
   "mcpServers": {

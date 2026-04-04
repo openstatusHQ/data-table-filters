@@ -22,7 +22,10 @@ export function deserializeFilters(
   return result;
 }
 
-function deserializeValue(config: FieldConfig<unknown>, value: unknown): unknown {
+function deserializeValue(
+  config: FieldConfig<unknown>,
+  value: unknown,
+): unknown {
   if (config.type === "timestamp" && typeof value === "number") {
     return new Date(value);
   }

@@ -323,8 +323,7 @@ function ClientInner() {
     });
   }, [facets]);
 
-  const { sort, size, uuid, cursor, direction, live, ...filter } =
-    search;
+  const { sort, size, uuid, cursor, direction, live, ...filter } = search;
 
   const defaultColumnFilters = React.useMemo(() => {
     return Object.entries(filter)

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "data-table-infinite": {
+      "type": "http",
+      "url": "http://localhost:3000/infinite/api/mcp"
+    },
+    "data-table-drizzle": {
+      "type": "http",
+      "url": "http://localhost:3000/drizzle/api/mcp"
+    }
+  }
+}

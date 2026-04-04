@@ -1,12 +1,12 @@
-import { createTableMCPHandler } from "@/lib/mcp";
 import {
   filterData,
   getFacetsFromData,
   sortData,
   splitData,
 } from "@/app/infinite/api/helpers";
-import { filterSchema } from "@/app/infinite/filter-schema";
 import { mock, mockLive } from "@/app/infinite/api/mock";
+import { filterSchema } from "@/app/infinite/filter-schema";
+import { createTableMCPHandler } from "@/lib/mcp";
 import type { SchemaDefinition } from "@/lib/store/schema";
 
 // Derive MCP schema from filterSchema, excluding UI-only fields

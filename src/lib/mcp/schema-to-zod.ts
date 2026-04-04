@@ -1,5 +1,5 @@
-import { z, type ZodTypeAny } from "zod";
 import type { FieldConfig, SchemaDefinition } from "@/lib/store/schema";
+import { z, type ZodTypeAny } from "zod";
 
 /**
  * Convert a single FieldConfig to its Zod equivalent.
@@ -22,9 +22,7 @@ function fieldConfigToZod(config: FieldConfig<unknown>): ZodTypeAny {
       }
       return z.string().optional();
     case "sort":
-      return z
-        .object({ id: z.string(), desc: z.boolean() })
-        .optional();
+      return z.object({ id: z.string(), desc: z.boolean() }).optional();
     case "array": {
       const itemZod = config.itemConfig
         ? fieldConfigToZod(config.itemConfig)

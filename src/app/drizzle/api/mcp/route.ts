@@ -1,11 +1,11 @@
-import { createTableMCPHandler } from "@/lib/mcp";
+import { filterSchema } from "@/app/infinite/filter-schema";
 import { db } from "@/db/drizzle";
 import { logs } from "@/db/drizzle/schema";
 import { createDrizzleHandler } from "@/lib/drizzle";
-import { filterSchema } from "@/app/infinite/filter-schema";
+import { createTableMCPHandler } from "@/lib/mcp";
+import type { SchemaDefinition } from "@/lib/store/schema";
 import { columnMapping } from "../../column-mapping";
 import { tableSchema } from "../../table-schema";
-import type { SchemaDefinition } from "@/lib/store/schema";
 
 // Derive MCP schema from filterSchema, excluding UI-only fields
 const { live, uuid, ...mcpSchema } =
@@ -26,9 +26,7 @@ const handler = createTableMCPHandler({
     "Query HTTP request logs (Drizzle/Postgres) with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
   schema: mcpSchema,
   getData: async ({ filters }) => {
-    const result = await drizzleHandler.execute(
-      filters,
-    );
+    const result = await drizzleHandler.execute(filters);
 
     // TODO: extract response row mapping — columnMapping already defines
     // the camelCase↔dot-notation relationship, could be reused here

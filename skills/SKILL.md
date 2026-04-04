@@ -36,7 +36,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 | **data-table-drizzle**           | `.../r/data-table-drizzle.json`                       | Drizzle ORM server-side helpers (auto-installs schema)                                         |
 | **data-table-query**             | `.../r/data-table-query.json`                         | React Query infinite query integration                                                         |
 | **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                             |
-| **data-table-mcp**              | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                           |
+| **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                           |
 
 All URLs use base `https://data-table.openstatus.dev`.
 

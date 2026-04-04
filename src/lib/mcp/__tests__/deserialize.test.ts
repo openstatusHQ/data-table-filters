@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { field } from "@/lib/store/schema";
+import { describe, expect, it } from "vitest";
 import { deserializeFilters } from "../deserialize";
 
 describe("deserializeFilters", () => {

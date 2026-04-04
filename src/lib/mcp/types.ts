@@ -1,5 +1,5 @@
 import type { FacetMetadataSchema } from "@/lib/data-table/types";
-import type { SchemaDefinition, InferSchemaType } from "@/lib/store/schema";
+import type { InferSchemaType, SchemaDefinition } from "@/lib/store/schema";
 
 export interface GetDataOptions<T extends SchemaDefinition> {
   filters: Partial<InferSchemaType<T>>;

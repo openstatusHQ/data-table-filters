@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import { createSchema, field } from "@/lib/store/schema";
+import { describe, expect, it, vi } from "vitest";
 import { createTableMCPHandler } from "../server";
 
 const LEVELS = ["error", "warn", "info"] as const;

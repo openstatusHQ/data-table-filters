@@ -14,6 +14,10 @@ faq:
     answer: "Each MCP endpoint serves one table. To expose multiple tables, create separate route handlers co-located with each table's API (e.g., /infinite/api/mcp, /drizzle/api/mcp), each with its own schema and getData function."
   - question: "How does schema auto-conversion work?"
     answer: "Your existing BYOS field definitions (field.string(), field.number(), field.array(field.stringLiteral(...)), etc.) are automatically converted to Zod schemas, which the MCP SDK then converts to JSON Schema for the tools/list response. Agents see typed filter parameters without any manual schema duplication."
+  - question: "How do I paginate results?"
+    answer: "Pagination is cursor-based, using the same fields as your table's UI. Pass cursor (Unix ms timestamp), size (rows per page, default 40), and direction ('next' or 'prev') inside the filters object. To get the next page, use the date of the last row as the cursor. Call with format 'stats' first to get the total count without fetching rows."
+  - question: "What are common use cases?"
+    answer: "Conversational data exploration (ask Claude Desktop or Cursor questions in natural language), monitoring and alerting (agents poll stats for anomalies), post-deploy validation (CI/CD agents check for error spikes), cross-table orchestration (agents query multiple endpoints to answer cross-cutting questions), internal tooling for non-developers (chat-based access to production data), and agent-to-agent pipelines (one agent's output feeds another's input)."
 ---
 
 # MCP Server
@@ -46,7 +50,12 @@ The recommended pattern derives the MCP schema from your existing `filterSchema`
 ```ts
 // app/infinite/api/mcp/route.ts
 import { createTableMCPHandler } from "@/lib/mcp";
-import { filterData, getFacetsFromData, sortData, splitData } from "@/app/infinite/api/helpers";
+import {
+  filterData,
+  getFacetsFromData,
+  sortData,
+  splitData,
+} from "@/app/infinite/api/helpers";
 import { filterSchema } from "@/app/infinite/filter-schema";
 import { mock, mockLive } from "@/app/infinite/api/mock";
 import type { SchemaDefinition } from "@/lib/store/schema";
@@ -148,58 +157,65 @@ export { handler as POST, handler as GET, handler as DELETE };
 
 ## Config
 
-| Option        | Type                     | Default          | Description                              |
-| ------------- | ------------------------ | ---------------- | ---------------------------------------- |
-| `schema`      | `SchemaDefinition`       | —                | BYOS field definitions for filter params |
-| `description` | `string`                 | —                | Tool description (shown to agents)       |
-| `getData`     | `(opts) => Promise<...>` | —                | Data source function                     |
-| `name`        | `string`                 | `"data-table"`   | MCP server name in `serverInfo`          |
+| Option        | Type                     | Default        | Description                              |
+| ------------- | ------------------------ | -------------- | ---------------------------------------- |
+| `schema`      | `SchemaDefinition`       | —              | BYOS field definitions for filter params |
+| `description` | `string`                 | —              | Tool description (shown to agents)       |
+| `getData`     | `(opts) => Promise<...>` | —              | Data source function                     |
+| `name`        | `string`                 | `"data-table"` | MCP server name in `serverInfo`          |
 
 ## The `query_table` Tool
 
 The handler registers a single MCP tool with these parameters:
 
-| Parameter | Type              | Default  | Description                     |
-| --------- | ----------------- | -------- | ------------------------------- |
-| `filters` | object (optional) | `{}`     | Auto-generated from your schema |
-| `format`  | `"json" \| "stats"` | `"json"` | Output format                |
+| Parameter | Type                | Default  | Description                     |
+| --------- | ------------------- | -------- | ------------------------------- |
+| `filters` | object (optional)   | `{}`     | Auto-generated from your schema |
+| `format`  | `"json" \| "stats"` | `"json"` | Output format                   |
 
 ### Pagination & Sorting
 
 Pagination and sorting are part of the `filters` object, derived from your `filterSchema`:
 
-| Filter field | Type                     | Default    | Description                   |
-| ------------ | ------------------------ | ---------- | ----------------------------- |
-| `cursor`     | `number` (Unix ms)       | now        | Cursor timestamp              |
-| `size`       | `number`                 | `40`       | Rows per page                 |
-| `direction`  | `"prev" \| "next"`       | `"next"`   | Pagination direction          |
-| `sort`       | `{ id, desc }`           | —          | Sort descriptor               |
+| Filter field | Type               | Default  | Description          |
+| ------------ | ------------------ | -------- | -------------------- |
+| `cursor`     | `number` (Unix ms) | now      | Cursor timestamp     |
+| `size`       | `number`           | `40`     | Rows per page        |
+| `direction`  | `"prev" \| "next"` | `"next"` | Pagination direction |
+| `sort`       | `{ id, desc }`     | —        | Sort descriptor      |
 
 ### Output formats
 
 **`json`** — returns rows with total count:
+
 ```json
 { "rows": [...], "total": 1234 }
 ```
 
 **`stats`** — returns total count and facet metadata (no rows):
+
 ```json
-{ "total": 1234, "facets": { "level": { "rows": [{ "value": "error", "total": 42 }], "total": 1234 } } }
+{
+  "total": 1234,
+  "facets": {
+    "level": { "rows": [{ "value": "error", "total": 42 }], "total": 1234 }
+  }
+}
 ```
 
 ## Schema Mapping
 
 Your BYOS field types are automatically converted to typed tool parameters:
 
-| Field type                        | Tool parameter type                  |
-| --------------------------------- | ------------------------------------ |
-| `field.string()`                  | `string` (optional)                  |
-| `field.number()`                  | `number` (optional)                  |
-| `field.boolean()`                 | `boolean` (optional)                 |
-| `field.timestamp()`               | `number` (optional, Unix ms)         |
-| `field.stringLiteral(["a", "b"])` | `enum ["a", "b"]` (optional)         |
-| `field.array(field.number())`     | `array of number` (optional)         |
-| `field.array(field.stringLiteral(...))` | `array of enum` (optional)     |
+| Field type                              | Tool parameter type          |
+| --------------------------------------- | ---------------------------- |
+| `field.string()`                        | `string` (optional)          |
+| `field.number()`                        | `number` (optional)          |
+| `field.boolean()`                       | `boolean` (optional)         |
+| `field.timestamp()`                     | `number` (optional, Unix ms) |
+| `field.stringLiteral(["a", "b"])`       | `enum ["a", "b"]` (optional) |
+| `field.array(field.number())`           | `array of number` (optional) |
+| `field.array(field.stringLiteral(...))` | `array of enum` (optional)   |
 
 Timestamp fields accept Unix milliseconds over the wire and are deserialized to `Date` objects before reaching your `getData` function.
 
@@ -245,6 +261,34 @@ curl -X POST http://localhost:3000/infinite/api/mcp \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"level":["error"],"size":5},"format":"stats"}}}'
 ```
+
+## Use Cases
+
+### Conversational data exploration
+
+Connect your MCP endpoint to Claude Desktop or Cursor. Ask questions in natural language — the agent translates them into `query_table` calls with the right filters, paginates through results, and summarizes findings.
+
+> "Show me all 500 errors from the HKG region in the last hour"
+
+### Monitoring and alerting
+
+An autonomous agent polls `format: "stats"` on a schedule, watching facet distributions for anomalies. When the error rate spikes or latency percentiles drift, it triggers alerts via Slack, PagerDuty, or email — no dashboard required.
+
+### Post-deploy validation
+
+After a deploy, a CI/CD agent queries the logs table for error spikes in a short window. If the error count exceeds a threshold compared to the pre-deploy baseline, it flags the release for rollback.
+
+### Cross-table orchestration
+
+Multiple MCP endpoints (logs, orders, customers) each expose a `query_table` tool. An agent queries across all of them to answer cross-cutting questions like "which customers experienced 500 errors today?" — joining data that lives in separate tables or services.
+
+### Internal tooling for non-developers
+
+Teams that don't have dashboard access or SQL knowledge can query production data through a chat interface. The MCP schema provides guardrails — agents can only filter on defined fields, preventing arbitrary queries.
+
+### Agent-to-agent pipelines
+
+One agent's output feeds another's input. A triage agent identifies error patterns from the logs table, then passes those patterns to a root-cause agent that correlates with deploy metadata from a different MCP endpoint.
 
 ## How It Works
 
