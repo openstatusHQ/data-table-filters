@@ -79,7 +79,15 @@ export function filterData(
         ) {
           return false;
         }
-        return true;
+      }
+      if (key === "method" && Array.isArray(filter)) {
+        if (!(filter as string[]).includes(row[key] as string)) return false;
+      }
+      if (key === "host" && typeof filter === "string" && filter) {
+        if (!(row[key] as string).includes(filter)) return false;
+      }
+      if (key === "pathname" && typeof filter === "string" && filter) {
+        if (!(row[key] as string).includes(filter)) return false;
       }
       if (key === "status" && isArrayOfNumbers(filter)) {
         if (!filter.includes(row[key])) {
