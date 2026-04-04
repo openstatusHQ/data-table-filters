@@ -1,31 +1,25 @@
-import { LEVELS } from "@/constants/levels";
-import { METHODS } from "@/constants/method";
-import { REGIONS } from "@/constants/region";
 import { createTableMCPHandler } from "@/lib/mcp";
-import { createSchema, field } from "@/lib/store/schema";
 import {
   filterData,
+  filterValues,
   getFacetsFromData,
   sortData,
 } from "@/app/infinite/api/helpers";
+import { filterSchema } from "@/app/infinite/filter-schema";
 import { mock, mockLive } from "@/app/infinite/api/mock";
+import type { SchemaDefinition } from "@/lib/store/schema";
 
-const mcpSchema = createSchema({
-  level: field.array(field.stringLiteral(LEVELS)),
-  method: field.array(field.stringLiteral(METHODS)),
-  host: field.string(),
-  pathname: field.string(),
-  latency: field.array(field.number()).delimiter("-"),
-  status: field.array(field.number()).delimiter(","),
-  regions: field.array(field.stringLiteral(REGIONS)),
-  date: field.array(field.timestamp()).delimiter("-"),
-});
+// Pick only the filter-relevant fields from the shared filter schema,
+// excluding pagination/UI concerns (sort, uuid, live, size, cursor, etc.)
+const mcpSchema = Object.fromEntries(
+  filterValues.map((key) => [key, filterSchema.definition[key]]),
+) as SchemaDefinition;
 
 const handler = createTableMCPHandler({
   name: "data-table-filters",
   description:
     "Query HTTP request logs with filters for level, method, host, pathname, latency, status, regions, and date range",
-  schema: mcpSchema.definition,
+  schema: mcpSchema,
   getData: async ({ filters, page, pageSize }) => {
     const totalData = [...mockLive, ...mock];
     const filtered = filterData(totalData, filters);
