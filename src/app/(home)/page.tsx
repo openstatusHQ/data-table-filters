@@ -165,9 +165,24 @@ function SEOContent() {
         <p className="text-muted-foreground">
           Unlike AG Grid, MUI DataGrid, or react-data-table-component, this
           project gives you the code directly. Install components via the{" "}
-          <Link href="https://ui.shadcn.com/docs/cli">shadcn CLI</Link>, own
-          every line, and customize without fighting library abstractions. No
-          vendor lock-in, no bundle bloat.
+          <Link href="https://ui.shadcn.com/docs/cli">shadcn CLI</Link> and
+          extend your table one piece at a time as your project grows — add
+          filters, sorting, or infinite scroll only when you need them. Own
+          every line, no vendor lock-in, no bundle bloat.
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <h3 className="text-foreground text-lg font-medium">
+          Built for AI agents
+        </h3>
+        <p className="text-muted-foreground">
+          Ships with an <Link href="/docs/ai-filters">AI agent skill</Link> that
+          understands the full project structure — it can scaffold, configure,
+          and extend data tables end-to-end. Because every component is
+          installed via the shadcn CLI, agents know exactly how to add and
+          compose pieces without custom tooling. Also includes an{" "}
+          <Link href="/docs/mcp">MCP server</Link> that lets AI assistants query
+          and filter your actual table data directly.
         </p>
       </div>
       <div className="grid gap-2">

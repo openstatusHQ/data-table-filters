@@ -124,6 +124,11 @@ export const HOMEPAGE_FAQS: { question: string; answer: string }[] = [
     answer:
       "You can choose between nuqs (URL-based state, shareable links, SSR-compatible) or zustand (client-side, fast, no URL clutter). Both are fully supported with the same filter API.",
   },
+  {
+    question: "Can AI agents build data tables with this?",
+    answer:
+      "Yes. data-table-filters ships with an AI agent skill that understands the full project structure and can scaffold, configure, and extend data tables end-to-end. Because every component is installed via the shadcn CLI, agents know exactly how to add and compose pieces without custom tooling. It also includes an MCP server that lets AI assistants query and filter your actual table data directly.",
+  },
 ];
 
 export function getJsonLDHomepageFAQ(): WithContext<FAQPage> {
