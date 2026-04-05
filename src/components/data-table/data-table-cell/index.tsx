@@ -7,3 +7,6 @@ export { DataTableCellBoolean } from "./data-table-cell-boolean";
 export { DataTableCellStar } from "./data-table-cell-star";
 export { DataTableCellStatusCode } from "./data-table-cell-status-code";
 export { DataTableCellLevelIndicator } from "./data-table-cell-level-indicator";
+export { DataTableCellHeatmap } from "./data-table-cell-heatmap";
+export { DataTableCellBar } from "./data-table-cell-bar";
+export { DataTableCellGauge } from "./data-table-cell-gauge";

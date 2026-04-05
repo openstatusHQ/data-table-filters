@@ -54,17 +54,11 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
         hidden: c.hidden,
         sortable: c.sortable,
         display: (() => {
-          const d: ColumnDescriptor["display"] = { type: c.display.type };
-          if (
-            c.display.type === "number" &&
-            "unit" in c.display &&
-            c.display.unit
-          ) {
-            d.unit = c.display.unit;
-          }
-          if (c.display.colorMap) {
-            d.colorMap = c.display.colorMap;
-          }
+          const { type, ...rest } = c.display;
+          const d: ColumnDescriptor["display"] = { type };
+          // Strip non-serializable properties (custom cell renderer)
+          if ("cell" in rest) delete (rest as Record<string, unknown>).cell;
+          Object.assign(d, rest);
           return d;
         })(),
         filter: serializeFilter(c.filter),
@@ -160,6 +154,25 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
       if (col_.display.colorMap) opts.colorMap = col_.display.colorMap;
       builder = builder.display(
         "number",
+        Object.keys(opts).length > 0 ? opts : undefined,
+      );
+    } else if (
+      displayType === "heatmap" ||
+      displayType === "bar" ||
+      displayType === "gauge"
+    ) {
+      const opts: {
+        min?: number;
+        max?: number;
+        unit?: string;
+        color?: string;
+      } = {};
+      if (col_.display.min !== undefined) opts.min = col_.display.min;
+      if (col_.display.max !== undefined) opts.max = col_.display.max;
+      if (col_.display.unit) opts.unit = col_.display.unit;
+      if (col_.display.color) opts.color = col_.display.color;
+      builder = builder.display(
+        displayType,
         Object.keys(opts).length > 0 ? opts : undefined,
       );
     } else if (

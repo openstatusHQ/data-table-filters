@@ -40,7 +40,7 @@ function getDisplayDescriptor(config: ColConfig): {
   ) {
     desc.unit = config.display.unit;
   }
-  if (config.display.colorMap) {
+  if ("colorMap" in config.display && config.display.colorMap) {
     desc.colorMap = config.display.colorMap;
   }
   return desc;

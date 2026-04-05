@@ -178,4 +178,82 @@ export const presets = {
   pathname(): ColBuilder<string, "input"> {
     return col.string().label("Pathname").filterable("input");
   },
+
+  /**
+   * A latency column with heatmap visualization.
+   *
+   * Defaults: number + heatmap display with unit + slider filter
+   * with bounds `{ min: 0, max: 5000 }` + sortable.
+   *
+   * @param unit   - Unit label shown after the value, e.g. `"ms"`, `"s"`, `"µs"`
+   * @param slider - Override the slider bounds (default: `{ min: 0, max: 5000 }`)
+   *
+   * @example
+   * ```ts
+   * col.presets.latency("ms").label("Latency").size(110).sheet()
+   * col.presets.latency("s", { min: 0, max: 60 }).label("Response time")
+   * ```
+   */
+  latency(
+    unit?: string,
+    slider?: { min: number; max: number },
+  ): ColBuilder<number, "input" | "slider" | "checkbox"> {
+    const bounds = slider ?? { min: 0, max: 5000 };
+    return col
+      .number()
+      .label("Latency")
+      .display("heatmap", { unit, min: bounds.min, max: bounds.max })
+      .filterable("slider", bounds)
+      .sortable();
+  },
+
+  /**
+   * A health/score column with gauge visualization.
+   *
+   * Defaults: number + gauge display (0–100) + sortable.
+   *
+   * @param range - Override the min/max range (default: `{ min: 0, max: 100 }`)
+   *
+   * @example
+   * ```ts
+   * col.presets.health().label("Health")
+   * col.presets.health({ min: 0, max: 1000 }).label("Score")
+   * ```
+   */
+  health(range?: {
+    min: number;
+    max: number;
+  }): ColBuilder<number, "input" | "slider" | "checkbox"> {
+    const { min = 0, max = 100 } = range ?? {};
+    return col
+      .number()
+      .label("Health")
+      .display("gauge", { min, max })
+      .sortable();
+  },
+
+  /**
+   * A progress column with bar visualization.
+   *
+   * Defaults: number + bar display (0–100) + sortable.
+   *
+   * @param range - Override the min/max range (default: `{ min: 0, max: 100 }`)
+   *
+   * @example
+   * ```ts
+   * col.presets.progress().label("Progress")
+   * col.presets.progress({ min: 0, max: 1000 }).label("Completion")
+   * ```
+   */
+  progress(range?: {
+    min: number;
+    max: number;
+  }): ColBuilder<number, "input" | "slider" | "checkbox"> {
+    const { min = 0, max = 100 } = range ?? {};
+    return col
+      .number()
+      .label("Progress")
+      .display("bar", { min, max })
+      .sortable();
+  },
 };

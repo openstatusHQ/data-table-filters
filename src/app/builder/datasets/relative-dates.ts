@@ -6,14 +6,16 @@ const TWO_MONTHS_MS = 60 * 24 * 60 * 60 * 1000;
  * (index 0 = most recent, last index = oldest) with a small random jitter
  * so they look organic. The array is mutated in place.
  *
- * Uses a seeded pseudo-random so the jitter is stable across hot-reloads
- * (avoids hydration mismatches).
+ * Uses a seeded pseudo-random so the jitter is stable across hot-reloads.
+ * The reference timestamp is rounded to the nearest hour so that server
+ * and client produce identical output during hydration.
  */
 export function patchDates<T extends Record<string, unknown>>(
   data: T[],
   field: keyof T & string,
 ): void {
-  const now = Date.now();
+  const HOUR_MS = 3_600_000;
+  const now = Math.floor(Date.now() / HOUR_MS) * HOUR_MS;
   const step = TWO_MONTHS_MS / data.length;
 
   // Derive a per-field seed so different datasets get different jitter patterns
