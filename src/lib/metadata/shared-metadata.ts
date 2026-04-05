@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
-export const TITLE = "Powerful Data-Table for React | openstatus";
+export const TITLE =
+  "React Data Table with Filters — shadcn/ui + TanStack Table | openstatus";
 export const DESCRIPTION =
-  "Flexible, fast, and easy-to-use filters with tanstack table, shadcn/ui and state management via nuqs or zustand. Fully open source on GitHub.";
+  "Open-source React data table with faceted filters, sorting, infinite scroll, and server-side rendering. Built on TanStack Table and shadcn/ui with nuqs or zustand state management. Install via CLI — no library lock-in.";
 export const BASE_URL = "https://data-table.openstatus.dev";
 
 const images = ["/assets/data-table-infinite.png"];
@@ -16,6 +17,7 @@ export const twitterMetadata: Metadata["twitter"] = {
 
 export const ogMetadata: Metadata["openGraph"] = {
   type: "website",
+  url: BASE_URL,
   images,
   title: TITLE,
   description: DESCRIPTION,
@@ -28,4 +30,15 @@ export const defaultMetadata: Metadata = {
     template: "%s | Data Table",
   },
   description: DESCRIPTION,
+  keywords: [
+    "react data table",
+    "shadcn data table",
+    "react data table with filters",
+    "tanstack table filters",
+    "shadcn data table filters",
+    "next.js data table",
+    "react server side data table",
+    "react data table infinite scroll",
+  ],
+  alternates: { canonical: "/" },
 };
