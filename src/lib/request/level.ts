@@ -39,18 +39,18 @@ export function getLevelRowClassName(value: (typeof _LEVELS)[number]): string {
       return "";
     case "warning":
       return cn(
-        "bg-warning/5 hover:bg-warning/10 focus-visible:bg-warning/10 data-[state=selected]:bg-warning/20",
-        "dark:bg-warning/10 dark:hover:bg-warning/20 dark:focus-visible:bg-warning/20 dark:data-[state=selected]:bg-warning/30",
+        "bg-warning/5 hover:bg-warning/10 focus-visible:bg-warning/10 data-detail:bg-warning/20 data-checked:bg-warning/20",
+        "dark:bg-warning/10 dark:hover:bg-warning/20 dark:focus-visible:bg-warning/20 dark:data-detail:bg-warning/30 dark:data-checked:bg-warning/30",
       );
     case "error":
       return cn(
-        "bg-error/5 hover:bg-error/10 focus-visible:bg-error/10 data-[state=selected]:bg-error/20",
-        "dark:bg-error/10 dark:hover:bg-error/20 dark:focus-visible:bg-error/20 dark:data-[state=selected]:bg-error/30",
+        "bg-error/5 hover:bg-error/10 focus-visible:bg-error/10 data-detail:bg-error/20 data-checked:bg-error/20",
+        "dark:bg-error/10 dark:hover:bg-error/20 dark:focus-visible:bg-error/20 dark:data-detail:bg-error/30 dark:data-checked:bg-error/30",
       );
     case "info":
       return cn(
-        "bg-info/5 hover:bg-info/10 focus-visible:bg-info/10 data-[state=selected]:bg-info/20",
-        "dark:bg-info/10 dark:hover:bg-info/20 dark:focus-visible:bg-info/20 dark:data-[state=selected]:bg-info/30",
+        "bg-info/5 hover:bg-info/10 focus-visible:bg-info/10 data-detail:bg-info/20 data-checked:bg-info/20",
+        "dark:bg-info/10 dark:hover:bg-info/20 dark:focus-visible:bg-info/20 dark:data-detail:bg-info/30 dark:data-checked:bg-info/30",
       );
     default:
       return "";
