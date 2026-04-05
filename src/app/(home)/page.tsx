@@ -1,13 +1,36 @@
 import { Link } from "@/components/custom/link";
 import { SocialsFooter } from "@/components/layout/socials-footer";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import {
+  createJsonLDGraph,
+  getJsonLDHomepageFAQ,
+  getJsonLDOrganization,
+  getJsonLDSoftwareApplication,
+  HOMEPAGE_FAQS,
+} from "@/lib/metadata/structured-data";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { default as NextLink } from "next/link";
 
+const jsonLd = createJsonLDGraph([
+  getJsonLDOrganization(),
+  getJsonLDSoftwareApplication(),
+  getJsonLDHomepageFAQ(),
+]);
+
 export default function Home() {
   return (
     <div className="container mx-auto flex min-h-screen w-full flex-col gap-6 p-4 sm:p-6 xl:gap-8 xl:p-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="px-2.5">
         <Hero />
       </div>
@@ -97,8 +120,100 @@ export default function Home() {
         </div>
       </div>
       <div className="border-border border-b border-dashed" />
+      <SEOContent />
+      <div className="border-border border-b border-dashed" />
       <SocialsFooter />
     </div>
+  );
+}
+
+function SEOContent() {
+  return (
+    <section className="grid gap-6 px-2.5 py-4">
+      <div className="grid gap-2">
+        <h2 className="text-foreground text-xl font-semibold sm:text-2xl">
+          Why data-table-filters?
+        </h2>
+        <p className="text-muted-foreground">
+          10 filter types, 2 state management options, server-side and
+          client-side rendering — all fully open source. Built for developers
+          who want production-ready data tables without the overhead of a
+          monolithic library. <Link href="/docs/introduction">Learn more</Link>.
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <h3 className="text-foreground text-lg font-medium">
+          Built on proven foundations
+        </h3>
+        <p className="text-muted-foreground">
+          Powered by{" "}
+          <Link href="https://tanstack.com/table">TanStack Table</Link> for
+          headless table logic,{" "}
+          <Link href="https://ui.shadcn.com">shadcn/ui</Link> for accessible
+          components, <Link href="https://nuqs.47ng.com">nuqs</Link> for
+          URL-based state management, and{" "}
+          <Link href="https://zustand.docs.pmnd.rs/getting-started/introduction">
+            zustand
+          </Link>{" "}
+          for client-side state. Each dependency is best-in-class.
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <h3 className="text-foreground text-lg font-medium">
+          Not a library — a playbook
+        </h3>
+        <p className="text-muted-foreground">
+          Unlike AG Grid, MUI DataGrid, or react-data-table-component, this
+          project gives you the code directly. Install components via the{" "}
+          <Link href="https://ui.shadcn.com/docs/cli">shadcn CLI</Link>, own
+          every line, and customize without fighting library abstractions. No
+          vendor lock-in, no bundle bloat.
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <h3 className="text-foreground text-lg font-medium">Features</h3>
+        <ul className="marker:text-muted-foreground text-muted-foreground grid list-inside list-disc gap-1">
+          <li>
+            <Link href="/docs/table-schema">Faceted filters</Link> — checkbox,
+            input, slider, time range
+          </li>
+          <li>
+            Server-side filtering with{" "}
+            <Link href="/docs/drizzle-orm">Drizzle ORM</Link>
+          </li>
+          <li>
+            Infinite scroll with{" "}
+            <Link href="/docs/data-fetching">TanStack Query</Link>
+          </li>
+          <li>
+            <Link href="/docs/state-management">
+              URL-based state management
+            </Link>{" "}
+            via nuqs
+          </li>
+          <li>Virtualization for large datasets</li>
+          <li>
+            <Link href="/docs/features">Column pinning</Link>, row selection,
+            bulk actions
+          </li>
+        </ul>
+      </div>
+      <div className="grid gap-4">
+        <h3 className="text-foreground text-lg font-medium">
+          Frequently Asked Questions
+        </h3>
+        <Accordion type="single" collapsible className="w-full">
+          {HOMEPAGE_FAQS.map((faq, i) => (
+            <AccordionItem key={i} value={`faq-${i}`}>
+              <AccordionTrigger>{faq.question}</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                {faq.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </section>
   );
 }
 
@@ -331,11 +446,11 @@ function Hero() {
     <div className="flex flex-col-reverse items-start justify-between gap-8 sm:flex-row">
       <div className="max-w-4xl space-y-3">
         <h1 className="text-foreground text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">
-          Powerful <span className="text-nowrap">Data-Table</span> for React
+          React <span className="text-nowrap">Data Table</span> with Filters
         </h1>
         {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
         <h2 className="text-muted-foreground max-w-[900px] sm:text-xl">
-          Extensible, fast, and easy-to-use filters with{" "}
+          Open-source faceted filters, sorting, and infinite scroll with{" "}
           <Link href="https://tanstack.com/table" className="text-nowrap">
             tanstack table
           </Link>
