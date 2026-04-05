@@ -24,6 +24,8 @@ import type { LogsMeta } from "./query-options";
 import type { ColumnSchema } from "./schema";
 
 export const tableSchema = createTableSchema({
+  select: col.select().size(37),
+
   level: col
     .enum(LEVELS)
     .label("Level")
@@ -60,7 +62,7 @@ export const tableSchema = createTableSchema({
       },
     })
     .defaultOpen()
-    .size(27),
+    .size(37),
 
   date: col
     .timestamp()

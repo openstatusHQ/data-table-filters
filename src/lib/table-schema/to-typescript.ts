@@ -123,6 +123,13 @@ function buildChain(c: ColumnDescriptor): string {
   let skipFilter = false;
   let skipSortable = false;
 
+  // Select column is zero-config — only emit factory + optional size override
+  // if (c.dataType === "select") {
+  //   parts.push("col.select()");
+  //   if (c.size !== undefined) parts.push(`.size(${c.size})`);
+  //   return parts.join("\n    ");
+  // }
+
   // 1. Factory (with preset detection)
   const preset = detectPreset(c);
   if (preset) {

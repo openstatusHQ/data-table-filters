@@ -25,6 +25,7 @@ import {
 } from "@/lib/constants/local-storage";
 import { getFacetedUniqueValuesFlattened } from "@/lib/data-table/faceted";
 import { formatCompactNumber } from "@/lib/format";
+import { useFilterActions } from "@/lib/store/hooks/useFilterActions";
 import { useFilterState } from "@/lib/store/hooks/useFilterState";
 import { arrSome, inDateRange } from "@/lib/table/filterfns";
 import { cn } from "@/lib/utils";
@@ -98,6 +99,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   toolbarActions?: React.ReactNode;
   chartSlot?: React.ReactNode;
   footerSlot?: React.ReactNode;
+  floatingBarSlot?: React.ReactNode;
 }
 
 export function DataTableInfinite<TData, TValue>({
@@ -128,6 +130,7 @@ export function DataTableInfinite<TData, TValue>({
   toolbarActions,
   chartSlot,
   footerSlot,
+  floatingBarSlot,
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -147,6 +150,12 @@ export function DataTableInfinite<TData, TValue>({
   const topBarRef = React.useRef<HTMLDivElement>(null);
   const tableRef = React.useRef<HTMLTableElement>(null);
   const [topBarHeight, setTopBarHeight] = React.useState(0);
+
+  // Detect if a select column exists to enable multi-row selection
+  const hasSelectColumn = React.useMemo(
+    () => columns.some((col) => col.meta?.kind === "select"),
+    [columns],
+  );
 
   const onScroll = React.useCallback(
     (e: React.UIEvent<HTMLElement>) => {
@@ -186,7 +195,7 @@ export function DataTableInfinite<TData, TValue>({
       rowSelection,
       columnOrder,
     },
-    enableMultiRowSelection: false,
+    enableMultiRowSelection: hasSelectColumn,
     columnResizeMode: "onChange",
     getRowId,
     onColumnVisibilityChange: setColumnVisibility,
@@ -204,6 +213,13 @@ export function DataTableInfinite<TData, TValue>({
     debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
     meta: { getRowClassName },
   });
+
+  // Clear multi-select when filters or sorting change
+  React.useEffect(() => {
+    if (hasSelectColumn) {
+      setRowSelection({});
+    }
+  }, [columnFilters, sorting, hasSelectColumn, setRowSelection]);
 
   // NOTE: Filter, sort, and selection syncing is now handled by DataTableStoreSync
 
@@ -250,6 +266,25 @@ export function DataTableInfinite<TData, TValue>({
   const columnOrderString = React.useMemo(
     () => columnOrder.join(","),
     [columnOrder],
+  );
+
+  // Read BYOS uuid for detail row visual state (only used in multi-select mode)
+  const detailRowId = useFilterState((s) => s.uuid) as
+    | string
+    | null
+    | undefined;
+  const { setFilters } = useFilterActions();
+
+  // Stable callback for row clicks — lifted here so Row doesn't need useFilterActions
+  const onRowClick = React.useCallback(
+    (row: Row<TData>) => {
+      if (hasSelectColumn) {
+        setFilters({ uuid: detailRowId === row.id ? null : row.id });
+      } else {
+        row.toggleSelected();
+      }
+    },
+    [hasSelectColumn, detailRowId, setFilters],
   );
 
   return (
@@ -352,7 +387,13 @@ export function DataTableInfinite<TData, TValue>({
                                   width: `var(--header-${header.id.replace(".", "-")}-size)`,
                                   minWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
                                 }
-                              : undefined
+                              : header.column.columnDef.maxSize
+                                ? {
+                                    width: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                    minWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                    maxWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                  }
+                                : undefined
                           }
                           className={cn(
                             "border-border relative truncate border-b select-none last:[&>.cursor-col-resize]:opacity-0",
@@ -407,6 +448,8 @@ export function DataTableInfinite<TData, TValue>({
                         row={row}
                         table={table}
                         selected={row.getIsSelected()}
+                        detailRowId={hasSelectColumn ? detailRowId : undefined}
+                        onRowClick={onRowClick}
                         visibleColumnIds={visibleColumnIds}
                         columnOrder={columnOrderString}
                       />
@@ -459,6 +502,7 @@ export function DataTableInfinite<TData, TValue>({
         </div>
       </div>
       {sheetSlot}
+      {floatingBarSlot}
     </DataTableProvider>
   );
 }
@@ -473,6 +517,8 @@ function Row<TData>({
   row,
   table,
   selected,
+  detailRowId,
+  onRowClick,
   visibleColumnIds,
   columnOrder,
 }: {
@@ -480,6 +526,9 @@ function Row<TData>({
   table: TTable<TData>;
   // REMINDER: row.getIsSelected(); - just for memoization
   selected?: boolean;
+  // When multi-select is enabled, the BYOS uuid for detail sheet (undefined = single-select mode)
+  detailRowId?: string | null;
+  onRowClick: (row: Row<TData>) => void;
   // REMINDER: for memoization - triggers re-render when columns change
   visibleColumnIds: string;
   columnOrder: string;
@@ -487,21 +536,36 @@ function Row<TData>({
   // REMINDER: rerender the row when live mode is toggled - used to opacity the row
   // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
   useFilterState((s) => s.live);
+
+  const isMultiSelect = detailRowId !== undefined;
+  const isDetail = isMultiSelect && detailRowId === row.id;
+
+  const handleClick = React.useCallback(() => {
+    onRowClick(row);
+  }, [onRowClick, row]);
+
   return (
     <TableRow
       id={row.id}
       tabIndex={0}
-      data-state={selected && "selected"}
-      onClick={() => row.toggleSelected()}
+      // Single-select: data-state="selected" for the selected row
+      // Multi-select: data-detail + data-checked are independent (a row can be both)
+      data-state={!isMultiSelect && selected ? "selected" : undefined}
+      data-detail={isDetail ? "" : undefined}
+      data-checked={isMultiSelect && selected ? "" : undefined}
+      onClick={handleClick}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          row.toggleSelected();
+          handleClick();
         }
       }}
       className={cn(
         "[&>:not(:last-child)]:border-r",
-        "outline-primary focus-visible:bg-muted/50 outline-1 -outline-offset-1 transition-colors outline-none focus-visible:outline-solid data-[state=selected]:outline-solid",
+        "outline-primary focus-visible:bg-muted/50 outline-1 -outline-offset-1 transition-colors outline-none focus-visible:outline-solid",
+        "data-[state=selected]:outline-solid",
+        "data-detail:outline-solid",
+        "data-checked:bg-muted/50",
         table.options.meta?.getRowClassName?.(row),
       )}
     >
@@ -514,7 +578,13 @@ function Row<TData>({
                   width: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
                   maxWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
                 }
-              : undefined
+              : cell.column.columnDef.maxSize
+                ? {
+                    width: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                    minWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                    maxWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                  }
+                : undefined
           }
           className={cn(
             "border-border truncate border-b",
@@ -533,6 +603,8 @@ const MemoizedRow = React.memo(
   (prev, next) =>
     prev.row.id === next.row.id &&
     prev.selected === next.selected &&
+    prev.detailRowId === next.detailRowId &&
+    prev.onRowClick === next.onRowClick &&
     prev.visibleColumnIds === next.visibleColumnIds &&
     prev.columnOrder === next.columnOrder,
 ) as typeof Row;

@@ -180,10 +180,38 @@ See [fetch-layer.md](fetch-layer.md) for setup.
 
 ## DataTableInfinite Slot Props Reference
 
-| Prop             | Type              | Where it renders               |
-| ---------------- | ----------------- | ------------------------------ |
-| `commandSlot`    | `React.ReactNode` | Top bar area                   |
-| `sheetSlot`      | `React.ReactNode` | After main content (overlay)   |
-| `toolbarActions` | `React.ReactNode` | Inside toolbar (extra buttons) |
-| `chartSlot`      | `React.ReactNode` | Top bar area                   |
-| `footerSlot`     | `React.ReactNode` | Sidebar footer                 |
+| Prop              | Type              | Where it renders                            |
+| ----------------- | ----------------- | ------------------------------------------- |
+| `commandSlot`     | `React.ReactNode` | Top bar area                                |
+| `sheetSlot`       | `React.ReactNode` | After main content (overlay)                |
+| `toolbarActions`  | `React.ReactNode` | Inside toolbar (extra buttons)              |
+| `chartSlot`       | `React.ReactNode` | Top bar area                                |
+| `footerSlot`      | `React.ReactNode` | Sidebar footer                              |
+| `floatingBarSlot` | `React.ReactNode` | Fixed bar at viewport bottom (bulk actions) |
+
+### Floating Bar (Bulk Actions)
+
+Enable multi-row selection by adding `col.select()` to the schema. Wrap bulk action buttons in `DataTableFloatingBar` — it reads selection state from `DataTableProvider` context (same pattern as `DataTableSheetDetails` for `sheetSlot`).
+
+```tsx
+import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
+
+// In schema
+const tableSchema = createTableSchema({
+  select: col.select().size(37),
+  // ...
+});
+
+// In client
+<DataTableInfinite
+  floatingBarSlot={
+    <DataTableFloatingBar>
+      {({ rows }) => (
+        <Button variant="outline" size="sm">
+          Export ({rows.length})
+        </Button>
+      )}
+    </DataTableFloatingBar>
+  }
+/>;
+```

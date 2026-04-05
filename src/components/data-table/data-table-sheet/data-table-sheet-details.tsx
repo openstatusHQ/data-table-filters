@@ -19,6 +19,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useFilterActions } from "@/lib/store/hooks/useFilterActions";
+import { useFilterState } from "@/lib/store/hooks/useFilterState";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import * as React from "react";
@@ -35,8 +37,16 @@ export function DataTableSheetDetails({
   children,
 }: DataTableSheetDetailsProps) {
   const { table, rowSelection, isLoading } = useDataTable();
+  const { setFilters } = useFilterActions();
 
-  const selectedRowKey = Object.keys(rowSelection)?.[0];
+  const isMultiSelect = !!table.options.enableMultiRowSelection;
+
+  // Read the detail row ID from BYOS uuid when multi-select is enabled,
+  // otherwise fall back to rowSelection (existing single-select behavior)
+  const uuid = useFilterState((s) => s.uuid) as string | null | undefined;
+  const selectedRowKey = isMultiSelect
+    ? (uuid ?? undefined)
+    : Object.keys(rowSelection)?.[0];
 
   const selectedRow = React.useMemo(() => {
     if (isLoading && !selectedRowKey) return;
@@ -60,12 +70,22 @@ export function DataTableSheetDetails({
   );
 
   const onPrev = React.useCallback(() => {
-    if (prevId) table.setRowSelection({ [prevId]: true });
-  }, [prevId, isLoading, table]);
+    if (!prevId) return;
+    if (isMultiSelect) {
+      setFilters({ uuid: prevId });
+    } else {
+      table.setRowSelection({ [prevId]: true });
+    }
+  }, [prevId, isLoading, table, isMultiSelect, setFilters]);
 
   const onNext = React.useCallback(() => {
-    if (nextId) table.setRowSelection({ [nextId]: true });
-  }, [nextId, isLoading, table]);
+    if (!nextId) return;
+    if (isMultiSelect) {
+      setFilters({ uuid: nextId });
+    } else {
+      table.setRowSelection({ [nextId]: true });
+    }
+  }, [nextId, isLoading, table, isMultiSelect, setFilters]);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -100,7 +120,12 @@ export function DataTableSheetDetails({
         const el = selectedRowKey
           ? document.getElementById(selectedRowKey)
           : null;
-        table.resetRowSelection();
+
+        if (isMultiSelect) {
+          setFilters({ uuid: null });
+        } else {
+          table.resetRowSelection();
+        }
 
         // REMINDER: when navigating between tabs in the sheet and exit the sheet, the tab gets lost
         // We need a minimal delay to allow the sheet to close before focusing back to the row

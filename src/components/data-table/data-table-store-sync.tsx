@@ -121,10 +121,12 @@ export function useDataTableStoreSync() {
     setFilters({ sort: newSort });
   }, [sorting, context, setFilters]);
 
-  // Sync row selection
+  // Sync row selection (single-select only — skip when multi-row selection is
+  // enabled because rowSelection is used for checkbox bulk actions, not sheet)
   useEffect(() => {
     if (!context) return;
     if (isInitialMount.current) return;
+    if (table.options.enableMultiRowSelection) return;
 
     const selectedKeys = Object.keys(rowSelection || {});
     const newUuid = selectedKeys.length > 0 ? selectedKeys[0] : null;
@@ -136,5 +138,10 @@ export function useDataTableStoreSync() {
 
     lastSentUuidRef.current = newUuidStr;
     setFilters({ uuid: newUuid });
-  }, [rowSelection, context, setFilters]);
+  }, [
+    rowSelection,
+    context,
+    setFilters,
+    table.options.enableMultiRowSelection,
+  ]);
 }

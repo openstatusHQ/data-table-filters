@@ -12,6 +12,7 @@ import {
   DataTableCellTimestamp,
 } from "@/components/data-table/data-table-cell";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { JSX } from "react";
 import type { ColConfig, DisplayConfig, TableSchemaDefinition } from "../types";
@@ -172,6 +173,49 @@ export function generateColumns<TData>(
 ): ColumnDef<TData>[] {
   return Object.entries(schema).map(([key, builder]) => {
     const config = builder._config;
+
+    // Select column — checkbox header + cell
+    if (config.kind === "select") {
+      return {
+        id: key,
+        header: ({ table }) => (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) =>
+                table.toggleAllPageRowsSelected(!!value)
+              }
+              aria-label="Select all"
+              className="shadow-none"
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div
+            className="flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Select row"
+              className="shadow-none"
+            />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        enableResizing: false,
+        ...(config.size !== undefined
+          ? { size: config.size, minSize: config.size, maxSize: config.size }
+          : {}),
+        meta: { label: config.label, kind: "select", hidden: false },
+      } as ColumnDef<TData>;
+    }
+
     const isDotted = key.includes(".");
     const filterFn = getFilterFn(config);
 
@@ -196,6 +240,7 @@ export function generateColumns<TData>(
     const meta = {
       label: config.label,
       hidden: config.hidden,
+      kind: config.kind,
     };
 
     const base = {
