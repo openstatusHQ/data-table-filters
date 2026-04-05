@@ -1,14 +1,13 @@
 import { getAllSections } from "@/lib/mdx/get-content";
+import { BASE_URL } from "@/lib/metadata/shared-metadata";
 import type { MetadataRoute } from "next";
-
-const BASE_URL = "https://data-table.openstatus.dev";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const docs = await getAllSections("docs");
 
   const docPages = docs.map((doc) => ({
     url: `${BASE_URL}/docs/${doc.slug}`,
-    lastModified: new Date(),
+    lastModified: doc.publishedAt ? new Date(doc.publishedAt) : new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));

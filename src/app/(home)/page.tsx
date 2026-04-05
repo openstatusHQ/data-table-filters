@@ -23,13 +23,15 @@ const jsonLd = createJsonLDGraph([
   getJsonLDSoftwareApplication(),
   getJsonLDHomepageFAQ(),
 ]);
+const jsonLdSerialized = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
 
 export default function Home() {
   return (
     <div className="container mx-auto flex min-h-screen w-full flex-col gap-6 p-4 sm:p-6 xl:gap-8 xl:p-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: jsonLdSerialized }}
       />
       <div className="px-2.5">
         <Hero />

@@ -1,8 +1,9 @@
+import { BASE_URL } from "@/lib/metadata/shared-metadata";
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: "*", allow: "/" }],
-    sitemap: "https://data-table.openstatus.dev/sitemap.xml",
+    sitemap: `${BASE_URL}/sitemap.xml`,
   };
 }
