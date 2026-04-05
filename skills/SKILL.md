@@ -104,6 +104,33 @@ After installing a block via `npx shadcn@latest add`, wire it into the table.
 />
 ```
 
+### Floating Bar (Bulk Actions) → `floatingBarSlot`
+
+Add `col.select()` to the schema to enable multi-row selection with checkboxes. Wrap actions in `DataTableFloatingBar` — it reads selection state from context (same pattern as `DataTableSheetDetails` for `sheetSlot`).
+
+```tsx
+// In table-schema.tsx
+export const tableSchema = createTableSchema({
+  select: col.select().size(37),
+  // ... other columns
+});
+
+// In client.tsx
+import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
+
+<DataTableInfinite
+  floatingBarSlot={
+    <DataTableFloatingBar>
+      {({ rows }) => (
+        <Button variant="outline" size="sm" onClick={() => console.log(rows)}>
+          Export ({rows.length})
+        </Button>
+      )}
+    </DataTableFloatingBar>
+  }
+/>;
+```
+
 ### Cell Renderers → column definitions
 
 ```tsx
@@ -139,7 +166,7 @@ Requires an API route that streams AI results. See [references/ai-filters.md](re
 
 ### All Slot Props
 
-`DataTableInfinite` accepts: `commandSlot`, `sheetSlot`, `toolbarActions`, `chartSlot`, `footerSlot`.
+`DataTableInfinite` accepts: `commandSlot`, `sheetSlot`, `toolbarActions`, `chartSlot`, `footerSlot`, `floatingBarSlot`.
 
 See [references/component-catalog.md](references/component-catalog.md) for full wiring details.
 
@@ -162,6 +189,8 @@ Map data model → `createTableSchema` + `col.*`:
 - `boolean` → `col.boolean().filterable("checkbox")`
 - `Date` → `col.timestamp().filterable("timerange")`
 - `enum` → `col.enum(values).filterable("checkbox")`
+
+- `select` → `col.select()` (checkbox row selection, not filterable)
 
 Presets: `col.presets.logLevel()`, `.httpStatus()`, `.duration()`, `.timestamp()`, `.traceId()`, `.pathname()`, `.httpMethod()`.
 

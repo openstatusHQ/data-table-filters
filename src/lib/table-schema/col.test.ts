@@ -281,7 +281,40 @@ describe("col.record()", () => {
   });
 });
 
-// ── .filterable() option preservation ────────────────────────────────────────
+// ── col.select() ──────────────────────────────────────────────────────────────
+
+describe("col.select()", () => {
+  it("has kind 'select' with filter null (not filterable)", () => {
+    const c = col.select();
+    expect(c._config.kind).toBe("select");
+    expect(c._config.filter).toBeNull();
+  });
+
+  it("has default label 'Select'", () => {
+    expect(col.select()._config.label).toBe("Select");
+  });
+
+  it("has sheet null (not shown in detail panel)", () => {
+    expect(col.select()._config.sheet).toBeNull();
+  });
+
+  it("is not sortable, not resizable, not hideable", () => {
+    const cfg = col.select()._config;
+    expect(cfg.sortable).toBe(false);
+    expect(cfg.resizable).toBe(false);
+    expect(cfg.enableHiding).toBe(false);
+  });
+
+  it("has default size of 40", () => {
+    expect(col.select()._config.size).toBe(40);
+  });
+
+  it(".size() overrides the default size", () => {
+    expect(col.select().size(37)._config.size).toBe(37);
+  });
+});
+
+// ── .filterable() option preservation ──────────────────────────────────────────
 
 describe(".filterable() option preservation", () => {
   it("preserves existing options when called again with the same type and no new options", () => {

@@ -77,6 +77,7 @@ See [auto-infer.md](auto-infer.md) for inference heuristics and the `DataTableAu
 | `col.enum(values)`       | `T[number]`              | `"checkbox"`                          |
 | `col.array(itemBuilder)` | `U[]`                    | `"checkbox"`                          |
 | `col.record()`           | `Record<string, string>` | none (display only)                   |
+| `col.select()`           | `boolean`                | none (row selection checkbox)         |
 
 ---
 
@@ -205,13 +206,14 @@ Use `generateSheetFields()` whenever possible — it handles this mapping automa
 
 When generating a schema from a user's data model:
 
-| User's data type          | col.\* factory                | Suggested filter                         |
-| ------------------------- | ----------------------------- | ---------------------------------------- |
-| `string`                  | `col.string()`                | `.filterable("input")`                   |
-| `number`                  | `col.number()`                | `.filterable("slider", { min, max })`    |
-| `boolean`                 | `col.boolean()`               | `.filterable("checkbox")`                |
-| `Date` / `timestamp`      | `col.timestamp()`             | `.filterable("timerange")`               |
-| `enum` / union of strings | `col.enum(values)`            | `.filterable("checkbox")`                |
-| `string[]` / `enum[]`     | `col.array(col.enum(values))` | `.filterable("checkbox")`                |
-| `Record<string, string>`  | `col.record()`                | `.notFilterable().sheet()`               |
-| UUID / ID                 | `col.string()`                | `.notFilterable()` or `.display("code")` |
+| User's data type          | col.\* factory                | Suggested filter                           |
+| ------------------------- | ----------------------------- | ------------------------------------------ |
+| `string`                  | `col.string()`                | `.filterable("input")`                     |
+| `number`                  | `col.number()`                | `.filterable("slider", { min, max })`      |
+| `boolean`                 | `col.boolean()`               | `.filterable("checkbox")`                  |
+| `Date` / `timestamp`      | `col.timestamp()`             | `.filterable("timerange")`                 |
+| `enum` / union of strings | `col.enum(values)`            | `.filterable("checkbox")`                  |
+| `string[]` / `enum[]`     | `col.array(col.enum(values))` | `.filterable("checkbox")`                  |
+| `Record<string, string>`  | `col.record()`                | `.notFilterable().sheet()`                 |
+| UUID / ID                 | `col.string()`                | `.notFilterable()` or `.display("code")`   |
+| Row selection checkbox    | `col.select()`                | none (enables multi-select + floating bar) |

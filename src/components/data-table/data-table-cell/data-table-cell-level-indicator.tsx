@@ -21,7 +21,7 @@ export function DataTableCellLevelIndicator({
       style={colorOverride ? { color: colorOverride } : undefined}
     >
       <span
-        className={`inline-block h-2 w-2 shrink-0 rounded-full ${colorOverride ? "" : builtinColor}`}
+        className={`inline-block size-3.5 shrink-0 rounded-sm ${colorOverride ? "" : builtinColor}`}
         style={colorOverride ? { backgroundColor: colorOverride } : undefined}
       />
       <span>{value}</span>

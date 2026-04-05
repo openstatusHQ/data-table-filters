@@ -348,6 +348,34 @@ function record(): ColBuilder<Record<string, string>, never> {
   });
 }
 
+/**
+ * A row-selection checkbox column.
+ *
+ * - Data type: `boolean` (selected state)
+ * - Not filterable (`F = never`)
+ * - Not shown in sheet or filters
+ * - Renders a checkbox in both the header (select all) and each row
+ *
+ * @example
+ * col.select().label("Select")
+ */
+function select(): ColBuilder<boolean, never> {
+  return createColBuilder<boolean, never>({
+    kind: "select",
+    optional: false,
+    label: "Select",
+    display: { type: "boolean" },
+    hidden: false,
+    enableHiding: false,
+    hideHeader: false,
+    resizable: false,
+    size: 40,
+    sortable: false,
+    filter: null,
+    sheet: null,
+  });
+}
+
 export const col = {
   string,
   number,
@@ -356,4 +384,5 @@ export const col = {
   enum: colEnum,
   array,
   record,
+  select,
 };

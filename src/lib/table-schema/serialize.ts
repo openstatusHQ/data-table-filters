@@ -125,23 +125,25 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     // deserializeSchema is a runtime operation reading from JSON.
 
     let builder: ColBuilder<unknown, any> =
-      col_.dataType === "enum" && col_.enumValues
-        ? col.enum(col_.enumValues as readonly string[])
-        : col_.dataType === "array" &&
-            col_.arrayItemType?.dataType === "enum" &&
-            col_.arrayItemType.enumValues
-          ? col.array(
-              col.enum(col_.arrayItemType.enumValues as readonly string[]),
-            )
-          : col_.dataType === "boolean"
-            ? col.boolean()
-            : col_.dataType === "timestamp"
-              ? col.timestamp()
-              : col_.dataType === "number"
-                ? col.number()
-                : col_.dataType === "record"
-                  ? col.record()
-                  : col.string();
+      col_.dataType === "select"
+        ? col.select()
+        : col_.dataType === "enum" && col_.enumValues
+          ? col.enum(col_.enumValues as readonly string[])
+          : col_.dataType === "array" &&
+              col_.arrayItemType?.dataType === "enum" &&
+              col_.arrayItemType.enumValues
+            ? col.array(
+                col.enum(col_.arrayItemType.enumValues as readonly string[]),
+              )
+            : col_.dataType === "boolean"
+              ? col.boolean()
+              : col_.dataType === "timestamp"
+                ? col.timestamp()
+                : col_.dataType === "number"
+                  ? col.number()
+                  : col_.dataType === "record"
+                    ? col.record()
+                    : col.string();
 
     // 2. Label + description
     builder = builder.label(col_.label);
@@ -197,7 +199,9 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     }
 
     // 5. Structural modifiers
-    if (col_.enableHiding === false) {
+    // sheetOnly() sets both enableHiding: false AND hidden: true.
+    // enableHiding: false alone (e.g. col.select()) should NOT trigger sheetOnly().
+    if (col_.enableHiding === false && col_.hidden) {
       builder = builder.sheetOnly();
     } else if (col_.hidden) {
       builder = builder.hidden();

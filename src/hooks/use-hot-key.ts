@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 
-export function useHotKey(callback: () => void, key: string): void {
+export function useHotKey(
+  callback: () => void,
+  key: string,
+  options?: { shift?: boolean },
+): void {
   // Use ref to always have the latest callback without re-registering the listener
   const callbackRef = useRef(callback);
   // eslint-disable-next-line react-hooks/refs
@@ -8,7 +12,12 @@ export function useHotKey(callback: () => void, key: string): void {
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {
-      if (e.key === key && (e.metaKey || e.ctrlKey)) {
+      const shiftMatch = options?.shift ? e.shiftKey : !e.shiftKey;
+      if (
+        e.key.toLowerCase() === key.toLowerCase() &&
+        (e.metaKey || e.ctrlKey) &&
+        shiftMatch
+      ) {
         // e.preventDefault();
         callbackRef.current();
       }
@@ -18,5 +27,5 @@ export function useHotKey(callback: () => void, key: string): void {
     return () => {
       window.removeEventListener("keydown", handler);
     };
-  }, [key]);
+  }, [key, options?.shift]);
 }

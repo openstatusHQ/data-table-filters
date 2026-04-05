@@ -1,6 +1,7 @@
 "use client";
 
 import { DataTableFilterAICommand } from "@/components/data-table/data-table-filter-command-ai";
+import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
 import { LiveButton } from "@/components/data-table/data-table-infinite/live-button";
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
@@ -12,6 +13,8 @@ import { useDataTable } from "@/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
 import type { SheetField } from "@/components/data-table/types";
+import { Button } from "@/components/ui/button";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useHotKey } from "@/hooks/use-hot-key";
 import { useLiveMode } from "@/hooks/use-live-mode";
 import {
@@ -31,8 +34,9 @@ import {
   getDefaultColumnVisibility,
 } from "@/lib/table-schema";
 import { cn } from "@/lib/utils";
-import type { FetchPreviousPageOptions } from "@tanstack/react-query";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import type { Row } from "@tanstack/react-table";
+import { Check, Copy } from "lucide-react";
 import * as React from "react";
 import { dataOptions } from "./query-options";
 import type { ColumnSchema, FilterState } from "./schema";
@@ -271,8 +275,36 @@ function ClientInner({
           metadata={metadata ?? {}}
         />
       }
+      floatingBarSlot={
+        <DataTableFloatingBar<ColumnSchema>>
+          {({ rows }) => <InfiniteFloatingBarSlot rows={rows} />}
+        </DataTableFloatingBar>
+      }
       tableId="infinite"
     />
+  );
+}
+
+function InfiniteFloatingBarSlot({ rows }: { rows: Row<ColumnSchema>[] }) {
+  const { copy, isCopied } = useCopyToClipboard();
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          const json = JSON.stringify(
+            rows.map((r) => r.original),
+            (_, v) => (v instanceof Date ? v.toISOString() : v),
+            2,
+          );
+          copy(json);
+        }}
+      >
+        {!isCopied ? <Copy /> : <Check />}
+        Copy as JSON
+      </Button>
+    </>
   );
 }
 
@@ -293,7 +325,11 @@ function InfiniteSheetSlot({
     ColumnSchema,
     unknown
   >();
-  const selectedRowKey = Object.keys(rowSelection)?.[0];
+  const uuid = useFilterState((s) => s.uuid) as string | null | undefined;
+  const isMultiSelect = !!table.options.enableMultiRowSelection;
+  const selectedRowKey = isMultiSelect
+    ? (uuid ?? undefined)
+    : Object.keys(rowSelection)?.[0];
   const selectedRow = React.useMemo(() => {
     if (isLoading && !selectedRowKey) return undefined;
     return table

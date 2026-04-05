@@ -30,6 +30,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/data-table/data-table-floating-bar.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/data-table/data-table-column-header.tsx",
           "type": "registry:component"
         },
