@@ -1,0 +1,305 @@
+---
+title: "MCP Server"
+description: "Expose your data table as a queryable MCP endpoint for AI agents"
+author: "openstatus"
+publishedAt: "2026-04-04"
+faq:
+  - question: "What is MCP?"
+    answer: "The Model Context Protocol (MCP) is an open standard that lets AI agents discover and call tools over HTTP. By exposing your data table as an MCP server, any MCP-compatible client (Claude Desktop, Cursor, custom agents) can query your data programmatically."
+  - question: "Does MCP replace the AI filters block?"
+    answer: "No. AI filters translate natural language into table filters on the client side. MCP exposes your data as a server-side tool that agents call directly — they're complementary. Use AI filters for human users typing queries, and MCP for agent-to-agent data access."
+  - question: "Which transport does it use?"
+    answer: "Streamable HTTP (2025-03-26 spec) via the official @modelcontextprotocol/sdk. The server runs stateless — no session tracking, fully serverless-compatible."
+  - question: "Can I expose multiple tables?"
+    answer: "Each MCP endpoint serves one table. To expose multiple tables, create separate route handlers co-located with each table's API (e.g., /infinite/api/mcp, /drizzle/api/mcp), each with its own schema and getData function."
+  - question: "How does schema auto-conversion work?"
+    answer: "Your existing BYOS field definitions (field.string(), field.number(), field.array(field.stringLiteral(...)), etc.) are automatically converted to Zod schemas, which the MCP SDK then converts to JSON Schema for the tools/list response. Agents see typed filter parameters without any manual schema duplication."
+  - question: "How do I paginate results?"
+    answer: "Pagination is cursor-based, using the same fields as your table's UI. Pass cursor (Unix ms timestamp), size (rows per page, default 40), and direction ('next' or 'prev') inside the filters object. To get the next page, use the date of the last row as the cursor. Call with format 'stats' first to get the total count without fetching rows."
+  - question: "What are common use cases?"
+    answer: "Conversational data exploration (ask Claude Desktop or Cursor questions in natural language), monitoring and alerting (agents poll stats for anomalies), post-deploy validation (CI/CD agents check for error spikes), cross-table orchestration (agents query multiple endpoints to answer cross-cutting questions), internal tooling for non-developers (chat-based access to production data), and agent-to-agent pipelines (one agent's output feeds another's input)."
+---
+
+# MCP Server
+
+The `data-table-mcp` block exposes your data table as an MCP endpoint. AI agents can discover the table's schema via `tools/list` and query it with filters, cursor-based pagination, sorting, and faceted stats via a single `query_table` tool.
+
+Stateless. Serverless-compatible. Schema auto-generated from your existing field definitions.
+
+## Installation
+
+```bash
+npx shadcn@latest add https://data-table-filters.com/r/data-table-mcp.json
+```
+
+This installs `@/lib/mcp` and the `@modelcontextprotocol/sdk` dependency.
+
+## Prerequisites
+
+- The **data-table** block must be installed (provides the BYOS schema system)
+- A data source — any async function that accepts filters and returns rows + total
+
+## Route Setup
+
+Create a route handler co-located with your table's API. Export POST, GET, and DELETE for Streamable HTTP spec compliance.
+
+The recommended pattern derives the MCP schema from your existing `filterSchema`, excluding UI-only fields (`live`, `uuid`) via destructuring. This automatically includes all filter fields, sorting, and cursor-based pagination.
+
+### In-Memory Example
+
+```ts
+// app/infinite/api/mcp/route.ts
+import { createTableMCPHandler } from "@/lib/mcp";
+import {
+  filterData,
+  getFacetsFromData,
+  sortData,
+  splitData,
+} from "@/app/infinite/api/helpers";
+import { filterSchema } from "@/app/infinite/filter-schema";
+import { mock, mockLive } from "@/app/infinite/api/mock";
+import type { SchemaDefinition } from "@/lib/store/schema";
+
+// Derive MCP schema from filterSchema, excluding UI-only fields
+const { live, uuid, ...mcpSchema } =
+  filterSchema.definition satisfies SchemaDefinition;
+
+const handler = createTableMCPHandler({
+  name: "data-table-filters",
+  description:
+    "Query HTTP request logs with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
+  schema: mcpSchema,
+  getData: async ({ filters }) => {
+    const totalData = [...mockLive, ...mock];
+    const filtered = filterData(totalData, filters);
+    const sorted = sortData(filtered, filters.sort ?? null);
+    const paginated = splitData(sorted, {
+      cursor: filters.cursor ?? null,
+      size: filters.size ?? 40,
+      direction: filters.direction ?? "next",
+    });
+    const facets = getFacetsFromData(filtered);
+    const total = filtered.length;
+    const rows = paginated.map((row) => ({
+      ...row,
+      date: row.date.toISOString(),
+    }));
+    return { rows, total, facets };
+  },
+});
+
+export { handler as POST, handler as GET, handler as DELETE };
+```
+
+### Drizzle/Postgres Example
+
+```ts
+// app/drizzle/api/mcp/route.ts
+import { createTableMCPHandler } from "@/lib/mcp";
+import { db } from "@/db/drizzle";
+import { logs } from "@/db/drizzle/schema";
+import { createDrizzleHandler } from "@/lib/drizzle";
+import { filterSchema } from "@/app/infinite/filter-schema";
+import { columnMapping } from "../../column-mapping";
+import { tableSchema } from "../../table-schema";
+import type { SchemaDefinition } from "@/lib/store/schema";
+
+const { live, uuid, ...mcpSchema } =
+  filterSchema.definition satisfies SchemaDefinition;
+
+const drizzleHandler = createDrizzleHandler({
+  db,
+  table: logs,
+  schema: tableSchema.definition,
+  columnMapping,
+  cursorColumn: "date",
+  defaultSize: 40,
+});
+
+const handler = createTableMCPHandler({
+  name: "data-table-drizzle",
+  description:
+    "Query HTTP request logs (Drizzle/Postgres) with filters for level, method, host, pathname, latency, status, regions, date range, sort, and cursor-based pagination (cursor, size, direction)",
+  schema: mcpSchema,
+  getData: async ({ filters }) => {
+    const result = await drizzleHandler.execute(
+      filters as Record<string, unknown>,
+    );
+
+    type LogRow = typeof logs.$inferSelect;
+    const rows = result.data.map((row) => {
+      const r = row as LogRow;
+      return {
+        uuid: r.uuid,
+        level: r.level,
+        method: r.method,
+        host: r.host,
+        pathname: r.pathname,
+        status: r.status,
+        latency: r.latency,
+        regions: r.regions,
+        date: r.date.toISOString(),
+        message: r.message ?? undefined,
+        "timing.dns": r.timingDns,
+        "timing.connection": r.timingConnection,
+        "timing.tls": r.timingTls,
+        "timing.ttfb": r.timingTtfb,
+        "timing.transfer": r.timingTransfer,
+      };
+    });
+
+    return { rows, total: result.filterRowCount, facets: result.facets };
+  },
+});
+
+export { handler as POST, handler as GET, handler as DELETE };
+```
+
+## Config
+
+| Option        | Type                     | Default        | Description                              |
+| ------------- | ------------------------ | -------------- | ---------------------------------------- |
+| `schema`      | `SchemaDefinition`       | —              | BYOS field definitions for filter params |
+| `description` | `string`                 | —              | Tool description (shown to agents)       |
+| `getData`     | `(opts) => Promise<...>` | —              | Data source function                     |
+| `name`        | `string`                 | `"data-table"` | MCP server name in `serverInfo`          |
+
+## The `query_table` Tool
+
+The handler registers a single MCP tool with these parameters:
+
+| Parameter | Type                | Default  | Description                     |
+| --------- | ------------------- | -------- | ------------------------------- |
+| `filters` | object (optional)   | `{}`     | Auto-generated from your schema |
+| `format`  | `"json" \| "stats"` | `"json"` | Output format                   |
+
+### Pagination & Sorting
+
+Pagination and sorting are part of the `filters` object, derived from your `filterSchema`:
+
+| Filter field | Type               | Default  | Description          |
+| ------------ | ------------------ | -------- | -------------------- |
+| `cursor`     | `number` (Unix ms) | now      | Cursor timestamp     |
+| `size`       | `number`           | `40`     | Rows per page        |
+| `direction`  | `"prev" \| "next"` | `"next"` | Pagination direction |
+| `sort`       | `{ id, desc }`     | —        | Sort descriptor      |
+
+### Output formats
+
+**`json`** — returns rows with total count:
+
+```json
+{ "rows": [...], "total": 1234 }
+```
+
+**`stats`** — returns total count and facet metadata (no rows):
+
+```json
+{
+  "total": 1234,
+  "facets": {
+    "level": { "rows": [{ "value": "error", "total": 42 }], "total": 1234 }
+  }
+}
+```
+
+## Schema Mapping
+
+Your BYOS field types are automatically converted to typed tool parameters:
+
+| Field type                              | Tool parameter type          |
+| --------------------------------------- | ---------------------------- |
+| `field.string()`                        | `string` (optional)          |
+| `field.number()`                        | `number` (optional)          |
+| `field.boolean()`                       | `boolean` (optional)         |
+| `field.timestamp()`                     | `number` (optional, Unix ms) |
+| `field.stringLiteral(["a", "b"])`       | `enum ["a", "b"]` (optional) |
+| `field.array(field.number())`           | `array of number` (optional) |
+| `field.array(field.stringLiteral(...))` | `array of enum` (optional)   |
+
+Timestamp fields accept Unix milliseconds over the wire and are deserialized to `Date` objects before reaching your `getData` function.
+
+## Connecting Clients
+
+### Claude Code
+
+Add to `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "data-table-infinite": {
+      "type": "http",
+      "url": "http://localhost:3000/infinite/api/mcp"
+    },
+    "data-table-drizzle": {
+      "type": "http",
+      "url": "http://localhost:3000/drizzle/api/mcp"
+    }
+  }
+}
+```
+
+### Verification (curl)
+
+```bash
+# Initialize
+curl -X POST http://localhost:3000/infinite/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}'
+
+# List tools (see auto-generated schema)
+curl -X POST http://localhost:3000/infinite/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+
+# Query with filters
+curl -X POST http://localhost:3000/infinite/api/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"query_table","arguments":{"filters":{"level":["error"],"size":5},"format":"stats"}}}'
+```
+
+## Use Cases
+
+### Conversational data exploration
+
+Connect your MCP endpoint to Claude Desktop or Cursor. Ask questions in natural language — the agent translates them into `query_table` calls with the right filters, paginates through results, and summarizes findings.
+
+> "Show me all 500 errors from the HKG region in the last hour"
+
+### Monitoring and alerting
+
+An autonomous agent polls `format: "stats"` on a schedule, watching facet distributions for anomalies. When the error rate spikes or latency percentiles drift, it triggers alerts via Slack, PagerDuty, or email — no dashboard required.
+
+### Post-deploy validation
+
+After a deploy, a CI/CD agent queries the logs table for error spikes in a short window. If the error count exceeds a threshold compared to the pre-deploy baseline, it flags the release for rollback.
+
+### Cross-table orchestration
+
+Multiple MCP endpoints (logs, orders, customers) each expose a `query_table` tool. An agent queries across all of them to answer cross-cutting questions like "which customers experienced 500 errors today?" — joining data that lives in separate tables or services.
+
+### Internal tooling for non-developers
+
+Teams that don't have dashboard access or SQL knowledge can query production data through a chat interface. The MCP schema provides guardrails — agents can only filter on defined fields, preventing arbitrary queries.
+
+### Agent-to-agent pipelines
+
+One agent's output feeds another's input. A triage agent identifies error patterns from the logs table, then passes those patterns to a root-cause agent that correlates with deploy metadata from a different MCP endpoint.
+
+## How It Works
+
+1. `createTableMCPHandler` converts your BYOS schema to a Zod schema at startup
+2. The MCP SDK auto-converts Zod to JSON Schema for `tools/list` responses
+3. On each request, a fresh `McpServer` + `WebStandardStreamableHTTPServerTransport` is created (stateless)
+4. Tool calls are validated by the SDK via Zod, then timestamp values are deserialized (`number` → `Date`)
+5. Your `getData` function is called with typed filters (including pagination and sort)
+6. Results are formatted as JSON (`rows` + `total`) or stats (`total` + `facets`)
+
+## Dependencies
+
+- `@modelcontextprotocol/sdk` — MCP protocol implementation
+- `zod` — Schema validation (already installed with the core block)

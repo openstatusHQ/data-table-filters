@@ -41,21 +41,21 @@ export function DataTableSheetDetails({
   const selectedRow = React.useMemo(() => {
     if (isLoading && !selectedRowKey) return;
     return table
-      .getCoreRowModel()
+      .getRowModel()
       .flatRows.find((row) => row.id === selectedRowKey);
   }, [selectedRowKey, isLoading, table]);
 
   const index = table
-    .getCoreRowModel()
+    .getRowModel()
     .flatRows.findIndex((row) => row.id === selectedRow?.id);
 
   const nextId = React.useMemo(
-    () => table.getCoreRowModel().flatRows[index + 1]?.id,
+    () => table.getRowModel().flatRows[index + 1]?.id,
     [index, isLoading, table],
   );
 
   const prevId = React.useMemo(
-    () => table.getCoreRowModel().flatRows[index - 1]?.id,
+    () => table.getRowModel().flatRows[index - 1]?.id,
     [index, isLoading, table],
   );
 

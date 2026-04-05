@@ -669,6 +669,39 @@
           }
         }
       }
+    },
+    {
+      "name": "data-table-mcp",
+      "type": "registry:block",
+      "title": "Data Table MCP Server",
+      "description": "Expose your data table as an MCP endpoint for AI agents. Auto-generates tool schema from BYOS field definitions. Stateless, serverless-compatible.",
+      "files": [
+        {
+          "path": "src/lib/mcp/index.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/mcp/types.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/mcp/server.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/mcp/schema-to-zod.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/mcp/deserialize.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "registryDependencies": [
+        "https://data-table.openstatus.dev/r/data-table.json"
+      ],
+      "dependencies": ["@modelcontextprotocol/sdk", "zod"],
+      "docs": "https://data-table.openstatus.dev/docs/mcp"
     }
   ]
 }

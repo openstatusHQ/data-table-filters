@@ -13,7 +13,6 @@ export const filterSchema = generateFilterSchema(tableSchema.definition, {
   live: field.boolean().default(false),
   // Pagination
   size: field.number().default(40),
-  start: field.number().default(0),
   direction: field.stringLiteral(DIRECTIONS).default("next"),
   cursor: field.timestamp(), // null = "now" (handled in query-options)
 });

@@ -3,16 +3,17 @@ name: data-table-filters
 description: >
   Install and extend data-table-filters — a React data table system with faceted filters
   (checkbox, input, slider, timerange), sorting, infinite scroll, virtualization, and BYOS
-  state management. Delivered as 10 shadcn registry blocks installable via
+  state management. Delivered as 11 shadcn registry blocks installable via
   `npx shadcn@latest add`. Use when: (1) installing data-table-filters from the shadcn
   registry, (2) adding extension blocks (command palette, AI filters, cell renderers, sheet panel,
   store adapters, schema system, Drizzle helpers, query layer), (3) configuring store
   adapters (nuqs/zustand/memory), (4) generating table schemas from a data model,
   (5) wiring up server-side filtering with Drizzle ORM, (6) connecting the React Query
   fetch layer, (7) auto-inferring schemas from raw JSON data with DataTableAuto / inferSchemaFromJSON,
-  (8) adding AI-powered natural language filtering, (9) troubleshooting integration issues.
+  (8) adding AI-powered natural language filtering, (9) exposing tables as MCP endpoints for AI agents,
+  (10) troubleshooting integration issues.
   Triggers on mentions of "data-table-filters", "data-table-filters.com", filterable data
-  tables with shadcn, DataTableAuto, auto-infer, AI filters, or any of the registry block names.
+  tables with shadcn, DataTableAuto, auto-infer, AI filters, MCP server, or any of the registry block names.
 ---
 
 # Data Table Filters
@@ -35,6 +36,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 | **data-table-drizzle**           | `.../r/data-table-drizzle.json`                       | Drizzle ORM server-side helpers (auto-installs schema)                                         |
 | **data-table-query**             | `.../r/data-table-query.json`                         | React Query infinite query integration                                                         |
 | **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                             |
+| **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                           |
 
 All URLs use base `https://data-table.openstatus.dev`.
 
