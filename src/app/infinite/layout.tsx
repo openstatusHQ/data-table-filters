@@ -8,8 +8,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <DataTableLayout>
       <DataTableLayoutFloatingBar>
-        <DataTableLayoutFloatingAction href="https://github.com/openstatusHQ/data-table-filters">
-          View GitHub Repo
+        <DataTableLayoutFloatingAction href="/docs">
+          View Documentation
         </DataTableLayoutFloatingAction>
         <DataTableLayoutFloatingAction href="/" secondary>
           Go back to home
