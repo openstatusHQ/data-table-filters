@@ -61,6 +61,7 @@ col.timestamp(); // Date    — timestamp display, timerange filter
 col.enum(values); // union   — badge display, checkbox filter
 col.array(item); // array   — badge display, checkbox filter
 col.record(); // Record  — text display, not filterable
+col.select(); // boolean — row selection checkbox column
 ```
 
 Each factory returns a `ColBuilder<T, F>` where `T` is the inferred TypeScript type and `F` constrains which filter types are valid at compile time:
@@ -74,6 +75,20 @@ Each factory returns a `ColBuilder<T, F>` where `T` is the inferred TypeScript t
 | `col.enum(values)`            | `"checkbox"`                        | Options auto-derived from values                |
 | `col.array(col.enum(values))` | `"checkbox"`                        | Multi-value tags, regions, labels               |
 | `col.record()`                | _none_ (`never`)                    | Use `.sheetOnly()` for detail drawers           |
+| `col.select()`                | _none_ (`never`)                    | Row selection checkbox + floating bar           |
+
+### Row Selection with `col.select()`
+
+`col.select()` adds a checkbox column for row selection. It renders a select-all checkbox in the header and a per-row checkbox in each cell. Pair it with `DataTableFloatingBar` to show bulk actions when rows are selected.
+
+```ts
+export const tableSchema = createTableSchema({
+  select: col.select().size(37),
+  // ...other columns
+});
+```
+
+> `col.select()` is not filterable, not sortable, and excluded from the sheet. It should typically be the first column in your schema. See [DataTableFloatingBar](/docs/ui-components#datatablefloatingbar) for the bulk action bar.
 
 ## Presets
 

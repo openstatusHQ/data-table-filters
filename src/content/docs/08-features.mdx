@@ -5,7 +5,7 @@ author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
   - question: "What keyboard shortcuts are available?"
-    answer: "Supported shortcuts include Cmd+K (command palette), Cmd+B (toggle sidebar), Cmd+U (clear filters), Cmd+J (toggle live mode), Esc (close dialogs), and Cmd+. (toggle debug panel)."
+    answer: "Supported shortcuts include Cmd+K (command palette), Cmd+B (toggle sidebar), Cmd+U (clear filters), Cmd+J (toggle live mode), Esc (close dialogs), Cmd+. (toggle debug panel), and Cmd+Shift+X (deselect all rows)."
   - question: "Does the timeline chart support zoom?"
     answer: "Yes, click and drag across the chart to select a time range. The selection is applied as a date filter, zooming the table into that window. The axis format adapts automatically to the visible time span."
   - question: "What is live mode?"
@@ -13,6 +13,8 @@ faq:
 ---
 
 # Features
+
+Try all features live in the [/infinite](/infinite) demo.
 
 ### Timeline Chart
 
@@ -53,3 +55,6 @@ Built-in keyboard shortcuts for common interactions:
 - `Cmd+J` — Toggle live mode
 - `Esc` — Reset table filters
 - `Cmd+.` — Reset element focus
+- `Cmd+Shift+X` — Deselect all rows (when rows are selected)
+
+> Row selection requires `col.select()` in your [Table Schema](/docs/table-schema#row-selection-with-colselect). Use [DataTableFloatingBar](/docs/ui-components#datatablefloatingbar) to add bulk action buttons to the selection bar.

@@ -5,7 +5,7 @@ author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
   - question: "What UI components are included?"
-    answer: "The library provides DataTableInfinite (infinite scroll table), DataTableFilterControls (sidebar filters with accordions), DataTableFilterCommand (command palette with filter syntax), and DataTableSheetDetails (row detail drawer)."
+    answer: "The library provides DataTableInfinite (infinite scroll table), DataTableFilterControls (sidebar filters with accordions), DataTableFilterCommand (command palette with filter syntax), DataTableFilterAICommand (AI-enhanced command palette with natural language support), DataTableSheetDetails (row detail drawer), and DataTableFloatingBar (bulk action bar for selected rows)."
   - question: "What cell renderers are available?"
     answer: "Built-in cell components include text, code, number, timestamp, badge, boolean, star, status code, and level indicator renderers."
 ---
@@ -75,6 +75,34 @@ Supports filter syntax:
 
 > Want AI-powered natural language queries in your command palette? Install the `data-table-filter-command-ai` block for an enhanced version that translates free-form text into structured filters. See [AI Filters](/docs/ai-filters).
 
+## DataTableFilterAICommand
+
+A drop-in replacement for `DataTableFilterCommand` that adds natural language query support. It includes everything from the standard command palette (structured `key:value` syntax, autocomplete, history) plus:
+
+- **AI inference** — type a free-form query like _"5xx errors in the last hour"_ and press Enter. The input is sent to your AI endpoint, which streams back structured filters.
+- **TextShimmer** — while the AI is processing, the closed command bar displays the query with a shimmer animation so the user knows it's working.
+- **Sparkles indicator** — an `AI:` badge in the footer and a sparkles icon on the infer suggestion hint that the input is being treated as natural language.
+
+The component automatically detects whether the input is structured (`host:API`) or natural language (`show me slow requests`) based on whether it matches known field names.
+
+```tsx
+<DataTableFilterAICommand
+  schema={filterSchema.definition}
+  tableSchema={tableSchema.definition}
+  api="/api/ai/filters"
+  tableId="my-table"
+/>
+```
+
+| Prop          | Type                    | Description                                                   |
+| ------------- | ----------------------- | ------------------------------------------------------------- |
+| `schema`      | `SchemaDefinition`      | BYOS schema for parsing/serializing filter values             |
+| `tableSchema` | `TableSchemaDefinition` | Table schema for AI context generation                        |
+| `api`         | `string`                | API endpoint that streams AI filter results                   |
+| `tableId`     | `string`                | Unique ID for localStorage namespacing (default: `"default"`) |
+
+> For full setup including the API route and provider configuration, see [AI Filters](/docs/ai-filters).
+
 ## DataTableSheetDetails
 
 ![data-table sheet detail drawer](/assets/docs/data-table-sheet.png)
@@ -88,6 +116,48 @@ Row detail drawer. Opens when a row is selected. Supports keyboard navigation be
 >
   <DataTableSheetContent fields={sheetFields} />
 </DataTableSheetDetails>
+```
+
+## DataTableFloatingBar
+
+A fixed bottom bar that appears when rows are selected, providing a slot for bulk action buttons. Dismisses when no rows are selected.
+
+- Shows `"{n} selected"` count with a deselect button
+- `Cmd+Shift+X` hotkey to deselect all rows
+- Uses a render prop that receives the selected `rows` and `table` instance
+
+```tsx
+<DataTableFloatingBar<ColumnSchema>>
+  {({ rows, table }) => (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        const json = JSON.stringify(
+          rows.map((r) => r.original),
+          null,
+          2,
+        );
+        navigator.clipboard.writeText(json);
+      }}
+    >
+      Copy {rows.length} rows
+    </Button>
+  )}
+</DataTableFloatingBar>
+```
+
+Pass it via the `floatingBarSlot` prop on `DataTableInfinite`:
+
+```tsx
+<DataTableInfinite
+  floatingBarSlot={
+    <DataTableFloatingBar<ColumnSchema>>
+      {({ rows }) => <MyBulkActions rows={rows} />}
+    </DataTableFloatingBar>
+  }
+  // ...other props
+/>
 ```
 
 ## Cell Components
