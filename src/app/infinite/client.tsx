@@ -302,7 +302,7 @@ function InfiniteFloatingBarSlot({ rows }: { rows: Row<ColumnSchema>[] }) {
         }}
       >
         {!isCopied ? <Copy /> : <Check />}
-        Copy to clipboard
+        Copy as JSON
       </Button>
     </>
   );
