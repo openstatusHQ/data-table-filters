@@ -1,6 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useHotKey } from "@/hooks/use-hot-key";
 import type { Row, Table as TTable } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import * as React from "react";
@@ -24,6 +32,8 @@ export function DataTableFloatingBar<TData>({
     // rowSelection is not used directly but serves as an invalidation trigger
   }, [table, rowSelection]);
 
+  useHotKey(() => table.resetRowSelection(), "x", { shift: true });
+
   if (selectedRowCount === 0) return null;
 
   return (
@@ -33,15 +43,26 @@ export function DataTableFloatingBar<TData>({
           <span className="text-muted-foreground text-sm whitespace-nowrap">
             {selectedRowCount} selected
           </span>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => table.resetRowSelection()}
-            className="text-muted-foreground hover:text-foreground rounded-sm p-0.5 transition-colors"
-            aria-label="Deselect all"
-          >
-            <X className="size-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip delayDuration={100}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => table.resetRowSelection()}
+                  className="text-muted-foreground hover:text-foreground rounded-sm p-0.5 transition-colors"
+                  aria-label="Deselect all"
+                >
+                  <X className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>
+                  Deselect all <Kbd>⌘ ⇧ X</Kbd>
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <div className="bg-border mr-1 h-5 w-px" />
         <div className="flex items-center gap-2">
