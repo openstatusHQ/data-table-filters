@@ -398,6 +398,15 @@ describe("deserializeSchema", () => {
     expect(roundTrip(def)).toEqual(serializeSchema(def));
   });
 
+  it("round-trips col.select() without incorrectly applying sheetOnly()", () => {
+    const def = { select: col.select().size(37) };
+    const json = serializeSchema(def);
+    // select has enableHiding: false but hidden: false — must NOT become sheetOnly
+    expect(json.columns[0]?.enableHiding).toBe(false);
+    expect(json.columns[0]?.hidden).toBe(false);
+    expect(roundTrip(def)).toEqual(json);
+  });
+
   it("falls back to 'text' display for string when JSON has display.type 'custom'", () => {
     const json: SchemaJSON = {
       columns: [

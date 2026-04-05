@@ -199,7 +199,9 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     }
 
     // 5. Structural modifiers
-    if (col_.enableHiding === false) {
+    // sheetOnly() sets both enableHiding: false AND hidden: true.
+    // enableHiding: false alone (e.g. col.select()) should NOT trigger sheetOnly().
+    if (col_.enableHiding === false && col_.hidden) {
       builder = builder.sheetOnly();
     } else if (col_.hidden) {
       builder = builder.hidden();

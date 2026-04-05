@@ -281,7 +281,7 @@ describe("col.record()", () => {
   });
 });
 
-// ── col.select() ───────────��────────────────────────────────��────────────────
+// ── col.select() ──────────────────────────────────────────────────────────────
 
 describe("col.select()", () => {
   it("has kind 'select' with filter null (not filterable)", () => {
@@ -314,7 +314,7 @@ describe("col.select()", () => {
   });
 });
 
-// ── .filterable() option preservation ───────────────────────────��────────────
+// ── .filterable() option preservation ──────────────────────────────────────────
 
 describe(".filterable() option preservation", () => {
   it("preserves existing options when called again with the same type and no new options", () => {
