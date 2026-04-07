@@ -23,6 +23,9 @@ function getDisplayDescriptor(config: ColConfig): {
   type: string;
   unit?: string;
   colorMap?: Record<string, string>;
+  min?: number;
+  max?: number;
+  color?: string;
 } {
   const type =
     config.display.type === "custom"
@@ -32,16 +35,24 @@ function getDisplayDescriptor(config: ColConfig): {
     type: string;
     unit?: string;
     colorMap?: Record<string, string>;
+    min?: number;
+    max?: number;
+    color?: string;
   } = { type };
-  if (
-    config.display.type === "number" &&
-    "unit" in config.display &&
-    config.display.unit
-  ) {
+  if ("unit" in config.display && config.display.unit) {
     desc.unit = config.display.unit;
   }
   if ("colorMap" in config.display && config.display.colorMap) {
     desc.colorMap = config.display.colorMap;
+  }
+  if ("min" in config.display && config.display.min !== undefined) {
+    desc.min = config.display.min;
+  }
+  if ("max" in config.display && config.display.max !== undefined) {
+    desc.max = config.display.max;
+  }
+  if ("color" in config.display && config.display.color) {
+    desc.color = config.display.color;
   }
   return desc;
 }

@@ -33,7 +33,7 @@ export function DataTableCellBar({
           backgroundColor: color
             ? `rgba(${hexToRgb(color)}, ${OPACITY})`
             : `var(--muted)`,
-          opacity: OPACITY,
+          opacity: color ? undefined : OPACITY,
           borderRight: `1px solid ${color ? `rgba(${hexToRgb(color)}, ${BORDER_OPACITY})` : `var(--border)`}`,
         }}
       />

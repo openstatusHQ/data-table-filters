@@ -407,6 +407,48 @@ describe("deserializeSchema", () => {
     expect(roundTrip(def)).toEqual(json);
   });
 
+  it("round-trips a heatmap display with options", () => {
+    const def = {
+      score: col
+        .number()
+        .label("Score")
+        .display("heatmap", {
+          min: 0,
+          max: 100,
+          unit: "pts",
+          color: "#ef4444",
+        }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips a bar display with options", () => {
+    const def = {
+      latency: col
+        .number()
+        .label("Latency")
+        .display("bar", { min: 0, max: 5000, unit: "ms", color: "#3b82f6" }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips a gauge display with options", () => {
+    const def = {
+      health: col
+        .number()
+        .label("Health")
+        .display("gauge", { min: 0, max: 100, color: "#22c55e" }),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
+  it("round-trips a bar display with no options", () => {
+    const def = {
+      value: col.number().label("Value").display("bar"),
+    };
+    expect(roundTrip(def)).toEqual(serializeSchema(def));
+  });
+
   it("falls back to 'text' display for string when JSON has display.type 'custom'", () => {
     const json: SchemaJSON = {
       columns: [
