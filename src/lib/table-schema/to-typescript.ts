@@ -158,7 +158,18 @@ function buildChain(c: ColumnDescriptor): string {
   if (!skipDisplay) {
     const dt = c.display.type;
     const hasColorMap = !!c.display.colorMap;
-    if (dt === "number" && (c.display.unit || hasColorMap)) {
+    if (dt === "heatmap" || dt === "bar" || dt === "gauge") {
+      const opts: Record<string, unknown> = {};
+      if (c.display.min !== undefined) opts.min = c.display.min;
+      if (c.display.max !== undefined) opts.max = c.display.max;
+      if (c.display.unit) opts.unit = c.display.unit;
+      if (c.display.color) opts.color = c.display.color;
+      parts.push(
+        Object.keys(opts).length > 0
+          ? `.display(${JSON.stringify(dt)}, ${JSON.stringify(opts)})`
+          : `.display(${JSON.stringify(dt)})`,
+      );
+    } else if (dt === "number" && (c.display.unit || hasColorMap)) {
       const opts: Record<string, unknown> = {};
       if (c.display.unit) opts.unit = c.display.unit;
       if (hasColorMap) opts.colorMap = c.display.colorMap;

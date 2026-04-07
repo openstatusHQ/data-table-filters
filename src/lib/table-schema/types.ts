@@ -28,6 +28,21 @@ export type DisplayConfig =
       type: "custom";
       cell: (value: unknown, row: unknown) => JSX.Element | null;
       colorMap?: Record<string, string>;
+    }
+  | {
+      type: "heatmap";
+      min?: number;
+      max?: number;
+      unit?: string;
+      color?: string;
+    }
+  | { type: "bar"; min?: number; max?: number; unit?: string; color?: string }
+  | {
+      type: "gauge";
+      min?: number;
+      max?: number;
+      unit?: string;
+      color?: string;
     };
 
 export type FilterConfig = {
@@ -149,6 +164,15 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
     options: {
       cell: (value: unknown, row: unknown) => JSX.Element | null;
       colorMap?: Record<string, string>;
+    },
+  ): ColBuilder<T, F>;
+  display(
+    type: "heatmap" | "bar" | "gauge",
+    options?: {
+      min?: number;
+      max?: number;
+      unit?: string;
+      color?: string;
     },
   ): ColBuilder<T, F>;
 
@@ -360,7 +384,14 @@ export type ColumnDescriptor = {
   sortable: boolean;
   size?: number;
   /** `"custom"` means a developer-supplied renderer exists; not reconstructable from JSON. */
-  display: { type: string; unit?: string; colorMap?: Record<string, string> };
+  display: {
+    type: string;
+    unit?: string;
+    colorMap?: Record<string, string>;
+    min?: number;
+    max?: number;
+    color?: string;
+  };
   filter: FilterDescriptor | null;
   sheet: SheetDescriptor | null;
 };

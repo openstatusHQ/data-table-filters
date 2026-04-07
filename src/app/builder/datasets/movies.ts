@@ -210,7 +210,7 @@ export const moviesData: Movie[] = [
   {
     title: "City of God",
     genre: "Crime",
-    rating: 8.6,
+    rating: 1,
     year: 2002,
     runtime: 130,
     country: "Brazil",
@@ -903,7 +903,7 @@ export const moviesData: Movie[] = [
   {
     title: "The Banshees of Inisherin",
     genre: "Drama",
-    rating: 7.7,
+    rating: 5.6,
     year: 2022,
     runtime: 114,
     country: "Ireland",

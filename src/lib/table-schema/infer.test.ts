@@ -298,8 +298,18 @@ describe("inferSchemaFromJSON — default column properties", () => {
     expect(col?.sheet).toEqual({});
   });
 
-  it("sets display type to 'number' for number columns", () => {
+  it("sets display type to 'gauge' for score columns", () => {
     const data = [{ score: 100 }, { score: 200 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "gauge",
+      min: 0,
+      max: 200,
+    });
+  });
+
+  it("sets display type to 'number' for number columns", () => {
+    const data = [{ count: 100 }, { count: 200 }];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({ type: "number" });
   });
@@ -368,24 +378,39 @@ describe("inferSchemaFromJSON — smart display enhancement", () => {
     expect(columns[0]?.display).toEqual({ type: "code" });
   });
 
-  it("sets number display with 'ms' unit for latency columns", () => {
+  it("sets heatmap display with 'ms' unit for latency columns", () => {
     const data = [{ latency: 100 }, { latency: 200 }, { latency: 300 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      unit: "ms",
+      min: 100,
+      max: 300,
+    });
     expect(columns[0]?.sortable).toBe(true);
   });
 
-  it("sets number display with 'ms' unit for duration columns", () => {
+  it("sets heatmap display with 'ms' unit for duration columns", () => {
     const data = [{ duration: 50 }, { duration: 150 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      unit: "ms",
+      min: 50,
+      max: 150,
+    });
     expect(columns[0]?.sortable).toBe(true);
   });
 
-  it("sets number display with 'ms' unit for responseTime (compound word)", () => {
+  it("sets heatmap display with 'ms' unit for responseTime (compound word)", () => {
     const data = [{ responseTime: 80 }, { responseTime: 120 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      unit: "ms",
+      min: 80,
+      max: 120,
+    });
     expect(columns[0]?.sortable).toBe(true);
   });
 
