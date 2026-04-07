@@ -2,6 +2,7 @@
 
 import { Link } from "@/components/custom/link";
 import { TextShimmer } from "@/components/data-table/data-table-filter-command-ai/text-shimmer";
+import { Skeleton as DataTableInfiniteSkeleton } from "@/components/data-table/data-table-infinite/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -641,6 +642,7 @@ export function BuilderClient() {
     (schema: SchemaJSON, newDataId: string) => {
       setDataId(newDataId);
       setSchemaJson(schema);
+      setSchemaVersion((v) => v + 1);
     },
     [],
   );
@@ -701,24 +703,27 @@ export function BuilderClient() {
       </div>
 
       {/* Right panel — live table */}
-      <div className="min-w-0 flex-1 overflow-hidden sm:border-l">
+      <div className="relative min-w-0 flex-1 overflow-hidden sm:border-l">
         {schemaJson && dataId ? (
           <BuilderTable
             dataId={dataId}
             schemaJson={schemaJson}
             schemaVersion={schemaVersion}
           />
+        ) : initialPrompt ? (
+          <>
+            <DataTableInfiniteSkeleton withChart={false} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <TextShimmer className="text-sm">Generating table…</TextShimmer>
+            </div>
+          </>
         ) : (
           <div className="flex h-full items-center justify-center">
-            {initialPrompt ? (
-              <TextShimmer className="text-sm">Generating table…</TextShimmer>
-            ) : (
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-muted-foreground text-sm">
-                  Get started by providing data or generating with AI.
-                </p>
-              </div>
-            )}
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-muted-foreground text-sm">
+                Get started by providing data or generating with AI.
+              </p>
+            </div>
           </div>
         )}
       </div>
