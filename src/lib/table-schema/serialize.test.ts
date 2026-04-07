@@ -409,15 +409,12 @@ describe("deserializeSchema", () => {
 
   it("round-trips a heatmap display with options", () => {
     const def = {
-      score: col
-        .number()
-        .label("Score")
-        .display("heatmap", {
-          min: 0,
-          max: 100,
-          unit: "pts",
-          color: "#ef4444",
-        }),
+      score: col.number().label("Score").display("heatmap", {
+        min: 0,
+        max: 100,
+        unit: "pts",
+        color: "#ef4444",
+      }),
     };
     expect(roundTrip(def)).toEqual(serializeSchema(def));
   });

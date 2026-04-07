@@ -309,7 +309,7 @@
       "name": "data-table-cell",
       "type": "registry:block",
       "title": "Data Table Cell Renderers",
-      "description": "Cell renderer system with 12 types: text, code, badge, boolean, number, status-code, level-indicator, timestamp, heatmap, bar, and gauge.",
+      "description": "Cell renderer system with 12 types: text, code, badge, boolean, star, number, status-code, level-indicator, timestamp, heatmap, bar, and gauge.",
       "files": [
         {
           "path": "src/components/data-table/data-table-cell/index.tsx",
