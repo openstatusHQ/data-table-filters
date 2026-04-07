@@ -66,7 +66,7 @@ type BuilderCallbacks = {
 function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
   const [description, setDescription] = React.useState(initialPrompt ?? "");
   const [rows, setRows] = React.useState(20);
-  const [generating, setGenerating] = React.useState(false);
+  const [generating, setGenerating] = React.useState(!!initialPrompt);
   const [rowsGenerated, setRowsGenerated] = React.useState(0);
   const abortRef = React.useRef<AbortController | null>(null);
 
@@ -78,7 +78,11 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
         body: JSON.stringify({ data }),
         signal,
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const err = (await res.json()) as { error?: string };
+        toast.error(err.error ?? "Failed to infer schema");
+        return;
+      }
       const { schema, dataId } = (await res.json()) as {
         schema: SchemaJSON;
         dataId: string;
@@ -199,21 +203,20 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
         setRowsGenerated(data.length);
         await applyPartial(data, controller.signal);
       } catch (e) {
-        // Don't toast on intentional abort
+        // Don't toast or update state on intentional abort
         if (e instanceof DOMException && e.name === "AbortError") return;
         toast.error(e instanceof Error ? e.message : "Failed to generate data");
       } finally {
-        setGenerating(false);
+        if (!controller.signal.aborted) {
+          setGenerating(false);
+        }
       }
     },
     [applyPartial],
   );
 
-  // Auto-submit when initialPrompt is provided (homepage redirect)
-  const autoSubmittedRef = React.useRef(false);
   React.useEffect(() => {
-    if (initialPrompt && !autoSubmittedRef.current) {
-      autoSubmittedRef.current = true;
+    if (!!initialPrompt) {
       handleGenerate(initialPrompt, rows);
     }
   }, [initialPrompt, handleGenerate, rows]);
@@ -546,11 +549,18 @@ function BuilderSchemaEditor({
       validateSchema(definition);
 
       if (dataId) {
-        await fetch("/api/builder", {
+        const res = await fetch("/api/builder", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ dataId, schema: parsed }),
         });
+        if (!res.ok) {
+          const err = (await res.json()) as { error?: string };
+          schemaForm.setError("schema", {
+            message: err.error ?? "Failed to save schema",
+          });
+          return;
+        }
       }
 
       onSchemaChange(parsed);
@@ -624,10 +634,8 @@ export function BuilderClient() {
     INITIAL_SCHEMA,
   );
   const [schemaVersion, setSchemaVersion] = React.useState(0);
-  const [activeTab, setActiveTab] = React.useState("data");
-
-  // nuqs params for homepage → builder redirect
-  const [prompt, setPrompt] = useQueryState("prompt", parseAsString);
+  const [activeTab, setActiveTab] = React.useState("ai");
+  const [initialPrompt] = useQueryState("prompt", parseAsString);
 
   const handleResult = React.useCallback(
     (schema: SchemaJSON, newDataId: string) => {
@@ -642,21 +650,6 @@ export function BuilderClient() {
     window.history.replaceState({}, "", window.location.pathname);
     setSchemaVersion((v) => v + 1);
   }, []);
-
-  // Capture prompt before clearing — persists across renders for AITab mount
-  const initialPromptRef = React.useRef<string | null>(null);
-  // eslint-disable-next-line react-hooks/refs
-  if (prompt && !initialPromptRef.current) {
-    initialPromptRef.current = prompt;
-  }
-
-  // Switch to AI tab and clear URL param when prompt is present
-  React.useEffect(() => {
-    if (prompt) {
-      setActiveTab("ai");
-      void setPrompt(null);
-    }
-  }, [prompt, setPrompt]);
 
   const panelContent = (
     <>
@@ -679,11 +672,7 @@ export function BuilderClient() {
         </TabsContent>
 
         <TabsContent value="ai" className="mt-0">
-          <BuilderAITab
-            onResult={handleResult}
-            // eslint-disable-next-line react-hooks/refs
-            initialPrompt={initialPromptRef.current}
-          />
+          <BuilderAITab onResult={handleResult} initialPrompt={initialPrompt} />
         </TabsContent>
       </Tabs>
 
@@ -721,13 +710,15 @@ export function BuilderClient() {
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground text-sm">
-              Paste JSON data and click{" "}
-              <strong className="text-foreground font-medium">
-                Generate Schema
-              </strong>{" "}
-              to see a live table here.
-            </p>
+            {initialPrompt ? (
+              <TextShimmer className="text-sm">Generating table…</TextShimmer>
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <p className="text-muted-foreground text-sm">
+                  Get started by providing data or generating with AI.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

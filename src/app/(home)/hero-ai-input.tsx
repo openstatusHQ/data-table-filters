@@ -9,7 +9,7 @@ import * as React from "react";
 export function HeroAIInput({
   className,
   ...props
-}: React.ComponentProps<"form">) {
+}: Omit<React.ComponentProps<"form">, "onSubmit">) {
   const [description, setDescription] = React.useState("");
   const router = useRouter();
 

@@ -493,6 +493,7 @@ function Hero() {
             data tables. Copy proven patterns, install the agent skill,
             ship.{" "}
           </span>
+          <br />
           <NextLink
             href="/docs/introduction"
             className="group text-foreground hover:text-background relative inline-block font-medium"
