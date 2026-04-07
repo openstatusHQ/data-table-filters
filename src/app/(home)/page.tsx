@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { default as NextLink } from "next/link";
+import { HeroAIInput } from "./hero-ai-input";
 
 const jsonLd = createJsonLDGraph([
   getJsonLDOrganization(),
@@ -500,6 +501,7 @@ function Hero() {
             <span className="relative">Learn more in the Docs.&nbsp;</span>
           </NextLink>
         </p>
+        <HeroAIInput className="max-w-xl pt-2" />
       </div>
       <NextLink
         href="https://openstatus.dev"
