@@ -22,6 +22,17 @@ export function getBuilderData(dataId: string): BuilderCacheEntry | undefined {
   return cache.get(dataId);
 }
 
+export function updateBuilderData(
+  dataId: string,
+  data: Record<string, unknown>[],
+): boolean {
+  const entry = cache.get(dataId);
+  if (!entry) return false;
+  const stamped = data.map((row, i) => ({ ...row, __rowId: `${i}` }));
+  entry.data = stamped;
+  return true;
+}
+
 export function updateBuilderSchema(
   dataId: string,
   schemaJson: SchemaJSON,
