@@ -25,9 +25,11 @@ export function Header({ page, sections }: HeaderProps) {
       </div>
       <div className="flex min-w-0 items-center gap-2.5">
         <div>
-          <Button variant="ghost">
+          <Button variant="ghost" className="group">
             <Github />
-            <span className="text-muted-foreground font-mono">1.9k</span>
+            <span className="text-muted-foreground group-hover:text-foreground font-mono">
+              1.9k
+            </span>
           </Button>
         </div>
         <div className="sm:w-48">
@@ -36,7 +38,7 @@ export function Header({ page, sections }: HeaderProps) {
         <NextLink
           href="https://openstatus.dev"
           target="_blank"
-          className="border-border relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed bg-white sm:h-12 sm:w-12"
+          className="border-border relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed bg-white"
         >
           <Image
             src="/logos/OpenStatus.png"
