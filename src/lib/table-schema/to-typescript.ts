@@ -158,27 +158,26 @@ function buildChain(c: ColumnDescriptor): string {
   if (!skipDisplay) {
     const display = c.display;
     const hasColorMap = !!display.colorMap;
-    if (display.type === "number" && (display.unit || hasColorMap)) {
+    if (
+      display.type === "heatmap" ||
+      display.type === "bar" ||
+      display.type === "gauge"
+    ) {
+      const opts: Record<string, unknown> = {};
+      if (display.min !== undefined) opts.min = display.min;
+      if (display.max !== undefined) opts.max = display.max;
+      if (display.unit) opts.unit = display.unit;
+      if (display.color) opts.color = display.color;
+      parts.push(
+        Object.keys(opts).length > 0
+          ? `.display(${JSON.stringify(display.type)}, ${JSON.stringify(opts)})`
+          : `.display(${JSON.stringify(display.type)})`,
+      );
+    } else if (display.type === "number" && (display.unit || hasColorMap)) {
       const opts: Record<string, unknown> = {};
       if (display.unit) opts.unit = display.unit;
       if (hasColorMap) opts.colorMap = display.colorMap;
       parts.push(`.display("number", ${JSON.stringify(opts)})`);
-    } else if (display.type === "bar") {
-      const opts: Record<string, unknown> = {
-        min: display.min,
-        max: display.max,
-      };
-      if (display.unit) opts.unit = display.unit;
-      if (hasColorMap) opts.colorMap = display.colorMap;
-      parts.push(`.display("bar", ${JSON.stringify(opts)})`);
-    } else if (display.type === "heatmap") {
-      const opts: Record<string, unknown> = {
-        min: display.min,
-        max: display.max,
-      };
-      if (display.color) opts.color = display.color;
-      if (hasColorMap) opts.colorMap = display.colorMap;
-      parts.push(`.display("heatmap", ${JSON.stringify(opts)})`);
     } else if (hasColorMap) {
       parts.push(
         `.display(${JSON.stringify(display.type)}, ${JSON.stringify({ colorMap: display.colorMap })})`,

@@ -50,8 +50,8 @@ function renderSheetValue(
       return typeof rawValue === "number" ? (
         <DataTableCellBar
           value={rawValue}
-          min={display.min}
-          max={display.max}
+          min={display.min ?? 0}
+          max={display.max ?? 100}
           unit={display.unit}
           color={colorMap?.[String(rawValue)]}
         />
@@ -63,8 +63,8 @@ function renderSheetValue(
       return typeof rawValue === "number" ? (
         <DataTableCellHeatmap
           value={rawValue}
-          min={display.min}
-          max={display.max}
+          min={display.min ?? 0}
+          max={display.max ?? 100}
           color={display.color}
         />
       ) : (

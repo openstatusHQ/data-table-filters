@@ -309,7 +309,7 @@
       "name": "data-table-cell",
       "type": "registry:block",
       "title": "Data Table Cell Renderers",
-      "description": "Cell renderer system with 12 types: text, code, badge, boolean, number, bar, heatmap, star, status-code, level-indicator, timestamp, and custom.",
+      "description": "Cell renderer system with 12 types: text, code, badge, boolean, star, number, status-code, level-indicator, timestamp, heatmap, bar, and gauge.",
       "files": [
         {
           "path": "src/components/data-table/data-table-cell/index.tsx",
@@ -340,11 +340,11 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/data-table/data-table-cell/data-table-cell-bar.tsx",
+          "path": "src/components/data-table/data-table-cell/data-table-cell-status-code.tsx",
           "type": "registry:component"
         },
         {
-          "path": "src/components/data-table/data-table-cell/data-table-cell-heatmap.tsx",
+          "path": "src/components/data-table/data-table-cell/data-table-cell-level-indicator.tsx",
           "type": "registry:component"
         },
         {
@@ -352,12 +352,20 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/data-table/data-table-cell/data-table-cell-status-code.tsx",
+          "path": "src/components/data-table/data-table-cell/data-table-cell-heatmap.tsx",
           "type": "registry:component"
         },
         {
-          "path": "src/components/data-table/data-table-cell/data-table-cell-level-indicator.tsx",
+          "path": "src/components/data-table/data-table-cell/data-table-cell-bar.tsx",
           "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-cell/data-table-cell-gauge.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/lib/colors.ts",
+          "type": "registry:lib"
         },
         {
           "path": "src/components/custom/text-with-tooltip.tsx",

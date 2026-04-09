@@ -24,15 +24,25 @@ export type DisplayConfig =
   | { type: "number"; unit?: string; colorMap?: Record<string, string> }
   | {
       type: "bar";
-      min: number;
-      max: number;
+      min?: number;
+      max?: number;
       unit?: string;
+      color?: string;
       colorMap?: Record<string, string>;
     }
   | {
       type: "heatmap";
-      min: number;
-      max: number;
+      min?: number;
+      max?: number;
+      unit?: string;
+      color?: string;
+      colorMap?: Record<string, string>;
+    }
+  | {
+      type: "gauge";
+      min?: number;
+      max?: number;
+      unit?: string;
       color?: string;
       colorMap?: Record<string, string>;
     }
@@ -185,6 +195,15 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
     options: {
       cell: (value: unknown, row: unknown) => JSX.Element | null;
       colorMap?: Record<string, string>;
+    },
+  ): ColBuilder<T, F>;
+  display(
+    type: "heatmap" | "bar" | "gauge",
+    options?: {
+      min?: number;
+      max?: number;
+      unit?: string;
+      color?: string;
     },
   ): ColBuilder<T, F>;
 

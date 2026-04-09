@@ -1,6 +1,5 @@
 import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-container";
 import { KVTabs } from "@/components/custom/kv-tabs";
-import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
 import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
@@ -155,9 +154,7 @@ export const tableSchema = createTableSchema({
   latency: col
     .number()
     .label("Latency")
-    .display("custom", {
-      cell: (value) => <DataTableColumnLatency value={value as number} />,
-    })
+    .display("bar", { min: 0, max: 5000, unit: "ms" })
     .filterable("slider", { min: 0, max: 5000, unit: "ms" })
     .size(110)
     .sortable()

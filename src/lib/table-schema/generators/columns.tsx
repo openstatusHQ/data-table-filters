@@ -5,6 +5,7 @@ import {
   DataTableCellBar,
   DataTableCellBoolean,
   DataTableCellCode,
+  DataTableCellGauge,
   DataTableCellHeatmap,
   DataTableCellLevelIndicator,
   DataTableCellNumber,
@@ -52,9 +53,10 @@ function renderCell(
   display: DisplayConfig,
   value: unknown,
   row: unknown,
+  context?: { min: number; max: number },
 ): JSX.Element | null {
   const fallback = <DataTableCellText value={String(value ?? "")} />;
-  const colorMap = display.colorMap;
+  const colorMap = "colorMap" in display ? display.colorMap : undefined;
   switch (display.type) {
     case "text": {
       const hex = colorMap?.[String(value)];
@@ -76,31 +78,6 @@ function renderCell(
       const hex = colorMap?.[String(value)];
       return typeof value === "number" ? (
         <DataTableCellNumber value={value} unit={display.unit} color={hex} />
-      ) : (
-        fallback
-      );
-    }
-    case "bar": {
-      return typeof value === "number" ? (
-        <DataTableCellBar
-          value={value}
-          min={display.min}
-          max={display.max}
-          unit={display.unit}
-          color={colorMap?.[String(value)]}
-        />
-      ) : (
-        fallback
-      );
-    }
-    case "heatmap": {
-      return typeof value === "number" ? (
-        <DataTableCellHeatmap
-          value={value}
-          min={display.min}
-          max={display.max}
-          color={display.color}
-        />
       ) : (
         fallback
       );
@@ -169,6 +146,48 @@ function renderCell(
     }
     case "custom":
       return display.cell(value, row);
+    case "heatmap": {
+      const { min = 0, max = 100 } = context ?? {};
+      return typeof value === "number" ? (
+        <DataTableCellHeatmap
+          value={value}
+          min={min}
+          max={max}
+          unit={display.unit}
+          color={display.color}
+        />
+      ) : (
+        fallback
+      );
+    }
+    case "bar": {
+      const { min = 0, max = 100 } = context ?? {};
+      return typeof value === "number" ? (
+        <DataTableCellBar
+          value={value}
+          min={min}
+          max={max}
+          unit={display.unit}
+          color={display.color}
+        />
+      ) : (
+        fallback
+      );
+    }
+    case "gauge": {
+      const { min = 0, max = 100 } = context ?? {};
+      return typeof value === "number" ? (
+        <DataTableCellGauge
+          value={value}
+          min={min}
+          max={max}
+          unit={display.unit}
+          color={display.color}
+        />
+      ) : (
+        fallback
+      );
+    }
   }
 }
 
@@ -256,13 +275,35 @@ export function generateColumns<TData>(
           }) => <DataTableColumnHeader column={column} title={config.label} />
         : config.label;
 
+    const needsMinMax =
+      config.display.type === "heatmap" ||
+      config.display.type === "bar" ||
+      config.display.type === "gauge";
+
     const cell = ({
       getValue,
       row,
+      column,
     }: {
       getValue: () => unknown;
       row: { original: TData };
-    }) => renderCell(config.display, getValue(), row.original);
+      column: { getFacetedMinMaxValues?: () => [number, number] | undefined };
+    }) => {
+      if (needsMinMax) {
+        const display = config.display as {
+          min?: number;
+          max?: number;
+        };
+        const faceted = column.getFacetedMinMaxValues?.();
+        const min = faceted?.[0] ?? display.min ?? 0;
+        const max = faceted?.[1] ?? display.max ?? 100;
+        return renderCell(config.display, getValue(), row.original, {
+          min,
+          max,
+        });
+      }
+      return renderCell(config.display, getValue(), row.original);
+    };
 
     const meta = {
       label: config.label,

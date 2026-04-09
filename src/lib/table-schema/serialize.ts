@@ -66,16 +66,27 @@ function serializeDisplay(display: DisplayConfig): SerializableDisplayConfig {
       };
     }
     case "heatmap": {
-      const d = {
+      const d: SerializableDisplayConfig = {
         type: "heatmap" as const,
         min: display.min,
         max: display.max,
       };
-      return {
-        ...d,
-        ...(display.color ? { color: display.color } : {}),
-        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
+      if (display.unit) (d as { unit?: string }).unit = display.unit;
+      if (display.color) (d as { color?: string }).color = display.color;
+      if (display.colorMap)
+        (d as { colorMap?: Record<string, string> }).colorMap =
+          display.colorMap;
+      return d;
+    }
+    case "gauge": {
+      const d: SerializableDisplayConfig = {
+        type: "gauge" as const,
+        min: display.min,
+        max: display.max,
       };
+      if (display.unit) (d as { unit?: string }).unit = display.unit;
+      if (display.color) (d as { color?: string }).color = display.color;
+      return d;
     }
     default: {
       const d: SerializableDisplayConfig = { type: display.type };
@@ -173,20 +184,25 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
         "number",
         Object.keys(opts).length > 0 ? opts : undefined,
       );
-    } else if (display.type === "bar") {
-      builder = builder.display("bar", {
-        min: display.min,
-        max: display.max,
-        ...(display.unit ? { unit: display.unit } : {}),
-        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
-      });
-    } else if (display.type === "heatmap") {
-      builder = builder.display("heatmap", {
-        min: display.min,
-        max: display.max,
-        ...(display.color ? { color: display.color } : {}),
-        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
-      });
+    } else if (
+      display.type === "bar" ||
+      display.type === "heatmap" ||
+      display.type === "gauge"
+    ) {
+      const opts: {
+        min?: number;
+        max?: number;
+        unit?: string;
+        color?: string;
+      } = {};
+      if (display.min !== undefined) opts.min = display.min;
+      if (display.max !== undefined) opts.max = display.max;
+      if (display.unit) opts.unit = display.unit;
+      if (display.color) opts.color = display.color;
+      builder = builder.display(
+        display.type,
+        Object.keys(opts).length > 0 ? opts : undefined,
+      );
     } else if (
       display.type === "text" ||
       display.type === "code" ||
