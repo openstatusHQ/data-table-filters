@@ -1,3 +1,4 @@
+import type { SerializableDisplayConfig } from "@/lib/table-schema/types";
 import type { JSX } from "react";
 
 export type SearchParams = {
@@ -76,7 +77,7 @@ export type SheetField<TData, TMeta = Record<string, unknown>> = {
   // REMINDER: readonly if we only want to copy the value (e.g. uuid)
   // TODO: we might have some values that are not in the data but can be computed
   type: "readonly" | "input" | "checkbox" | "slider" | "timerange";
-  display?: { type: string; unit?: string; colorMap?: Record<string, string> };
+  display?: SerializableDisplayConfig;
   component?: (
     // REMINDER: this is used to pass additional data like the `InfiniteQueryMeta`
     props: TData & {

@@ -24,19 +24,19 @@ A shadcn registry for building filterable, sortable data tables with infinite sc
 
 Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencies, path rewriting, and CSS variable injection.
 
-| Block                            | Install URL                                           | What it adds                                                                                   |
-| -------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (~52 files)                          |
-| **data-table-filter-command**    | `.../r/data-table-filter-command.json`                | Command palette with history + keyboard shortcuts                                              |
-| **data-table-cell**              | `.../r/data-table-cell.json`                          | 8 cell renderers (text, code, badge, boolean, number, status-code, level-indicator, timestamp) |
-| **data-table-sheet**             | `.../r/data-table-sheet.json`                         | Row detail side panel (auto-installs cells)                                                    |
-| **data-table-nuqs**              | `.../r/data-table-nuqs.json`                          | nuqs URL state adapter                                                                         |
-| **data-table-zustand**           | `.../r/data-table-zustand.json`                       | zustand state adapter                                                                          |
-| **data-table-schema**            | `.../r/data-table-schema.json`                        | Declarative schema system with `col.*` factories                                               |
-| **data-table-drizzle**           | `.../r/data-table-drizzle.json`                       | Drizzle ORM server-side helpers (auto-installs schema)                                         |
-| **data-table-query**             | `.../r/data-table-query.json`                         | React Query infinite query integration                                                         |
-| **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                             |
-| **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                           |
+| Block                            | Install URL                                           | What it adds                                                                                                                |
+| -------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (~52 files)                                                       |
+| **data-table-filter-command**    | `.../r/data-table-filter-command.json`                | Command palette with history + keyboard shortcuts                                                                           |
+| **data-table-cell**              | `.../r/data-table-cell.json`                          | 12 cell renderers (text, code, number, bar, heatmap, badge, boolean, star, status-code, level-indicator, timestamp, custom) |
+| **data-table-sheet**             | `.../r/data-table-sheet.json`                         | Row detail side panel (auto-installs cells)                                                                                 |
+| **data-table-nuqs**              | `.../r/data-table-nuqs.json`                          | nuqs URL state adapter                                                                                                      |
+| **data-table-zustand**           | `.../r/data-table-zustand.json`                       | zustand state adapter                                                                                                       |
+| **data-table-schema**            | `.../r/data-table-schema.json`                        | Declarative schema system with `col.*` factories                                                                            |
+| **data-table-drizzle**           | `.../r/data-table-drizzle.json`                       | Drizzle ORM server-side helpers (auto-installs schema)                                                                      |
+| **data-table-query**             | `.../r/data-table-query.json`                         | React Query infinite query integration                                                                                      |
+| **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                                                          |
+| **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                                                        |
 
 All URLs use base `https://data-table.openstatus.dev`.
 

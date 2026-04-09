@@ -156,32 +156,36 @@ function buildChain(c: ColumnDescriptor): string {
 
   // 4. .display() — skip if covered by preset (unless colorMap needs emitting)
   if (!skipDisplay) {
-    const dt = c.display.type;
-    const hasColorMap = !!c.display.colorMap;
-    if (dt === "heatmap" || dt === "bar" || dt === "gauge") {
+    const display = c.display;
+    const hasColorMap = !!display.colorMap;
+    if (
+      display.type === "heatmap" ||
+      display.type === "bar" ||
+      display.type === "gauge"
+    ) {
       const opts: Record<string, unknown> = {};
-      if (c.display.min !== undefined) opts.min = c.display.min;
-      if (c.display.max !== undefined) opts.max = c.display.max;
-      if (c.display.unit) opts.unit = c.display.unit;
-      if (c.display.color) opts.color = c.display.color;
+      if (display.min !== undefined) opts.min = display.min;
+      if (display.max !== undefined) opts.max = display.max;
+      if (display.unit) opts.unit = display.unit;
+      if (display.color) opts.color = display.color;
       parts.push(
         Object.keys(opts).length > 0
-          ? `.display(${JSON.stringify(dt)}, ${JSON.stringify(opts)})`
-          : `.display(${JSON.stringify(dt)})`,
+          ? `.display(${JSON.stringify(display.type)}, ${JSON.stringify(opts)})`
+          : `.display(${JSON.stringify(display.type)})`,
       );
-    } else if (dt === "number" && (c.display.unit || hasColorMap)) {
+    } else if (display.type === "number" && (display.unit || hasColorMap)) {
       const opts: Record<string, unknown> = {};
-      if (c.display.unit) opts.unit = c.display.unit;
-      if (hasColorMap) opts.colorMap = c.display.colorMap;
+      if (display.unit) opts.unit = display.unit;
+      if (hasColorMap) opts.colorMap = display.colorMap;
       parts.push(`.display("number", ${JSON.stringify(opts)})`);
     } else if (hasColorMap) {
       parts.push(
-        `.display(${JSON.stringify(dt)}, ${JSON.stringify({ colorMap: c.display.colorMap })})`,
+        `.display(${JSON.stringify(display.type)}, ${JSON.stringify({ colorMap: display.colorMap })})`,
       );
     } else if (
-      dt !== "text" // "text" is the default for string/record, skip it
+      display.type !== "text" // "text" is the default for string/record, skip it
     ) {
-      parts.push(`.display(${JSON.stringify(dt)})`);
+      parts.push(`.display(${JSON.stringify(display.type)})`);
     }
   } else if (c.display.colorMap) {
     // Preset covers display type, but colorMap still needs to be emitted

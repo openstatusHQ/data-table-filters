@@ -1,4 +1,9 @@
-import type { ColumnDescriptor, FilterDescriptor, SchemaJSON } from "./types";
+import type {
+  ColumnDescriptor,
+  FilterDescriptor,
+  SchemaJSON,
+  SerializableDisplayConfig,
+} from "./types";
 
 // Unix ms timestamps are 13-digit numbers (> Sep 2001, < Nov 2286)
 const UNIX_MS_MIN = 1_000_000_000_000;
@@ -24,21 +29,33 @@ function keyToLabel(key: string): string {
   return label.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function displayForDataType(
+  dataType: ColumnDescriptor["dataType"],
+): SerializableDisplayConfig {
+  switch (dataType) {
+    case "number":
+      return { type: "number" };
+    case "boolean":
+      return { type: "boolean" };
+    case "timestamp":
+      return { type: "timestamp" };
+    case "enum":
+    case "array":
+      return { type: "badge" };
+    case "string":
+    case "record":
+    case "select":
+    default:
+      return { type: "text" };
+  }
+}
+
 function makeDescriptor(
   key: string,
   label: string,
   dataType: ColumnDescriptor["dataType"],
   filter: FilterDescriptor | null,
 ): ColumnDescriptor {
-  const displayMap: Record<string, string> = {
-    string: "text",
-    number: "number",
-    boolean: "boolean",
-    timestamp: "timestamp",
-    enum: "badge",
-    array: "badge",
-    record: "text",
-  };
   return {
     key,
     label,
@@ -46,7 +63,7 @@ function makeDescriptor(
     optional: false,
     hidden: false,
     sortable: false,
-    display: { type: displayMap[dataType] ?? "text" },
+    display: displayForDataType(dataType),
     filter,
     sheet: {},
   };
@@ -73,7 +90,16 @@ const CODE_WORDS = new Set([
   "href",
   "website",
 ]);
-const LATENCY_WORDS = new Set(["latency", "duration", "elapsed"]);
+const LATENCY_WORDS = new Set([
+  "latency",
+  "duration",
+  "elapsed",
+  "delay",
+  "wait",
+  "ttfb",
+  "rtt",
+  "ping",
+]);
 const SIZE_WORDS = new Set(["size", "bytes", "length"]);
 const LEVEL_WORDS = new Set(["level", "severity"]);
 const TRACE_ID_WORDS = new Set(["trace", "span", "request"]);
@@ -234,7 +260,7 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
   // Column sizing defaults
   const sizeDefaults: Record<string, number> = {
     boolean: 100,
-    timestamp: 180,
+    timestamp: 220,
     number: 120,
     enum: 130,
   };

@@ -13,7 +13,11 @@ const chartBarsHeights = Array.from({ length: 40 }).map(
   () => Math.random() * 30 + 15,
 );
 
-export function Skeleton() {
+interface SkeletonProps {
+  withChart?: boolean;
+}
+
+export function Skeleton({ withChart = true }: SkeletonProps) {
   return (
     <div
       className="flex h-full min-h-screen w-full flex-col sm:flex-row"
@@ -104,26 +108,28 @@ export function Skeleton() {
           </div>
 
           {/* Timeline Chart Skeleton */}
-          <div className="-mb-2 aspect-auto h-[60px] w-full">
-            <div className="relative h-full">
-              {/* Chart bars area - positioned at top */}
-              <div className="absolute inset-x-0 top-0 flex h-[45px] items-end gap-px">
-                {chartBarsHeights.map((height, i) => (
-                  <DefaultSkeleton
-                    key={i}
-                    className="flex-1 rounded-sm"
-                    style={{ height: `${height}%` }}
-                  />
-                ))}
-              </div>
-              {/* Axis labels area - positioned at bottom */}
-              <div className="absolute right-0 bottom-0 left-0 flex h-[15px] items-center justify-between px-1">
-                <DefaultSkeleton className="h-3 w-12" />
-                <DefaultSkeleton className="h-3 w-12" />
-                <DefaultSkeleton className="h-3 w-12" />
+          {withChart ? (
+            <div className="-mb-2 aspect-auto h-[60px] w-full">
+              <div className="relative h-full">
+                {/* Chart bars area - positioned at top */}
+                <div className="absolute inset-x-0 top-0 flex h-[45px] items-end gap-px">
+                  {chartBarsHeights.map((height, i) => (
+                    <DefaultSkeleton
+                      key={i}
+                      className="flex-1 rounded-sm"
+                      style={{ height: `${height}%` }}
+                    />
+                  ))}
+                </div>
+                {/* Axis labels area - positioned at bottom */}
+                <div className="absolute right-0 bottom-0 left-0 flex h-[15px] items-center justify-between px-1">
+                  <DefaultSkeleton className="h-3 w-12" />
+                  <DefaultSkeleton className="h-3 w-12" />
+                  <DefaultSkeleton className="h-3 w-12" />
+                </div>
               </div>
             </div>
-          </div>
+          ) : undefined}
         </div>
 
         {/* Data Table */}

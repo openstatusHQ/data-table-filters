@@ -1,5 +1,4 @@
 import { Link } from "@/components/custom/link";
-import { SocialsFooter } from "@/components/layout/socials-footer";
 import {
   Accordion,
   AccordionContent,
@@ -15,8 +14,8 @@ import {
   HOMEPAGE_FAQS,
 } from "@/lib/metadata/structured-data";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { default as NextLink } from "next/link";
+import { HeroAIInput } from "./hero-ai-input";
 
 const jsonLd = createJsonLDGraph([
   getJsonLDOrganization(),
@@ -27,7 +26,7 @@ const jsonLdSerialized = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
 
 export default function Home() {
   return (
-    <div className="container mx-auto flex min-h-screen w-full flex-col gap-6 p-4 sm:p-6 xl:gap-8 xl:p-8">
+    <div className="flex w-full flex-col gap-6 xl:gap-8">
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -45,7 +44,14 @@ export default function Home() {
           >
             nuqs | zustand
           </Badge>
-          <NextLink href="/infinite" className="group flex flex-col gap-2.5">
+
+          <NextLink
+            href="/infinite"
+            className={cn(
+              "group flex flex-col gap-2.5",
+              "focus-visible:border-ring focus-visible:ring-ring/50 rounded-md transition-all outline-none focus-visible:ring-[3px]",
+            )}
+          >
             <div className="border-border/70 bg-muted/40 group-hover:border-border group-hover:bg-muted/50 flex flex-col justify-center rounded-lg border px-5 py-6 md:px-10 md:py-12 xl:aspect-video">
               <div className="flex w-full flex-row items-end gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
                 <div className="hidden sm:block">
@@ -83,7 +89,13 @@ export default function Home() {
           >
             nuqs | zustand
           </Badge>
-          <NextLink href="/default" className="group flex flex-col gap-2.5">
+          <NextLink
+            href="/default"
+            className={cn(
+              "group flex flex-col gap-2.5",
+              "focus-visible:border-ring focus-visible:ring-ring/50 rounded-md transition-all outline-none focus-visible:ring-[3px]",
+            )}
+          >
             <div className="border-border/70 bg-muted/40 group-hover:border-border group-hover:bg-muted/50 flex flex-col justify-center rounded-lg border px-5 py-6 md:px-10 md:py-12 xl:aspect-video">
               <div className="flex w-full flex-col gap-2.5 transition-all duration-300 group-hover:scale-[1.02]">
                 <div className="flex flex-1 flex-row items-end gap-2.5">
@@ -123,8 +135,6 @@ export default function Home() {
       </div>
       <div className="border-border border-b border-dashed" />
       <SEOContent />
-      <div className="border-border border-b border-dashed" />
-      <SocialsFooter />
     </div>
   );
 }
@@ -221,7 +231,7 @@ function SEOContent() {
         </h3>
         <Accordion type="single" collapsible className="w-full">
           {HOMEPAGE_FAQS.map((faq, i) => (
-            <AccordionItem key={i} value={`faq-${i}`}>
+            <AccordionItem key={i} value={`faq-${i}`} className="border-dashed">
               <AccordionTrigger>{faq.question}</AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
                 {faq.answer}
@@ -460,59 +470,46 @@ function Pagination() {
 
 function Hero() {
   return (
-    <div className="flex flex-col-reverse items-start justify-between gap-8 sm:flex-row">
-      <div className="max-w-4xl space-y-3">
-        <h1 className="text-foreground text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">
-          React <span className="text-nowrap">Data Table</span> with Filters
-        </h1>
-        {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
-        <h2 className="text-muted-foreground max-w-[900px] sm:text-xl">
-          Open-source faceted filters, sorting, and infinite scroll with{" "}
-          <Link href="https://tanstack.com/table" className="text-nowrap">
-            tanstack table
-          </Link>
-          ,{" "}
-          <Link href="https://ui.shadcn.com" className="text-nowrap">
-            shadcn/ui
-          </Link>{" "}
-          and state management via{" "}
-          <Link href="https://nuqs.47ng.com">nuqs</Link> (url-based) or{" "}
-          <Link href="https://zustand.docs.pmnd.rs/getting-started/introduction">
-            zustand
-          </Link>{" "}
-          (client-side). Open Source on{" "}
-          <Link href="https://github.com/openstatusHQ/data-table-filters">
-            GitHub
-          </Link>
-          .
-        </h2>
-        <p className="text-foreground max-w-[900px] text-balance italic sm:text-lg">
-          <span className="mr-2">
-            It&apos;s not a library. It&apos;s a playbook. Stop hand-rolling
-            data tables. Copy proven patterns, install the agent skill,
-            ship.{" "}
-          </span>
-          <NextLink
-            href="/docs/introduction"
-            className="group text-foreground hover:text-background relative inline-block font-medium"
-          >
-            <span className="bg-muted group-hover:bg-foreground absolute inset-0 scale-x-105 -skew-x-12"></span>
-            <span className="relative">Learn more in the Docs.&nbsp;</span>
-          </NextLink>
-        </p>
-      </div>
-      <NextLink
-        href="https://openstatus.dev"
-        target="_blank"
-        className="border-border relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-dashed bg-white sm:h-12 sm:w-12"
-      >
-        <Image
-          src="/logos/OpenStatus.png"
-          alt="OpenStatus Logo"
-          className="aspect-square object-cover p-1"
-          fill
-        />
-      </NextLink>
+    <div className="max-w-4xl space-y-3">
+      <h1 className="text-foreground text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">
+        React <span className="text-nowrap">Data Table</span> with Filters
+      </h1>
+      {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
+      <h2 className="text-muted-foreground max-w-[900px] sm:text-xl">
+        Open-source faceted filters, sorting, and infinite scroll with{" "}
+        <Link href="https://tanstack.com/table" className="text-nowrap">
+          tanstack table
+        </Link>
+        ,{" "}
+        <Link href="https://ui.shadcn.com" className="text-nowrap">
+          shadcn/ui
+        </Link>{" "}
+        and state management via <Link href="https://nuqs.47ng.com">nuqs</Link>{" "}
+        (url-based) or{" "}
+        <Link href="https://zustand.docs.pmnd.rs/getting-started/introduction">
+          zustand
+        </Link>{" "}
+        (client-side). Open Source on{" "}
+        <Link href="https://github.com/openstatusHQ/data-table-filters">
+          GitHub
+        </Link>
+        .
+      </h2>
+      <p className="text-foreground max-w-[900px] text-balance italic sm:text-lg">
+        <span className="mr-2">
+          It&apos;s not a library. It&apos;s a playbook. Stop hand-rolling data
+          tables. Copy proven patterns, install the agent skill, ship.{" "}
+        </span>
+        <br />
+        <NextLink
+          href="/docs/introduction"
+          className="group text-foreground hover:text-background relative inline-block font-medium"
+        >
+          <span className="bg-muted group-hover:bg-foreground absolute inset-0 scale-x-105 -skew-x-12"></span>
+          <span className="relative">Learn more in the Docs.&nbsp;</span>
+        </NextLink>
+      </p>
+      <HeroAIInput className="max-w-xl pt-2" />
     </div>
   );
 }

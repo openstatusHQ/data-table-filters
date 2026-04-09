@@ -1,7 +1,7 @@
 import type { BuilderDataResponse } from "@/app/api/builder/data/route";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 
-const PAGE_SIZE = 40;
+const PAGE_SIZE = 30;
 
 function getStableFilterKey(
   filters: Record<string, unknown>,

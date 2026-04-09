@@ -2,8 +2,10 @@
 
 import {
   DataTableCellBadge,
+  DataTableCellBar,
   DataTableCellBoolean,
   DataTableCellCode,
+  DataTableCellHeatmap,
   DataTableCellLevelIndicator,
   DataTableCellNumber,
   DataTableCellStar,
@@ -11,6 +13,7 @@ import {
   DataTableCellText,
   DataTableCellTimestamp,
 } from "@/components/data-table/data-table-cell";
+import type { SerializableDisplayConfig } from "@/lib/table-schema/types";
 import { cn } from "@/lib/utils";
 import { Table } from "@tanstack/react-table";
 import * as React from "react";
@@ -20,7 +23,7 @@ import { SheetDetailsContentSkeleton } from "./data-table-sheet-skeleton";
 
 function renderSheetValue(
   rawValue: unknown,
-  display?: { type: string; unit?: string; colorMap?: Record<string, string> },
+  display?: SerializableDisplayConfig,
 ): React.ReactNode {
   if (!display) return String(rawValue);
   const colorMap = display.colorMap;
@@ -39,6 +42,31 @@ function renderSheetValue(
       const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "number" ? (
         <DataTableCellNumber value={rawValue} unit={display.unit} color={hex} />
+      ) : (
+        String(rawValue)
+      );
+    }
+    case "bar": {
+      return typeof rawValue === "number" ? (
+        <DataTableCellBar
+          value={rawValue}
+          min={display.min ?? 0}
+          max={display.max ?? 100}
+          unit={display.unit}
+          color={colorMap?.[String(rawValue)]}
+        />
+      ) : (
+        String(rawValue)
+      );
+    }
+    case "heatmap": {
+      return typeof rawValue === "number" ? (
+        <DataTableCellHeatmap
+          value={rawValue}
+          min={display.min ?? 0}
+          max={display.max ?? 100}
+          color={display.color}
+        />
       ) : (
         String(rawValue)
       );

@@ -460,10 +460,10 @@ describe("inferSchemaFromJSON — column sizing defaults", () => {
     expect(columns[0]?.size).toBe(100);
   });
 
-  it("sets size 180 for timestamp columns", () => {
+  it("sets size 220 for timestamp columns", () => {
     const data = [{ createdAt: "2024-01-01T00:00:00Z" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.size).toBe(180);
+    expect(columns[0]?.size).toBe(220);
   });
 
   it("sets size 120 for number columns", () => {

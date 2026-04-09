@@ -63,9 +63,6 @@ export function DocsSidebar({ sections }: { sections: SectionMeta[] }) {
       <nav className="sticky top-10 hidden max-h-[calc(100vh-6rem)] overflow-y-auto md:block">
         <p className="mb-3 text-sm font-medium">Docs</p>
         <SectionList sections={sections} currentSlug={currentSlug} />
-        <div className="mt-3">
-          <DocsSearch sections={sections} />
-        </div>
       </nav>
 
       {/* Mobile FAB + Sheet */}

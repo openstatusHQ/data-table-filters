@@ -22,11 +22,12 @@ export type DisplayConfig =
   | { type: "badge"; colorMap?: Record<string, string> }
   | { type: "timestamp"; colorMap?: Record<string, string> }
   | { type: "number"; unit?: string; colorMap?: Record<string, string> }
-  | { type: "status-code"; colorMap?: Record<string, string> }
-  | { type: "level-indicator"; colorMap?: Record<string, string> }
   | {
-      type: "custom";
-      cell: (value: unknown, row: unknown) => JSX.Element | null;
+      type: "bar";
+      min?: number;
+      max?: number;
+      unit?: string;
+      color?: string;
       colorMap?: Record<string, string>;
     }
   | {
@@ -35,14 +36,22 @@ export type DisplayConfig =
       max?: number;
       unit?: string;
       color?: string;
+      colorMap?: Record<string, string>;
     }
-  | { type: "bar"; min?: number; max?: number; unit?: string; color?: string }
   | {
       type: "gauge";
       min?: number;
       max?: number;
       unit?: string;
       color?: string;
+      colorMap?: Record<string, string>;
+    }
+  | { type: "status-code"; colorMap?: Record<string, string> }
+  | { type: "level-indicator"; colorMap?: Record<string, string> }
+  | {
+      type: "custom";
+      cell: (value: unknown, row: unknown) => JSX.Element | null;
+      colorMap?: Record<string, string>;
     };
 
 export type FilterConfig = {
@@ -136,11 +145,15 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * - `"badge"` — colored chip (enums, categories, tags)
    * - `"timestamp"` — relative time ("3m ago"), absolute datetime on hover
    * - `"number"` — formatted number with optional `unit` suffix
+   * - `"bar"` — horizontal bar with `min`/`max` range and optional `unit`
+   * - `"heatmap"` — background color intensity based on `min`/`max` range
    * - `"custom"` — developer-supplied JSX renderer (not serializable)
    *
    * @example
    * col.string().display("code")
    * col.number().display("number", { unit: "ms" })
+   * col.number().display("bar", { min: 0, max: 5000, unit: "ms" })
+   * col.number().display("heatmap", { min: 0, max: 100 })
    * col.enum(LEVELS).display("custom", { cell: (value) => <LevelBadge value={value} /> })
    */
   display(
@@ -158,6 +171,24 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
   display(
     type: "number",
     options?: { unit?: string; colorMap?: Record<string, string> },
+  ): ColBuilder<T, F>;
+  display(
+    type: "bar",
+    options: {
+      min: number;
+      max: number;
+      unit?: string;
+      colorMap?: Record<string, string>;
+    },
+  ): ColBuilder<T, F>;
+  display(
+    type: "heatmap",
+    options: {
+      min: number;
+      max: number;
+      color?: string;
+      colorMap?: Record<string, string>;
+    },
   ): ColBuilder<T, F>;
   display(
     type: "custom",
@@ -370,6 +401,12 @@ export type SheetDescriptor = {
   skeletonClassName?: string;
 };
 
+/** Serializable display config — excludes the `custom` variant (contains JSX). */
+export type SerializableDisplayConfig = Exclude<
+  DisplayConfig,
+  { type: "custom" }
+>;
+
 export type ColumnDescriptor = {
   key: string;
   label: string;
@@ -383,15 +420,7 @@ export type ColumnDescriptor = {
   enableHiding?: boolean;
   sortable: boolean;
   size?: number;
-  /** `"custom"` means a developer-supplied renderer exists; not reconstructable from JSON. */
-  display: {
-    type: string;
-    unit?: string;
-    colorMap?: Record<string, string>;
-    min?: number;
-    max?: number;
-    color?: string;
-  };
+  display: SerializableDisplayConfig;
   filter: FilterDescriptor | null;
   sheet: SheetDescriptor | null;
 };

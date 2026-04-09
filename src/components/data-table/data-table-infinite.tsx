@@ -100,6 +100,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   chartSlot?: React.ReactNode;
   footerSlot?: React.ReactNode;
   floatingBarSlot?: React.ReactNode;
+  className?: string;
 }
 
 export function DataTableInfinite<TData, TValue>({
@@ -131,6 +132,7 @@ export function DataTableInfinite<TData, TValue>({
   chartSlot,
   footerSlot,
   floatingBarSlot,
+  className,
 }: DataTableInfiniteProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
@@ -343,7 +345,7 @@ export function DataTableInfinite<TData, TValue>({
           className={cn(
             "border-border flex max-w-full flex-1 flex-col sm:border-l",
             // Chrome issue
-            "sm:group-data-[expanded=true]/controls:max-w-[calc(100vw-208px)] md:group-data-[expanded=true]/controls:max-w-[calc(100vw-288px)]",
+            "sm:group-data-[expanded=true]/controls:max-w-[calc(100%-208px)] md:group-data-[expanded=true]/controls:max-w-[calc(100%-288px)]",
           )}
         >
           <div
