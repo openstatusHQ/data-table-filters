@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import NextLink from "next/link";
 
-export function SocialsFooter() {
+export function Footer() {
   return (
-    <div className="flex flex-col gap-1">
+    <footer className="flex flex-col gap-1">
       <div className="flex items-center justify-center gap-2 p-1">
         <Button variant="ghost" size="icon" asChild>
           <NextLink href="/">
@@ -36,6 +36,6 @@ export function SocialsFooter() {
       <p className="text-muted-foreground text-center text-sm">
         Powered by <Link href="https://openstatus.dev">OpenStatus</Link>
       </p>
-    </div>
+    </footer>
   );
 }

@@ -1,9 +1,8 @@
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
-import { DocsSidebar, getAllSections } from "@/lib/mdx";
-import { cn } from "@/lib/utils";
+import { getAllSections } from "@/lib/mdx";
 
-export default async function DocsLayout({
+export default async function HomeLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -12,18 +11,9 @@ export default async function DocsLayout({
 
   return (
     <main className="container mx-auto flex min-h-screen w-full flex-col gap-6 p-4 sm:p-6 xl:gap-8 xl:p-8">
-      <Header page="docs" sections={sections} />
+      <Header page="home" sections={sections} />
       <div className="border-border border-b border-dashed" />
-      <div
-        className={cn(
-          "relative mx-auto w-full max-w-6xl flex-1",
-          "md:grid md:grid-cols-[220px_1fr] md:gap-8",
-          "xl:grid-cols-[220px_1fr_220px]",
-        )}
-      >
-        <DocsSidebar sections={sections} />
-        {children}
-      </div>
+      <div>{children}</div>
       <div className="border-border border-b border-dashed" />
       <Footer />
     </main>

@@ -78,8 +78,7 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
         onClick={() => setOpen(true)}
         className={cn(
           "text-muted-foreground w-full border-dashed shadow-none",
-          open &&
-            "bg-accent text-accent-foreground dark:bg-input/30 dark:bg-input/50",
+          open && "bg-accent text-accent-foreground dark:bg-input/30",
         )}
       >
         <SearchIcon className="size-3.5" />
