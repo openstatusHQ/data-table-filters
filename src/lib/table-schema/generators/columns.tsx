@@ -2,8 +2,10 @@
 
 import {
   DataTableCellBadge,
+  DataTableCellBar,
   DataTableCellBoolean,
   DataTableCellCode,
+  DataTableCellHeatmap,
   DataTableCellLevelIndicator,
   DataTableCellNumber,
   DataTableCellStar,
@@ -74,6 +76,31 @@ function renderCell(
       const hex = colorMap?.[String(value)];
       return typeof value === "number" ? (
         <DataTableCellNumber value={value} unit={display.unit} color={hex} />
+      ) : (
+        fallback
+      );
+    }
+    case "bar": {
+      return typeof value === "number" ? (
+        <DataTableCellBar
+          value={value}
+          min={display.min}
+          max={display.max}
+          unit={display.unit}
+          color={colorMap?.[String(value)]}
+        />
+      ) : (
+        fallback
+      );
+    }
+    case "heatmap": {
+      return typeof value === "number" ? (
+        <DataTableCellHeatmap
+          value={value}
+          min={display.min}
+          max={display.max}
+          color={display.color}
+        />
       ) : (
         fallback
       );

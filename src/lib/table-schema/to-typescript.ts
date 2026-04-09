@@ -156,21 +156,37 @@ function buildChain(c: ColumnDescriptor): string {
 
   // 4. .display() — skip if covered by preset (unless colorMap needs emitting)
   if (!skipDisplay) {
-    const dt = c.display.type;
-    const hasColorMap = !!c.display.colorMap;
-    if (dt === "number" && (c.display.unit || hasColorMap)) {
+    const display = c.display;
+    const hasColorMap = !!display.colorMap;
+    if (display.type === "number" && (display.unit || hasColorMap)) {
       const opts: Record<string, unknown> = {};
-      if (c.display.unit) opts.unit = c.display.unit;
-      if (hasColorMap) opts.colorMap = c.display.colorMap;
+      if (display.unit) opts.unit = display.unit;
+      if (hasColorMap) opts.colorMap = display.colorMap;
       parts.push(`.display("number", ${JSON.stringify(opts)})`);
+    } else if (display.type === "bar") {
+      const opts: Record<string, unknown> = {
+        min: display.min,
+        max: display.max,
+      };
+      if (display.unit) opts.unit = display.unit;
+      if (hasColorMap) opts.colorMap = display.colorMap;
+      parts.push(`.display("bar", ${JSON.stringify(opts)})`);
+    } else if (display.type === "heatmap") {
+      const opts: Record<string, unknown> = {
+        min: display.min,
+        max: display.max,
+      };
+      if (display.color) opts.color = display.color;
+      if (hasColorMap) opts.colorMap = display.colorMap;
+      parts.push(`.display("heatmap", ${JSON.stringify(opts)})`);
     } else if (hasColorMap) {
       parts.push(
-        `.display(${JSON.stringify(dt)}, ${JSON.stringify({ colorMap: c.display.colorMap })})`,
+        `.display(${JSON.stringify(display.type)}, ${JSON.stringify({ colorMap: display.colorMap })})`,
       );
     } else if (
-      dt !== "text" // "text" is the default for string/record, skip it
+      display.type !== "text" // "text" is the default for string/record, skip it
     ) {
-      parts.push(`.display(${JSON.stringify(dt)})`);
+      parts.push(`.display(${JSON.stringify(display.type)})`);
     }
   } else if (c.display.colorMap) {
     // Preset covers display type, but colorMap still needs to be emitted

@@ -76,18 +76,24 @@ Includes: memory adapter, command palette, sheet detail panel, auto column visib
 
 After inference, `enhanceDescriptor` applies keyword-based heuristics on column names:
 
-| Column name pattern                           | Enhancement                               |
-| --------------------------------------------- | ----------------------------------------- |
-| Contains `id`, `uuid`, `hash`, `token`, `key` | `code` display, not sortable              |
-| Contains `trace`/`span`/`request` + `id`      | Hidden, not filterable                    |
-| Contains `favorite`, `starred`, `bookmarked`  | `star` display (boolean columns)          |
-| Contains `email`, `mail`                      | `code` display                            |
-| Contains `path`, `url`, `uri`, `endpoint`     | `code` display                            |
-| Contains `latency`, `duration`, `elapsed`     | `number` display with `ms` unit, sortable |
-| Contains `size`, `bytes`, `length`            | `number` display with `B` unit, sortable  |
-| Contains `level`, `severity`                  | Enum filter expanded by default           |
-| Contains `status`, `state`                    | Badge with semantic colors                |
+| Column name pattern                                          | Enhancement                                  |
+| ------------------------------------------------------------ | -------------------------------------------- |
+| Contains `id`, `uuid`, `hash`, `token`, `key`               | `code` display, not sortable                 |
+| Contains `trace`/`span`/`request` + `id`                    | Hidden, not filterable                       |
+| Contains `favorite`, `starred`, `bookmarked`                 | `star` display (boolean columns)             |
+| Contains `email`, `mail`                                     | `code` display                               |
+| Contains `path`, `url`, `uri`, `endpoint`                    | `code` display                               |
+| Contains `latency`, `duration`, `elapsed`, `delay`, `wait`, `ttfb`, `rtt`, `ping` | `bar` display with `ms` unit, sortable |
+| Contains `size`, `bytes`, `length`                           | `number` display with `B` unit, sortable     |
+| Contains `percent`, `pct`, `progress`, `completion`, `accuracy`, `confidence` | `heatmap` display (0–100), sortable |
+| Contains `cpu`, `memory`, `mem`, `usage`, `utilization`, `load`, `disk`, `gpu` | `heatmap` display (0–100), sortable |
+| Contains `temperature`, `temp`                               | `heatmap` display (data min–max), sortable   |
+| Contains `rate`, `throughput`, `rps`, `qps`, `tps`, `ops`, `bandwidth` | `bar` display (0–max), sortable     |
+| Ends with `Ms`, `Millis`                                     | `bar` display with `ms` unit, sortable       |
+| Ends with `Pct`, `Percent`                                   | `heatmap` display (0–100), sortable          |
+| Contains `level`, `severity`                                 | Enum filter expanded by default              |
+| Contains `status`, `state`                                   | Badge with semantic colors                   |
 
 Semantic colors for status values: `active`/`completed`/`success` → green, `pending`/`draft` → amber, `error`/`failed` → red, `archived`/`deleted` → gray.
 
-Default column sizing: boolean 100px, timestamp 180px, number 120px, enum 130px.
+Default column sizing: boolean 100px, timestamp 220px, number 120px, enum 130px.

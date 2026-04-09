@@ -309,7 +309,7 @@
       "name": "data-table-cell",
       "type": "registry:block",
       "title": "Data Table Cell Renderers",
-      "description": "Cell renderer system with 8 types: text, code, badge, boolean, number, status-code, level-indicator, and timestamp.",
+      "description": "Cell renderer system with 12 types: text, code, badge, boolean, number, bar, heatmap, star, status-code, level-indicator, timestamp, and custom.",
       "files": [
         {
           "path": "src/components/data-table/data-table-cell/index.tsx",
@@ -340,7 +340,23 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/data-table/data-table-cell/data-table-cell-bar.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-cell/data-table-cell-heatmap.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/data-table/data-table-cell/data-table-cell-timestamp.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-cell/data-table-cell-status-code.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-cell/data-table-cell-level-indicator.tsx",
           "type": "registry:component"
         },
         {

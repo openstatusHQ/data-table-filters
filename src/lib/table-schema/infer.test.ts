@@ -368,24 +368,39 @@ describe("inferSchemaFromJSON — smart display enhancement", () => {
     expect(columns[0]?.display).toEqual({ type: "code" });
   });
 
-  it("sets number display with 'ms' unit for latency columns", () => {
+  it("sets bar display with 'ms' unit for latency columns", () => {
     const data = [{ latency: 100 }, { latency: 200 }, { latency: 300 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 300,
+      unit: "ms",
+    });
     expect(columns[0]?.sortable).toBe(true);
   });
 
-  it("sets number display with 'ms' unit for duration columns", () => {
+  it("sets bar display with 'ms' unit for duration columns", () => {
     const data = [{ duration: 50 }, { duration: 150 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 150,
+      unit: "ms",
+    });
     expect(columns[0]?.sortable).toBe(true);
   });
 
-  it("sets number display with 'ms' unit for responseTime (compound word)", () => {
+  it("sets bar display with 'ms' unit for responseTime (compound word)", () => {
     const data = [{ responseTime: 80 }, { responseTime: 120 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "number", unit: "ms" });
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 120,
+      unit: "ms",
+    });
     expect(columns[0]?.sortable).toBe(true);
   });
 
@@ -435,10 +450,10 @@ describe("inferSchemaFromJSON — column sizing defaults", () => {
     expect(columns[0]?.size).toBe(100);
   });
 
-  it("sets size 180 for timestamp columns", () => {
+  it("sets size 220 for timestamp columns", () => {
     const data = [{ createdAt: "2024-01-01T00:00:00Z" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.size).toBe(180);
+    expect(columns[0]?.size).toBe(220);
   });
 
   it("sets size 120 for number columns", () => {
@@ -683,5 +698,215 @@ describe("inferSchemaFromJSON — status/state enum heuristics", () => {
     // >10 distinct values → string, not enum → no colorMap
     expect(columns[0]?.dataType).toBe("string");
     expect((columns[0]?.display as any)?.colorMap).toBeUndefined();
+  });
+});
+
+// ── expanded latency word detection ─────────────────────────────────────────
+
+describe("inferSchemaFromJSON — expanded latency words", () => {
+  it.each(["delay", "wait", "ttfb", "rtt", "ping"])(
+    "sets bar display for '%s' columns",
+    (word) => {
+      const data = [{ [word]: 10 }, { [word]: 200 }];
+      const { columns } = inferSchemaFromJSON(data);
+      expect(columns[0]?.display).toEqual({
+        type: "bar",
+        min: 0,
+        max: 200,
+        unit: "ms",
+      });
+      expect(columns[0]?.sortable).toBe(true);
+    },
+  );
+
+  it("sets bar display for networkDelay (camelCase compound)", () => {
+    const data = [{ networkDelay: 5 }, { networkDelay: 50 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 50,
+      unit: "ms",
+    });
+  });
+});
+
+// ── percentage word detection ───────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — percentage words → heatmap", () => {
+  it.each(["progress", "completion", "accuracy", "confidence"])(
+    "sets heatmap display for '%s' columns",
+    (word) => {
+      const data = [{ [word]: 10 }, { [word]: 90 }];
+      const { columns } = inferSchemaFromJSON(data);
+      expect(columns[0]?.display).toEqual({
+        type: "heatmap",
+        min: 0,
+        max: 100,
+      });
+      expect(columns[0]?.sortable).toBe(true);
+    },
+  );
+
+  it("sets heatmap display for cpuPercent (camelCase compound)", () => {
+    const data = [{ cpuPercent: 20 }, { cpuPercent: 80 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      min: 0,
+      max: 100,
+    });
+  });
+});
+
+// ── resource word detection ─────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — resource words → heatmap", () => {
+  it.each([
+    "cpu",
+    "memory",
+    "mem",
+    "usage",
+    "utilization",
+    "load",
+    "disk",
+    "gpu",
+  ])("sets heatmap display for '%s' columns", (word) => {
+    const data = [{ [word]: 10 }, { [word]: 90 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      min: 0,
+      max: 100,
+    });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sets heatmap display for cpuUsage (camelCase compound)", () => {
+    const data = [{ cpuUsage: 10 }, { cpuUsage: 95 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      min: 0,
+      max: 100,
+    });
+  });
+});
+
+// ── temperature word detection ──────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — temperature words → heatmap", () => {
+  it("sets heatmap with actual min/max for temperature columns", () => {
+    const data = [{ temperature: 20 }, { temperature: 85 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      min: 20,
+      max: 85,
+    });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sets heatmap with actual min/max for temp columns", () => {
+    const data = [{ temp: -5 }, { temp: 42 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      min: -5,
+      max: 42,
+    });
+  });
+});
+
+// ── rate word detection ─────────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — rate words → bar", () => {
+  it.each(["rate", "throughput", "rps", "qps", "tps", "ops", "bandwidth"])(
+    "sets bar display for '%s' columns",
+    (word) => {
+      const data = [{ [word]: 100 }, { [word]: 5000 }];
+      const { columns } = inferSchemaFromJSON(data);
+      expect(columns[0]?.display).toEqual({
+        type: "bar",
+        min: 0,
+        max: 5000,
+      });
+      expect(columns[0]?.sortable).toBe(true);
+    },
+  );
+
+  it("sets bar display for requestRate (camelCase compound)", () => {
+    const data = [{ requestRate: 50 }, { requestRate: 1200 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 1200,
+    });
+  });
+});
+
+// ── suffix-based detection ──────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — suffix detection", () => {
+  it("sets bar display for *_ms suffix columns", () => {
+    const data = [{ processTimeMs: 10 }, { processTimeMs: 500 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 500,
+      unit: "ms",
+    });
+  });
+
+  it("sets bar display for *_millis suffix columns", () => {
+    const data = [{ elapsedMillis: 100 }, { elapsedMillis: 3000 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 3000,
+      unit: "ms",
+    });
+  });
+
+  it("sets heatmap display for *_pct suffix columns", () => {
+    const data = [{ errorPct: 1 }, { errorPct: 25 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      min: 0,
+      max: 100,
+    });
+  });
+
+  it("sets heatmap display for *_percent suffix columns", () => {
+    const data = [{ diskPercent: 40 }, { diskPercent: 90 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "heatmap",
+      min: 0,
+      max: 100,
+    });
+  });
+
+  it("word-set match takes priority over suffix", () => {
+    // "latency" word match should win over "ms" suffix
+    const data = [{ latencyMs: 10 }, { latencyMs: 200 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({
+      type: "bar",
+      min: 0,
+      max: 200,
+      unit: "ms",
+    });
+  });
+
+  it("does not apply suffix detection to non-number columns", () => {
+    const data = [{ durationMs: "fast" }, { durationMs: "slow" }];
+    const { columns } = inferSchemaFromJSON(data);
+    // String column — suffix shouldn't change display
+    expect(columns[0]?.display.type).toBe("badge");
   });
 });

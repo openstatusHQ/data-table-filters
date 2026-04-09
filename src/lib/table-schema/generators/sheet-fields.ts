@@ -1,49 +1,36 @@
 import type { SheetField } from "@/components/data-table/types";
-import type { ColConfig, TableSchemaDefinition } from "../types";
+import type {
+  ColConfig,
+  SerializableDisplayConfig,
+  TableSchemaDefinition,
+} from "../types";
 
-function defaultDisplayForKind(kind: ColConfig["kind"]): string {
+function defaultDisplayForKind(
+  kind: ColConfig["kind"],
+): SerializableDisplayConfig {
   switch (kind) {
     case "enum":
     case "array":
-      return "badge";
+      return { type: "badge" };
     case "boolean":
-      return "boolean";
+      return { type: "boolean" };
     case "timestamp":
-      return "timestamp";
+      return { type: "timestamp" };
     case "number":
-      return "number";
+      return { type: "number" };
     case "string":
     case "record":
+    case "select":
     default:
-      return "text";
+      return { type: "text" };
   }
 }
 
-function getDisplayDescriptor(config: ColConfig): {
-  type: string;
-  unit?: string;
-  colorMap?: Record<string, string>;
-} {
-  const type =
-    config.display.type === "custom"
-      ? defaultDisplayForKind(config.kind)
-      : config.display.type;
-  const desc: {
-    type: string;
-    unit?: string;
-    colorMap?: Record<string, string>;
-  } = { type };
-  if (
-    config.display.type === "number" &&
-    "unit" in config.display &&
-    config.display.unit
-  ) {
-    desc.unit = config.display.unit;
+function getDisplayDescriptor(config: ColConfig): SerializableDisplayConfig {
+  if (config.display.type === "custom") {
+    return defaultDisplayForKind(config.kind);
   }
-  if (config.display.colorMap) {
-    desc.colorMap = config.display.colorMap;
-  }
-  return desc;
+  return config.display as SerializableDisplayConfig;
 }
 
 /**

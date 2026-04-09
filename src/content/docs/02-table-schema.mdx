@@ -143,6 +143,8 @@ Controls how the cell value renders. Built-in display types:
 | `"text"`            | Plain text with overflow tooltip (default for strings)  |
 | `"code"`            | Monospace — IDs, paths, hashes                          |
 | `"number"`          | Formatted number with optional `unit` suffix            |
+| `"bar"`             | Horizontal bar with `min`/`max` range and optional unit |
+| `"heatmap"`         | Background color intensity based on `min`/`max` range   |
 | `"badge"`           | Colored chip (default for enums)                        |
 | `"timestamp"`       | Relative time ("3m ago"), absolute on hover             |
 | `"boolean"`         | Checkmark / dash icon                                   |
@@ -153,6 +155,8 @@ Controls how the cell value renders. Built-in display types:
 
 ```ts
 col.number().display("number", { unit: "ms" })
+col.number().display("bar", { min: 0, max: 5000, unit: "ms" })
+col.number().display("heatmap", { min: 0, max: 100 })
 col.enum(v).display("badge", { colorMap: { error: "#ef4444", warn: "#f59e0b" } })
 col.enum(v).display("custom", {
   cell: (value, row) => <MyComponent value={value} />,

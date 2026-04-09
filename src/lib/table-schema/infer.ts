@@ -1,4 +1,9 @@
-import type { ColumnDescriptor, FilterDescriptor, SchemaJSON } from "./types";
+import type {
+  ColumnDescriptor,
+  FilterDescriptor,
+  SchemaJSON,
+  SerializableDisplayConfig,
+} from "./types";
 
 // Unix ms timestamps are 13-digit numbers (> Sep 2001, < Nov 2286)
 const UNIX_MS_MIN = 1_000_000_000_000;
@@ -24,21 +29,33 @@ function keyToLabel(key: string): string {
   return label.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function displayForDataType(
+  dataType: ColumnDescriptor["dataType"],
+): SerializableDisplayConfig {
+  switch (dataType) {
+    case "number":
+      return { type: "number" };
+    case "boolean":
+      return { type: "boolean" };
+    case "timestamp":
+      return { type: "timestamp" };
+    case "enum":
+    case "array":
+      return { type: "badge" };
+    case "string":
+    case "record":
+    case "select":
+    default:
+      return { type: "text" };
+  }
+}
+
 function makeDescriptor(
   key: string,
   label: string,
   dataType: ColumnDescriptor["dataType"],
   filter: FilterDescriptor | null,
 ): ColumnDescriptor {
-  const displayMap: Record<string, string> = {
-    string: "text",
-    number: "number",
-    boolean: "boolean",
-    timestamp: "timestamp",
-    enum: "badge",
-    array: "badge",
-    record: "text",
-  };
   return {
     key,
     label,
@@ -46,7 +63,7 @@ function makeDescriptor(
     optional: false,
     hidden: false,
     sortable: false,
-    display: { type: displayMap[dataType] ?? "text" },
+    display: displayForDataType(dataType),
     filter,
     sheet: {},
   };
@@ -73,13 +90,54 @@ const CODE_WORDS = new Set([
   "href",
   "website",
 ]);
-const LATENCY_WORDS = new Set(["latency", "duration", "elapsed"]);
+const LATENCY_WORDS = new Set([
+  "latency",
+  "duration",
+  "elapsed",
+  "delay",
+  "wait",
+  "ttfb",
+  "rtt",
+  "ping",
+]);
 const SIZE_WORDS = new Set(["size", "bytes", "length"]);
 const LEVEL_WORDS = new Set(["level", "severity"]);
 const TRACE_ID_WORDS = new Set(["trace", "span", "request"]);
 const FAVORITE_WORDS = new Set(["favorite", "starred", "bookmarked", "pinned"]);
 const EMAIL_WORDS = new Set(["email", "mail"]);
 const STATUS_WORDS = new Set(["status", "state"]);
+const PERCENTAGE_WORDS = new Set([
+  "percent",
+  "pct",
+  "progress",
+  "completion",
+  "accuracy",
+  "confidence",
+]);
+const RESOURCE_WORDS = new Set([
+  "cpu",
+  "memory",
+  "mem",
+  "usage",
+  "utilization",
+  "load",
+  "disk",
+  "gpu",
+]);
+const TEMPERATURE_WORDS = new Set(["temp", "temperature"]);
+const RATE_WORDS = new Set([
+  "rate",
+  "throughput",
+  "rps",
+  "qps",
+  "tps",
+  "ops",
+  "bandwidth",
+]);
+/** Suffixes that imply a time-based unit when the column is numeric. */
+const TIME_UNIT_SUFFIXES = new Set(["ms", "millis"]);
+/** Suffixes that imply a percentage when the column is numeric. */
+const PERCENT_UNIT_SUFFIXES = new Set(["pct", "percent"]);
 
 /** Semantic color mapping for status-like enum values. */
 const STATUS_COLORS: Record<string, string> = {
@@ -137,6 +195,8 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
   const joined = words.join("");
   const d = { ...descriptor };
 
+  const lastWord = words[words.length - 1];
+
   const hasIdWord = words.some((w) => ID_WORDS.has(w));
   const hasCodeWord = words.some((w) => CODE_WORDS.has(w));
   const hasLatencyWord =
@@ -147,6 +207,17 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
   const hasFavoriteWord = words.some((w) => FAVORITE_WORDS.has(w));
   const hasEmailWord = words.some((w) => EMAIL_WORDS.has(w));
   const hasStatusWord = words.some((w) => STATUS_WORDS.has(w));
+  const hasPercentageWord = words.some((w) => PERCENTAGE_WORDS.has(w));
+  const hasResourceWord = words.some((w) => RESOURCE_WORDS.has(w));
+  const hasTemperatureWord = words.some((w) => TEMPERATURE_WORDS.has(w));
+  const hasRateWord = words.some((w) => RATE_WORDS.has(w));
+  const hasTimeSuffix = lastWord != null && TIME_UNIT_SUFFIXES.has(lastWord);
+  const hasPercentSuffix =
+    lastWord != null && PERCENT_UNIT_SUFFIXES.has(lastWord);
+
+  // Extract data min/max from slider filter (already computed during inference)
+  const dataMin = d.filter?.min ?? 0;
+  const dataMax = d.filter?.max ?? 100;
 
   // ID-like columns → code display, not sortable
   if (hasIdWord) {
@@ -171,14 +242,44 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
   else if (hasCodeWord) {
     d.display = { type: "code" };
   }
-  // Latency-like number columns → number with ms unit, sortable
+  // Latency-like number columns → bar with ms unit, sortable
   else if (hasLatencyWord && d.dataType === "number") {
-    d.display = { type: "number", unit: "ms" };
+    d.display = { type: "bar", min: 0, max: dataMax, unit: "ms" };
     d.sortable = true;
   }
   // Size-like number columns → number with B unit, sortable
   else if (hasSizeWord && d.dataType === "number") {
     d.display = { type: "number", unit: "B" };
+    d.sortable = true;
+  }
+  // Percentage-like number columns → heatmap 0–100
+  else if (hasPercentageWord && d.dataType === "number") {
+    d.display = { type: "heatmap", min: 0, max: 100 };
+    d.sortable = true;
+  }
+  // Resource utilization columns → heatmap 0–100
+  else if (hasResourceWord && d.dataType === "number") {
+    d.display = { type: "heatmap", min: 0, max: 100 };
+    d.sortable = true;
+  }
+  // Temperature columns → heatmap with actual data range
+  else if (hasTemperatureWord && d.dataType === "number") {
+    d.display = { type: "heatmap", min: dataMin, max: dataMax };
+    d.sortable = true;
+  }
+  // Rate/throughput columns → bar with 0 to actual max
+  else if (hasRateWord && d.dataType === "number") {
+    d.display = { type: "bar", min: 0, max: dataMax };
+    d.sortable = true;
+  }
+  // Suffix detection: *_ms, *Millis → bar with ms unit
+  else if (hasTimeSuffix && d.dataType === "number") {
+    d.display = { type: "bar", min: 0, max: dataMax, unit: "ms" };
+    d.sortable = true;
+  }
+  // Suffix detection: *_pct, *Percent → heatmap 0–100
+  else if (hasPercentSuffix && d.dataType === "number") {
+    d.display = { type: "heatmap", min: 0, max: 100 };
     d.sortable = true;
   }
 
@@ -202,7 +303,7 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
   // Column sizing defaults
   const sizeDefaults: Record<string, number> = {
     boolean: 100,
-    timestamp: 180,
+    timestamp: 220,
     number: 120,
     enum: 130,
   };

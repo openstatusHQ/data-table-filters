@@ -2,10 +2,11 @@ import { col } from "./col";
 import type {
   ColBuilder,
   ColConfig,
-  ColKind,
   ColumnDescriptor,
+  DisplayConfig,
   FilterDescriptor,
   SchemaJSON,
+  SerializableDisplayConfig,
   SheetDescriptor,
   TableSchemaDefinition,
 } from "./types";
@@ -42,6 +43,50 @@ function serializeSheet(sheet: ColConfig["sheet"]): SheetDescriptor | null {
   return descriptor;
 }
 
+function serializeDisplay(display: DisplayConfig): SerializableDisplayConfig {
+  switch (display.type) {
+    case "custom":
+      // Custom renderers are not serializable — fall back to text
+      return { type: "text" };
+    case "number": {
+      const d: SerializableDisplayConfig = { type: "number" };
+      if (display.unit)
+        (d as { type: "number"; unit?: string }).unit = display.unit;
+      if (display.colorMap)
+        (d as { colorMap?: Record<string, string> }).colorMap =
+          display.colorMap;
+      return d;
+    }
+    case "bar": {
+      const d = { type: "bar" as const, min: display.min, max: display.max };
+      return {
+        ...d,
+        ...(display.unit ? { unit: display.unit } : {}),
+        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
+      };
+    }
+    case "heatmap": {
+      const d = {
+        type: "heatmap" as const,
+        min: display.min,
+        max: display.max,
+      };
+      return {
+        ...d,
+        ...(display.color ? { color: display.color } : {}),
+        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
+      };
+    }
+    default: {
+      const d: SerializableDisplayConfig = { type: display.type };
+      if (display.colorMap)
+        (d as { colorMap?: Record<string, string> }).colorMap =
+          display.colorMap;
+      return d;
+    }
+  }
+}
+
 export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
   const columns: ColumnDescriptor[] = Object.entries(definition).map(
     ([key, builder]) => {
@@ -53,20 +98,7 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
         optional: c.optional,
         hidden: c.hidden,
         sortable: c.sortable,
-        display: (() => {
-          const d: ColumnDescriptor["display"] = { type: c.display.type };
-          if (
-            c.display.type === "number" &&
-            "unit" in c.display &&
-            c.display.unit
-          ) {
-            d.unit = c.display.unit;
-          }
-          if (c.display.colorMap) {
-            d.colorMap = c.display.colorMap;
-          }
-          return d;
-        })(),
+        display: serializeDisplay(c.display),
         filter: serializeFilter(c.filter),
         sheet: serializeSheet(c.sheet),
       };
@@ -96,24 +128,6 @@ export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
 // sheet.condition) are not serialized and therefore cannot be reconstructed.
 // Columns with display.type === "custom" fall back to the col kind's default
 // display. Developers can override renderers on the returned builders.
-
-function defaultDisplayType(kind: ColKind): string {
-  switch (kind) {
-    case "enum":
-    case "array":
-      return "badge";
-    case "boolean":
-      return "boolean";
-    case "timestamp":
-      return "timestamp";
-    case "number":
-      return "number";
-    case "string":
-    case "record":
-    default:
-      return "text";
-  }
-}
 
 export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
   const definition: TableSchemaDefinition = {};
@@ -149,32 +163,43 @@ export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
     builder = builder.label(col_.label);
     if (col_.description) builder = builder.description(col_.description);
 
-    // 3. Display — fall back to kind default when "custom" (function not serialized)
-    const displayType =
-      col_.display.type === "custom"
-        ? defaultDisplayType(col_.dataType)
-        : col_.display.type;
-    if (displayType === "number") {
+    // 3. Display
+    const display = col_.display;
+    if (display.type === "number") {
       const opts: { unit?: string; colorMap?: Record<string, string> } = {};
-      if (col_.display.unit) opts.unit = col_.display.unit;
-      if (col_.display.colorMap) opts.colorMap = col_.display.colorMap;
+      if (display.unit) opts.unit = display.unit;
+      if (display.colorMap) opts.colorMap = display.colorMap;
       builder = builder.display(
         "number",
         Object.keys(opts).length > 0 ? opts : undefined,
       );
+    } else if (display.type === "bar") {
+      builder = builder.display("bar", {
+        min: display.min,
+        max: display.max,
+        ...(display.unit ? { unit: display.unit } : {}),
+        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
+      });
+    } else if (display.type === "heatmap") {
+      builder = builder.display("heatmap", {
+        min: display.min,
+        max: display.max,
+        ...(display.color ? { color: display.color } : {}),
+        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
+      });
     } else if (
-      displayType === "text" ||
-      displayType === "code" ||
-      displayType === "boolean" ||
-      displayType === "star" ||
-      displayType === "badge" ||
-      displayType === "timestamp" ||
-      displayType === "status-code" ||
-      displayType === "level-indicator"
+      display.type === "text" ||
+      display.type === "code" ||
+      display.type === "boolean" ||
+      display.type === "star" ||
+      display.type === "badge" ||
+      display.type === "timestamp" ||
+      display.type === "status-code" ||
+      display.type === "level-indicator"
     ) {
       builder = builder.display(
-        displayType,
-        col_.display.colorMap ? { colorMap: col_.display.colorMap } : undefined,
+        display.type,
+        display.colorMap ? { colorMap: display.colorMap } : undefined,
       );
     }
 

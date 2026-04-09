@@ -370,7 +370,7 @@ describe("deserializeSchema", () => {
           optional: false,
           hidden: false,
           sortable: false,
-          display: { type: "custom" },
+          display: { type: "custom" } as any,
           filter: {
             type: "checkbox",
             defaultOpen: false,
@@ -380,7 +380,7 @@ describe("deserializeSchema", () => {
         },
       ],
     };
-    const out = serializeSchema(deserializeSchema(json));
+    const out = serializeSchema(deserializeSchema(json as SchemaJSON));
     expect(out.columns[0]?.display.type).toBe("badge");
   });
 
@@ -417,13 +417,13 @@ describe("deserializeSchema", () => {
           optional: false,
           hidden: false,
           sortable: false,
-          display: { type: "custom" },
+          display: { type: "custom" } as any,
           filter: { type: "input", defaultOpen: false, commandDisabled: false },
           sheet: null,
         },
       ],
     };
-    const out = serializeSchema(deserializeSchema(json));
+    const out = serializeSchema(deserializeSchema(json as SchemaJSON));
     expect(out.columns[0]?.display.type).toBe("text");
   });
 });
