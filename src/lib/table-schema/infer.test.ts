@@ -710,4 +710,3 @@ describe("inferSchemaFromJSON — status/state enum heuristics", () => {
     expect((columns[0]?.display as any)?.colorMap).toBeUndefined();
   });
 });
-
