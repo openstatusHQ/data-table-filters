@@ -1,7 +1,11 @@
 import type { SchemaJSON } from "@/lib/table-schema";
 import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
 import { NextResponse } from "next/server";
-import { storeBuilderData, updateBuilderSchema } from "./cache";
+import {
+  storeBuilderData,
+  updateBuilderData,
+  updateBuilderSchema,
+} from "./cache";
 
 /**
  * POST /api/builder
@@ -64,6 +68,46 @@ export async function PATCH(request: Request) {
     }
 
     const updated = updateBuilderSchema(body.dataId, body.schema);
+    if (!updated) {
+      return NextResponse.json({ error: "Dataset not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: 400 },
+    );
+  }
+}
+
+/**
+ * PUT /api/builder
+ *
+ * Body: { dataId: string, data: unknown[] }
+ * Returns: { success: true }
+ *
+ * Replaces data in an existing cache entry without creating a new dataId.
+ * Used during AI streaming to grow rows without remounting the table.
+ */
+export async function PUT(request: Request) {
+  try {
+    const body = (await request.json()) as {
+      dataId: string;
+      data: unknown[];
+    };
+
+    if (!body.dataId || !Array.isArray(body.data)) {
+      return NextResponse.json(
+        { error: "dataId and data array are required" },
+        { status: 400 },
+      );
+    }
+
+    const updated = updateBuilderData(
+      body.dataId,
+      body.data as Record<string, unknown>[],
+    );
     if (!updated) {
       return NextResponse.json({ error: "Dataset not found" }, { status: 404 });
     }

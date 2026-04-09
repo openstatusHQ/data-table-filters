@@ -34,6 +34,7 @@ import { validateSchema } from "@/lib/table-schema/validate";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useQueryClient } from "@tanstack/react-query";
 import { Blocks, Shuffle, Sparkle, Upload } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import * as React from "react";
@@ -70,29 +71,7 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
   const [generating, setGenerating] = React.useState(!!initialPrompt);
   const [rowsGenerated, setRowsGenerated] = React.useState(0);
   const abortRef = React.useRef<AbortController | null>(null);
-
-  const applyPartial = React.useCallback(
-    async (data: Record<string, unknown>[], signal?: AbortSignal) => {
-      const res = await fetch("/api/builder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data }),
-        signal,
-      });
-      if (!res.ok) {
-        const err = (await res.json()) as { error?: string };
-        toast.error(err.error ?? "Failed to infer schema");
-        return;
-      }
-      const { schema, dataId } = (await res.json()) as {
-        schema: SchemaJSON;
-        dataId: string;
-      };
-      applyDatasetColorMaps(schema, data);
-      onResult(schema, dataId);
-    },
-    [onResult],
-  );
+  const queryClient = useQueryClient();
 
   const handleGenerate = React.useCallback(
     async (desc: string, numRows: number) => {
@@ -103,6 +82,13 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
 
       setGenerating(true);
       setRowsGenerated(0);
+
+      // Tracks the dataId created by the first render (row 5).
+      // All subsequent updates PUT to the same entry.
+      let firstDataId: string | null = null;
+      let firstRenderDone = false;
+      let updateInFlight = false;
+
       try {
         const res = await fetch("/api/builder/generate", {
           method: "POST",
@@ -125,40 +111,59 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
           return;
         }
 
+        // ---------------------------------------------------------------
+        // Helper: parse partial JSON array from accumulated stream text
+        // ---------------------------------------------------------------
+        const parsePartial = (
+          acc: string,
+        ): Record<string, unknown>[] | null => {
+          try {
+            const clean = acc.replace(/^```(?:json)?\s*/i, "").trim();
+            const arrStart = clean.indexOf("[");
+            if (arrStart === -1) return null;
+            const fromArr = clean.substring(arrStart);
+            const lastClose = fromArr.lastIndexOf("},");
+            if (lastClose === -1) return null;
+            const partial = fromArr.substring(0, lastClose + 1) + "]";
+            return JSON.parse(partial) as Record<string, unknown>[];
+          } catch {
+            return null;
+          }
+        };
+
+        // ---------------------------------------------------------------
+        // Helper: update existing cache entry + invalidate React Query
+        // ---------------------------------------------------------------
+        const updateExisting = async (
+          dataId: string,
+          data: Record<string, unknown>[],
+        ) => {
+          if (updateInFlight || controller.signal.aborted) return;
+          updateInFlight = true;
+          try {
+            const putRes = await fetch("/api/builder", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ dataId, data }),
+              signal: controller.signal,
+            });
+            if (putRes.ok) {
+              await queryClient.invalidateQueries({
+                queryKey: ["builder-data", dataId],
+              });
+            }
+          } catch {
+            // Swallow abort errors
+          } finally {
+            updateInFlight = false;
+          }
+        };
+
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let accumulated = "";
         let rowCount = 0;
         let lastRenderedCount = 0;
-        let renderInFlight = false;
-
-        const tryPartialRender = (acc: string) => {
-          if (renderInFlight || controller.signal.aborted) return;
-          try {
-            const clean = acc.replace(/^```(?:json)?\s*/i, "").trim();
-            const arrStart = clean.indexOf("[");
-            if (arrStart === -1) return;
-            const fromArr = clean.substring(arrStart);
-            const lastClose = fromArr.lastIndexOf("},");
-            if (lastClose === -1) return;
-            const partial = fromArr.substring(0, lastClose + 1) + "]";
-            const partialData = JSON.parse(partial) as Record<
-              string,
-              unknown
-            >[];
-            if (partialData.length > lastRenderedCount) {
-              lastRenderedCount = partialData.length;
-              renderInFlight = true;
-              applyPartial(partialData, controller.signal)
-                .catch(() => {})
-                .finally(() => {
-                  renderInFlight = false;
-                });
-            }
-          } catch {
-            // Partial parse failed — skip this chunk
-          }
-        };
 
         while (true) {
           const { done, value } = await reader.read();
@@ -171,8 +176,38 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
           if (newCount > rowCount) {
             rowCount = newCount;
             setRowsGenerated(rowCount);
-            if (rowCount >= 5) {
-              tryPartialRender(accumulated);
+          }
+
+          // At row 5: create cache entry + mount table (awaited, blocks stream briefly)
+          if (!firstRenderDone && rowCount >= 5) {
+            const partialData = parsePartial(accumulated);
+            if (partialData && partialData.length >= 5) {
+              firstRenderDone = true;
+              lastRenderedCount = partialData.length;
+              const postRes = await fetch("/api/builder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data: partialData }),
+                signal: controller.signal,
+              });
+              if (postRes.ok) {
+                const { schema, dataId } = (await postRes.json()) as {
+                  schema: SchemaJSON;
+                  dataId: string;
+                };
+                firstDataId = dataId;
+                applyDatasetColorMaps(schema, partialData);
+                onResult(schema, dataId);
+              }
+            }
+          }
+
+          // After first render, fire-and-forget updates as more rows arrive
+          if (firstDataId && rowCount > lastRenderedCount) {
+            const partialData = parsePartial(accumulated);
+            if (partialData && partialData.length > lastRenderedCount) {
+              lastRenderedCount = partialData.length;
+              updateExisting(firstDataId, partialData);
             }
           }
         }
@@ -202,7 +237,27 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
         }
 
         setRowsGenerated(data.length);
-        await applyPartial(data, controller.signal);
+
+        if (firstDataId) {
+          // Final update: PUT full data to same cache entry
+          await updateExisting(firstDataId, data);
+        } else {
+          // Stream was too short for partial render — do full init now
+          const postRes = await fetch("/api/builder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data }),
+            signal: controller.signal,
+          });
+          if (postRes.ok) {
+            const { schema, dataId } = (await postRes.json()) as {
+              schema: SchemaJSON;
+              dataId: string;
+            };
+            applyDatasetColorMaps(schema, data);
+            onResult(schema, dataId);
+          }
+        }
       } catch (e) {
         // Don't toast or update state on intentional abort
         if (e instanceof DOMException && e.name === "AbortError") return;
@@ -213,7 +268,7 @@ function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
         }
       }
     },
-    [applyPartial],
+    [onResult, queryClient],
   );
 
   React.useEffect(() => {
