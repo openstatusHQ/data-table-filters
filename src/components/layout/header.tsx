@@ -25,11 +25,13 @@ export function Header({ page, sections }: HeaderProps) {
       </div>
       <div className="flex min-w-0 items-center gap-2.5">
         <div>
-          <Button variant="ghost" className="group">
-            <Github />
-            <span className="text-muted-foreground group-hover:text-foreground font-mono">
-              1.9k
-            </span>
+          <Button variant="ghost" className="group hidden sm:flex" asChild>
+            <NextLink href="https://github.com/openstatusHQ/data-table-filters">
+              <Github />
+              <span className="text-muted-foreground group-hover:text-foreground font-mono">
+                1.9k
+              </span>
+            </NextLink>
           </Button>
         </div>
         <div className="sm:w-48">
