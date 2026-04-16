@@ -1,0 +1,105 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "data-table-cell",
+  "title": "Data Table Cell Renderers",
+  "description": "Cell renderer system with 12 types: text, code, badge, boolean, star, number, status-code, level-indicator, timestamp, heatmap, bar, and gauge.",
+  "dependencies": [
+    "lucide-react",
+    "date-fns",
+    "@date-fns/utc",
+    "sonner"
+  ],
+  "registryDependencies": [
+    "https://data-table.openstatus.dev/r/data-table.json",
+    "tooltip",
+    "hover-card"
+  ],
+  "files": [
+    {
+      "path": "src/components/data-table/data-table-cell/index.tsx",
+      "content": "export { DataTableCellText } from \"./data-table-cell-text\";\nexport { DataTableCellCode } from \"./data-table-cell-code\";\nexport { DataTableCellNumber } from \"./data-table-cell-number\";\nexport { DataTableCellBar } from \"./data-table-cell-bar\";\nexport { DataTableCellHeatmap } from \"./data-table-cell-heatmap\";\nexport { DataTableCellGauge } from \"./data-table-cell-gauge\";\nexport { DataTableCellTimestamp } from \"./data-table-cell-timestamp\";\nexport { DataTableCellBadge } from \"./data-table-cell-badge\";\nexport { DataTableCellBoolean } from \"./data-table-cell-boolean\";\nexport { DataTableCellStar } from \"./data-table-cell-star\";\nexport { DataTableCellStatusCode } from \"./data-table-cell-status-code\";\nexport { DataTableCellLevelIndicator } from \"./data-table-cell-level-indicator\";\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-text.tsx",
+      "content": "import { TextWithTooltip } from \"@/components/custom/text-with-tooltip\";\n\nexport function DataTableCellText({\n  value,\n  color,\n}: {\n  value: string | number;\n  color?: string;\n}) {\n  return <TextWithTooltip text={value} style={color ? { color } : undefined} />;\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-code.tsx",
+      "content": "export function DataTableCellCode({\n  value,\n  color,\n}: {\n  value: string | number;\n  color?: string;\n}) {\n  return (\n    <span className=\"font-mono\" style={color ? { color } : undefined}>\n      {value}\n    </span>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-badge.tsx",
+      "content": "export function DataTableCellBadge({\n  value,\n  color,\n}: {\n  value: string | number;\n  color?: string;\n}) {\n  return (\n    <span\n      className=\"rounded-sm border px-1.5 py-0.5 font-mono text-xs\"\n      style={\n        color\n          ? {\n              color,\n              backgroundColor: `${color}1a`,\n              borderColor: `${color}33`,\n            }\n          : undefined\n      }\n    >\n      {value}\n    </span>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-boolean.tsx",
+      "content": "import { Check, Minus } from \"lucide-react\";\n\nexport function DataTableCellBoolean({\n  value,\n  color,\n}: {\n  value: boolean;\n  color?: string;\n}) {\n  if (value) {\n    return (\n      <Check\n        className={`ml-auto h-4 w-4 ${color ? \"\" : \"text-foreground\"}`}\n        style={color ? { color } : undefined}\n      />\n    );\n  }\n  return (\n    <Minus\n      className={`ml-auto h-4 w-4 ${color ? \"\" : \"text-muted-foreground/50\"}`}\n      style={color ? { color } : undefined}\n    />\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-star.tsx",
+      "content": "import { Star } from \"lucide-react\";\n\nexport function DataTableCellStar({ value }: { value: boolean }) {\n  if (value) {\n    return (\n      <span className=\"ml-auto inline-flex items-center\">\n        <Star\n          className=\"h-4 w-4 fill-yellow-400 text-yellow-400\"\n          aria-hidden=\"true\"\n        />\n        <span className=\"sr-only\">Favorited</span>\n      </span>\n    );\n  }\n  return (\n    <span className=\"ml-auto inline-flex items-center\">\n      <Star className=\"text-muted-foreground/40 h-4 w-4\" aria-hidden=\"true\" />\n      <span className=\"sr-only\">Not favorited</span>\n    </span>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-number.tsx",
+      "content": "export function DataTableCellNumber({\n  value,\n  unit,\n  color,\n}: {\n  value: number;\n  unit?: string;\n  color?: string;\n}) {\n  const formatted = new Intl.NumberFormat(\"en-US\", {\n    maximumFractionDigits: 3,\n  }).format(value);\n\n  return (\n    <span className=\"font-mono\" style={color ? { color } : undefined}>\n      {formatted}\n      {unit && <span className=\"text-muted-foreground\">{unit}</span>}\n    </span>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-status-code.tsx",
+      "content": "import { getStatusColor } from \"@/lib/request/status-code\";\n\nexport function DataTableCellStatusCode({\n  value,\n  color,\n}: {\n  value: number;\n  color?: string;\n}) {\n  const colors = getStatusColor(value);\n  return (\n    <span\n      className={`font-mono ${color ? \"\" : colors.text}`}\n      style={color ? { color } : undefined}\n    >\n      {value}\n    </span>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-level-indicator.tsx",
+      "content": "const LEVEL_COLORS: Record<string, string> = {\n  error: \"bg-red-500\",\n  warn: \"bg-yellow-500\",\n  warning: \"bg-yellow-500\",\n  info: \"bg-blue-500\",\n  debug: \"bg-gray-400\",\n  success: \"bg-green-500\",\n};\n\nexport function DataTableCellLevelIndicator({\n  value,\n  color: colorOverride,\n}: {\n  value: string;\n  color?: string;\n}) {\n  const builtinColor = LEVEL_COLORS[value.toLowerCase()] ?? \"bg-gray-300\";\n  return (\n    <span\n      className=\"inline-flex items-center gap-1.5\"\n      style={colorOverride ? { color: colorOverride } : undefined}\n    >\n      <span\n        className={`inline-block size-3.5 shrink-0 rounded-sm ${colorOverride ? \"\" : builtinColor}`}\n        style={colorOverride ? { backgroundColor: colorOverride } : undefined}\n      />\n      <span>{value}</span>\n    </span>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-timestamp.tsx",
+      "content": "\"use client\";\n\nimport { HoverCardTimestamp } from \"@/components/data-table/data-table-infinite/hover-card-timestamp\";\n\nexport function DataTableCellTimestamp({\n  date,\n  color,\n}: {\n  date: Date | string | number;\n  color?: string;\n}) {\n  const d = date instanceof Date ? date : new Date(date);\n  return (\n    <span style={color ? { color } : undefined}>\n      <HoverCardTimestamp date={d} />\n    </span>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-heatmap.tsx",
+      "content": "import { hexToRgb } from \"@/lib/colors\";\n\nconst OPACITY = 0.1;\n\nexport function DataTableCellHeatmap({\n  value,\n  min,\n  max,\n  unit,\n  color,\n}: {\n  value: number;\n  min: number;\n  max: number;\n  unit?: string;\n  color?: string;\n}) {\n  const range = max - min;\n  const ratio =\n    range === 0 ? 0 : Math.max(0, Math.min(1, (value - min) / range));\n  const opacity = ratio * OPACITY;\n\n  const formatted = new Intl.NumberFormat(\"en-US\", {\n    maximumFractionDigits: 3,\n  }).format(value);\n\n  return (\n    <div className=\"relative -m-2 p-2\">\n      <div\n        className=\"absolute inset-0\"\n        style={{\n          backgroundColor: color\n            ? `rgba(${hexToRgb(color)}, ${opacity})`\n            : `var(--muted-foreground)`,\n          opacity: color ? undefined : opacity,\n        }}\n      />\n      <span className=\"relative font-mono\">\n        {formatted}\n        {unit && <span className=\"text-muted-foreground\">{unit}</span>}\n      </span>\n    </div>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-bar.tsx",
+      "content": "import { hexToRgb } from \"@/lib/colors\";\n\nconst OPACITY = 0.5;\nconst BORDER_OPACITY = 1;\n\nexport function DataTableCellBar({\n  value,\n  min,\n  max,\n  unit,\n  color,\n}: {\n  value: number;\n  min: number;\n  max: number;\n  unit?: string;\n  color?: string;\n}) {\n  const range = max - min;\n  const ratio =\n    range === 0 ? 0 : Math.max(0, Math.min(1, (value - min) / range));\n\n  const formatted = new Intl.NumberFormat(\"en-US\", {\n    maximumFractionDigits: 3,\n  }).format(value);\n\n  return (\n    <div className=\"relative -m-2 p-2\">\n      <div\n        className=\"absolute inset-y-0 left-0\"\n        style={{\n          width: `${ratio * 100}%`,\n          backgroundColor: color\n            ? `rgba(${hexToRgb(color)}, ${OPACITY})`\n            : `var(--muted)`,\n          opacity: color ? undefined : OPACITY,\n          borderRight: `1px solid ${color ? `rgba(${hexToRgb(color)}, ${BORDER_OPACITY})` : `var(--border)`}`,\n        }}\n      />\n      <span className=\"relative font-mono\">\n        {formatted}\n        {unit && <span className=\"text-muted-foreground\">{unit}</span>}\n      </span>\n    </div>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-cell/data-table-cell-gauge.tsx",
+      "content": "import { hexToRgb } from \"@/lib/colors\";\n\nconst BG_OPACITY = 0.2;\nconst FOREGROUND_OPACITY = 0.5;\n\nexport function DataTableCellGauge({\n  value,\n  min,\n  max,\n  unit,\n  color,\n}: {\n  value: number;\n  min: number;\n  max: number;\n  unit?: string;\n  color?: string;\n}) {\n  const range = max - min;\n  const ratio =\n    range === 0 ? 0 : Math.max(0, Math.min(1, (value - min) / range));\n\n  // SVG circle gauge calculations\n  const size = 20;\n  const strokeWidth = 4;\n  const viewBox = 120;\n  const radius = 50;\n  const circumference = 2 * Math.PI * radius;\n  const strokeDashoffset = circumference - ratio * circumference;\n\n  const bgStroke = color\n    ? `rgba(${hexToRgb(color)}, ${BG_OPACITY})`\n    : `var(--muted)`;\n\n  const fgStroke = color\n    ? `rgba(${hexToRgb(color)}, ${FOREGROUND_OPACITY})`\n    : `var(--muted-foreground)`;\n\n  const formatted = new Intl.NumberFormat(\"en-US\", {\n    maximumFractionDigits: 3,\n  }).format(value);\n\n  return (\n    <div className=\"flex items-center gap-1.5\">\n      <svg\n        fill=\"none\"\n        height={size}\n        width={size}\n        viewBox={`0 0 ${viewBox} ${viewBox}`}\n        className=\"shrink-0 -rotate-90\"\n      >\n        <circle\n          strokeWidth={strokeWidth * 4}\n          stroke={bgStroke}\n          fill=\"transparent\"\n          r={radius}\n          cx={viewBox / 2}\n          cy={viewBox / 2}\n        />\n        <circle\n          strokeWidth={strokeWidth * 4}\n          strokeDasharray={`${circumference} ${circumference}`}\n          strokeDashoffset={strokeDashoffset}\n          strokeLinecap=\"round\"\n          stroke={fgStroke}\n          fill=\"transparent\"\n          r={radius}\n          cx={viewBox / 2}\n          cy={viewBox / 2}\n        />\n      </svg>\n      <span className=\"font-mono\">\n        {formatted}\n        {unit && <span className=\"text-muted-foreground\">{unit}</span>}\n      </span>\n    </div>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/lib/colors.ts",
+      "content": "export function hexToRgb(hex: string): string {\n  const normalizedHex = hex.trim().replace(/^#/, \"\");\n\n  let rgbHex: string;\n\n  if (/^[0-9a-fA-F]{3}$/.test(normalizedHex)) {\n    rgbHex = normalizedHex\n      .split(\"\")\n      .map((char) => char + char)\n      .join(\"\");\n  } else if (/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {\n    rgbHex = normalizedHex;\n  } else if (/^[0-9a-fA-F]{8}$/.test(normalizedHex)) {\n    rgbHex = normalizedHex.substring(0, 6);\n  } else {\n    return \"0, 0, 0\";\n  }\n\n  const r = parseInt(rgbHex.substring(0, 2), 16);\n  const g = parseInt(rgbHex.substring(2, 4), 16);\n  const b = parseInt(rgbHex.substring(4, 6), 16);\n\n  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {\n    return \"0, 0, 0\";\n  }\n\n  return `${r}, ${g}, ${b}`;\n}\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "src/components/custom/text-with-tooltip.tsx",
+      "content": "import {\n  Tooltip,\n  TooltipContent,\n  TooltipProvider,\n  TooltipTrigger,\n} from \"@/components/ui/tooltip\";\nimport { cn } from \"@/lib/utils\";\nimport React, { useEffect, useRef, useState } from \"react\";\n\ninterface TextWithTooltipProps {\n  text: string | number;\n  className?: string;\n  style?: React.CSSProperties;\n}\n\nexport function TextWithTooltip({\n  text,\n  className,\n  style,\n}: TextWithTooltipProps) {\n  const [isTruncated, setIsTruncated] = useState<boolean>(false);\n  const textRef = useRef<HTMLDivElement>(null);\n\n  useEffect(() => {\n    const checkTruncation = () => {\n      if (textRef.current) {\n        const { scrollWidth, clientWidth } = textRef.current;\n        setIsTruncated(scrollWidth > clientWidth);\n      }\n    };\n\n    const resizeObserver = new ResizeObserver(() => {\n      checkTruncation();\n    });\n\n    if (textRef.current) {\n      resizeObserver.observe(textRef.current);\n    }\n\n    checkTruncation();\n\n    return () => {\n      resizeObserver.disconnect();\n    };\n  }, []);\n\n  return (\n    <TooltipProvider delayDuration={100} disableHoverableContent>\n      <Tooltip>\n        <TooltipTrigger disabled={!isTruncated} asChild>\n          <div\n            ref={textRef}\n            className={cn(\n              \"truncate\",\n              !isTruncated && \"pointer-events-none\",\n              className,\n            )}\n            style={style}\n          >\n            {text}\n          </div>\n        </TooltipTrigger>\n        <TooltipContent>{text}</TooltipContent>\n      </Tooltip>\n    </TooltipProvider>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/components/data-table/data-table-infinite/hover-card-timestamp.tsx",
+      "content": "\"use client\";\n\nimport {\n  HoverCard,\n  HoverCardContent,\n  HoverCardTrigger,\n} from \"@/components/ui/hover-card\";\nimport { useCopyToClipboard } from \"@/hooks/use-copy-to-clipboard\";\nimport { cn } from \"@/lib/utils\";\nimport { UTCDate } from \"@date-fns/utc\";\nimport { format, formatDistanceToNowStrict } from \"date-fns\";\nimport { Check, Copy } from \"lucide-react\";\nimport type { ComponentPropsWithoutRef } from \"react\";\n\ntype HoverCardContentProps = ComponentPropsWithoutRef<typeof HoverCardContent>;\n\ninterface HoverCardTimestampProps {\n  date: Date;\n  side?: HoverCardContentProps[\"side\"];\n  sideOffset?: HoverCardContentProps[\"sideOffset\"];\n  align?: HoverCardContentProps[\"align\"];\n  alignOffset?: HoverCardContentProps[\"alignOffset\"];\n  className?: string;\n}\n\nexport function HoverCardTimestamp({\n  date,\n  side = \"right\",\n  align = \"start\",\n  alignOffset = -4,\n  sideOffset,\n  className,\n}: HoverCardTimestampProps) {\n  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;\n\n  return (\n    <HoverCard openDelay={0} closeDelay={0}>\n      <HoverCardTrigger asChild>\n        <div className={cn(\"font-mono whitespace-nowrap\", className)}>\n          {format(date, \"LLL dd, y HH:mm:ss\")}\n        </div>\n      </HoverCardTrigger>\n      {/* Portal is built into HoverCardContent in shadcn v4 */}\n      <HoverCardContent\n        className=\"z-10 w-auto p-2\"\n        {...{ side, align, alignOffset, sideOffset }}\n      >\n        <dl className=\"flex flex-col gap-1\">\n          <Row value={String(date.getTime())} label=\"Timestamp\" />\n          <Row\n            value={format(new UTCDate(date), \"LLL dd, y HH:mm:ss\")}\n            label=\"UTC\"\n          />\n          <Row value={format(date, \"LLL dd, y HH:mm:ss\")} label={timezone} />\n          <Row\n            value={formatDistanceToNowStrict(date, { addSuffix: true })}\n            label=\"Relative\"\n          />\n        </dl>\n      </HoverCardContent>\n    </HoverCard>\n  );\n}\n\nfunction Row({ value, label }: { value: string; label: string }) {\n  const { copy, isCopied } = useCopyToClipboard();\n\n  return (\n    <div\n      className=\"group flex items-center justify-between gap-4 text-sm\"\n      onClick={(e) => {\n        e.stopPropagation();\n        copy(value);\n      }}\n    >\n      <dt className=\"text-muted-foreground\">{label}</dt>\n      <dd className=\"flex items-center gap-1 truncate font-mono\">\n        <span className=\"invisible group-hover:visible\">\n          {!isCopied ? (\n            <Copy className=\"h-3 w-3\" />\n          ) : (\n            <Check className=\"h-3 w-3\" />\n          )}\n        </span>\n        {value}\n      </dd>\n    </div>\n  );\n}\n",
+      "type": "registry:component"
+    },
+    {
+      "path": "src/hooks/use-copy-to-clipboard.ts",
+      "content": "\"use client\";\n\nimport { useCallback, useState } from \"react\";\nimport { toast } from \"sonner\";\n\nexport function useCopyToClipboard() {\n  const [text, setText] = useState<string | null>(null);\n\n  const copy = useCallback(\n    async (\n      text: string,\n      { timeout, withToast }: { timeout?: number; withToast?: boolean } = {\n        timeout: 3000,\n        withToast: false,\n      },\n    ) => {\n      if (!navigator?.clipboard) {\n        console.warn(\"Clipboard not supported\");\n        return false;\n      }\n\n      try {\n        await navigator.clipboard.writeText(text);\n        setText(text);\n\n        if (timeout) {\n          setTimeout(() => {\n            setText(null);\n          }, timeout);\n        }\n\n        if (withToast) {\n          toast.success(\"Copied to clipboard\");\n        }\n\n        return true;\n      } catch (error) {\n        console.warn(\"Copy failed\", error);\n        setText(null);\n        return false;\n      }\n    },\n    [],\n  );\n\n  return { text, copy, isCopied: text !== null };\n}\n",
+      "type": "registry:hook"
+    }
+  ],
+  "type": "registry:block"
+}
