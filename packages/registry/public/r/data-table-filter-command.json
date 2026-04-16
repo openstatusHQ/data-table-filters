@@ -3,10 +3,7 @@
   "name": "data-table-filter-command",
   "title": "Data Table Filter Command Palette",
   "description": "Command palette for power-user filter input with history and keyboard shortcuts.",
-  "dependencies": [
-    "date-fns",
-    "lucide-react"
-  ],
+  "dependencies": ["date-fns", "lucide-react"],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json",
     "command",

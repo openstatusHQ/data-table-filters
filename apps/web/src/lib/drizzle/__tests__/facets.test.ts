@@ -1,7 +1,7 @@
 import { logs } from "@/db/drizzle/schema";
+import { computeFacets } from "@dtf/registry/lib/drizzle/facets";
 import { inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { computeFacets } from "@dtf/registry/lib/drizzle/facets";
 import {
   destroyTestDb,
   getDb,

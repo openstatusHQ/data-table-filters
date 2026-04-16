@@ -1,7 +1,10 @@
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { VERCEL_EDGE_REGIONS } from "@/constants/region";
-import { RANGE_DELIMITER, SLIDER_DELIMITER } from "@dtf/registry/lib/delimiters";
+import {
+  RANGE_DELIMITER,
+  SLIDER_DELIMITER,
+} from "@dtf/registry/lib/delimiters";
 import { createSchema, field } from "@dtf/registry/lib/store/schema";
 
 // Direction type for pagination

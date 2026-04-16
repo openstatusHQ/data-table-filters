@@ -3,9 +3,7 @@
   "name": "data-table-zustand",
   "title": "Data Table zustand Store Adapter",
   "description": "Client-side state management adapter using zustand for app-level filter persistence.",
-  "dependencies": [
-    "zustand"
-  ],
+  "dependencies": ["zustand"],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json"
   ],

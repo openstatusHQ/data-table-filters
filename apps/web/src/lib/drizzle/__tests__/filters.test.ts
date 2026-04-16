@@ -1,6 +1,6 @@
+import { buildWhereConditions } from "@dtf/registry/lib/drizzle/filters";
 import { and } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { buildWhereConditions } from "@dtf/registry/lib/drizzle/filters";
 import {
   destroyTestDb,
   getDb,

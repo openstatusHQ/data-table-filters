@@ -17,8 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useIsMobile } from "@dtf/registry/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@dtf/registry/hooks/use-mobile";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import { Slot } from "radix-ui";

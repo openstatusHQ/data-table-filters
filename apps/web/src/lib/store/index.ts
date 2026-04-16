@@ -37,8 +37,14 @@ export type { DataTableStoreProviderProps } from "@dtf/registry/lib/store/provid
 
 // Hooks
 export { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
-export { useFilterActions, type FilterActions } from "@dtf/registry/lib/store/hooks/useFilterActions";
-export { useFilterField, type FilterFieldResult } from "@dtf/registry/lib/store/hooks/useFilterField";
+export {
+  useFilterActions,
+  type FilterActions,
+} from "@dtf/registry/lib/store/hooks/useFilterActions";
+export {
+  useFilterField,
+  type FilterFieldResult,
+} from "@dtf/registry/lib/store/hooks/useFilterField";
 export { useReactTableSync } from "@dtf/registry/lib/store/hooks/useReactTableSync";
 
 // Context (for advanced use cases)
@@ -50,4 +56,7 @@ export {
 
 // Text Parser
 export { createTextParser } from "@dtf/registry/lib/store/parser";
-export type { TextParser, TextParserOptions } from "@dtf/registry/lib/store/parser";
+export type {
+  TextParser,
+  TextParserOptions,
+} from "@dtf/registry/lib/store/parser";

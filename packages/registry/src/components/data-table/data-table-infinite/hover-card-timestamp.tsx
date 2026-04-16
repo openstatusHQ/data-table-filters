@@ -1,5 +1,6 @@
 "use client";
 
+import { UTCDate } from "@date-fns/utc";
 import {
   HoverCard,
   HoverCardContent,
@@ -7,7 +8,6 @@ import {
 } from "@dtf/registry/components/ui/hover-card";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { cn } from "@dtf/registry/lib/utils";
-import { UTCDate } from "@date-fns/utc";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Check, Copy } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";

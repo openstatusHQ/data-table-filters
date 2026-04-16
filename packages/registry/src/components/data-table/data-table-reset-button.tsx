@@ -1,6 +1,7 @@
 "use client";
 
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { Button } from "@dtf/registry/components/ui/button";
 import { Kbd } from "@dtf/registry/components/ui/kbd";
 import {
   Tooltip,
@@ -10,7 +11,6 @@ import {
 } from "@dtf/registry/components/ui/tooltip";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { X } from "lucide-react";
-import { Button } from "@dtf/registry/components/ui/button";
 
 export function DataTableResetButton() {
   const { table } = useDataTable();

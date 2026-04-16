@@ -1,9 +1,9 @@
+import type { Percentile } from "@/lib/request/percentile";
 import {
   createDataTableQueryOptions,
   type InfiniteQueryMeta,
   type InfiniteQueryResponse,
 } from "@dtf/registry/lib/data-table";
-import type { Percentile } from "@/lib/request/percentile";
 import type { ColumnSchema } from "./schema";
 import { searchParamsSerializer, type SearchParamsType } from "./search-params";
 

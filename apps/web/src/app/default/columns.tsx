@@ -1,8 +1,8 @@
 "use client";
 
-import { DataTableColumnHeader } from "@dtf/registry/components/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import { tagColor } from "@/constants/tag";
+import { DataTableColumnHeader } from "@dtf/registry/components/data-table/data-table-column-header";
 import { isArrayOfDates, isArrayOfNumbers } from "@dtf/registry/lib/is-array";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isSameDay } from "date-fns";

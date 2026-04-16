@@ -3,6 +3,8 @@
 // REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
 "use no memo";
 
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -13,13 +15,11 @@ import {
 } from "@dtf/registry/components/custom/table";
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableFilterControls } from "@dtf/registry/components/data-table/data-table-filter-controls";
-import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableProvider } from "@dtf/registry/components/data-table/data-table-provider";
 import { DataTableToolbar } from "@dtf/registry/components/data-table/data-table-toolbar";
 import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
 import { useLocalStorage } from "@dtf/registry/hooks/use-local-storage";
 import { getColumnVisibilityKey } from "@dtf/registry/lib/constants/local-storage";
-import { cn } from "@/lib/utils";
 import type {
   ColumnDef,
   ColumnFiltersState,

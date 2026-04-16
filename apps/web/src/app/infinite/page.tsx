@@ -1,10 +1,10 @@
 import { Skeleton } from "@/components/data-table/data-table-infinite/skeleton";
+import { getQueryClient } from "@/providers/get-query-client";
 import {
   ADAPTER_COOKIE_NAME,
   PREFETCH_COOKIE_NAME,
 } from "@dtf/registry/lib/constants/cookies";
 import type { AdapterType } from "@dtf/registry/lib/store/adapter/types";
-import { getQueryClient } from "@/providers/get-query-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { cookies } from "next/headers";
 import type { SearchParams } from "nuqs";

@@ -1,19 +1,21 @@
 "use client";
 
-import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
-import { DataTableFloatingBar } from "@dtf/registry/components/data-table/data-table-floating-bar";
-import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { LiveButton } from "@/components/data-table/data-table-infinite/live-button";
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
 import { RefreshButton } from "@/components/data-table/data-table-infinite/refresh-button";
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
 import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
+import { Button } from "@/components/ui/button";
+import { getLevelRowClassName } from "@/lib/request/level";
+import { cn } from "@/lib/utils";
+import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
+import { DataTableFloatingBar } from "@dtf/registry/components/data-table/data-table-floating-bar";
+import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";
 import type { SheetField } from "@dtf/registry/components/data-table/types";
-import { Button } from "@/components/ui/button";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
@@ -21,7 +23,6 @@ import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
 } from "@dtf/registry/lib/data-table/faceted";
-import { getLevelRowClassName } from "@/lib/request/level";
 import type { AdapterType } from "@dtf/registry/lib/store/adapter/types";
 import { useNuqsAdapter } from "@dtf/registry/lib/store/adapters/nuqs";
 import { useZustandAdapter } from "@dtf/registry/lib/store/adapters/zustand";
@@ -33,7 +34,6 @@ import {
   generateSheetFields,
   getDefaultColumnVisibility,
 } from "@dtf/registry/lib/table-schema";
-import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { Check, Copy } from "lucide-react";

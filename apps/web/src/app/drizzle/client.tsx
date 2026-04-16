@@ -1,13 +1,15 @@
 "use client";
 
-import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
-import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { LiveButton } from "@/components/data-table/data-table-infinite/live-button";
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
 import { RefreshButton } from "@/components/data-table/data-table-infinite/refresh-button";
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
 import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
+import { getLevelRowClassName } from "@/lib/request/level";
+import { cn } from "@/lib/utils";
+import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
+import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";
@@ -18,7 +20,6 @@ import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
 } from "@dtf/registry/lib/data-table/faceted";
-import { getLevelRowClassName } from "@/lib/request/level";
 import { useNuqsAdapter } from "@dtf/registry/lib/store/adapters/nuqs";
 import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
 import { DataTableStoreProvider } from "@dtf/registry/lib/store/provider/DataTableStoreProvider";
@@ -28,7 +29,6 @@ import {
   generateSheetFields,
   getDefaultColumnVisibility,
 } from "@dtf/registry/lib/table-schema";
-import { cn } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { dataOptions } from "./query-options";

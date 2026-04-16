@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
+import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { cva, VariantProps } from "class-variance-authority";
 import { Check, Copy, Plus } from "lucide-react";
 import * as React from "react";

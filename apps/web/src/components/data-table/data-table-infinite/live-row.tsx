@@ -1,5 +1,5 @@
-import { TableCell, TableRow } from "@dtf/registry/components/custom/table";
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { TableCell, TableRow } from "@dtf/registry/components/custom/table";
 
 export function LiveRow({ colSpan }: { colSpan: number }) {
   return (

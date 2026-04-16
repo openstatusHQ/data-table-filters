@@ -6,16 +6,16 @@ import { DataTableColumnLatency } from "@/components/data-table/data-table-colum
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
 import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
-import type {
-  DataTableFilterField,
-  Option,
-  SheetField,
-} from "@dtf/registry/components/data-table/types";
 import { _LEVELS, LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { VERCEL_EDGE_REGIONS } from "@/constants/region";
 import { isJSON } from "@/lib/is-json";
 import { getLevelLabel } from "@/lib/request/level";
+import type {
+  DataTableFilterField,
+  Option,
+  SheetField,
+} from "@dtf/registry/components/data-table/types";
 import { format } from "date-fns";
 import type { ColumnType } from "./columns";
 

@@ -3,9 +3,7 @@
   "name": "data-table-schema",
   "title": "Data Table Schema System",
   "description": "Declarative table definitions with col.* factories, presets, and generators for columns, filters, and sheet fields.",
-  "dependencies": [
-    "@tanstack/react-table"
-  ],
+  "dependencies": ["@tanstack/react-table"],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json",
     "https://data-table.openstatus.dev/r/data-table-cell.json",

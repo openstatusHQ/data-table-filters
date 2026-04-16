@@ -1,7 +1,6 @@
 "use client";
 
 import { Link } from "@/components/custom/link";
-import { TextShimmer } from "@dtf/registry/components/data-table/data-table-filter-command-ai/text-shimmer";
 import { Skeleton as DataTableInfiniteSkeleton } from "@/components/data-table/data-table-infinite/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,14 +23,15 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { parseCSV } from "@/lib/csv-parser";
+import { cn } from "@/lib/utils";
+import { TextShimmer } from "@dtf/registry/components/data-table/data-table-filter-command-ai/text-shimmer";
+import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { type SchemaJSON } from "@dtf/registry/lib/table-schema";
 import { inferSchemaFromJSON } from "@dtf/registry/lib/table-schema/infer";
 import { deserializeSchema } from "@dtf/registry/lib/table-schema/serialize";
 import { schemaToTypeScript } from "@dtf/registry/lib/table-schema/to-typescript";
 import { validateSchema } from "@dtf/registry/lib/table-schema/validate";
-import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useQueryClient } from "@tanstack/react-query";

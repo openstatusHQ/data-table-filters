@@ -8,13 +8,12 @@
  * This script copies src/ → dist/src/, rewrites @dtf/registry/ → @/,
  * and creates the configs shadcn build expects.
  */
-
 import {
   cpSync,
   existsSync,
   mkdirSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   rmSync,
   statSync,
   writeFileSync,

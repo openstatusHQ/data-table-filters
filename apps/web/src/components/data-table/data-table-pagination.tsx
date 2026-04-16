@@ -1,6 +1,5 @@
 "use client";
 
-import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import {
   ChevronLeft,
   ChevronRight,

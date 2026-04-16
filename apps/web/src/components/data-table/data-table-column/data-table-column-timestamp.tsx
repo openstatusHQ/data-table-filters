@@ -5,9 +5,9 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import { UTCDate } from "@date-fns/utc";
+import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Check, Copy } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";

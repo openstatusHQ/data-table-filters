@@ -1,7 +1,7 @@
 import { logs } from "@/db/drizzle/schema";
 import { seedRows } from "@/db/drizzle/seed-data";
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { ColumnMapping } from "@dtf/registry/lib/drizzle/types";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 
 export const hasDatabase = !!process.env.DATABASE_URL;
 

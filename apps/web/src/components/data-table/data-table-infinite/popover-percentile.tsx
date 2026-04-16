@@ -6,9 +6,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { formatCompactNumber, formatMilliseconds } from "@dtf/registry/lib/format";
 import { getPercentileColor, Percentile } from "@/lib/request/percentile";
 import { cn } from "@/lib/utils";
+import {
+  formatCompactNumber,
+  formatMilliseconds,
+} from "@dtf/registry/lib/format";
 import { FunctionSquare } from "lucide-react";
 import * as React from "react";
 

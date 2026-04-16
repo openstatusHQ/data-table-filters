@@ -1,4 +1,7 @@
-import type { DatePreset, Option } from "@dtf/registry/components/data-table/types";
+import type {
+  DatePreset,
+  Option,
+} from "@dtf/registry/components/data-table/types";
 import type { JSX } from "react";
 
 export type ColKind =

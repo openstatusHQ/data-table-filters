@@ -1,3 +1,4 @@
+import { experimental_useObject as useObject } from "@ai-sdk/react";
 import {
   diffPartialState,
   generateAIOutputSchema,
@@ -5,7 +6,6 @@ import {
   parseAIResponse,
 } from "@dtf/registry/lib/ai";
 import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
-import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 export type UseAIFiltersOptions = {

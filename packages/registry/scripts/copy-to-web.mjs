@@ -5,7 +5,6 @@
  * - packages/registry/public/r/ (canonical location)
  * - apps/web/public/r/ (served by Next.js)
  */
-
 import { cpSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

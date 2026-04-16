@@ -1,10 +1,10 @@
 import { LEVELS } from "@/constants/levels";
 import { REGIONS } from "@/constants/region";
-import { isArrayOfDates, isArrayOfNumbers } from "@dtf/registry/lib/is-array";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
+import { isArrayOfDates, isArrayOfNumbers } from "@dtf/registry/lib/is-array";
 import {
   addDays,
   addMilliseconds,

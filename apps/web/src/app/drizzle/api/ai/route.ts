@@ -1,5 +1,5 @@
-import { createAIFilterHandler } from "@dtf/registry/lib/ai/create-ai-filter-handler";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createAIFilterHandler } from "@dtf/registry/lib/ai/create-ai-filter-handler";
 import { tableSchema } from "../../table-schema";
 
 const anthropic = createAnthropic({

@@ -1,5 +1,5 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildOrderBy } from "@dtf/registry/lib/drizzle/sorting";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   destroyTestDb,
   getDb,

@@ -1,6 +1,6 @@
 import { logs } from "@/db/drizzle/schema";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildCursorPagination } from "@dtf/registry/lib/drizzle/pagination";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   destroyTestDb,
   getDb,

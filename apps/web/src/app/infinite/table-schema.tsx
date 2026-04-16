@@ -8,16 +8,16 @@ import { SheetTimingPhases } from "@/components/data-table/data-table-infinite/s
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
-import { formatMilliseconds } from "@dtf/registry/lib/format";
 import { getLevelColor, getLevelLabel } from "@/lib/request/level";
 import { getStatusColor } from "@/lib/request/status-code";
 import type { TimingPhase } from "@/lib/request/timing";
+import { cn } from "@/lib/utils";
+import { formatMilliseconds } from "@dtf/registry/lib/format";
 import {
   col,
   createTableSchema,
   type InferTableType,
 } from "@dtf/registry/lib/table-schema";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { LogsMeta } from "./query-options";
 import type { ColumnSchema } from "./schema";

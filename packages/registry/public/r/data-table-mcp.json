@@ -3,10 +3,7 @@
   "name": "data-table-mcp",
   "title": "Data Table MCP Server",
   "description": "Expose your data table as an MCP endpoint for AI agents. Auto-generates tool schema from BYOS field definitions. Stateless, serverless-compatible.",
-  "dependencies": [
-    "@modelcontextprotocol/sdk",
-    "zod"
-  ],
+  "dependencies": ["@modelcontextprotocol/sdk", "zod"],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json"
   ],

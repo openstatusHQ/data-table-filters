@@ -1,4 +1,3 @@
-import { formatMilliseconds } from "@dtf/registry/lib/format";
 import {
   getTimingColor,
   getTimingLabel,
@@ -7,6 +6,7 @@ import {
   timingPhases,
 } from "@/lib/request/timing";
 import { cn } from "@/lib/utils";
+import { formatMilliseconds } from "@dtf/registry/lib/format";
 
 export function SheetTimingPhases({
   latency,

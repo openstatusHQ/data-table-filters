@@ -1,9 +1,10 @@
 "use client";
 
-import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
-import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
 import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
+import { getLevelRowClassName } from "@/lib/request/level";
+import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
+import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";
@@ -11,7 +12,6 @@ import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
 } from "@dtf/registry/lib/data-table/faceted";
-import { getLevelRowClassName } from "@/lib/request/level";
 import { useNuqsAdapter } from "@dtf/registry/lib/store/adapters/nuqs";
 import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
 import { DataTableStoreProvider } from "@dtf/registry/lib/store/provider/DataTableStoreProvider";

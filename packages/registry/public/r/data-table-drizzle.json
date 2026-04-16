@@ -3,10 +3,7 @@
   "name": "data-table-drizzle",
   "title": "Data Table Drizzle ORM Helpers",
   "description": "Server-side filtering, faceted search, cursor pagination, and sorting helpers for Drizzle ORM.",
-  "dependencies": [
-    "drizzle-orm",
-    "date-fns"
-  ],
+  "dependencies": ["drizzle-orm", "date-fns"],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json",
     "https://data-table.openstatus.dev/r/data-table-schema.json"

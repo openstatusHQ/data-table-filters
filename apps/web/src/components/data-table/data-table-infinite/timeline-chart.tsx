@@ -1,16 +1,16 @@
 "use client";
 
 import type { TimelineChartSchema } from "@/app/infinite/schema";
-import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import type { BaseChartSchema } from "@dtf/registry/lib/data-table/types";
 import { getLevelLabel } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import type { BaseChartSchema } from "@dtf/registry/lib/data-table/types";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ReferenceArea, XAxis } from "recharts";

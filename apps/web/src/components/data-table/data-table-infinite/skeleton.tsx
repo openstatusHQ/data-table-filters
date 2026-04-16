@@ -1,3 +1,5 @@
+import { Skeleton as DefaultSkeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -6,8 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@dtf/registry/components/custom/table";
-import { Skeleton as DefaultSkeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 const chartBarsHeights = Array.from({ length: 40 }).map(
   () => Math.random() * 30 + 15,

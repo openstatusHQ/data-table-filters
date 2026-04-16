@@ -1,12 +1,12 @@
 "use client";
 
+import { REGIONS } from "@/constants/region";
+import { tagColor, TAGS } from "@/constants/tag";
+import { cn } from "@/lib/utils";
 import type {
   DataTableFilterField,
   Option,
 } from "@dtf/registry/components/data-table/types";
-import { REGIONS } from "@/constants/region";
-import { tagColor, TAGS } from "@/constants/tag";
-import { cn } from "@/lib/utils";
 import { data } from "./data";
 import type { ColumnSchema } from "./types";
 

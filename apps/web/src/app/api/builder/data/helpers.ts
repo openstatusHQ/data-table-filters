@@ -1,6 +1,9 @@
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
 import { createTableSchema } from "@dtf/registry/lib/table-schema";
-import type { SchemaJSON, TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import type {
+  SchemaJSON,
+  TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 
 /**
  * Schema-aware filtering for generic builder data.

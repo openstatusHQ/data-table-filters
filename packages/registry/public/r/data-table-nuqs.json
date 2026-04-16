@@ -3,9 +3,7 @@
   "name": "data-table-nuqs",
   "title": "Data Table nuqs Store Adapter",
   "description": "URL-based state management adapter using nuqs for shareable, bookmarkable filter state.",
-  "dependencies": [
-    "nuqs"
-  ],
+  "dependencies": ["nuqs"],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json"
   ],
