@@ -2,9 +2,9 @@ import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
-} from "@/lib/delimiters";
-import { isArrayOfDates } from "@/lib/is-array";
-import type { FieldBuilder, SchemaDefinition } from "@/lib/store/schema/types";
+} from "@dtf/registry/lib/delimiters";
+import { isArrayOfDates } from "@dtf/registry/lib/is-array";
+import type { FieldBuilder, SchemaDefinition } from "@dtf/registry/lib/store/schema/types";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import type { DataTableFilterField } from "../types";
 

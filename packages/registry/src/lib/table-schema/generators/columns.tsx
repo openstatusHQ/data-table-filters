@@ -13,9 +13,9 @@ import {
   DataTableCellStatusCode,
   DataTableCellText,
   DataTableCellTimestamp,
-} from "@/components/data-table/data-table-cell";
-import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@dtf/registry/components/data-table/data-table-cell";
+import { DataTableColumnHeader } from "@dtf/registry/components/data-table/data-table-column-header";
+import { Checkbox } from "@dtf/registry/components/ui/checkbox";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { JSX } from "react";
 import type { ColConfig, DisplayConfig, TableSchemaDefinition } from "../types";

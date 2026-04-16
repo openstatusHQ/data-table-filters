@@ -22,7 +22,7 @@ describe("schemaToTypeScript", () => {
     const json: SchemaJSON = { columns: [] };
     const ts = schemaToTypeScript(json);
     expect(ts).toContain(
-      'import { createTableSchema, col } from "@/lib/table-schema"',
+      'import { createTableSchema, col } from "@dtf/registry/lib/table-schema"',
     );
     expect(ts).toContain("export const schema = createTableSchema({");
     expect(ts).toContain("});");

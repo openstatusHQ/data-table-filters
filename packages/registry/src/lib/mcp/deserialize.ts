@@ -1,4 +1,4 @@
-import type { FieldConfig, SchemaDefinition } from "@/lib/store/schema";
+import type { FieldConfig, SchemaDefinition } from "@dtf/registry/lib/store/schema";
 
 /**
  * Deserialize raw MCP JSON values into typed values based on the schema.

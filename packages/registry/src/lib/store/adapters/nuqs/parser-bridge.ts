@@ -4,7 +4,7 @@
  * This module bridges our schema field definitions to nuqs parser format.
  */
 
-import { SORT_DELIMITER } from "@/lib/delimiters";
+import { SORT_DELIMITER } from "@dtf/registry/lib/delimiters";
 import {
   createParser,
   parseAsArrayOf,

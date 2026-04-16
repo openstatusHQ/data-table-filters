@@ -3,16 +3,16 @@
 // REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
 "use no memo";
 
-import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
-import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { MemoizedDataTableSheetContent } from "@/components/data-table/data-table-sheet/data-table-sheet-content";
-import { DataTableSheetDetails } from "@/components/data-table/data-table-sheet/data-table-sheet-details";
-import type { SheetField } from "@/components/data-table/types";
-import { useMemoryAdapter } from "@/lib/store/adapters/memory";
-import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
-import { field } from "@/lib/store/schema";
-import type { SchemaDefinition } from "@/lib/store/schema/types";
+import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
+import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
+import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";
+import type { SheetField } from "@dtf/registry/components/data-table/types";
+import { useMemoryAdapter } from "@dtf/registry/lib/store/adapters/memory";
+import { DataTableStoreProvider } from "@dtf/registry/lib/store/provider/DataTableStoreProvider";
+import { field } from "@dtf/registry/lib/store/schema";
+import type { SchemaDefinition } from "@dtf/registry/lib/store/schema/types";
 import {
   createTableSchema,
   generateColumns,
@@ -20,8 +20,8 @@ import {
   generateFilterSchema,
   generateSheetFields,
   getDefaultColumnVisibility,
-} from "@/lib/table-schema";
-import { inferSchemaFromJSON } from "@/lib/table-schema/infer";
+} from "@dtf/registry/lib/table-schema";
+import { inferSchemaFromJSON } from "@dtf/registry/lib/table-schema/infer";
 import * as React from "react";
 
 type AutoRow = Record<string, unknown>;

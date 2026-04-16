@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
+import { Button } from "@dtf/registry/components/ui/button";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useHotKey } from "@/hooks/use-hot-key";
+} from "@dtf/registry/components/ui/tooltip";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import type { Row, Table as TTable } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import * as React from "react";

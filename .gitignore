@@ -37,8 +37,9 @@ next-env.d.ts
 # turbo
 .turbo
 
-# registry build output (generated artifact)
+# registry build output (generated artifacts)
 apps/web/public/r/
+packages/registry/dist/
 
 # working docs
 PLAN.md

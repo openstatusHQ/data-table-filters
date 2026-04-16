@@ -2,7 +2,7 @@
 
 import { Link } from "@/components/custom/link";
 import { TextShimmer } from "@dtf/registry/components/data-table/data-table-filter-command-ai/text-shimmer";
-import { Skeleton as DataTableInfiniteSkeleton } from "@dtf/registry/components/data-table/data-table-infinite/skeleton";
+import { Skeleton as DataTableInfiniteSkeleton } from "@/components/data-table/data-table-infinite/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,

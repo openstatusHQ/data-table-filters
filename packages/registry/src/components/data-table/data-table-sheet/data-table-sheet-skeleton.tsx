@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@dtf/registry/components/ui/skeleton";
+import { cn } from "@dtf/registry/lib/utils";
 import { SheetField } from "../types";
 
 interface SheetDetailsContentSkeletonProps<TData, TMeta> {

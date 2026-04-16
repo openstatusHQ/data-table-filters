@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@dtf/registry/lib/utils";
 
 export type TextShimmerProps = {
   as?: React.ElementType;

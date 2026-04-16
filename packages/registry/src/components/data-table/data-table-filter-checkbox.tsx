@@ -1,16 +1,16 @@
 "use client";
 
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { Checkbox } from "@dtf/registry/components/ui/checkbox";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatCompactNumber } from "@/lib/format";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/input-group";
+import { Label } from "@dtf/registry/components/ui/label";
+import { Skeleton } from "@dtf/registry/components/ui/skeleton";
+import { formatCompactNumber } from "@dtf/registry/lib/format";
+import { cn } from "@dtf/registry/lib/utils";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import type { DataTableCheckboxFilterField } from "./types";

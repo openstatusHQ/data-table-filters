@@ -1,4 +1,4 @@
-import type { DataTableFilterField } from "@/components/data-table/types";
+import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
 import type { TableSchemaDefinition } from "../types";
 
 /**

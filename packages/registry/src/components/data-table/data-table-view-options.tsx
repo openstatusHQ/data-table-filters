@@ -4,9 +4,9 @@ import {
   Sortable,
   SortableDragHandle,
   SortableItem,
-} from "@/components/custom/sortable";
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { Button } from "@/components/ui/button";
+} from "@dtf/registry/components/custom/sortable";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { Button } from "@dtf/registry/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -14,13 +14,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@dtf/registry/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/popover";
+import { cn } from "@dtf/registry/lib/utils";
 import { Check, GripVertical, Settings2 } from "lucide-react";
 import { useMemo, useState } from "react";
 

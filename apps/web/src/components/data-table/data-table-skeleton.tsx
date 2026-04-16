@@ -5,7 +5,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/custom/table";
+} from "@dtf/registry/components/custom/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DataTableSkeletonProps {

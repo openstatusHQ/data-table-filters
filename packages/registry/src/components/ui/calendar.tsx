@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@dtf/registry/components/ui/button";
+import { cn } from "@dtf/registry/lib/utils";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,

@@ -1,4 +1,4 @@
-import type { SerializableDisplayConfig } from "@/lib/table-schema/types";
+import type { SerializableDisplayConfig } from "@dtf/registry/lib/table-schema/types";
 import type { JSX } from "react";
 
 export type SearchParams = {

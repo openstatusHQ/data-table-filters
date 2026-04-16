@@ -1,6 +1,6 @@
 "use client";
 
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import {
   Command,
   CommandEmpty,
@@ -8,15 +8,15 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
-import { Kbd } from "@/components/ui/kbd";
-import { Separator } from "@/components/ui/separator";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { getCommandHistoryKey } from "@/lib/constants/local-storage";
-import { formatCompactNumber } from "@/lib/format";
-import type { SchemaDefinition } from "@/lib/store/schema/types";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/command";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
+import { Separator } from "@dtf/registry/components/ui/separator";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
+import { useLocalStorage } from "@dtf/registry/hooks/use-local-storage";
+import { getCommandHistoryKey } from "@dtf/registry/lib/constants/local-storage";
+import { formatCompactNumber } from "@dtf/registry/lib/format";
+import type { SchemaDefinition } from "@dtf/registry/lib/store/schema/types";
+import { cn } from "@dtf/registry/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
 import { formatDistanceToNow } from "date-fns";
 import { LoaderCircle, Search, X } from "lucide-react";

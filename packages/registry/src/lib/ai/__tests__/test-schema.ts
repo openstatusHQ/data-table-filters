@@ -1,4 +1,4 @@
-import { col, createTableSchema } from "@/lib/table-schema";
+import { col, createTableSchema } from "@dtf/registry/lib/table-schema";
 
 const LEVELS = ["info", "warn", "error"] as const;
 const REGIONS = ["ams", "gru", "fra", "iad"] as const;

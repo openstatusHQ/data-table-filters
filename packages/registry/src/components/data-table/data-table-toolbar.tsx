@@ -1,17 +1,17 @@
 "use client";
 
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { Button } from "@dtf/registry/components/ui/button";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { formatCompactNumber } from "@/lib/format";
-import { useControls } from "@/providers/controls";
+} from "@dtf/registry/components/ui/tooltip";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
+import { formatCompactNumber } from "@dtf/registry/lib/format";
+import { useControls } from "@dtf/registry/providers/controls";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 import { DataTableResetButton } from "./data-table-reset-button";

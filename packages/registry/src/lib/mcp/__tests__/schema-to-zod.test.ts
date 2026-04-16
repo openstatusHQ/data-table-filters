@@ -1,4 +1,4 @@
-import { field } from "@/lib/store/schema";
+import { field } from "@dtf/registry/lib/store/schema";
 import { describe, expect, it } from "vitest";
 import { schemaToZod } from "../schema-to-zod";
 

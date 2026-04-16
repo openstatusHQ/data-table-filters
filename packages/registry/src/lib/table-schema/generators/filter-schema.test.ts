@@ -2,7 +2,7 @@ import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
-} from "@/lib/delimiters";
+} from "@dtf/registry/lib/delimiters";
 import { describe, expect, it } from "vitest";
 import { col } from "../col";
 import type { TableSchemaDefinition } from "../types";

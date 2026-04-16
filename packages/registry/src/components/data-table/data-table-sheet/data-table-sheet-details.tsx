@@ -7,21 +7,21 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/custom/sheet";
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@dtf/registry/components/custom/sheet";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { Button } from "@dtf/registry/components/ui/button";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
+import { Separator } from "@dtf/registry/components/ui/separator";
+import { Skeleton } from "@dtf/registry/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useFilterActions } from "@/lib/store/hooks/useFilterActions";
-import { useFilterState } from "@/lib/store/hooks/useFilterState";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/tooltip";
+import { useFilterActions } from "@dtf/registry/lib/store/hooks/useFilterActions";
+import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
+import { cn } from "@dtf/registry/lib/utils";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import * as React from "react";
 

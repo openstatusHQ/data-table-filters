@@ -5,7 +5,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import { UTCDate } from "@date-fns/utc";
 import { format, formatDistanceToNowStrict } from "date-fns";

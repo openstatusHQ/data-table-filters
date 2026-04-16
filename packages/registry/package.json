@@ -67,7 +67,7 @@
     "typescript": "^5"
   },
   "scripts": {
-    "registry:build": "npx shadcn@latest build",
+    "registry:build": "node scripts/transform-imports.mjs && cd dist && npx shadcn@latest build && cd .. && node scripts/copy-to-web.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   }

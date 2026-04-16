@@ -5,9 +5,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/dropdown-menu";
+import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
+import { cn } from "@dtf/registry/lib/utils";
 import { Table } from "@tanstack/react-table";
 import { endOfDay, endOfHour, startOfDay, startOfHour } from "date-fns";
 import {

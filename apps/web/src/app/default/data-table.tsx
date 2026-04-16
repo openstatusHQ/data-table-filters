@@ -13,7 +13,7 @@ import {
 } from "@dtf/registry/components/custom/table";
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableFilterControls } from "@dtf/registry/components/data-table/data-table-filter-controls";
-import { DataTablePagination } from "@dtf/registry/components/data-table/data-table-pagination";
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { DataTableProvider } from "@dtf/registry/components/data-table/data-table-provider";
 import { DataTableToolbar } from "@dtf/registry/components/data-table/data-table-toolbar";
 import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@dtf/registry/components/ui/button";
 import {
   Drawer,
   DrawerClose,
@@ -8,16 +8,16 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Kbd } from "@/components/ui/kbd";
+} from "@dtf/registry/components/ui/drawer";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { useMediaQuery } from "@/hooks/use-media-query";
+} from "@dtf/registry/components/ui/tooltip";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
+import { useMediaQuery } from "@dtf/registry/hooks/use-media-query";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { FilterIcon } from "lucide-react";
 import React from "react";

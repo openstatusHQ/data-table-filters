@@ -264,12 +264,12 @@ function buildChain(c: ColumnDescriptor): string {
  * @example
  * ```ts
  * const ts = schemaToTypeScript(tableSchema.toJSON());
- * // → 'import { createTableSchema, col } from "@/lib/table-schema"; ...'
+ * // → 'import { createTableSchema, col } from "@dtf/registry/lib/table-schema"; ...'
  * ```
  */
 export function schemaToTypeScript(json: SchemaJSON): string {
   const lines: string[] = [
-    'import { createTableSchema, col } from "@/lib/table-schema";',
+    'import { createTableSchema, col } from "@dtf/registry/lib/table-schema";',
     "",
     "export const schema = createTableSchema({",
   ];

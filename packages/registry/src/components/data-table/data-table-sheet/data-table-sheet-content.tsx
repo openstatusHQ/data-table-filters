@@ -12,9 +12,9 @@ import {
   DataTableCellStatusCode,
   DataTableCellText,
   DataTableCellTimestamp,
-} from "@/components/data-table/data-table-cell";
-import type { SerializableDisplayConfig } from "@/lib/table-schema/types";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/data-table/data-table-cell";
+import type { SerializableDisplayConfig } from "@dtf/registry/lib/table-schema/types";
+import { cn } from "@dtf/registry/lib/utils";
 import { Table } from "@tanstack/react-table";
 import * as React from "react";
 import { DataTableFilterField, SheetField } from "../types";

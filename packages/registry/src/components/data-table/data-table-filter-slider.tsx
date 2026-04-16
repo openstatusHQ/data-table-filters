@@ -1,15 +1,15 @@
 "use client";
 
-import { Slider } from "@/components/custom/slider";
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import { Slider } from "@dtf/registry/components/custom/slider";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import { useDebounce } from "@/hooks/use-debounce";
-import { isArrayOfNumbers } from "@/lib/is-array";
+} from "@dtf/registry/components/ui/input-group";
+import { Label } from "@dtf/registry/components/ui/label";
+import { useDebounce } from "@dtf/registry/hooks/use-debounce";
+import { isArrayOfNumbers } from "@dtf/registry/lib/is-array";
 import { useEffect, useState } from "react";
 import type { DataTableSliderFilterField } from "./types";
 

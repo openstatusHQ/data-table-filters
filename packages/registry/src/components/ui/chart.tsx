@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@dtf/registry/lib/utils";
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 

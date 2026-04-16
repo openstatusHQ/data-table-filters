@@ -1,4 +1,4 @@
-import { col, createTableSchema } from "@/lib/table-schema";
+import { col, createTableSchema } from "@dtf/registry/lib/table-schema";
 import { describe, expect, it } from "vitest";
 import { generateAIContext } from "../context";
 import { testSchema } from "./test-schema";

@@ -1,4 +1,4 @@
-import type { TableSchemaDefinition } from "@/lib/table-schema";
+import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
 import { streamObject } from "ai";
 import type { LanguageModel } from "ai";
 import { generateAIOutputSchema } from "./output-schema";
@@ -22,7 +22,7 @@ export type AIFilterHandlerOptions = {
  * @example
  * ```ts
  * import { createAnthropic } from "@ai-sdk/anthropic";
- * import { createAIFilterHandler } from "@/lib/ai/create-ai-filter-handler";
+ * import { createAIFilterHandler } from "@dtf/registry/lib/ai/create-ai-filter-handler";
  * import { tableSchema } from "../table-schema";
  *
  * const anthropic = createAnthropic({

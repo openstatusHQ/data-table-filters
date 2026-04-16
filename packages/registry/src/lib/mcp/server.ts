@@ -1,4 +1,4 @@
-import type { SchemaDefinition } from "@/lib/store/schema";
+import type { SchemaDefinition } from "@dtf/registry/lib/store/schema";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";

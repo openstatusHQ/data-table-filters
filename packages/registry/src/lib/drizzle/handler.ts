@@ -1,5 +1,5 @@
-import type { FacetMetadataSchema } from "@/lib/data-table/types";
-import type { TableSchemaDefinition } from "@/lib/table-schema";
+import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
+import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
 import { and, count, sql, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { computeFacets } from "./facets";

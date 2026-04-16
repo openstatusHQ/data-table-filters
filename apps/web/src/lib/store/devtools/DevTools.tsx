@@ -9,9 +9,9 @@
 import { cn } from "@/lib/utils";
 import { Bug, Copy, Pause, Play, RotateCcw, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
-import { useStoreContext } from "../context";
-import { useFilterActions } from "../hooks/useFilterActions";
-import { useFilterState } from "../hooks/useFilterState";
+import { useStoreContext } from "@dtf/registry/lib/store/context";
+import { useFilterActions } from "@dtf/registry/lib/store/hooks/useFilterActions";
+import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
 import { HistoryPanel, type HistoryEntry } from "./HistoryPanel";
 import { StateInspector } from "./StateInspector";
 

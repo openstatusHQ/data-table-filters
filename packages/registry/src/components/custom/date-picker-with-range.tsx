@@ -1,16 +1,16 @@
 "use client";
 
-import type { DatePreset } from "@/components/data-table/types";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
-import { Kbd } from "@/components/ui/kbd";
-import { Label } from "@/components/ui/label";
+import type { DatePreset } from "@dtf/registry/components/data-table/types";
+import { Button } from "@dtf/registry/components/ui/button";
+import { Calendar } from "@dtf/registry/components/ui/calendar";
+import { Input } from "@dtf/registry/components/ui/input";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
+import { Label } from "@dtf/registry/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@dtf/registry/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -19,11 +19,11 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { presets as defaultPresets } from "@/constants/date-preset";
-import { useDebounce } from "@/hooks/use-debounce";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/select";
+import { Separator } from "@dtf/registry/components/ui/separator";
+import { presets as defaultPresets } from "@dtf/registry/constants/date-preset";
+import { useDebounce } from "@dtf/registry/hooks/use-debounce";
+import { cn } from "@dtf/registry/lib/utils";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import * as React from "react";

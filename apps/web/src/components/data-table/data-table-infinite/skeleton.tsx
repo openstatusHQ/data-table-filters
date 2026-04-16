@@ -5,7 +5,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/custom/table";
+} from "@dtf/registry/components/custom/table";
 import { Skeleton as DefaultSkeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 

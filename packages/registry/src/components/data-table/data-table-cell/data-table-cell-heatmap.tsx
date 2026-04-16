@@ -1,4 +1,4 @@
-import { hexToRgb } from "@/lib/colors";
+import { hexToRgb } from "@dtf/registry/lib/colors";
 
 const OPACITY = 0.1;
 

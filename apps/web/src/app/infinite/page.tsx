@@ -1,4 +1,4 @@
-import { Skeleton } from "@dtf/registry/components/data-table/data-table-infinite/skeleton";
+import { Skeleton } from "@/components/data-table/data-table-infinite/skeleton";
 import {
   ADAPTER_COOKIE_NAME,
   PREFETCH_COOKIE_NAME,

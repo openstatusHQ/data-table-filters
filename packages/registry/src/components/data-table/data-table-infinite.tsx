@@ -10,25 +10,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/custom/table";
-import { DataTableFilterControls } from "@/components/data-table/data-table-filter-controls";
-import { DataTableProvider } from "@/components/data-table/data-table-provider";
-import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
-import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
-import type { DataTableFilterField } from "@/components/data-table/types";
-import { Button } from "@/components/ui/button";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+} from "@dtf/registry/components/custom/table";
+import { DataTableFilterControls } from "@dtf/registry/components/data-table/data-table-filter-controls";
+import { DataTableProvider } from "@dtf/registry/components/data-table/data-table-provider";
+import { DataTableResetButton } from "@dtf/registry/components/data-table/data-table-reset-button";
+import { DataTableToolbar } from "@dtf/registry/components/data-table/data-table-toolbar"; // TODO: check where to put this
+import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
+import { Button } from "@dtf/registry/components/ui/button";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
+import { useLocalStorage } from "@dtf/registry/hooks/use-local-storage";
 import {
   getColumnOrderKey,
   getColumnVisibilityKey,
-} from "@/lib/constants/local-storage";
-import { getFacetedUniqueValuesFlattened } from "@/lib/data-table/faceted";
-import { formatCompactNumber } from "@/lib/format";
-import { useFilterActions } from "@/lib/store/hooks/useFilterActions";
-import { useFilterState } from "@/lib/store/hooks/useFilterState";
-import { arrSome, inDateRange } from "@/lib/table/filterfns";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/lib/constants/local-storage";
+import { getFacetedUniqueValuesFlattened } from "@dtf/registry/lib/data-table/faceted";
+import { formatCompactNumber } from "@dtf/registry/lib/format";
+import { useFilterActions } from "@dtf/registry/lib/store/hooks/useFilterActions";
+import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
+import { arrSome, inDateRange } from "@dtf/registry/lib/table/filterfns";
+import { cn } from "@dtf/registry/lib/utils";
 import {
   type FetchNextPageOptions,
   type FetchPreviousPageOptions,

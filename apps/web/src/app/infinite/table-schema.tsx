@@ -1,10 +1,10 @@
 import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-container";
 import { KVTabs } from "@/components/custom/kv-tabs";
-import { DataTableColumnLevelIndicator } from "@dtf/registry/components/data-table/data-table-column/data-table-column-level-indicator";
-import { DataTableColumnRegion } from "@dtf/registry/components/data-table/data-table-column/data-table-column-region";
-import { DataTableColumnStatusCode } from "@dtf/registry/components/data-table/data-table-column/data-table-column-status-code";
-import { PopoverPercentile } from "@dtf/registry/components/data-table/data-table-infinite/popover-percentile";
-import { SheetTimingPhases } from "@dtf/registry/components/data-table/data-table-infinite/sheet-timing-phases";
+import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
+import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
+import { PopoverPercentile } from "@/components/data-table/data-table-infinite/popover-percentile";
+import { SheetTimingPhases } from "@/components/data-table/data-table-infinite/sheet-timing-phases";
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";

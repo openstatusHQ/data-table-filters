@@ -1,4 +1,4 @@
-import type { FacetMetadataSchema } from "@/lib/data-table/types";
+import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
 import { and, count, max, min, sql, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import type { ColumnMapping, DrizzleDB } from "./types";

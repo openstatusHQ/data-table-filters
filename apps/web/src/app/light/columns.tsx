@@ -1,10 +1,10 @@
 "use client";
 
-import { DataTableColumnLatency } from "@dtf/registry/components/data-table/data-table-column/data-table-column-latency";
-import { DataTableColumnLevelIndicator } from "@dtf/registry/components/data-table/data-table-column/data-table-column-level-indicator";
-import { DataTableColumnRegion } from "@dtf/registry/components/data-table/data-table-column/data-table-column-region";
-import { DataTableColumnStatusCode } from "@dtf/registry/components/data-table/data-table-column/data-table-column-status-code";
-import { DataTableColumnTimestamp } from "@dtf/registry/components/data-table/data-table-column/data-table-column-timestamp";
+import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
+import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
+import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
+import { DataTableColumnTimestamp } from "@/components/data-table/data-table-column/data-table-column-timestamp";
 import { LEVELS } from "@/constants/levels";
 import { VERCEL_EDGE_REGIONS } from "@/constants/region";
 import type { ColumnDef } from "@tanstack/react-table";

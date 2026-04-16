@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { composeRefs } from "@/lib/compose-refs";
-import { cn } from "@/lib/utils";
+import { Button } from "@dtf/registry/components/ui/button";
+import { composeRefs } from "@dtf/registry/lib/compose-refs";
+import { cn } from "@dtf/registry/lib/utils";
 import type {
   DndContextProps,
   DraggableSyntheticListeners,

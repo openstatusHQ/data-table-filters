@@ -1,4 +1,4 @@
-import { formatMilliseconds } from "@/lib/format";
+import { formatMilliseconds } from "@dtf/registry/lib/format";
 import {
   getTimingColor,
   getTimingLabel,

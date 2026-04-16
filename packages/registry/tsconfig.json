@@ -2,9 +2,9 @@
   "extends": "@dtf/tsconfig/base.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@dtf/registry/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }

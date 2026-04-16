@@ -2,10 +2,10 @@
 
 import { CopyToClipboardContainer } from "@/components/custom/copy-to-clipboard-container";
 import { KVTabs } from "@/components/custom/kv-tabs";
-import { DataTableColumnLatency } from "@dtf/registry/components/data-table/data-table-column/data-table-column-latency";
-import { DataTableColumnLevelIndicator } from "@dtf/registry/components/data-table/data-table-column/data-table-column-level-indicator";
-import { DataTableColumnRegion } from "@dtf/registry/components/data-table/data-table-column/data-table-column-region";
-import { DataTableColumnStatusCode } from "@dtf/registry/components/data-table/data-table-column/data-table-column-status-code";
+import { DataTableColumnLatency } from "@/components/data-table/data-table-column/data-table-column-latency";
+import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
+import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
 import type {
   DataTableFilterField,
   Option,

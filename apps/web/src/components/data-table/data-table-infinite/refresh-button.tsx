@@ -1,4 +1,4 @@
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle, RefreshCcw } from "lucide-react";
 

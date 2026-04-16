@@ -26,7 +26,7 @@ import { validateSchema } from "./validate";
  *
  * @example
  * ```ts
- * import { col, createTableSchema } from "@/lib/table-schema";
+ * import { col, createTableSchema } from "@dtf/registry/lib/table-schema";
  *
  * export const tableSchema = createTableSchema({
  *   level:   col.presets.logLevel(LEVELS).description("Log severity"),

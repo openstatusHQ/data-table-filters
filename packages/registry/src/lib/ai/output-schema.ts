@@ -1,4 +1,4 @@
-import type { TableSchemaDefinition } from "@/lib/table-schema";
+import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
 import { z } from "zod";
 
 /**

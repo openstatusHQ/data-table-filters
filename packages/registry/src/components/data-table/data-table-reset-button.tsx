@@ -1,16 +1,16 @@
 "use client";
 
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import { Kbd } from "@/components/ui/kbd";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useHotKey } from "@/hooks/use-hot-key";
+} from "@dtf/registry/components/ui/tooltip";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@dtf/registry/components/ui/button";
 
 export function DataTableResetButton() {
   const { table } = useDataTable();

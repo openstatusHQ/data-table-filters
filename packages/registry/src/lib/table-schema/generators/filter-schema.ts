@@ -2,13 +2,13 @@ import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
-} from "@/lib/delimiters";
-import { createSchema, field } from "@/lib/store/schema";
+} from "@dtf/registry/lib/delimiters";
+import { createSchema, field } from "@dtf/registry/lib/store/schema";
 import type {
   FieldBuilder,
   Schema,
   SchemaDefinition,
-} from "@/lib/store/schema";
+} from "@dtf/registry/lib/store/schema";
 import type { ColBuilder, TableSchemaDefinition } from "../types";
 
 /**

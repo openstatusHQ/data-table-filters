@@ -147,10 +147,12 @@ function BuilderTableQuery({
       if (!facetsField) return field;
       if (field.options && field.options.length > 0) return field;
 
-      const options = facetsField.rows.map(({ value }: { value: unknown }) => ({
-        label: `${value}`,
-        value,
-      }));
+      const options = facetsField.rows.map(
+        ({ value }: { value: string | number | boolean }) => ({
+          label: `${value}`,
+          value,
+        }),
+      );
 
       if (field.type === "slider") {
         return {

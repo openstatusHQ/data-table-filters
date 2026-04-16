@@ -3,7 +3,7 @@ import {
   ARRAY_DELIMITER,
   RANGE_DELIMITER,
   SLIDER_DELIMITER,
-} from "@/lib/delimiters";
+} from "@dtf/registry/lib/delimiters";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import { z } from "zod";
 import type { DataTableFilterField } from "./types";

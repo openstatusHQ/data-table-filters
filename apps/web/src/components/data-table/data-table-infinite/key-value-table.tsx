@@ -3,8 +3,8 @@ import {
   TableBody,
   TableCell,
   TableRow,
-} from "@/components/custom/table";
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+} from "@dtf/registry/components/custom/table";
+import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { Check, Copy } from "lucide-react";
 
 interface KeyValueTableProps {

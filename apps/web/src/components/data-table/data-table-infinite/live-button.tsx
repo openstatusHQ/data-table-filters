@@ -1,11 +1,11 @@
 "use client";
 
 import type { FilterState } from "@/app/infinite/schema";
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { Button } from "@/components/ui/button";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { useFilterActions } from "@/lib/store/hooks/useFilterActions";
-import { useFilterState } from "@/lib/store/hooks/useFilterState";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
+import { useFilterActions } from "@dtf/registry/lib/store/hooks/useFilterActions";
+import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
 import { cn } from "@/lib/utils";
 import type { FetchPreviousPageOptions } from "@tanstack/react-query";
 import { CirclePause, CirclePlay } from "lucide-react";

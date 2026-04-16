@@ -8,7 +8,7 @@
 
 "use client";
 
-import type { DataTableFilterField } from "@/components/data-table/types";
+import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
 import type { ColumnFiltersState, Table } from "@tanstack/react-table";
 import { useCallback, useEffect, useRef } from "react";
 import { useFilterActions } from "./useFilterActions";

@@ -12,9 +12,9 @@
  * the table directly via column.setFilterValue(), and this component propagates
  * those changes to the BYOS adapter for URL sync (nuqs) or state persistence.
  */
-import { useStoreContext } from "@/lib/store/context";
-import { useFilterActions } from "@/lib/store/hooks/useFilterActions";
-import { isStateEqual } from "@/lib/store/schema";
+import { useStoreContext } from "@dtf/registry/lib/store/context";
+import { useFilterActions } from "@dtf/registry/lib/store/hooks/useFilterActions";
+import { isStateEqual } from "@dtf/registry/lib/store/schema";
 import { useEffect, useRef } from "react";
 import { useDataTable } from "./data-table-provider";
 

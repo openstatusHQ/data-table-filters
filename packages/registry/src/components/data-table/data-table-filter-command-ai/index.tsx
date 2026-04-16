@@ -1,16 +1,16 @@
 "use client";
 
-import { TextShimmer } from "@/components/data-table/data-table-filter-command-ai/text-shimmer";
-import { useAIFilters } from "@/components/data-table/data-table-filter-command-ai/use-ai-filters";
+import { TextShimmer } from "@dtf/registry/components/data-table/data-table-filter-command-ai/text-shimmer";
+import { useAIFilters } from "@dtf/registry/components/data-table/data-table-filter-command-ai/use-ai-filters";
 import {
   columnFiltersParserFromSchema,
   getFieldOptions,
   getFilterValue,
   getWordByCaretPosition,
   replaceInputByFieldType,
-} from "@/components/data-table/data-table-filter-command/utils";
-import { useDataTable } from "@/components/data-table/data-table-provider";
-import type { DataTableFilterField } from "@/components/data-table/types";
+} from "@dtf/registry/components/data-table/data-table-filter-command/utils";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
 import {
   Command,
   CommandEmpty,
@@ -18,17 +18,17 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
-import { Kbd } from "@/components/ui/kbd";
-import { Separator } from "@/components/ui/separator";
-import { useHotKey } from "@/hooks/use-hot-key";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { isStructuredQuery } from "@/lib/ai";
-import { getCommandHistoryKey } from "@/lib/constants/local-storage";
-import { formatCompactNumber } from "@/lib/format";
-import type { SchemaDefinition } from "@/lib/store/schema/types";
-import type { TableSchemaDefinition } from "@/lib/table-schema";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/command";
+import { Kbd } from "@dtf/registry/components/ui/kbd";
+import { Separator } from "@dtf/registry/components/ui/separator";
+import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
+import { useLocalStorage } from "@dtf/registry/hooks/use-local-storage";
+import { isStructuredQuery } from "@dtf/registry/lib/ai";
+import { getCommandHistoryKey } from "@dtf/registry/lib/constants/local-storage";
+import { formatCompactNumber } from "@dtf/registry/lib/format";
+import type { SchemaDefinition } from "@dtf/registry/lib/store/schema/types";
+import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import { cn } from "@dtf/registry/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
 import { formatDistanceToNow } from "date-fns";
 import { LoaderCircle, Search, Sparkles, X } from "lucide-react";

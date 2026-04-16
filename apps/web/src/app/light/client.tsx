@@ -2,8 +2,8 @@
 
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
-import { SocialsFooter } from "@dtf/registry/components/data-table/data-table-infinite/socials-footer";
-import { TimelineChart } from "@dtf/registry/components/data-table/data-table-infinite/timeline-chart";
+import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
+import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";

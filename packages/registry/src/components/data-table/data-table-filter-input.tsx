@@ -1,13 +1,13 @@
 "use client";
 
-import { useDataTable } from "@/components/data-table/data-table-provider";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import { useDebounce } from "@/hooks/use-debounce";
+} from "@dtf/registry/components/ui/input-group";
+import { Label } from "@dtf/registry/components/ui/label";
+import { useDebounce } from "@dtf/registry/hooks/use-debounce";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { DataTableInputFilterField } from "./types";

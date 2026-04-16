@@ -3,8 +3,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+} from "@dtf/registry/components/ui/tooltip";
+import { cn } from "@dtf/registry/lib/utils";
 import React, { useEffect, useRef, useState } from "react";
 
 interface TextWithTooltipProps {

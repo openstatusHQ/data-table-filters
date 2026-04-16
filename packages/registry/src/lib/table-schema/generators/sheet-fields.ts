@@ -1,4 +1,4 @@
-import type { SheetField } from "@/components/data-table/types";
+import type { SheetField } from "@dtf/registry/components/data-table/types";
 import type {
   ColConfig,
   SerializableDisplayConfig,

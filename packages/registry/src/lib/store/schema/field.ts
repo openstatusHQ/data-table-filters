@@ -8,7 +8,7 @@ import {
   ARRAY_DELIMITER,
   SLIDER_DELIMITER,
   SORT_DELIMITER,
-} from "@/lib/delimiters";
+} from "@dtf/registry/lib/delimiters";
 import type { FieldBuilder, FieldConfig } from "./types";
 
 // Helper to create a field builder from config

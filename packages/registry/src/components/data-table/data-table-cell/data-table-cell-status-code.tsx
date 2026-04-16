@@ -1,4 +1,4 @@
-import { getStatusColor } from "@/lib/request/status-code";
+import { getStatusColor } from "@dtf/registry/lib/request/status-code";
 
 export function DataTableCellStatusCode({
   value,

@@ -3,8 +3,8 @@ import {
   generateAIOutputSchema,
   isStructuredQuery,
   parseAIResponse,
-} from "@/lib/ai";
-import type { TableSchemaDefinition } from "@/lib/table-schema";
+} from "@dtf/registry/lib/ai";
+import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
 import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
