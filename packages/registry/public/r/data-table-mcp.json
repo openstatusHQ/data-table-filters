@@ -1,0 +1,39 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "data-table-mcp",
+  "title": "Data Table MCP Server",
+  "description": "Expose your data table as an MCP endpoint for AI agents. Auto-generates tool schema from BYOS field definitions. Stateless, serverless-compatible.",
+  "dependencies": ["@modelcontextprotocol/sdk", "zod"],
+  "registryDependencies": [
+    "https://data-table.openstatus.dev/r/data-table.json"
+  ],
+  "files": [
+    {
+      "path": "src/lib/mcp/index.ts",
+      "content": "export { createTableMCPHandler } from \"./server\";\nexport type { TableMCPConfig, GetDataOptions, GetDataResult } from \"./types\";\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "src/lib/mcp/types.ts",
+      "content": "import type { FacetMetadataSchema } from \"@/lib/data-table/types\";\nimport type { InferSchemaType, SchemaDefinition } from \"@/lib/store/schema\";\n\nexport interface GetDataOptions<T extends SchemaDefinition> {\n  filters: Partial<InferSchemaType<T>>;\n}\n\nexport interface GetDataResult<R = Record<string, unknown>> {\n  rows: R[];\n  total: number;\n  facets?: Record<string, FacetMetadataSchema>;\n}\n\nexport interface TableMCPConfig<\n  T extends SchemaDefinition,\n  R = Record<string, unknown>,\n> {\n  schema: T;\n  getData: (options: GetDataOptions<T>) => Promise<GetDataResult<R>>;\n  description: string;\n  name?: string;\n}\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "src/lib/mcp/server.ts",
+      "content": "import type { SchemaDefinition } from \"@/lib/store/schema\";\nimport { McpServer } from \"@modelcontextprotocol/sdk/server/mcp.js\";\nimport { WebStandardStreamableHTTPServerTransport } from \"@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js\";\nimport { z } from \"zod\";\nimport { deserializeFilters } from \"./deserialize\";\nimport { schemaToZod } from \"./schema-to-zod\";\nimport type { TableMCPConfig } from \"./types\";\n\nfunction createServer<T extends SchemaDefinition, R = Record<string, unknown>>(\n  config: TableMCPConfig<T, R>,\n  filtersSchema: z.ZodObject<z.ZodRawShape>,\n) {\n  const server = new McpServer({\n    name: config.name ?? \"data-table\",\n    version: \"1.0.0\",\n  });\n\n  server.tool(\n    \"query_table\",\n    config.description,\n    {\n      filters: filtersSchema.optional(),\n      format: z.enum([\"json\", \"metadata\"]).default(\"json\"),\n    },\n    async ({ filters: rawFilters, format }) => {\n      try {\n        const filters = rawFilters\n          ? deserializeFilters(config.schema, rawFilters)\n          : {};\n\n        const result = await config.getData({\n          filters: filters as Parameters<typeof config.getData>[0][\"filters\"],\n        });\n\n        const output =\n          format === \"metadata\"\n            ? { total: result.total, facets: result.facets ?? {} }\n            : { rows: result.rows, total: result.total };\n\n        return {\n          content: [{ type: \"text\" as const, text: JSON.stringify(output) }],\n        };\n      } catch (e) {\n        return {\n          content: [\n            {\n              type: \"text\" as const,\n              text: `getData failed: ${e instanceof Error ? e.message : String(e)}`,\n            },\n          ],\n          isError: true,\n        };\n      }\n    },\n  );\n\n  return server;\n}\n\nexport function createTableMCPHandler<\n  T extends SchemaDefinition,\n  R = Record<string, unknown>,\n>(config: TableMCPConfig<T, R>) {\n  const filtersSchema = schemaToZod(config.schema);\n\n  return async function handler(request: Request): Promise<Response> {\n    const server = createServer(config, filtersSchema);\n    const transport = new WebStandardStreamableHTTPServerTransport({\n      sessionIdGenerator: undefined,\n      enableJsonResponse: true,\n    });\n    await server.connect(transport);\n    try {\n      return await transport.handleRequest(request);\n    } finally {\n      await server.close();\n    }\n  };\n}\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "src/lib/mcp/schema-to-zod.ts",
+      "content": "import type { FieldConfig, SchemaDefinition } from \"@/lib/store/schema\";\nimport { z, type ZodTypeAny } from \"zod\";\n\n/**\n * Convert a single FieldConfig to its Zod equivalent.\n */\nfunction fieldConfigToZod(config: FieldConfig<unknown>): ZodTypeAny {\n  switch (config.type) {\n    case \"string\":\n      return z.string().optional();\n    case \"number\":\n      return z.number().optional();\n    case \"boolean\":\n      return z.boolean().optional();\n    case \"timestamp\":\n      return z.number().optional().describe(\"Unix ms\");\n    case \"stringLiteral\":\n      if (config.literals && config.literals.length > 0) {\n        return z\n          .enum(config.literals as unknown as [string, ...string[]])\n          .optional();\n      }\n      return z.string().optional();\n    case \"sort\":\n      return z.object({ id: z.string(), desc: z.boolean() }).optional();\n    case \"array\": {\n      const itemZod = config.itemConfig\n        ? fieldConfigToZod(config.itemConfig)\n        : z.unknown();\n      // Remove .optional() from item schema inside arrays\n      const unwrapped =\n        itemZod instanceof z.ZodOptional ? itemZod.unwrap() : itemZod;\n      return z.array(unwrapped).optional();\n    }\n    default:\n      return z.unknown().optional();\n  }\n}\n\n/**\n * Convert a SchemaDefinition to a Zod object schema for the `filters` parameter.\n * The SDK auto-converts Zod → JSON Schema for tools/list.\n */\nexport function schemaToZod(\n  schema: SchemaDefinition,\n): z.ZodObject<Record<string, ZodTypeAny>> {\n  const shape: Record<string, ZodTypeAny> = {};\n  for (const [key, fieldBuilder] of Object.entries(schema)) {\n    shape[key] = fieldConfigToZod(fieldBuilder._config);\n  }\n  return z.object(shape);\n}\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "src/lib/mcp/deserialize.ts",
+      "content": "import type { FieldConfig, SchemaDefinition } from \"@/lib/store/schema\";\n\n/**\n * Deserialize raw MCP JSON values into typed values based on the schema.\n * Only timestamps need conversion (number → Date). All other types pass through.\n */\nexport function deserializeFilters(\n  schema: SchemaDefinition,\n  raw: Record<string, unknown>,\n): Record<string, unknown> {\n  const result: Record<string, unknown> = {};\n\n  for (const [key, value] of Object.entries(raw)) {\n    if (value === undefined || value === null) continue;\n\n    const fieldBuilder = schema[key];\n    if (!fieldBuilder) continue;\n\n    result[key] = deserializeValue(fieldBuilder._config, value);\n  }\n\n  return result;\n}\n\nfunction deserializeValue(\n  config: FieldConfig<unknown>,\n  value: unknown,\n): unknown {\n  if (config.type === \"timestamp\" && typeof value === \"number\") {\n    return new Date(value);\n  }\n\n  if (config.type === \"array\" && Array.isArray(value) && config.itemConfig) {\n    return value.map((item) => deserializeValue(config.itemConfig!, item));\n  }\n\n  return value;\n}\n",
+      "type": "registry:lib"
+    }
+  ],
+  "docs": "https://data-table.openstatus.dev/docs/mcp",
+  "type": "registry:block"
+}

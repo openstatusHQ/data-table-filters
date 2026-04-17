@@ -1,0 +1,208 @@
+"use client";
+
+// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
+"use no memo";
+
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@dtf/registry/components/custom/table";
+import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
+import { DataTableFilterControls } from "@dtf/registry/components/data-table/data-table-filter-controls";
+import { DataTableProvider } from "@dtf/registry/components/data-table/data-table-provider";
+import { DataTableToolbar } from "@dtf/registry/components/data-table/data-table-toolbar";
+import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
+import { useLocalStorage } from "@dtf/registry/hooks/use-local-storage";
+import { getColumnVisibilityKey } from "@dtf/registry/lib/constants/local-storage";
+import type {
+  ColumnDef,
+  ColumnFiltersState,
+  PaginationState,
+  SortingState,
+  Table as TTable,
+  VisibilityState,
+} from "@tanstack/react-table";
+import {
+  flexRender,
+  getCoreRowModel,
+  getFacetedMinMaxValues,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import * as React from "react";
+import { filterSchema } from "./schema";
+
+export interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  defaultColumnFilters?: ColumnFiltersState;
+  // TODO: add sortingColumnFilters
+  filterFields?: DataTableFilterField<TData>[];
+  tableId?: string;
+}
+
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+  defaultColumnFilters = [],
+  filterFields = [],
+  tableId = "default",
+}: DataTableProps<TData, TValue>) {
+  const [columnFilters, setColumnFilters] =
+    React.useState<ColumnFiltersState>(defaultColumnFilters);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [columnVisibility, setColumnVisibility] =
+    useLocalStorage<VisibilityState>(getColumnVisibilityKey(tableId), {});
+
+  // Reset pagination when filters change to avoid showing empty pages
+  React.useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [columnFilters]);
+
+  // Custom getFacetedUniqueValues that handles array values
+  const customGetFacetedUniqueValues = React.useCallback(
+    (table: TTable<TData>, columnId: string) => () => {
+      const facets = getFacetedUniqueValues<TData>()(table, columnId)();
+      const customFacets = new Map();
+      for (const [key, value] of facets as any) {
+        if (Array.isArray(key)) {
+          for (const k of key) {
+            const prevValue = customFacets.get(k) || 0;
+            customFacets.set(k, prevValue + value);
+          }
+        } else {
+          const prevValue = customFacets.get(key) || 0;
+          customFacets.set(key, prevValue + value);
+        }
+      }
+      return customFacets;
+    },
+    [],
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { columnFilters, sorting, columnVisibility, pagination },
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getSortedRowModel: getSortedRowModel(),
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    getFacetedUniqueValues: customGetFacetedUniqueValues,
+    // Enable global filtering support
+    enableFilters: true,
+    enableColumnFilters: true,
+  });
+
+  // Wrapper function for the provider (different signature)
+  const getFacetedUniqueValuesForProvider = React.useCallback(
+    (table: TTable<TData>, columnId: string): Map<string, number> => {
+      return customGetFacetedUniqueValues(table, columnId)();
+    },
+    [customGetFacetedUniqueValues],
+  );
+
+  return (
+    <DataTableProvider
+      table={table}
+      columns={columns}
+      filterFields={filterFields}
+      columnFilters={columnFilters}
+      sorting={sorting}
+      pagination={pagination}
+      getFacetedUniqueValues={getFacetedUniqueValuesForProvider}
+    >
+      <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
+        <div
+          className={cn(
+            "hidden w-full p-1 sm:block sm:max-w-52 sm:min-w-52 sm:self-start md:max-w-64 md:min-w-64",
+            "group-data-[expanded=false]/controls:hidden",
+          )}
+        >
+          <DataTableFilterControls />
+        </div>
+        <div className="flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1">
+          <DataTableFilterCommand
+            schema={filterSchema.definition}
+            tableId="default"
+          />
+          <DataTableToolbar />
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow
+                    key={headerGroup.id}
+                    className="hover:bg-transparent"
+                  >
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <DataTablePagination />
+        </div>
+      </div>
+    </DataTableProvider>
+  );
+}

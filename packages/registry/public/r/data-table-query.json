@@ -1,0 +1,32 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "data-table-query",
+  "title": "Data Table Query Layer",
+  "description": "React Query infinite query integration with SuperJSON serialization and faceted search helpers.",
+  "dependencies": [
+    "@tanstack/react-query",
+    "@tanstack/react-table",
+    "superjson"
+  ],
+  "registryDependencies": [
+    "https://data-table.openstatus.dev/r/data-table.json"
+  ],
+  "files": [
+    {
+      "path": "src/lib/data-table/index.ts",
+      "content": "export {\n  createDataTableQueryOptions,\n  type InfiniteQueryMeta,\n  type InfiniteQueryResponse,\n} from \"./create-query-options\";\nexport { getFacetedMinMaxValues, getFacetedUniqueValues } from \"./faceted\";\nexport {\n  facetMetadataSchema,\n  type BaseChartSchema,\n  type FacetMetadataSchema,\n} from \"./types\";\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "src/lib/data-table/create-query-options.ts",
+      "content": "import { infiniteQueryOptions, keepPreviousData } from \"@tanstack/react-query\";\nimport SuperJSON from \"superjson\";\nimport type { BaseChartSchema, FacetMetadataSchema } from \"./types\";\n\nexport type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {\n  totalRowCount: number;\n  filterRowCount: number;\n  chartData: BaseChartSchema[];\n  facets: Record<string, FacetMetadataSchema>;\n  metadata?: TMeta;\n};\n\nexport type InfiniteQueryResponse<TData, TMeta = unknown> = {\n  data: TData;\n  meta: InfiniteQueryMeta<TMeta>;\n  prevCursor: number | null;\n  nextCursor: number | null;\n};\n\nfunction getBaseUrl() {\n  if (typeof window !== \"undefined\") return \"\";\n  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;\n  return `http://localhost:${process.env.PORT ?? 3000}`;\n}\n\n/**\n * Factory for creating infinite query options for data tables.\n *\n * Parametrizes the query key prefix, API endpoint, and serializer —\n * everything else (pagination, caching, SuperJSON) is shared.\n */\nexport function createDataTableQueryOptions<TData, TMeta>(config: {\n  queryKeyPrefix: string;\n  apiEndpoint: string;\n  searchParamsSerializer: (search: Record<string, unknown>) => string;\n}) {\n  return (search: Record<string, unknown>) => {\n    const cursor = search.cursor as Date | undefined;\n    const initialCursor = cursor?.getTime?.() ?? Date.now();\n\n    // Normalize empty arrays to null for consistent serialization\n    const normalized: Record<string, unknown> = {};\n    for (const [key, value] of Object.entries(search)) {\n      if (Array.isArray(value) && value.length === 0) {\n        normalized[key] = null;\n      } else {\n        normalized[key] = value;\n      }\n    }\n\n    const stableKey = config.searchParamsSerializer({\n      ...normalized,\n      uuid: null,\n      live: null,\n      cursor: null,\n      direction: null,\n    });\n\n    return infiniteQueryOptions({\n      queryKey: [config.queryKeyPrefix, stableKey],\n      queryFn: async ({ pageParam }) => {\n        const cursorDate = new Date(pageParam.cursor);\n        const direction = pageParam.direction as \"next\" | \"prev\" | undefined;\n        const serialize = config.searchParamsSerializer({\n          ...search,\n          cursor: cursorDate,\n          direction,\n          uuid: null,\n          live: null,\n        });\n        const response = await fetch(\n          `${getBaseUrl()}${config.apiEndpoint}${serialize}`,\n        );\n        const json = await response.json();\n        return SuperJSON.parse<InfiniteQueryResponse<TData, TMeta>>(json);\n      },\n      initialPageParam: { cursor: initialCursor, direction: \"next\" },\n      getPreviousPageParam: (firstPage) => {\n        if (!firstPage.prevCursor) return null;\n        return { cursor: firstPage.prevCursor, direction: \"prev\" };\n      },\n      getNextPageParam: (lastPage) => {\n        if (!lastPage.nextCursor) return null;\n        return { cursor: lastPage.nextCursor, direction: \"next\" };\n      },\n      refetchOnWindowFocus: false,\n      placeholderData: keepPreviousData,\n      staleTime: 1000 * 60 * 5,\n    });\n  };\n}\n",
+      "type": "registry:lib"
+    },
+    {
+      "path": "src/lib/data-table/faceted.ts",
+      "content": "import type { RowModel, Table as TTable } from \"@tanstack/react-table\";\nimport type { FacetMetadataSchema } from \"./types\";\n\n/**\n * Drop-in replacement for TanStack's `getFacetedUniqueValues` that flattens\n * array column values. The built-in version treats `[\"a\", \"b\"]` as one unique\n * value; this version counts each item individually.\n *\n * Works for both array and non-array columns.\n */\nexport function getFacetedUniqueValuesFlattened<TData>(): (\n  table: TTable<TData>,\n  columnId: string,\n) => () => Map<unknown, number> {\n  return (table, columnId) => {\n    return () => {\n      const facetedRowModel: RowModel<TData> | undefined = table\n        .getColumn(columnId)\n        ?.getFacetedRowModel();\n      if (!facetedRowModel) return new Map();\n\n      const counts = new Map<unknown, number>();\n      for (const row of facetedRowModel.flatRows) {\n        const value = row.getValue(columnId);\n        if (Array.isArray(value)) {\n          for (const item of value) {\n            counts.set(item, (counts.get(item) ?? 0) + 1);\n          }\n        } else if (value != null) {\n          counts.set(value, (counts.get(value) ?? 0) + 1);\n        }\n      }\n      return counts;\n    };\n  };\n}\n\nexport function getFacetedUniqueValues<TData>(\n  facets?: Record<string, FacetMetadataSchema>,\n) {\n  return (_: TTable<TData>, columnId: string): Map<string, number> => {\n    return new Map(\n      facets?.[columnId]?.rows?.map(({ value, total }) => [value, total]) || [],\n    );\n  };\n}\n\nexport function getFacetedMinMaxValues<TData>(\n  facets?: Record<string, FacetMetadataSchema>,\n) {\n  return (_: TTable<TData>, columnId: string): [number, number] | undefined => {\n    const min = facets?.[columnId]?.min;\n    const max = facets?.[columnId]?.max;\n    if (typeof min === \"number\" && typeof max === \"number\") return [min, max];\n    if (typeof min === \"number\") return [min, min];\n    if (typeof max === \"number\") return [max, max];\n    return undefined;\n  };\n}\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:block"
+}

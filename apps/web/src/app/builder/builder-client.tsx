@@ -1,0 +1,817 @@
+"use client";
+
+import { Link } from "@/components/custom/link";
+import { Skeleton as DataTableInfiniteSkeleton } from "@/components/data-table/data-table-infinite/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { parseCSV } from "@/lib/csv-parser";
+import { cn } from "@/lib/utils";
+import { TextShimmer } from "@dtf/registry/components/data-table/data-table-filter-command-ai/text-shimmer";
+import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
+import { type SchemaJSON } from "@dtf/registry/lib/table-schema";
+import { inferSchemaFromJSON } from "@dtf/registry/lib/table-schema/infer";
+import { deserializeSchema } from "@dtf/registry/lib/table-schema/serialize";
+import { schemaToTypeScript } from "@dtf/registry/lib/table-schema/to-typescript";
+import { validateSchema } from "@dtf/registry/lib/table-schema/validate";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useQueryClient } from "@tanstack/react-query";
+import { Blocks, Shuffle, Sparkle, Upload } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
+import * as React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import { BuilderTable } from "./builder-table";
+import {
+  applyDatasetColorMaps,
+  EXAMPLE_DATASETS,
+  PLACEHOLDER_DATA,
+  PLACEHOLDER_DATA_JSON,
+} from "./datasets";
+
+const INITIAL_SCHEMA = inferSchemaFromJSON(PLACEHOLDER_DATA);
+applyDatasetColorMaps(INITIAL_SCHEMA, PLACEHOLDER_DATA);
+
+// ---------------------------------------------------------------------------
+// Shared types
+// ---------------------------------------------------------------------------
+
+type BuilderCallbacks = {
+  onResult: (schema: SchemaJSON, dataId: string) => void;
+  initialPrompt?: string | null;
+};
+
+// ---------------------------------------------------------------------------
+// BuilderAITab
+// ---------------------------------------------------------------------------
+
+function BuilderAITab({ onResult, initialPrompt }: BuilderCallbacks) {
+  const [description, setDescription] = React.useState(initialPrompt ?? "");
+  const [rows, setRows] = React.useState(20);
+  const [generating, setGenerating] = React.useState(!!initialPrompt);
+  const [rowsGenerated, setRowsGenerated] = React.useState(0);
+  const abortRef = React.useRef<AbortController | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleGenerate = React.useCallback(
+    async (desc: string, numRows: number) => {
+      // Abort any in-flight request
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setGenerating(true);
+      setRowsGenerated(0);
+
+      // Tracks the dataId created by the first render (row 5).
+      // All subsequent updates PUT to the same entry.
+      let firstDataId: string | null = null;
+      let firstRenderDone = false;
+      let updateInFlight = false;
+
+      try {
+        const res = await fetch("/api/builder/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description: desc, rows: numRows }),
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          const err = (await res.json()) as { error?: string };
+          toast.error(
+            res.status === 429
+              ? "Too many requests. Please wait a moment."
+              : (err.error ?? "Request failed"),
+          );
+          return;
+        }
+
+        if (!res.body) {
+          toast.error("Empty response from AI. Try again.");
+          return;
+        }
+
+        // ---------------------------------------------------------------
+        // Helper: parse partial JSON array from accumulated stream text
+        // ---------------------------------------------------------------
+        const parsePartial = (
+          acc: string,
+        ): Record<string, unknown>[] | null => {
+          try {
+            const clean = acc.replace(/^```(?:json)?\s*/i, "").trim();
+            const arrStart = clean.indexOf("[");
+            if (arrStart === -1) return null;
+            const fromArr = clean.substring(arrStart);
+            const lastClose = fromArr.lastIndexOf("},");
+            if (lastClose === -1) return null;
+            const partial = fromArr.substring(0, lastClose + 1) + "]";
+            return JSON.parse(partial) as Record<string, unknown>[];
+          } catch {
+            return null;
+          }
+        };
+
+        // ---------------------------------------------------------------
+        // Helper: update existing cache entry + invalidate React Query
+        // ---------------------------------------------------------------
+        const updateExisting = async (
+          dataId: string,
+          data: Record<string, unknown>[],
+        ) => {
+          if (updateInFlight || controller.signal.aborted) return;
+          updateInFlight = true;
+          try {
+            const putRes = await fetch("/api/builder", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ dataId, data }),
+              signal: controller.signal,
+            });
+            if (putRes.ok) {
+              await queryClient.invalidateQueries({
+                queryKey: ["builder-data", dataId],
+              });
+            }
+          } catch {
+            // Swallow abort errors
+          } finally {
+            updateInFlight = false;
+          }
+        };
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulated = "";
+        let rowCount = 0;
+        let lastRenderedCount = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          accumulated += chunk;
+
+          const matches = accumulated.match(/\}\s*,/g);
+          const newCount = matches?.length ?? 0;
+          if (newCount > rowCount) {
+            rowCount = newCount;
+            setRowsGenerated(rowCount);
+          }
+
+          // At row 5: create cache entry + mount table (awaited, blocks stream briefly)
+          if (!firstRenderDone && rowCount >= 5) {
+            const partialData = parsePartial(accumulated);
+            if (partialData && partialData.length >= 5) {
+              firstRenderDone = true;
+              lastRenderedCount = partialData.length;
+              const postRes = await fetch("/api/builder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data: partialData }),
+                signal: controller.signal,
+              });
+              if (postRes.ok) {
+                const { schema, dataId } = (await postRes.json()) as {
+                  schema: SchemaJSON;
+                  dataId: string;
+                };
+                firstDataId = dataId;
+                applyDatasetColorMaps(schema, partialData);
+                onResult(schema, dataId);
+              }
+            }
+          }
+
+          // After first render, fire-and-forget updates as more rows arrive
+          if (firstDataId && rowCount > lastRenderedCount) {
+            const partialData = parsePartial(accumulated);
+            if (partialData && partialData.length > lastRenderedCount) {
+              lastRenderedCount = partialData.length;
+              updateExisting(firstDataId, partialData);
+            }
+          }
+        }
+
+        // Parse full JSON
+        const cleaned = accumulated
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```\s*$/, "")
+          .trim();
+
+        let data: Record<string, unknown>[];
+        try {
+          const parsed = JSON.parse(cleaned);
+          data = (
+            Array.isArray(parsed) ? parsed : (parsed.rows ?? [])
+          ) as Record<string, unknown>[];
+        } catch {
+          toast.error(
+            "Failed to parse AI response. Try again with a simpler description.",
+          );
+          return;
+        }
+
+        if (!data.length) {
+          toast.error("AI generated no data. Try a more specific description.");
+          return;
+        }
+
+        setRowsGenerated(data.length);
+
+        if (firstDataId) {
+          // Final update: PUT full data to same cache entry
+          await updateExisting(firstDataId, data);
+        } else {
+          // Stream was too short for partial render — do full init now
+          const postRes = await fetch("/api/builder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data }),
+            signal: controller.signal,
+          });
+          if (postRes.ok) {
+            const { schema, dataId } = (await postRes.json()) as {
+              schema: SchemaJSON;
+              dataId: string;
+            };
+            applyDatasetColorMaps(schema, data);
+            onResult(schema, dataId);
+          }
+        }
+      } catch (e) {
+        // Don't toast or update state on intentional abort
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        toast.error(e instanceof Error ? e.message : "Failed to generate data");
+      } finally {
+        if (!controller.signal.aborted) {
+          setGenerating(false);
+        }
+      }
+    },
+    [onResult, queryClient],
+  );
+
+  React.useEffect(() => {
+    if (!!initialPrompt) {
+      handleGenerate(initialPrompt, rows);
+    }
+  }, [initialPrompt, handleGenerate, rows]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!description.trim() || generating) return;
+        handleGenerate(description.trim(), rows);
+      }}
+      className="flex flex-col gap-3"
+    >
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium">AI Table Generation</p>
+        <p className="text-muted-foreground text-xs">
+          Describe your data in plain English. The AI generates sample rows and
+          the schema is auto-inferred.
+        </p>
+      </div>
+      <div className="relative">
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="e.g. API request logs with method, status, latency, region, and timestamp"
+          rows={7}
+          disabled={generating}
+          className={cn(
+            "field-sizing-fixed font-mono text-xs",
+            generating && "text-transparent",
+          )}
+          maxLength={500}
+        />
+        {generating && (
+          <div className="pointer-events-none absolute inset-0 flex items-center px-3 py-2 tabular-nums">
+            <TextShimmer className="text-sm">
+              {rowsGenerated > 0
+                ? `${rowsGenerated} / ${rows} rows\u2026`
+                : `Generating ${rows} rows\u2026`}
+            </TextShimmer>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <label className="text-muted-foreground text-xs">Rows</label>
+          <span className="text-muted-foreground text-xs">{rows}</span>
+        </div>
+        <Slider
+          value={[rows]}
+          onValueChange={([v]) => setRows(v)}
+          min={10}
+          max={100}
+          step={5}
+          disabled={generating}
+        />
+      </div>
+      <Button
+        type="submit"
+        disabled={generating || !description.trim()}
+        className="w-full"
+      >
+        {generating ? "Generating…" : "Generate Table"}
+      </Button>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BuilderDataTab
+// ---------------------------------------------------------------------------
+
+const dataFormSchema = z.object({
+  json: z.string().superRefine((val, ctx) => {
+    try {
+      const parsed = JSON.parse(val);
+      if (!Array.isArray(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Expected a JSON array.",
+        });
+      }
+    } catch (e) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: e instanceof Error ? e.message : "Invalid JSON",
+      });
+    }
+  }),
+});
+
+type DataFormValues = z.infer<typeof dataFormSchema>;
+
+function BuilderDataTab({ onResult }: BuilderCallbacks) {
+  const [generating, setGenerating] = React.useState(false);
+  const [currentDatasetLabel, setCurrentDatasetLabel] = React.useState(
+    EXAMPLE_DATASETS[0].label,
+  );
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const csvHeaderMapRef = React.useRef<Record<string, string> | null>(null);
+
+  const dataForm = useForm<DataFormValues>({
+    resolver: zodResolver(dataFormSchema),
+    defaultValues: { json: PLACEHOLDER_DATA_JSON },
+    mode: "onChange",
+  });
+
+  const generateSchema = React.useCallback(
+    async (data: Record<string, unknown>[]) => {
+      setGenerating(true);
+      try {
+        const res = await fetch("/api/builder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data }),
+        });
+        if (!res.ok) {
+          const err = (await res.json()) as { error?: string };
+          dataForm.setError("json", { message: err.error ?? "Request failed" });
+          return;
+        }
+        const { schema, dataId: newDataId } = (await res.json()) as {
+          schema: SchemaJSON;
+          dataId: string;
+        };
+        const headerMap = csvHeaderMapRef.current;
+        if (headerMap) {
+          for (const col of schema.columns) {
+            if (headerMap[col.key]) {
+              col.label = headerMap[col.key];
+            }
+          }
+          csvHeaderMapRef.current = null;
+        }
+        applyDatasetColorMaps(schema, data);
+        onResult(schema, newDataId);
+      } catch (e) {
+        dataForm.setError("json", {
+          message: e instanceof Error ? e.message : "Network error",
+        });
+      } finally {
+        setGenerating(false);
+      }
+    },
+    [dataForm, onResult],
+  );
+
+  // Store initial placeholder data on mount
+  React.useEffect(() => {
+    generateSchema(PLACEHOLDER_DATA);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      const { data, headerMap } = parseCSV(text);
+      if (data.length === 0) {
+        dataForm.setError("json", {
+          message: "CSV file is empty or has no data rows.",
+        });
+        return;
+      }
+      csvHeaderMapRef.current = headerMap;
+      dataForm.setValue("json", JSON.stringify(data, null, 2), {
+        shouldValidate: true,
+      });
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const handleRandom = async () => {
+    const current = EXAMPLE_DATASETS.findIndex(
+      (d) => d.label === currentDatasetLabel,
+    );
+    const next = (current + 1) % EXAMPLE_DATASETS.length;
+    const dataset = EXAMPLE_DATASETS[next];
+    dataForm.setValue("json", JSON.stringify(dataset.data, null, 2), {
+      shouldValidate: true,
+    });
+    setCurrentDatasetLabel(dataset.label);
+    await generateSchema(dataset.data as Record<string, unknown>[]);
+  };
+
+  const handleGenerate = dataForm.handleSubmit(async ({ json }) => {
+    const data = JSON.parse(json) as Record<string, unknown>[];
+    await generateSchema(data);
+  });
+
+  return (
+    <form onSubmit={handleGenerate} className="flex flex-col gap-2">
+      <Controller
+        name="json"
+        control={dataForm.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <div className="flex items-center justify-between">
+              <FieldLabel htmlFor="json" className="text-sm font-medium">
+                JSON Data
+              </FieldLabel>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-muted-foreground h-6 gap-1.5 px-2 text-xs"
+                onClick={handleRandom}
+              >
+                <Shuffle className="h-3 w-3" />
+                {currentDatasetLabel}
+              </Button>
+            </div>
+            <Textarea
+              {...field}
+              id={field.name}
+              className={cn(
+                "field-sizing-fixed font-mono text-xs",
+                fieldState.invalid && "border-destructive",
+              )}
+              rows={7}
+              placeholder={PLACEHOLDER_DATA_JSON}
+              spellCheck={false}
+              aria-invalid={fieldState.invalid}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            <FieldDescription className="text-sm">
+              Paste JSON to generate a live table with an auto-inferred schema.
+            </FieldDescription>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleCSVUpload}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="mr-1 h-3 w-3" />
+              Transform CSV
+            </Button>
+            <FieldDescription className="text-sm">
+              Or transform a CSV to a JSON array. The CSV is not uploaded to a
+              server.
+            </FieldDescription>
+          </Field>
+        )}
+      />
+      <Button
+        type="submit"
+        disabled={generating || !dataForm.formState.isValid}
+        className="w-full"
+      >
+        {generating ? "Generating…" : "Generate Schema"}
+      </Button>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BuilderSchemaEditor
+// ---------------------------------------------------------------------------
+
+const schemaFormSchema = z.object({
+  schema: z.string().superRefine((val, ctx) => {
+    try {
+      const parsed = JSON.parse(val);
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        !Array.isArray((parsed as { columns?: unknown }).columns)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Expected an object with a 'columns' array.",
+        });
+      }
+    } catch (e) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: e instanceof Error ? e.message : "Invalid JSON",
+      });
+    }
+  }),
+});
+
+type SchemaFormValues = z.infer<typeof schemaFormSchema>;
+
+function BuilderSchemaEditor({
+  schemaJson,
+  dataId,
+  onSchemaChange,
+}: {
+  schemaJson: SchemaJSON | null;
+  dataId: string | null;
+  onSchemaChange: (schema: SchemaJSON) => void;
+}) {
+  const { isCopied, copy } = useCopyToClipboard();
+
+  const schemaForm = useForm<SchemaFormValues>({
+    resolver: zodResolver(schemaFormSchema),
+    defaultValues: { schema: JSON.stringify(INITIAL_SCHEMA, null, 2) },
+    mode: "onChange",
+  });
+
+  // Sync external schema changes into the form
+  const lastSchemaRef = React.useRef(schemaJson);
+  React.useEffect(() => {
+    if (schemaJson && schemaJson !== lastSchemaRef.current) {
+      lastSchemaRef.current = schemaJson;
+      schemaForm.setValue("schema", JSON.stringify(schemaJson, null, 2), {
+        shouldValidate: true,
+      });
+    }
+  }, [schemaJson, schemaForm]);
+
+  const handleApply = schemaForm.handleSubmit(async ({ schema }) => {
+    try {
+      const parsed = JSON.parse(schema) as SchemaJSON;
+      const definition = deserializeSchema(parsed);
+      validateSchema(definition);
+
+      if (dataId) {
+        const res = await fetch("/api/builder", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataId, schema: parsed }),
+        });
+        if (!res.ok) {
+          const err = (await res.json()) as { error?: string };
+          schemaForm.setError("schema", {
+            message: err.error ?? "Failed to save schema",
+          });
+          return;
+        }
+      }
+
+      onSchemaChange(parsed);
+    } catch (e) {
+      schemaForm.setError("schema", {
+        message: e instanceof Error ? e.message : "Invalid schema JSON",
+      });
+    }
+  });
+
+  const handleExport = async () => {
+    if (!schemaJson) return;
+    await copy(schemaToTypeScript(schemaJson), { withToast: true });
+  };
+
+  return (
+    <form onSubmit={handleApply} className="flex flex-col gap-2 px-4 py-2">
+      <Controller
+        name="schema"
+        control={schemaForm.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <div className="flex items-center justify-between">
+              <FieldLabel htmlFor="schema" className="text-sm font-medium">
+                Schema JSON
+              </FieldLabel>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleExport}
+                disabled={!schemaJson}
+                className="text-muted-foreground h-6 gap-1.5 px-2 text-xs"
+              >
+                {isCopied ? "Copied!" : "Export TS"}
+              </Button>
+            </div>
+            <Textarea
+              {...field}
+              id={field.name}
+              rows={10}
+              className={cn(
+                "field-sizing-fixed font-mono text-xs",
+                fieldState.invalid && "border-destructive",
+              )}
+              placeholder='{ "columns": [] }'
+              spellCheck={false}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Button
+        type="submit"
+        disabled={!schemaForm.formState.isValid}
+        variant="secondary"
+        className="w-full"
+      >
+        Apply
+      </Button>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BuilderClient (orchestrator)
+// ---------------------------------------------------------------------------
+
+export function BuilderClient() {
+  const [dataId, setDataId] = React.useState<string | null>(null);
+  const [schemaJson, setSchemaJson] = React.useState<SchemaJSON | null>(
+    INITIAL_SCHEMA,
+  );
+  const [schemaVersion, setSchemaVersion] = React.useState(0);
+  const [activeTab, setActiveTab] = React.useState("ai");
+  const [initialPrompt] = useQueryState("prompt", parseAsString);
+
+  const handleResult = React.useCallback(
+    (schema: SchemaJSON, newDataId: string) => {
+      setDataId(newDataId);
+      setSchemaJson(schema);
+      setSchemaVersion((v) => v + 1);
+    },
+    [],
+  );
+
+  const handleSchemaChange = React.useCallback((schema: SchemaJSON) => {
+    setSchemaJson(schema);
+    window.history.replaceState({}, "", window.location.pathname);
+    setSchemaVersion((v) => v + 1);
+  }, []);
+
+  const panelContent = (
+    <>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex flex-col gap-3 px-4 py-2"
+      >
+        <TabsList className="w-full">
+          <TabsTrigger value="data" className="flex-1">
+            Data
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="flex-1">
+            AI <Sparkle className="ml-1 h-3 w-3" />
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="data" className="mt-0">
+          <BuilderDataTab onResult={handleResult} />
+        </TabsContent>
+
+        <TabsContent value="ai" className="mt-0">
+          <BuilderAITab onResult={handleResult} initialPrompt={initialPrompt} />
+        </TabsContent>
+      </Tabs>
+
+      <Separator />
+
+      <BuilderSchemaEditor
+        schemaJson={schemaJson}
+        dataId={dataId}
+        onSchemaChange={handleSchemaChange}
+      />
+    </>
+  );
+
+  return (
+    <div className="flex h-screen max-h-screen w-full max-w-full flex-row">
+      {/* Left panel — desktop */}
+      <div className="hidden shrink-0 flex-col gap-2 overflow-y-auto sm:flex sm:max-w-52 sm:min-w-52 md:max-w-72 md:min-w-72">
+        <div className="border-border bg-background border-b px-4 py-2">
+          <div className="flex h-[46px] items-center justify-start gap-3">
+            <Link href="/" className="text-foreground font-medium">
+              Back
+            </Link>
+          </div>
+        </div>
+        {panelContent}
+      </div>
+
+      {/* Right panel — live table */}
+      <div className="relative min-w-0 flex-1 overflow-hidden sm:border-l">
+        {schemaJson && dataId ? (
+          <BuilderTable
+            dataId={dataId}
+            schemaJson={schemaJson}
+            schemaVersion={schemaVersion}
+          />
+        ) : initialPrompt ? (
+          <>
+            <DataTableInfiniteSkeleton withChart={false} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <TextShimmer className="text-sm">Generating table…</TextShimmer>
+            </div>
+          </>
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-muted-foreground text-sm">
+                Get started by providing data or generating with AI.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* FAB + Drawer — mobile */}
+      <div className="sm:hidden">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button
+              size="icon"
+              className="fixed right-4 bottom-4 z-40 h-12 w-12 rounded-full shadow-lg"
+            >
+              <Blocks className="h-5 w-5" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[calc(100dvh-2rem)]">
+            <VisuallyHidden>
+              <DrawerHeader>
+                <DrawerTitle>Builder</DrawerTitle>
+                <DrawerDescription>Configure data and schema</DrawerDescription>
+              </DrawerHeader>
+            </VisuallyHidden>
+            <div className="flex-1 overflow-y-auto">{panelContent}</div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline" className="w-full">
+                  Close
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      </div>
+    </div>
+  );
+}
