@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "PreToolCall": [
+      {
+        "matcher": "Bash(git commit:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-checks.sh",
+            "timeout": 120
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/registry-rebuild-check.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
