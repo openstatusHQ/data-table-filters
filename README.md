@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/openstatushq-data-table-filters-badge.png)](https://mseep.ai/app/openstatushq-data-table-filters)
+
 ## About The Project
 
 A **Table Schema builder**, **BYOS (Bring Your Own Store)** state management, and a set of pre-built **components** for building powerful, filterable data-tables with React.
