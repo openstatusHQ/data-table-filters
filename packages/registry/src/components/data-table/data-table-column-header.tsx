@@ -36,7 +36,7 @@ export function DataTableColumnHeader<TData, TValue>({
       <span className="flex flex-col">
         <ChevronUp
           className={cn(
-            "-mb-0.5! size-3!",
+            "-mb-0.5 size-3",
             column.getIsSorted() === "asc"
               ? "text-accent-foreground"
               : "text-muted-foreground",
@@ -44,7 +44,7 @@ export function DataTableColumnHeader<TData, TValue>({
         />
         <ChevronDown
           className={cn(
-            "-mt-0.5! size-3!",
+            "-mt-0.5 size-3",
             column.getIsSorted() === "desc"
               ? "text-accent-foreground"
               : "text-muted-foreground",
