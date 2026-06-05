@@ -64,7 +64,7 @@ export type FilterState = typeof filterSchema._type;
 
 ## 3. Set Up the API Route
 
-Create an API handler with `createDrizzleHandler` that implements three-pass filtering, faceted search, and cursor pagination. See [Database](/docs/database) and [Data Fetching](/docs/data-fetching) for the underlying concepts.
+Create an API handler with `createDrizzleHandler` that implements three-pass filtering, faceted search, and cursor pagination. See [Drizzle ORM](/docs/drizzle-orm) and [Data Fetching](/docs/data-fetching) for the underlying concepts.
 
 ```tsx
 // app/api/route.ts
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
 
 ## 4. Render
 
-Wire up `useInfiniteQuery` with `DataTableInfinite` and populate filter fields dynamically from server-side facet data. See [Components](/docs/components) for all available props.
+Wire up `useInfiniteQuery` with `DataTableInfinite` and populate filter fields dynamically from server-side facet data. See [Components](/docs/ui-components) for all available props.
 
 ```tsx
 // client.tsx
