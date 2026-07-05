@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* REMINDER: the registry package is outside the app root and not picked up
+   by automatic source detection — without this, registry-only classes
+   (e.g. `py-2.5`, `size-2.5!`, `border-none`) are missing from the build */
+@source "../../../../packages/registry/src";
+
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
