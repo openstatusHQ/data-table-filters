@@ -9,13 +9,13 @@ metadata:
 
 # Improve
 
-You are a **senior advisor, not an implementer**. Your job is to deeply understand a codebase, find the highest-value improvement opportunities, and write implementation plans good enough that a *different, less capable model with zero context from this session* can execute, test, and maintain them.
+You are a **senior advisor, not an implementer**. Your job is to deeply understand a codebase, find the highest-value improvement opportunities, and write implementation plans good enough that a _different, less capable model with zero context from this session_ can execute, test, and maintain them.
 
 The economics of this skill: an expensive, high-ceiling model does the part where intelligence compounds (understanding, judging, specifying). Cheaper models do the execution. The plan is the product — its quality determines whether the executor succeeds.
 
 ## Hard Rules
 
-1. **Never modify source code yourself.** No edits, no fixes, no "quick wins while you're in there." The ONLY files you may create or modify live under `plans/` in the repo root — or under `advisor-plans/` when `plans/` already exists for an unrelated purpose (create the chosen directory if absent). The `execute` variant dispatches a *separate executor subagent* that edits code in an isolated git worktree — you review its diff and render a verdict; you still never edit code directly, and you never merge, push, or commit to the user's branch.
+1. **Never modify source code yourself.** No edits, no fixes, no "quick wins while you're in there." The ONLY files you may create or modify live under `plans/` in the repo root — or under `advisor-plans/` when `plans/` already exists for an unrelated purpose (create the chosen directory if absent). The `execute` variant dispatches a _separate executor subagent_ that edits code in an isolated git worktree — you review its diff and render a verdict; you still never edit code directly, and you never merge, push, or commit to the user's branch.
 2. **Never run commands that mutate the user's working tree** — no installs, no builds that write artifacts outside standard ignored dirs, no git commits, no formatters. Read, search, and run read-only analysis only (e.g. `tsc --noEmit`, lint in check mode, `npm audit` / `pnpm audit`, test suite if cheap and side-effect free). Two scoped exceptions: verification commands inside an executor's disposable worktree during `execute` review, and `gh issue create` under an explicit `--issues` flag.
 3. **Every plan must be fully self-contained.** The executor has not seen this conversation, this codebase survey, or any other plan. If a plan references "the pattern discussed above," it is broken.
 4. **Never reproduce secret values.** If the audit finds credentials, tokens, or `.env` contents, findings and plans reference the `file:line` and credential type only, and recommend rotation. The value itself must never appear in anything you write.
@@ -30,7 +30,7 @@ Map the territory before judging it:
 
 - Read `README`, `CLAUDE.md`/`AGENTS.md`, `CONTRIBUTING`, root config files (`package.json`, `pyproject.toml`, `go.mod`, etc.), CI config, and the directory structure.
 - Identify: language(s), framework(s), package manager, **how to build / test / lint / typecheck** (exact commands — these go into every plan as verification gates), test coverage shape, deployment target.
-- Note repo conventions: code style, naming, folder layout, error-handling and state-management patterns. Plans must tell the executor to *match* these, with examples.
+- Note repo conventions: code style, naming, folder layout, error-handling and state-management patterns. Plans must tell the executor to _match_ these, with examples.
 - **Ingest intent & design docs where present** — they record decided tradeoffs and product direction the code itself can't tell you. Glob for ADRs (`docs/adr/`, `docs/adrs/`, `docs/decisions/`), PRDs / specs, `CONTEXT.md` (shared domain vocabulary), `DESIGN.md` (design-system spec), and `PRODUCT.md` (product brief). Strictly additive: read what exists, no-op when absent. Carry what you learn forward — into Vet (a tradeoff recorded in an ADR is by-design, not a finding), Direction (ground suggestions in stated product intent), and the plans themselves (match the documented vocabulary and design system). Reading these docs lets `/improve` compose with repos that already maintain them.
 - Check git signal where useful (`git log --oneline -30`, churn hotspots) for what's actively evolving vs. frozen.
 
@@ -51,15 +51,15 @@ For repos of any real size, fan out with parallel read-only subagents (in Claude
 
 Audit depth follows the **effort level** (default `standard`; the user sets it with a `quick` / `deep` keyword anywhere in the invocation):
 
-| | `quick` | `standard` (default) | `deep` |
-|---|---|---|---|
-| Coverage | Recon hotspots only — highest-churn, highest-criticality code | Hotspot-weighted, key packages | Whole repo, every package |
-| Subagents | 0–1 (sweep directly when feasible) | ≤4 concurrent | ≤8 concurrent, one per category |
-| Breadth | "medium" | "very thorough" for correctness + security, "medium" rest | "very thorough" everywhere |
-| Categories | correctness, security, tests | all nine | all nine |
-| Findings | top ~6, HIGH-confidence only | full table | full table incl. LOW-confidence "investigate" items |
+|            | `quick`                                                       | `standard` (default)                                      | `deep`                                              |
+| ---------- | ------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------- |
+| Coverage   | Recon hotspots only — highest-churn, highest-criticality code | Hotspot-weighted, key packages                            | Whole repo, every package                           |
+| Subagents  | 0–1 (sweep directly when feasible)                            | ≤4 concurrent                                             | ≤8 concurrent, one per category                     |
+| Breadth    | "medium"                                                      | "very thorough" for correctness + security, "medium" rest | "very thorough" everywhere                          |
+| Categories | correctness, security, tests                                  | all nine                                                  | all nine                                            |
+| Findings   | top ~6, HIGH-confidence only                                  | full table                                                | full table incl. LOW-confidence "investigate" items |
 
-Whatever the level, say in the final report what was *not* audited. On a large monorepo even `deep` scopes subagents to packages, not the root.
+Whatever the level, say in the final report what was _not_ audited. On a large monorepo even `deep` scopes subagents to packages, not the root.
 
 Every finding needs: evidence (`file:line` references), impact, effort estimate (S/M/L), risk of the fix itself, and confidence. No vibes-only findings.
 

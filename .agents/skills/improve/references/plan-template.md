@@ -5,7 +5,7 @@ Every plan is written for an executor model that has **zero context**: it has no
 Three properties make a plan executable by a weaker model:
 
 1. **Self-contained context** — everything needed is in the file: paths, code excerpts, conventions, commands.
-2. **Verification gates** — every step ends with a command and its expected result. The executor never has to *judge* whether it succeeded.
+2. **Verification gates** — every step ends with a command and its expected result. The executor never has to _judge_ whether it succeeded.
 3. **Hard boundaries and escape hatches** — explicit out-of-scope list, and "STOP and report" conditions instead of letting the model improvise when reality doesn't match the plan.
 
 File naming: `plans/NNN-short-slug.md`, numbered in recommended execution order.
@@ -34,7 +34,7 @@ File naming: `plans/NNN-short-slug.md`, numbered in recommended execution order.
 - **Priority**: P1 | P2 | P3
 - **Effort**: S | M | L
 - **Risk**: LOW | MED | HIGH
-- **Depends on**: plans/NNN-*.md (or "none")
+- **Depends on**: plans/NNN-\*.md (or "none")
 - **Category**: bug | security | perf | tests | tech-debt | migration | dx | docs | direction
 - **Planned at**: commit `<short SHA>`, <YYYY-MM-DD>
 - **Issue**: <GitHub issue URL — only when published via `--issues`; omit otherwise>
@@ -64,12 +64,12 @@ The facts the executor needs, inlined — never "as discussed" or "see audit":
 
 ## Commands you will need
 
-| Purpose   | Command                  | Expected on success |
-|-----------|--------------------------|---------------------|
-| Install   | `pnpm install`           | exit 0              |
-| Typecheck | `pnpm typecheck`         | exit 0, no errors   |
-| Tests     | `pnpm test -- <filter>`  | all pass            |
-| Lint      | `pnpm lint`              | exit 0              |
+| Purpose   | Command                 | Expected on success |
+| --------- | ----------------------- | ------------------- |
+| Install   | `pnpm install`          | exit 0              |
+| Typecheck | `pnpm typecheck`        | exit 0, no errors   |
+| Tests     | `pnpm test -- <filter>` | all pass            |
+| Lint      | `pnpm lint`             | exit 0              |
 
 (Exact commands from this repo — verified during recon, not guessed.)
 
@@ -85,10 +85,12 @@ executor's environment. Skip the section otherwise.)
 ## Scope
 
 **In scope** (the only files you should modify):
+
 - `src/orders/api.ts`
 - `src/orders/api.test.ts` (create)
 
 **Out of scope** (do NOT touch, even though they look related):
+
 - `src/orders/legacy-api.ts` — deprecated path, scheduled for deletion;
   changing it wastes effort and risks the v1 clients still pinned to it.
 - Any change to the public response shape — clients depend on it.
@@ -171,7 +173,7 @@ honor its STOP conditions, and update your row when done.
 ## Execution order & status
 
 | Plan | Title | Priority | Effort | Depends on | Status |
-|------|-------|----------|--------|------------|--------|
+| ---- | ----- | -------- | ------ | ---------- | ------ |
 | 001  | ...   | P1       | S      | —          | TODO   |
 | 002  | ...   | P1       | M      | 001        | TODO   |
 
