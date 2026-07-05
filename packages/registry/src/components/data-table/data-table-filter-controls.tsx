@@ -53,7 +53,8 @@ export function DataTableFilterControls() {
         const FilterComponent = FILTER_COMPONENTS[field.type];
         if (!FilterComponent) return null;
         return (
-          <AccordionItem key={value} value={value} className="border-none">
+          // REMINDER: -mx-2 lets the border-b span the full sidebar width despite the parent p-2; px-2 keeps the content aligned
+          <AccordionItem key={value} value={value} className="-mx-2 px-2">
             <AccordionTrigger className="data-[state=closed]:text-muted-foreground data-[state=open]:text-foreground focus-within:data-[state=closed]:text-foreground hover:data-[state=closed]:text-foreground w-full items-center gap-2 px-2 py-0 hover:no-underline">
               <div className="flex w-full items-center justify-between gap-2 truncate py-2 pr-2">
                 <div className="flex items-center gap-2 truncate">
