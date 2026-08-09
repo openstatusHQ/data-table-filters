@@ -85,6 +85,44 @@ describe("deserialize", () => {
     expect(result.success).toBe(false);
   });
 
+  it("keeps colons inside the value (splits on the first colon only)", () => {
+    // Regression: `split(":")` truncated "url:https://example.com" to "https"
+    const urlSchema = z.object({ url: z.string() });
+    const urlParse = deserialize(urlSchema);
+    const result = urlParse("url:https://example.com/path");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.url).toBe("https://example.com/path");
+    }
+  });
+
+  it("keeps colons in a timestamp value", () => {
+    const timeSchema = z.object({ time: z.string() });
+    const timeParse = deserialize(timeSchema);
+    const result = timeParse("time:12:30:45");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.time).toBe("12:30:45");
+    }
+  });
+
+  it("round-trips a colon-bearing value through serialize → deserialize", () => {
+    const serialized = serializeColumnFilters(
+      [{ id: "host", value: "https://example.com" }],
+      [
+        { label: "Host", value: "host", type: "input" },
+      ] as DataTableFilterField<{
+        host: string;
+      }>[],
+    );
+    const hostSchema = z.object({ host: z.string() });
+    const result = deserialize(hostSchema)(serialized);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.host).toBe("https://example.com");
+    }
+  });
+
   it("passes the parsed object through zod schema validation", () => {
     // The zod schema should reject extra keys if strict mode is used
     const strictSchema = z.object({ q: z.string() }).strict();

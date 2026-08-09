@@ -244,6 +244,28 @@ describe("getFilterValue", () => {
       }),
     ).toBe(0);
   });
+
+  it("matches a query containing colons (splits on the first colon only)", () => {
+    // Regression: `split(":")` truncated the query at the second colon, so
+    // "https://example.com" was compared as "https" and never matched.
+    expect(
+      getFilterValue({
+        value: "host:https://example.com",
+        search: "",
+        currentWord: "host:https://example.com",
+      }),
+    ).toBe(1);
+  });
+
+  it("does not match a colon-bearing query against a different value", () => {
+    expect(
+      getFilterValue({
+        value: "host:https://other.com",
+        search: "",
+        currentWord: "host:https://example.com",
+      }),
+    ).toBe(0);
+  });
 });
 
 // ── notEmpty ─────────────────────────────────────────────────────────────────

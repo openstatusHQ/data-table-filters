@@ -16,8 +16,14 @@ export function deserialize<T extends z.ZodObject>(schema: T) {
       .split(" ")
       .reduce(
         (prev, curr) => {
-          const [name, value] = curr.split(":");
-          if (!value || !name) return prev;
+          // Split on the FIRST colon only — values legitimately contain colons
+          // (urls, timestamps), and `split(":")` would truncate them.
+          const separatorIndex = curr.indexOf(":");
+          // -1 = no separator, 0 = empty name; both are skipped
+          if (separatorIndex < 1) return prev;
+          const name = curr.slice(0, separatorIndex);
+          const value = curr.slice(separatorIndex + 1);
+          if (!value) return prev;
           prev[name] = value;
           return prev;
         },

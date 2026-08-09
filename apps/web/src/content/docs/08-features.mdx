@@ -31,7 +31,7 @@ Pass chart data via the `chartData` and `chartDataColumnId` props on `DataTableI
 
 #### Zoom
 
-The timeline chart supports click-and-drag zoom. Click and drag across bars to select a time range — a shaded `ReferenceArea` highlights your selection as you drag. On mouse up, the selected range is applied as a date filter on the table, zooming into that time window. The axis tick format adapts automatically based on the visible time span (seconds for ≤10 min, hours for ≤1 day, day+hour for ≤1 week, full date otherwise).
+The timeline chart supports click-and-drag zoom. Click and drag across bars to select a time range — a `ReferenceArea` marks the selection with a line and grip on each end, fades the buckets outside it, and a card shows the range, duration, and row count as you drag. On mouse up the selection is parked rather than applied: the same card grows **Cancel** and **Zoom** buttons, so confirm with **Zoom** (or `Enter`) to set the date filter on the table, or discard with **Cancel** (or `Escape`). The axis tick format adapts automatically based on the visible time span (seconds for ≤10 min, hours for ≤1 day, day+hour for ≤1 week, full date otherwise).
 
 ### Live Mode
 

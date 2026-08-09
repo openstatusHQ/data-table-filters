@@ -12,7 +12,8 @@ description: >
   fetch layer, (7) auto-inferring schemas from raw JSON data with DataTableAuto / inferSchemaFromJSON,
   (8) adding AI-powered natural language filtering, (9) exposing tables as MCP endpoints for AI agents,
   (10) troubleshooting integration issues.
-  Triggers on mentions of "data-table-filters", "data-table-filters.com", filterable data
+  Triggers on mentions of "data-table-filters", "data-table.openstatus.dev",
+  "data-table-filters.com", filterable data
   tables with shadcn, DataTableAuto, auto-infer, AI filters, MCP server, or any of the registry block names.
 ---
 
@@ -26,7 +27,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 
 | Block                            | Install URL                                           | What it adds                                                                                                                |
 | -------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (~52 files)                                                       |
+| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (53 files)                                                        |
 | **data-table-filter-command**    | `.../r/data-table-filter-command.json`                | Command palette with history + keyboard shortcuts                                                                           |
 | **data-table-cell**              | `.../r/data-table-cell.json`                          | 12 cell renderers (text, code, number, bar, heatmap, badge, boolean, star, status-code, level-indicator, timestamp, custom) |
 | **data-table-sheet**             | `.../r/data-table-sheet.json`                         | Row detail side panel (auto-installs cells)                                                                                 |

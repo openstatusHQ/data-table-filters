@@ -7,22 +7,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Each job installs its own dependencies (jobs do not share a filesystem), so
+# there is no shared "setup" job — it would only serialize the pipeline.
 jobs:
-  setup:
-    name: Install dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-
   typecheck:
     name: Type check
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,12 +20,16 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-typecheck-${{ github.sha }}
+          restore-keys: turbo-typecheck-
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo typecheck
 
   lint:
     name: Lint
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,12 +38,16 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-lint-${{ github.sha }}
+          restore-keys: turbo-lint-
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo lint
 
   test:
     name: Test
-    needs: setup
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -75,6 +72,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-test-${{ github.sha }}
+          restore-keys: turbo-test-
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web db:drizzle:migrate
       - run: pnpm --filter web db:drizzle:seed-test
@@ -82,7 +84,6 @@ jobs:
 
   format:
     name: Format
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

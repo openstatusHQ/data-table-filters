@@ -152,7 +152,18 @@ export function getFilterValue({
    * @example slider [filter, query] = ["p95", "0-3000"]
    * @example input [filter, query] = ["name", "api"]
    */
-  const [filter, query] = currentWord.toLowerCase().split(":");
+  // Split on the FIRST colon only — values legitimately contain colons (urls,
+  // timestamps), and `split(":")` would truncate the query at the second one.
+  const lowerCurrentWord = currentWord.toLowerCase();
+  const separatorIndex = lowerCurrentWord.indexOf(":");
+  const filter =
+    separatorIndex === -1
+      ? lowerCurrentWord
+      : lowerCurrentWord.slice(0, separatorIndex);
+  const query =
+    separatorIndex === -1
+      ? undefined
+      : lowerCurrentWord.slice(separatorIndex + 1);
   if (query && value.startsWith(`${filter}:`)) {
     if (query.includes(ARRAY_DELIMITER)) {
       /**

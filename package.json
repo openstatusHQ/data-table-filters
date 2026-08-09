@@ -8,13 +8,24 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "registry:build": "turbo registry:build"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "turbo": "^2.5.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "hono": ">=4.12.25",
+      "fast-uri": "^3.1.4",
+      "sharp": "^0.35.0",
+      "postcss@8": "^8.5.18",
+      "lodash": "^4.18.0",
+      "js-yaml@4": "^4.3.0"
+    }
   },
   "packageManager": "pnpm@10.12.1"
 }

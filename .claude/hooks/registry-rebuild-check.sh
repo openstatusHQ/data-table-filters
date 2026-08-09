@@ -1,15 +1,10 @@
 #!/bin/bash
-# Post-commit check: warn if registry source was modified but not rebuilt
-# Compares git diff of staged + unstaged changes against last registry build output
+# PreToolUse check: block a commit whose registry output no longer matches the
+# source it was built from. See lib/registry-stale.mjs for how staleness is
+# determined — it compares built content, not "did src change at all".
+
+source "$(dirname "$0")/lib/gate-git-commit.sh"
 
 cd "$(git rev-parse --show-toplevel)"
 
-# Check if any registry source files have uncommitted changes
-registry_changed=$(git diff --name-only HEAD 2>/dev/null | grep -c "^packages/registry/src/" || true)
-
-if [ "$registry_changed" -gt 0 ]; then
-  echo "⚠️  Registry source files changed. Run 'pnpm registry:build' and commit the output."
-  exit 1
-fi
-
-exit 0
+exec node .claude/hooks/lib/registry-stale.mjs

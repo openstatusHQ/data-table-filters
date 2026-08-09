@@ -71,30 +71,34 @@ function ClientInner() {
   const { sort, cursor, direction, uuid, ...filter } = search;
 
   // TODO: replace completely by facets
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filterFields = React.useMemo(() => {
     return defaultFilterFields.map((field) => {
       const facet = facets?.[field.value];
-      if (facet) {
-        // TODO: facets
-        if (["status", "method"].includes(field.value)) {
-          field.options = facet.rows.map((row) => ({
-            value: row.value,
-            label: row.value,
-          }));
-        }
-        if (field.value === "latency") {
-          field.min = facet.min || field.min;
-          field.max = facet.max || field.max;
-          field.options = facet.rows.map((row) => ({
-            value: row.value,
-            label: row.value,
-          }));
-        }
+      if (!facet) return field;
+
+      // Spread into a new object rather than assigning onto `field`:
+      // `defaultFilterFields` is a module-level constant, so mutating it here
+      // leaks injected options into every later render and every other mount.
+      const options = facet.rows.map((row) => ({
+        value: row.value,
+        label: row.value,
+      }));
+
+      // TODO: facets
+      if (["status", "method"].includes(field.value)) {
+        return { ...field, options };
+      }
+      if (field.value === "latency") {
+        return {
+          ...field,
+          min: facet.min || field.min,
+          max: facet.max || field.max,
+          options,
+        };
       }
       return field;
     });
-  }, [flatData]);
+  }, [facets]);
 
   const defaultColumnFilters = React.useMemo(() => {
     return Object.entries(filter)

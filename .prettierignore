@@ -1,0 +1,12 @@
+# Build output
+.next/
+.turbo/
+dist/
+node_modules/
+
+# Local planning / audit scratch (untracked, not part of the source tree)
+plans/
+.claude/docs/
+
+# Managed by pnpm
+pnpm-lock.yaml
