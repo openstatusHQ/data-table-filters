@@ -100,6 +100,64 @@ export function getSelectionBounds<TChart extends BaseChartSchema>(
 }
 
 /**
+ * The two bucket labels of a drag, oldest first.
+ *
+ * A drag can run right-to-left, and `ReferenceArea` reads `x1` as the rect's
+ * start edge and `x2` as its end - handed the labels in the order they were
+ * touched, a backwards drag renders a rect a bucket short on either side.
+ *
+ * Unparseable labels keep the order they came in: there is nothing to sort by,
+ * and `getSelectionBounds` rejects them anyway.
+ */
+export function orderSelectionLabels(
+  labelA: string,
+  labelB: string,
+): [string, string] {
+  const a = new Date(labelA).getTime();
+  const b = new Date(labelB).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b)) return [labelA, labelB];
+  return a <= b ? [labelA, labelB] : [labelB, labelA];
+}
+
+/**
+ * Whether a recharts callback came from a real pointer.
+ *
+ * `accessibilityLayer` spoofs a mouse move at its keyboard cursor - the first
+ * bucket, until an arrow key moves it - whenever the chart takes focus, which a
+ * mousedown does. The spoof passes a bare `{ pageX, pageY }`, a real event a `type`.
+ */
+export function isPointerEvent(event: unknown): boolean {
+  return typeof (event as { type?: unknown } | null | undefined)?.type === "string"; // prettier-ignore
+}
+
+/** How much time the chart covers - it decides how every label is formatted. */
+export type ChartPeriod = "10m" | "1d" | "1w" | "1mo";
+
+/**
+ * An x-axis tick, as coarse as the period the chart covers.
+ *
+ * Shared with the labels the selection puts on the axis, so a selection edge
+ * can't print its instant in a different format than the ticks around it.
+ */
+export function formatAxisTick(
+  value: number | string,
+  period?: ChartPeriod,
+): string {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return "N/A";
+  switch (period) {
+    case "10m":
+      return format(date, "HH:mm:ss");
+    case "1d":
+      return format(date, "HH:mm");
+    case "1w":
+      return format(date, "LLL dd HH:mm");
+    default:
+      return format(date, "LLL dd, y");
+  }
+}
+
+/**
  * Formats a selected range for the readout, both ends kept apart so the caller
  * can style the separator (e.g. `Jul 21 16:52` / `17:02`).
  *
@@ -110,7 +168,7 @@ export function getSelectionBounds<TChart extends BaseChartSchema>(
 export function formatSelectionRange(
   from: number,
   to: number,
-  period?: "10m" | "1d" | "1w" | "1mo",
+  period?: ChartPeriod,
 ): { start: string; end: string } {
   const timePattern = period === "10m" ? "HH:mm:ss" : "HH:mm";
   return {
@@ -141,6 +199,42 @@ export function centerWithin(
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+/** The breathing room left between the card and the selection it belongs to. */
+export const SELECTION_CARD_GAP = 8;
+
+/**
+ * The left edge for the card describing a selection.
+ *
+ * A selection wider than the card keeps its ends visible with the card centered
+ * on it, so that's where it goes. A narrow one would disappear underneath, so
+ * the card steps aside - to whichever side has more room, and only if the card
+ * fits there whole. When neither side does, being centered and readable beats
+ * being pushed half out of the plot.
+ */
+export function getSelectionCardLeft(
+  selection: { x: number; width: number },
+  cardWidth: number,
+  chartWidth: number,
+  gap = SELECTION_CARD_GAP,
+): number {
+  const center = () =>
+    centerWithin(selection.x + selection.width / 2, cardWidth, chartWidth);
+
+  if (selection.width >= cardWidth) return center();
+
+  const selectionEnd = selection.x + selection.width;
+  const room = { left: selection.x, right: chartWidth - selectionEnd };
+  const needed = cardWidth + gap;
+  // the roomier side first, so the card leans away from the nearest plot edge
+  const sides = room.right >= room.left ? ["right", "left"] : ["left", "right"];
+
+  for (const side of sides) {
+    if (side === "right" && room.right >= needed) return selectionEnd + gap;
+    if (side === "left" && room.left >= needed) return selection.x - needed;
+  }
+  return center();
 }
 
 /** Width of the vertical line marking each end of the selection. */
@@ -177,6 +271,42 @@ export function getSelectionEdges(
       rx: SELECTION_GRIP_WIDTH / 2,
     },
   }));
+}
+
+/**
+ * How far below the plot the selection's labels sit, matching where recharts
+ * puts a tick: its `tickSize` (6) plus its `tickMargin` (2). They stand in for
+ * the axis ticks while a selection is up, so they have to land on the same line.
+ */
+export const SELECTION_LABEL_OFFSET = 8;
+/** The smallest gap left between the two labels before the end one is dropped. */
+export const SELECTION_LABEL_GAP = 8;
+
+/**
+ * Where the labels for a selection's two edges go, each centered on its edge
+ * and kept inside the plot.
+ *
+ * `end` is `null` when the two would touch: a narrow selection only gets to say
+ * where it starts. The check runs on the clamped centers, not on the raw
+ * selection width - a selection against a plot boundary has its labels pushed
+ * inwards, which closes the gap the raw width says is there.
+ */
+export function getSelectionLabels(
+  selection: Box,
+  chartWidth: number,
+  widths: { start: number; end: number },
+): { start: { x: number; y: number }; end: { x: number; y: number } | null } {
+  const y = selection.y + selection.height + SELECTION_LABEL_OFFSET;
+  // `centerWithin` returns a left edge; these are drawn from their center
+  const startX = centerWithin(selection.x, widths.start, chartWidth) + widths.start / 2; // prettier-ignore
+  const endX = centerWithin(selection.x + selection.width, widths.end, chartWidth) + widths.end / 2; // prettier-ignore
+
+  const gap = endX - widths.end / 2 - (startX + widths.start / 2);
+
+  return {
+    start: { x: startX, y },
+    end: gap >= SELECTION_LABEL_GAP ? { x: endX, y } : null,
+  };
 }
 
 /**

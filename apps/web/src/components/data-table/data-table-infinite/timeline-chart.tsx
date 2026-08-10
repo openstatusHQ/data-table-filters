@@ -13,17 +13,22 @@ import { cn } from "@/lib/utils";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import type { BaseChartSchema } from "@dtf/registry/lib/data-table/types";
 import { format } from "date-fns";
-import { X, ZoomIn } from "lucide-react";
+import { ZoomIn } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bar, BarChart, CartesianGrid, ReferenceArea, XAxis } from "recharts";
 import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
+import type { Box } from "./timeline-chart-utils";
 import {
-  centerWithin,
+  formatAxisTick,
   formatSelectionRange,
   getSelectionBounds,
+  getSelectionCardLeft,
   getSelectionEdges,
+  getSelectionLabels,
   getSelectionScrim,
+  isPointerEvent,
+  orderSelectionLabels,
   sumBucketValues,
 } from "./timeline-chart-utils";
 
@@ -48,13 +53,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-/** Stack order, bottom-up - the tooltip and the selection card follow it too. */
+/** Stack order, bottom-up - the tooltip follows it too. */
 const LEVELS = ["error", "warning", "success"] as const;
 
-type SelectionReadout = {
-  range: { start: string; end: string };
-  values: Record<string, number>;
-};
+/** A selected range, both ends kept apart so the separator can be styled. */
+type SelectionRange = { start: string; end: string };
 
 interface TimelineChartProps<TChart extends BaseChartSchema> {
   className?: string;
@@ -74,7 +77,7 @@ export function TimelineChart<TChart extends BaseChartSchema>({
   className,
   columnId,
 }: TimelineChartProps<TChart>) {
-  const { table, columnFilters } = useDataTable();
+  const { table } = useDataTable();
   // state, not a ref: the card is portaled into it, so a render has to follow
   // the element being attached
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
@@ -115,8 +118,9 @@ export function TimelineChart<TChart extends BaseChartSchema>({
   }, [data]);
 
   /**
-   * The buckets currently under the drag, in the same bounds we commit as the
-   * filter - so the readout can't disagree with what the table ends up showing.
+   * How the selection describes itself, off the same bounds we commit as the
+   * filter - so nothing on screen can disagree with what the table ends up
+   * showing.
    */
   const selection = useMemo(() => {
     if (!refAreaLeft || !refAreaRight) return null;
@@ -128,12 +132,31 @@ export function TimelineChart<TChart extends BaseChartSchema>({
 
     return {
       range: formatSelectionRange(from, displayEnd, timerange.period),
+      // the per-level counts the range covers. nothing shows them right now -
+      // the card is the range and the actions - but they're what a breakdown
+      // would be built from, and they stay in step with the bounds above
       values: sumBucketValues(data, from, toBucket),
+      // the instants the two edges sit on: `from` opens the first bucket and
+      // `displayEnd` is where the last one runs out, which is the boundary the
+      // right edge is drawn at
+      axis: {
+        start: formatAxisTick(from, timerange.period),
+        end: formatAxisTick(displayEnd, timerange.period),
+      },
     };
   }, [refAreaLeft, refAreaRight, data, timerange.period]);
 
-  const hasFilter = Boolean(
-    columnFilters.find((filter) => filter.id === columnId)?.value,
+  /**
+   * The selection as `ReferenceArea` wants it: `x1` is the rect's start edge
+   * and `x2` its end, so a backwards drag has to be flipped or the highlight
+   * comes out a bucket short on either side.
+   */
+  const refArea = useMemo(
+    () =>
+      refAreaLeft && refAreaRight
+        ? orderSelectionLabels(refAreaLeft, refAreaRight)
+        : null,
+    [refAreaLeft, refAreaRight],
   );
 
   const handleMouseDown: CategoricalChartFunc = (e) => {
@@ -145,7 +168,11 @@ export function TimelineChart<TChart extends BaseChartSchema>({
     }
   };
 
-  const handleMouseMove: CategoricalChartFunc = (e) => {
+  const handleMouseMove: CategoricalChartFunc = (e, event) => {
+    // only a moving pointer widens the selection - taking the a11y layer's
+    // spoofed move too (see `isPointerEvent`) would make a click select from
+    // the first bucket to the bar it landed on
+    if (!isPointerEvent(event)) return;
     if (isSelecting && e.activeLabel) {
       setRefAreaRight(e.activeLabel);
     }
@@ -182,8 +209,9 @@ export function TimelineChart<TChart extends BaseChartSchema>({
     if (!isSelecting) return;
     const onMouseUp = () => {
       setIsSelecting(false);
-      // a click without a drag isn't a range - don't leave a pending selection
-      if (!refAreaRight) setRefAreaLeft(null);
+      // a click without a drag is the shortest range there is: the one bucket
+      // under the cursor. `x1 === x2` still spans a full band
+      if (!refAreaRight) setRefAreaRight(refAreaLeft);
     };
     // dragging across the page would otherwise select the table's text
     document.body.classList.add("select-none");
@@ -226,10 +254,6 @@ export function TimelineChart<TChart extends BaseChartSchema>({
           "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted/50", // otherwise same color as 200
           "select-none", // disable text selection
           "touch-pan-y", // capture horizontal drags, let vertical page scroll through
-          // no hover while a selection is on the chart: mid-drag the readout
-          // replaces the tooltip, and once pending it covers the actions
-          (isSelecting || isPending) &&
-            "[&_.recharts-tooltip-cursor]:hidden [&_.recharts-tooltip-wrapper]:hidden",
           className,
         )}
       >
@@ -248,21 +272,19 @@ export function TimelineChart<TChart extends BaseChartSchema>({
             minTickGap={32}
             axisLine={false}
             // interval="preserveStartEnd"
-            tickFormatter={(value) => {
-              const date = new Date(value);
-              if (isNaN(date.getTime())) return "N/A";
-              if (timerange.period === "10m") {
-                return format(date, "HH:mm:ss");
-              } else if (timerange.period === "1d") {
-                return format(date, "HH:mm");
-              } else if (timerange.period === "1w") {
-                return format(date, "LLL dd HH:mm");
-              }
-              return format(date, "LLL dd, y");
-            }}
+            // the selection labels the axis itself while it's up, so the ticks
+            // step aside rather than compete with it - but only once there is
+            // something to replace them with. the axis keeps its height either way
+            tick={!selection}
+            tickFormatter={(value) => formatAxisTick(value, timerange.period)}
           />
           <ChartTooltip
             // defaultIndex={10}
+            // no hover while a selection is on the chart: mid-drag it fights the
+            // band being dragged, and once parked it covers the actions.
+            // recharts reads `active` before its own hover state, and only when
+            // it's defined - `undefined` hands control back
+            active={isSelecting || isPending ? false : undefined}
             content={
               <ChartTooltipContent
                 labelFormatter={(value) => {
@@ -284,10 +306,10 @@ export function TimelineChart<TChart extends BaseChartSchema>({
               fill={`var(--color-${level})`}
             />
           ))}
-          {refAreaLeft && refAreaRight && (
+          {refArea && (
             <ReferenceArea
-              x1={refAreaLeft}
-              x2={refAreaRight}
+              x1={refArea[0]}
+              x2={refArea[1]}
               stroke="none"
               fill="var(--foreground)"
               fillOpacity={0.05}
@@ -295,7 +317,12 @@ export function TimelineChart<TChart extends BaseChartSchema>({
                 <SelectionOverlay
                   chartWidth={chartWidth}
                   container={container}
-                  readout={selection}
+                  axisLabels={selection?.axis ?? null}
+                  // nothing floats over the chart mid-drag: the shaded band and
+                  // its edges already describe the range, and a card chasing the
+                  // cursor only reads as the tooltip refusing to go away. it
+                  // comes back once the drag parks, where it carries the actions
+                  range={isPending ? (selection?.range ?? null) : null}
                   actions={
                     isPending
                       ? { onZoom: applySelection, onCancel: clearSelection }
@@ -307,16 +334,6 @@ export function TimelineChart<TChart extends BaseChartSchema>({
           )}
         </BarChart>
       </ChartContainer>
-      {hasFilter && !isSelecting && !isPending ? (
-        <Button
-          variant="outline"
-          className={cn(PILL_BUTTON, "absolute top-0 right-0 gap-1")}
-          onClick={() => table.getColumn(columnId)?.setFilterValue(undefined)}
-        >
-          <span>Reset</span>
-          <X className="text-muted-foreground size-2.5!" />
-        </Button>
-      ) : null}
     </div>
   );
 }
@@ -334,14 +351,16 @@ function SelectionOverlay({
   viewBox,
   chartWidth,
   container,
-  readout,
+  axisLabels,
+  range,
   actions,
 }: {
   /** injected by recharts, not passed by the parent */
   viewBox?: { x?: number; y?: number; width?: number; height?: number };
   chartWidth: number;
   container: HTMLElement | null;
-  readout?: SelectionReadout | null;
+  axisLabels?: SelectionRange | null;
+  range?: SelectionRange | null;
   actions?: { onZoom: () => void; onCancel: () => void } | null;
 }) {
   if (!viewBox) return null;
@@ -370,12 +389,19 @@ function SelectionOverlay({
           <rect {...grip} />
         </g>
       ))}
-      {readout && container
+      {axisLabels ? (
+        <SelectionAxisLabels
+          selection={selection}
+          chartWidth={chartWidth}
+          labels={axisLabels}
+        />
+      ) : null}
+      {range && actions && container
         ? createPortal(
             <SelectionCard
-              center={selection.x + selection.width / 2}
+              selection={selection}
               chartWidth={chartWidth}
-              readout={readout}
+              range={range}
               actions={actions}
             />,
             container,
@@ -386,8 +412,61 @@ function SelectionOverlay({
 }
 
 /**
- * The range description, and - once the drag is released - the actions to
- * confirm it. One card rather than two: the range is what you're confirming.
+ * The two instants the selection runs between, drawn where the axis ticks would
+ * have been - the ticks are off while a selection is up, so the only dates on
+ * the axis are the ones the selection is about.
+ *
+ * The end label is dropped when the two would touch: a narrow selection only
+ * gets to say where it starts. It stays mounted and merely hidden, because
+ * unmounting it would throw away the width that decision is made from - and the
+ * decision would flip back on the next frame.
+ */
+function SelectionAxisLabels({
+  selection,
+  chartWidth,
+  labels,
+}: {
+  selection: Box;
+  chartWidth: number;
+  labels: { start: string; end: string };
+}) {
+  const startRef = useRef<SVGTextElement>(null);
+  const endRef = useRef<SVGTextElement>(null);
+  const [widths, setWidths] = useState({ start: 0, end: 0 });
+
+  // before paint, so a label never shows up off-center for a frame
+  useLayoutEffect(() => {
+    setWidths({
+      start: startRef.current?.getComputedTextLength() ?? 0,
+      end: endRef.current?.getComputedTextLength() ?? 0,
+    });
+  }, [labels.start, labels.end]);
+
+  const { start, end } = getSelectionLabels(selection, chartWidth, widths);
+
+  return (
+    // `dy` is what recharts hangs its own tick text from (`capHeight`), so these
+    // sit on the same line the ticks would have
+    <g className="fill-muted-foreground" textAnchor="middle">
+      <text ref={startRef} x={start.x} y={start.y} dy="0.71em">
+        {labels.start}
+      </text>
+      <text
+        ref={endRef}
+        x={end?.x ?? start.x}
+        y={start.y}
+        dy="0.71em"
+        visibility={end ? undefined : "hidden"}
+      >
+        {labels.end}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * The range description and the actions to confirm it, shown once the drag is
+ * released. One card rather than two: the range is what you're confirming.
  *
  * Portaled to the chart container instead of drawn in the SVG. An `<svg>` clips
  * to its viewport, so a card this tall lost its shadow and its bottom edge to
@@ -396,76 +475,55 @@ function SelectionOverlay({
  * width.
  */
 function SelectionCard({
-  center,
+  selection,
   chartWidth,
-  readout,
+  range,
   actions,
 }: {
-  center: number;
+  selection: Box;
   chartWidth: number;
-  readout: SelectionReadout;
-  actions?: { onZoom: () => void; onCancel: () => void } | null;
+  range: SelectionRange;
+  actions: { onZoom: () => void; onCancel: () => void };
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-  const hasActions = Boolean(actions);
 
   // before paint, so the card never shows up off-center for a frame
   useLayoutEffect(() => {
     setWidth(ref.current?.offsetWidth ?? 0);
-  }, [readout.range.start, readout.range.end, hasActions]);
+  }, [range.start, range.end]);
 
   return (
     // same shell as `ChartTooltipContent` - the card replaces the tooltip
     <div
       ref={ref}
-      style={{ left: centerWithin(center, width, chartWidth) }}
+      style={{ left: getSelectionCardLeft(selection, width, chartWidth) }}
       className="border-border/50 bg-background pointer-events-none absolute top-0 grid w-max min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl"
     >
       <div className="font-medium">
-        {readout.range.start}
+        {range.start}
         <span className="text-muted-foreground mx-1 font-normal">→</span>
-        {readout.range.end}
+        {range.end}
       </div>
-      <div className="grid gap-1.5">
-        {LEVELS.map((level) => (
-          <div key={level} className="flex w-full flex-wrap items-center gap-2">
-            <div
-              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-              style={{ background: chartConfig[level].color }}
-            />
-            <div className="flex flex-1 items-center justify-between leading-none">
-              <span className="text-muted-foreground">
-                {chartConfig[level].label}
-              </span>
-              <span className="text-foreground font-mono font-medium tabular-nums">
-                {(readout.values[level] ?? 0).toLocaleString()}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-      {actions ? (
-        <div
-          className="border-border/50 pointer-events-auto -mx-2.5 -mb-1.5 flex items-center gap-1 border-t px-2.5 py-1.5"
-          // a portal bubbles through the React tree, not the DOM one - without
-          // this a click on either button reaches the chart and starts a drag
-          onMouseDown={(event) => event.stopPropagation()}
-          onMouseUp={(event) => event.stopPropagation()}
+      <div
+        className="border-border/50 pointer-events-auto -mx-2.5 -mb-1.5 flex items-center gap-1 border-t px-2.5 py-1.5"
+        // a portal bubbles through the React tree, not the DOM one - without
+        // this a click on either button reaches the chart and starts a drag
+        onMouseDown={(event) => event.stopPropagation()}
+        onMouseUp={(event) => event.stopPropagation()}
+      >
+        <Button
+          variant="outline"
+          className={PILL_BUTTON}
+          onClick={actions.onCancel}
         >
-          <Button
-            variant="outline"
-            className={PILL_BUTTON}
-            onClick={actions.onCancel}
-          >
-            Cancel
-          </Button>
-          <Button className={cn(PILL_BUTTON, "gap-1")} onClick={actions.onZoom}>
-            <ZoomIn className="size-2.5!" />
-            <span>Zoom</span>
-          </Button>
-        </div>
-      ) : null}
+          Cancel
+        </Button>
+        <Button className={cn(PILL_BUTTON, "gap-1")} onClick={actions.onZoom}>
+          <ZoomIn className="size-2.5!" />
+          <span>Zoom</span>
+        </Button>
+      </div>
     </div>
   );
 }

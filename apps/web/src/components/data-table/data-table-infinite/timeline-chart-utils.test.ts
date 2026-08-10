@@ -2,13 +2,21 @@ import { describe, expect, it } from "vitest";
 import type { Box } from "./timeline-chart-utils";
 import {
   centerWithin,
+  formatAxisTick,
   formatSelectionRange,
   getBucketInterval,
   getSelectionBounds,
+  getSelectionCardLeft,
   getSelectionEdges,
+  getSelectionLabels,
   getSelectionScrim,
+  isPointerEvent,
+  orderSelectionLabels,
+  SELECTION_CARD_GAP,
   SELECTION_EDGE_WIDTH,
   SELECTION_GRIP_WIDTH,
+  SELECTION_LABEL_GAP,
+  SELECTION_LABEL_OFFSET,
   sumBucketRows,
   sumBucketValues,
 } from "./timeline-chart-utils";
@@ -161,6 +169,126 @@ describe("getSelectionBounds", () => {
   });
 });
 
+describe("formatAxisTick", () => {
+  // local-time constructor keeps the expectations timezone independent
+  const at = (day: number, hour: number, minute = 0, second = 0) =>
+    new Date(2026, 6, day, hour, minute, second).getTime();
+
+  it("returns N/A for unparseable values", () => {
+    expect(formatAxisTick("nope", "1d")).toBe("N/A");
+  });
+
+  it("gets coarser as the period widens", () => {
+    const value = at(21, 16, 52, 30);
+    expect(formatAxisTick(value, "10m")).toBe("16:52:30");
+    expect(formatAxisTick(value, "1d")).toBe("16:52");
+    expect(formatAxisTick(value, "1w")).toBe("Jul 21 16:52");
+    expect(formatAxisTick(value, "1mo")).toBe("Jul 21, 2026");
+  });
+
+  it("falls back to the widest format without a period", () => {
+    expect(formatAxisTick(at(21, 16), undefined)).toBe("Jul 21, 2026");
+  });
+
+  it("takes the same date as a string or a timestamp", () => {
+    const value = at(21, 16, 52);
+    expect(formatAxisTick(new Date(value).toString(), "1d")).toBe(
+      formatAxisTick(value, "1d"),
+    );
+  });
+});
+
+describe("getSelectionLabels", () => {
+  const selection = { x: 200, y: 0, width: 300, height: 40 };
+  const widths = { start: 60, end: 60 };
+
+  it("centers each label on its edge, below the plot", () => {
+    const { start, end } = getSelectionLabels(selection, 1_000, widths);
+    expect(start.x).toBe(200);
+    expect(end?.x).toBe(500);
+    expect(start.y).toBe(40 + SELECTION_LABEL_OFFSET);
+    expect(end?.y).toBe(start.y);
+  });
+
+  it("drops the end label when the two would touch", () => {
+    // 60 wide labels centered on either edge need more than 60 between them
+    const narrow = { ...selection, width: 60 + SELECTION_LABEL_GAP - 1 };
+    expect(getSelectionLabels(narrow, 1_000, widths).end).toBeNull();
+  });
+
+  it("keeps the end label at exactly the minimum gap", () => {
+    const tight = { ...selection, width: 60 + SELECTION_LABEL_GAP };
+    expect(getSelectionLabels(tight, 1_000, widths).end).not.toBeNull();
+  });
+
+  it("keeps both labels inside the plot", () => {
+    const atEdges = { ...selection, x: 0, width: 1_000 };
+    const { start, end } = getSelectionLabels(atEdges, 1_000, widths);
+    expect(start.x).toBe(30); // half a label in, not hanging off the left
+    expect(end?.x).toBe(970);
+  });
+
+  it("drops the end label when clamping closes the gap", () => {
+    // the raw width says there is room, but both labels get pushed inwards by
+    // the plot edges until they collide
+    const narrowPlot = { ...selection, x: 0, width: 80 };
+    expect(getSelectionLabels(narrowPlot, 80, widths).end).toBeNull();
+  });
+});
+
+describe("isPointerEvent", () => {
+  it("accepts a real mouse event", () => {
+    expect(isPointerEvent({ type: "mousemove", pageX: 10, pageY: 20 })).toBe(
+      true,
+    );
+  });
+
+  it("rejects the a11y layer's spoofed move, which carries no type", () => {
+    expect(isPointerEvent({ pageX: 10, pageY: 20 })).toBe(false);
+  });
+
+  it("rejects a missing event", () => {
+    expect(isPointerEvent(undefined)).toBe(false);
+    expect(isPointerEvent(null)).toBe(false);
+  });
+});
+
+describe("orderSelectionLabels", () => {
+  const label = (ms: number) => new Date(ms).toString();
+
+  it("keeps a forward drag as is", () => {
+    expect(orderSelectionLabels(label(1_000), label(3_000))).toEqual([
+      label(1_000),
+      label(3_000),
+    ]);
+  });
+
+  it("flips a backwards drag", () => {
+    expect(orderSelectionLabels(label(3_000), label(1_000))).toEqual([
+      label(1_000),
+      label(3_000),
+    ]);
+  });
+
+  it("keeps a single-bucket selection", () => {
+    expect(orderSelectionLabels(label(1_000), label(1_000))).toEqual([
+      label(1_000),
+      label(1_000),
+    ]);
+  });
+
+  it("leaves unparseable labels in the order they came in", () => {
+    expect(orderSelectionLabels("nope", label(1_000))).toEqual([
+      "nope",
+      label(1_000),
+    ]);
+    expect(orderSelectionLabels(label(1_000), "nope")).toEqual([
+      label(1_000),
+      "nope",
+    ]);
+  });
+});
+
 describe("formatSelectionRange", () => {
   // local-time constructors keep the expectations timezone independent
   const at = (day: number, hour: number, minute = 0, second = 0) =>
@@ -221,6 +349,57 @@ describe("centerWithin", () => {
 
   it("returns the point itself before the element has been measured", () => {
     expect(centerWithin(300, 0, 600)).toBe(300);
+  });
+});
+
+describe("getSelectionCardLeft", () => {
+  const CARD = 200;
+  const left = (
+    selection: { x: number; width: number },
+    chartWidth = 1_000,
+    cardWidth = CARD,
+  ) => getSelectionCardLeft(selection, cardWidth, chartWidth);
+
+  it("centers on a selection wider than the card", () => {
+    // the card can't swallow it - both ends stay visible around it
+    expect(left({ x: 200, width: 400 })).toBe(300);
+  });
+
+  it("centers when the selection is exactly as wide as the card", () => {
+    expect(left({ x: 200, width: CARD })).toBe(200);
+  });
+
+  it("steps aside for a narrow selection, to the roomier side", () => {
+    // 400 to its left, 560 to its right
+    expect(left({ x: 400, width: 40 })).toBe(440 + SELECTION_CARD_GAP);
+  });
+
+  it("goes left when that is the roomier side", () => {
+    // 600 to its left, 360 to its right
+    expect(left({ x: 600, width: 40 })).toBe(600 - SELECTION_CARD_GAP - CARD);
+  });
+
+  it("takes the tighter side when the roomier one can't fit the card", () => {
+    // hard against the right edge: no room there, plenty on the left
+    const x = 1_000 - 40;
+    expect(left({ x, width: 40 })).toBe(x - SELECTION_CARD_GAP - CARD);
+  });
+
+  it("falls back to centered when neither side fits the card", () => {
+    // a plot barely wider than the card itself: centered on the selection
+    // (120) and still inside the plot
+    expect(left({ x: 100, width: 40 }, 250)).toBe(20);
+  });
+
+  it("keeps the card inside the plot on either side", () => {
+    expect(left({ x: 0, width: 40 })).toBeGreaterThanOrEqual(0);
+    expect(left({ x: 960, width: 40 })).toBeGreaterThanOrEqual(0);
+    expect(left({ x: 960, width: 40 })).toBeLessThanOrEqual(1_000 - CARD);
+  });
+
+  it("centers before the card has been measured", () => {
+    // width 0 counts as "narrower than the selection" - nothing to step aside for
+    expect(left({ x: 200, width: 400 }, 1_000, 0)).toBe(400);
   });
 });
 
