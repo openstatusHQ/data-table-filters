@@ -166,6 +166,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/utils.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/format.ts",
           "type": "registry:lib"
         },

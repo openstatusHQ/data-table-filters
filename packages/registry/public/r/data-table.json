@@ -238,6 +238,11 @@
       "type": "registry:lib"
     },
     {
+      "path": "src/lib/utils.ts",
+      "content": "import { clsx, type ClassValue } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib"
+    },
+    {
       "path": "src/lib/format.ts",
       "content": "import { format } from \"date-fns\";\n\nexport function formatLatency(ms: number): string {\n  if (ms >= 1000) {\n    return (\n      new Intl.NumberFormat(\"en-US\", {\n        minimumFractionDigits: 1,\n        maximumFractionDigits: 1,\n      }).format(ms / 1000) + \"s\"\n    );\n  }\n\n  return (\n    new Intl.NumberFormat(\"en-US\", { maximumFractionDigits: 3 }).format(ms) +\n    \"ms\"\n  );\n}\n\nexport function formatMilliseconds(value: number) {\n  return new Intl.NumberFormat(\"en-US\", { maximumFractionDigits: 3 }).format(\n    value,\n  );\n}\n\nexport function formatDate(value: Date | string) {\n  return format(new Date(`${value}`), \"LLL dd, y HH:mm\");\n}\n\nexport function formatCompactNumber(value: number) {\n  if (value >= 100 && value < 1000) {\n    return value.toString(); // Keep the number as is if it's in the hundreds\n  } else if (value >= 1000 && value < 1000000) {\n    return (value / 1000).toFixed(1) + \"k\"; // Convert to 'k' for thousands\n  } else if (value >= 1000000) {\n    return (value / 1000000).toFixed(1) + \"M\"; // Convert to 'M' for millions\n  } else {\n    return value.toString(); // Optionally handle numbers less than 100 if needed\n  }\n}\n",
       "type": "registry:lib"

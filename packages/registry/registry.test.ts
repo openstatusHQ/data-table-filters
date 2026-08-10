@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import registry from "./registry.json";
 
 // Regression tests for issue #79 — registry blocks shipped a tree that could
-// not typecheck, and silently clobbered the consumer's `src/lib/utils.ts`.
+// not typecheck because blocks imported modules no dependency provided.
 //
 // These assert packaging invariants against `registry.json` (the source of
 // truth) rather than the built `public/r/*.json`, so they fail on the edit that
@@ -91,17 +91,24 @@ describe("registry packaging", () => {
     },
   );
 
-  it("never ships src/lib/utils.ts, which would overwrite the consumer's own", () => {
-    // The block only needs `cn`, which shadcn `init` already puts there.
-    // Shipping our copy replaces the file wholesale and deletes any exports
-    // the consumer kept alongside `cn`.
-    const offenders = items
-      .filter((item) =>
-        (item.files ?? []).some((file) => file.path === "src/lib/utils.ts"),
-      )
-      .map((item) => item.name);
+  it("keeps the shipped src/lib/utils.ts to the canonical `cn` helper", () => {
+    // We ship `src/lib/utils.ts` on purpose, so every block's `@/lib/utils`
+    // import resolves even in a project that never ran `shadcn init`. shadcn
+    // prompts before overwriting (y/N, defaulting to N), so this is the
+    // consumer's call to make — but it lands on a path they are likely to own.
+    // Keeping the file identical to what `shadcn init` writes means saying yes
+    // is a no-op. Adding an export here would start destroying their code.
+    const shippers = items.filter((item) =>
+      (item.files ?? []).some((file) => file.path === "src/lib/utils.ts"),
+    );
+    expect(shippers.length).toBeGreaterThan(0);
 
-    expect(offenders).toEqual([]);
+    const source = readFileSync(resolve(root, "src/lib/utils.ts"), "utf8");
+    const exports = [
+      ...source.matchAll(/^export\s+(?:function|const)\s+(\w+)/gm),
+    ].map((match) => match[1]);
+
+    expect(exports).toEqual(["cn"]);
   });
 
   it("lists only files that exist on disk", () => {
