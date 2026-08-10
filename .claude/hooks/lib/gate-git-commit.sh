@@ -7,6 +7,11 @@
 #
 #   source "$(dirname "$0")/lib/gate-git-commit.sh"
 
+# Fast path: skip when stdin is a TTY (script run directly, not as a tool hook).
+if [ -t 0 ]; then
+  exit 0
+fi
+
 # Fast path: the payload doesn't mention a commit anywhere, so no parsing needed
 # and we don't pay for a node startup on every unrelated Bash call.
 _gate_input=$(cat)
