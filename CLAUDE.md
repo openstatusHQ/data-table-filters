@@ -16,7 +16,7 @@
 pnpm dev              # start all workspaces
 pnpm build            # turbo build (includes registry:build)
 pnpm lint             # turbo lint (eslint across workspaces)
-pnpm turbo typecheck  # tsc --noEmit across workspaces
+pnpm typecheck        # tsc --noEmit across workspaces
 pnpm test             # turbo test (vitest across workspaces)
 pnpm format           # prettier --write .
 pnpm registry:build   # build shadcn registry artifacts
