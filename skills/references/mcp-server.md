@@ -1,6 +1,6 @@
 # MCP Server
 
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-mcp.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-mcp.json`
 
 ## Overview
 

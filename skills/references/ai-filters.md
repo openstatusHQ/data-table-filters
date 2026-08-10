@@ -1,6 +1,6 @@
 # AI Filters
 
-**Install:** `npx shadcn@latest add https://data-table-filters.com/r/data-table-filter-command-ai.json`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-filter-command-ai.json`
 
 ## Overview
 

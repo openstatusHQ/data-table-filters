@@ -5,6 +5,8 @@
 
 set -e
 
+source "$(dirname "$0")/lib/gate-git-commit.sh"
+
 cd "$(git rev-parse --show-toplevel)"
 
 echo "🔍 Running pre-commit checks..."

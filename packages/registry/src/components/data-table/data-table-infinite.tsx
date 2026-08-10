@@ -238,9 +238,9 @@ export function DataTableInfinite<TData, TValue>({
     for (let i = 0; i < headers.length; i++) {
       const header = headers[i]!;
       // REMINDER: replace "." with "-" to avoid invalid CSS variable name (e.g. "timing.dns" -> "timing-dns")
-      colSizes[`--header-${header.id.replace(".", "-")}-size`] =
+      colSizes[`--header-${header.id.replaceAll(".", "-")}-size`] =
         `${header.getSize()}px`;
-      colSizes[`--col-${header.column.id.replace(".", "-")}-size`] =
+      colSizes[`--col-${header.column.id.replaceAll(".", "-")}-size`] =
         `${header.column.getSize()}px`;
     }
     return colSizes;
@@ -332,7 +332,8 @@ export function DataTableInfinite<TData, TValue>({
               </div>
             </div>
           </div>
-          <div className="flex-1 p-2 sm:overflow-y-scroll">
+          {/* REMINDER: no top padding - it would offset the first filter row */}
+          <div className="flex-1 px-2 pb-2 sm:overflow-y-scroll">
             <DataTableFilterControls />
           </div>
           {footerSlot ? (
@@ -386,14 +387,14 @@ export function DataTableInfinite<TData, TValue>({
                           style={
                             header.column.getCanResize()
                               ? {
-                                  width: `var(--header-${header.id.replace(".", "-")}-size)`,
-                                  minWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                  width: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
+                                  minWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
                                 }
                               : header.column.columnDef.maxSize
                                 ? {
-                                    width: `var(--header-${header.id.replace(".", "-")}-size)`,
-                                    minWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
-                                    maxWidth: `var(--header-${header.id.replace(".", "-")}-size)`,
+                                    width: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
+                                    minWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
+                                    maxWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
                                   }
                                 : undefined
                           }
@@ -577,14 +578,14 @@ function Row<TData>({
           style={
             cell.column.getCanResize()
               ? {
-                  width: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
-                  maxWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                  width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                  maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
                 }
               : cell.column.columnDef.maxSize
                 ? {
-                    width: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
-                    minWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
-                    maxWidth: `var(--col-${cell.column.id.replace(".", "-")}-size)`,
+                    width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                    minWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                    maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
                   }
                 : undefined
           }

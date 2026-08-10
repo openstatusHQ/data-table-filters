@@ -5,7 +5,7 @@ author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
   - question: "How do I install data-table-filters?"
-    answer: "Run `npx shadcn@latest add https://data-table-filters.com/r/data-table.json` to install the core block with ~52 files, including the table engine, memory store adapter, and all 4 filter types."
+    answer: "Run `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json` to install the core block with 53 files, including the table engine, memory store adapter, and all 4 filter types."
   - question: "What are the prerequisites?"
     answer: "You need a React project with shadcn/ui initialized and Tailwind CSS v4. The shadcn CLI handles all dependency resolution automatically."
 ---
@@ -70,16 +70,17 @@ npx shadcn@latest add https://data-table.openstatus.dev/r/<block>
 
 | Name                           | Block                                                                                                      | Components |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------- | ---------: |
-| `data-table`                   | [data-table.json](https://data-table.openstatus.dev/r/data-table.json)                                     |         51 |
+| `data-table`                   | [data-table.json](https://data-table.openstatus.dev/r/data-table.json)                                     |         53 |
 | `data-table-filter-command`    | [data-table-filter-command.json](https://data-table.openstatus.dev/r/data-table-filter-command.json)       |          2 |
-| `data-table-cell`              | [data-table-cell.json](https://data-table.openstatus.dev/r/data-table-cell.json)                           |         10 |
+| `data-table-cell`              | [data-table-cell.json](https://data-table.openstatus.dev/r/data-table-cell.json)                           |         17 |
 | `data-table-sheet`             | [data-table-sheet.json](https://data-table.openstatus.dev/r/data-table-sheet.json)                         |          5 |
 | `data-table-nuqs`              | [data-table-nuqs.json](https://data-table.openstatus.dev/r/data-table-nuqs.json)                           |          4 |
 | `data-table-zustand`           | [data-table-zustand.json](https://data-table.openstatus.dev/r/data-table-zustand.json)                     |          3 |
-| `data-table-schema`            | [data-table-schema.json](https://data-table.openstatus.dev/r/data-table-schema.json)                       |         12 |
+| `data-table-schema`            | [data-table-schema.json](https://data-table.openstatus.dev/r/data-table-schema.json)                       |         13 |
 | `data-table-drizzle`           | [data-table-drizzle.json](https://data-table.openstatus.dev/r/data-table-drizzle.json)                     |          7 |
 | `data-table-query`             | [data-table-query.json](https://data-table.openstatus.dev/r/data-table-query.json)                         |          3 |
-| `data-table-filter-command-ai` | [data-table-filter-command-ai.json](https://data-table.openstatus.dev/r/data-table-filter-command-ai.json) |         10 |
+| `data-table-filter-command-ai` | [data-table-filter-command-ai.json](https://data-table.openstatus.dev/r/data-table-filter-command-ai.json) |         11 |
+| `data-table-mcp`               | [data-table-mcp.json](https://data-table.openstatus.dev/r/data-table-mcp.json)                             |          5 |
 
 > Looking to add natural language filtering? The `data-table-filter-command-ai` block translates queries like _"5xx errors last 24h"_ into structured filters using any LLM. See [AI Filters](/docs/ai-filters) for setup.
 

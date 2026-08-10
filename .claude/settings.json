@@ -1,13 +1,13 @@
 {
   "hooks": {
-    "PreToolCall": [
+    "PreToolUse": [
       {
-        "matcher": "Bash(git commit:*)",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-commit-checks.sh",
-            "timeout": 120
+            "timeout": 600
           },
           {
             "type": "command",
