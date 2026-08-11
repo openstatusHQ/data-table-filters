@@ -1,5 +1,6 @@
 import { buildDocMarkdown } from "@/lib/llms/build";
 import { getAllSections, getSection } from "@/lib/mdx";
+import { BASE_URL } from "@/lib/metadata/shared-metadata";
 
 export const dynamic = "force-static";
 
@@ -28,6 +29,10 @@ export async function GET(
     headers: {
       "content-type": "text/markdown; charset=utf-8",
       "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      // Both representations are in the sitemap, so point search engines at the
+      // HTML page as the indexable one. Plain text can't carry a <link>, which
+      // is why this rides on the header instead.
+      link: `<${BASE_URL}/docs/${slug}>; rel="canonical"`,
     },
   });
 }
