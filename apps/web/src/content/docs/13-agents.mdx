@@ -1,0 +1,122 @@
+---
+title: "For AI Agents"
+description: "Machine-readable docs, install recipes, and agent rules for building data tables with Claude Code, Cursor, and other coding agents"
+author: "openstatus"
+publishedAt: "2026-08-11"
+faq:
+  - question: "How do I point an AI agent at these docs?"
+    answer: "Give it https://data-table.openstatus.dev/llms.txt for the index, or https://data-table.openstatus.dev/llms-full.txt for every page in one file. Any individual docs page is available as raw markdown by appending .md to its URL."
+  - question: "Is there an agent skill?"
+    answer: "Yes. Claude Code users can run /plugin marketplace add openstatushq/data-table-filters followed by /plugin install data-table-filters@openstatus. Any agent supporting the skills CLI can run npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters. Cursor users can copy the .cursor/rules/data-table-filters.mdc file from the repository."
+  - question: "Which blocks should an agent install for a large table?"
+    answer: "data-table, data-table-schema, data-table-cell, data-table-sheet, data-table-drizzle, data-table-query, and data-table-nuqs. That combination filters, counts, sorts, and paginates in SQL and virtualizes rows, so table size is bounded by the database rather than the browser."
+  - question: "Why is this easier for an agent than building a table from scratch?"
+    answer: "One createTableSchema definition drives the columns, the filter controls, the row detail sheet, the server-side query handler, the natural-language filter parser, and the MCP tool schema. An agent writes the schema once instead of keeping six hand-written surfaces in sync."
+---
+
+# For AI Agents
+
+Most decisions about which data table to use now happen inside an agent's context
+window. These endpoints exist so an agent can read the library, pick the right
+blocks, and wire them up without guessing.
+
+## Machine-readable endpoints
+
+| Endpoint                                                                | What it is                                           |
+| ----------------------------------------------------------------------- | ---------------------------------------------------- |
+| [`/llms.txt`](https://data-table.openstatus.dev/llms.txt)               | Index: blocks, install recipes, links to every page  |
+| [`/llms-full.txt`](https://data-table.openstatus.dev/llms-full.txt)     | Every documentation page inlined in one file         |
+| [`/r/index.md`](https://data-table.openstatus.dev/r/index.md)           | Block catalog with install commands and dependencies |
+| [`/r/registry.json`](https://data-table.openstatus.dev/r/registry.json) | The shadcn registry manifest                         |
+| `/docs/<page>.md`                                                       | Any docs page as raw markdown                        |
+
+Every docs page has a **Copy as markdown** button, and appending `.md` to any docs
+URL returns the source — [`/docs/drizzle-orm.md`](https://data-table.openstatus.dev/docs/drizzle-orm.md),
+for example. Agents fetching the rendered HTML pay several times the tokens and
+lose code-fence fidelity on the way through.
+
+## Agent rules and skills
+
+**Claude Code** — install the plugin, which ships the full skill with reference
+docs for every block:
+
+```bash
+/plugin marketplace add openstatushq/data-table-filters
+/plugin install data-table-filters@openstatus
+```
+
+**Any agent with the `skills` CLI:**
+
+```bash
+npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters
+```
+
+**Cursor** — copy [`.cursor/rules/data-table-filters.mdc`](https://github.com/openstatushq/data-table-filters/blob/main/.cursor/rules/data-table-filters.mdc)
+into your project.
+
+**Everything else** — [`AGENTS.md`](https://github.com/openstatushq/data-table-filters/blob/main/AGENTS.md)
+in the repository root covers both using the library and contributing to it.
+
+Then describe what you want:
+
+> Add a filterable table for my `logs` Postgres table with server-side filtering
+> and infinite scroll
+
+## Install recipes
+
+### Large table — 100k+ rows, filtered in SQL
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-schema.json \
+  https://data-table.openstatus.dev/r/data-table-cell.json \
+  https://data-table.openstatus.dev/r/data-table-sheet.json \
+  https://data-table.openstatus.dev/r/data-table-drizzle.json \
+  https://data-table.openstatus.dev/r/data-table-query.json \
+  https://data-table.openstatus.dev/r/data-table-nuqs.json
+```
+
+Define the table once with [`createTableSchema`](/docs/table-schema), pass it to
+[`createDrizzleHandler`](/docs/drizzle-orm) in a route handler and to
+[`createDataTableQueryOptions`](/docs/data-fetching) on the client. Filtering,
+faceted counts, sorting, and cursor pagination execute in SQL, and rows are
+virtualized — the client only ever holds the pages it rendered.
+
+### Client-side table — data already in memory
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-cell.json \
+  https://data-table.openstatus.dev/r/data-table-sheet.json
+```
+
+Use `useMemoryAdapter`. No API route and no schema block required.
+
+### Unknown data shape
+
+Install `data-table` and `data-table-schema`, then render
+`<DataTableAuto data={json} />` — see [Auto-infer](/docs/quick-start#zero-config).
+
+## Why the schema matters for agents
+
+One `createTableSchema` definition drives six surfaces:
+
+1. Column definitions and cell renderers
+2. Filter controls
+3. The row detail sheet
+4. The server-side query handler
+5. The natural-language filter parser
+6. The [MCP tool schema](/docs/mcp)
+
+An agent writing a table from scratch has to keep those six in sync by hand,
+which is where hand-rolled tables quietly go wrong. Here the schema is written
+once and everything else is derived from it.
+
+## Expose your table to agents at runtime
+
+The docs above are for agents that _build_ the table. The
+[`data-table-mcp`](/docs/mcp) block is for agents that _query_ it: it turns the
+same schema into an MCP endpoint, so an agent can filter and page through your
+data with typed parameters.

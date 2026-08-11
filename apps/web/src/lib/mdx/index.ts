@@ -11,3 +11,4 @@ export { DocsSidebar } from "./docs-sidebar";
 export { DocsPagination } from "./docs-pagination";
 export { DocsSearch } from "./docs-search";
 export { HighlightText } from "./highlight-text";
+export { CopyPageButton } from "./copy-page-button";

@@ -1,4 +1,5 @@
 import {
+  CopyPageButton,
   DocsPagination,
   getAllSections,
   getSection,
@@ -91,6 +92,9 @@ export default async function DocsSectionPage({
           "prose-h1:font-semibold prose-h2:font-semibold prose-h3:font-semibold prose-h4:font-semibold prose-h5:font-semibold prose-h6:font-semibold",
         )}
       >
+        <div className="flex justify-end">
+          <CopyPageButton slug={slug} />
+        </div>
         <HighlightText>
           <Mdx source={source} />
         </HighlightText>

@@ -30,15 +30,33 @@ npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
 
 All URLs use base `https://data-table.openstatus.dev`.
 
-## Agent Skill
+## For AI Agents
 
-Install the agent skill to let Claude Code (or any compatible AI coding tool) set up data-table-filters in your project:
+Install the plugin in Claude Code:
+
+```bash
+/plugin marketplace add openstatushq/data-table-filters
+/plugin install data-table-filters@openstatus
+```
+
+Or install the skill with any agent that supports the `skills` CLI:
 
 ```bash
 npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters
 ```
 
 Then just say "add a filterable data table" — the skill detects your stack, installs the right blocks, generates a schema, and wires everything up.
+
+Machine-readable docs, for agents without the skill:
+
+| Endpoint                                                            | What it is                                           |
+| ------------------------------------------------------------------- | ---------------------------------------------------- |
+| [`/llms.txt`](https://data-table.openstatus.dev/llms.txt)           | Index: blocks, install recipes, docs links           |
+| [`/llms-full.txt`](https://data-table.openstatus.dev/llms-full.txt) | Every documentation page in one file                 |
+| [`/r/index.md`](https://data-table.openstatus.dev/r/index.md)       | Block catalog with install commands and dependencies |
+| `/docs/<page>.md`                                                   | Any docs page as raw markdown                        |
+
+Cursor users can copy [`.cursor/rules/data-table-filters.mdc`](./.cursor/rules/data-table-filters.mdc) into their project; [`AGENTS.md`](./AGENTS.md) covers every other agent. See the [For AI Agents](https://data-table.openstatus.dev/docs/agents) docs page for the full rundown.
 
 ## Table Schema
 

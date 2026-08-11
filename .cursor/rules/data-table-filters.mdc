@@ -1,0 +1,101 @@
+---
+description: Install and wire up data-table-filters — filterable React data tables with server-side filtering, faceted counts, infinite scroll, and virtualization, delivered as shadcn registry blocks.
+globs:
+alwaysApply: false
+---
+
+# data-table-filters
+
+Copy this file into any project that uses data-table-filters
+(`.cursor/rules/data-table-filters.mdc`) to give Cursor the same instructions the
+Claude Code skill provides.
+
+Blocks are installed into the repo with the shadcn CLI — this is not an npm
+dependency. Stack: React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui.
+
+Full docs for agents:
+
+- Index: https://data-table.openstatus.dev/llms.txt
+- Everything in one file: https://data-table.openstatus.dev/llms-full.txt
+- Block catalog: https://data-table.openstatus.dev/r/index.md
+- Any docs page as markdown: append `.md`, e.g. `/docs/drizzle-orm.md`
+
+## Blocks
+
+All URLs are `https://data-table.openstatus.dev/r/<name>.json`.
+
+| Block                          | Install when                                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `data-table`                   | Always — table engine, 4 filter types, infinite scroll, virtualization, memory store            |
+| `data-table-schema`            | One definition should drive columns, filters, sheet, and sorting (required by drizzle/mcp/ai)   |
+| `data-table-cell`              | Columns need badges, bars, heatmaps, status codes, timestamps                                   |
+| `data-table-sheet`             | Clicking a row opens a detail panel                                                             |
+| `data-table-filter-command`    | cmd+k filter palette with history                                                               |
+| `data-table-nuqs`              | Filter state lives in the URL (default for Next.js)                                             |
+| `data-table-zustand`           | Filter state lives in client app state                                                          |
+| `data-table-drizzle`           | Rows live in SQL and must be filtered server-side — **the block for large tables**              |
+| `data-table-query`             | The table fetches pages from an API endpoint                                                    |
+| `data-table-filter-command-ai` | Natural-language filtering                                                                      |
+| `data-table-mcp`               | Agents should query the table over MCP                                                          |
+
+## Large table (server-side, 100k+ rows)
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-schema.json \
+  https://data-table.openstatus.dev/r/data-table-cell.json \
+  https://data-table.openstatus.dev/r/data-table-sheet.json \
+  https://data-table.openstatus.dev/r/data-table-drizzle.json \
+  https://data-table.openstatus.dev/r/data-table-query.json \
+  https://data-table.openstatus.dev/r/data-table-nuqs.json
+```
+
+1. `createTableSchema` with `col.*` factories — one definition per table.
+2. Route handler: `createDrizzleHandler({ db, table, columnMapping, cursorColumn, schema })`.
+3. Client: `createDataTableQueryOptions({ queryKeyPrefix, apiEndpoint, searchParamsSerializer })`.
+4. Render `<DataTableInfinite>` inside `<DataTableStoreProvider adapter={adapter}>`.
+
+Filtering, faceted counts, sorting, and cursor pagination all execute in SQL.
+
+## Client-side table
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-cell.json \
+  https://data-table.openstatus.dev/r/data-table-sheet.json
+```
+
+Use `useMemoryAdapter`. No API route, no schema block.
+
+## Schema mapping
+
+- `string` → `col.string().filterable("input")`
+- `number` → `col.number().filterable("slider", { min, max })`
+- `boolean` → `col.boolean().filterable("checkbox")`
+- `Date` → `col.timestamp().filterable("timerange")`
+- `enum` → `col.enum(values).filterable("checkbox")`
+- row selection → `col.select()`
+
+Presets: `col.presets.logLevel()`, `.httpStatus()`, `.duration()`, `.timestamp()`,
+`.traceId()`, `.pathname()`, `.httpMethod()`.
+
+## Slots
+
+`DataTableInfinite` accepts `commandSlot`, `sheetSlot`, `toolbarActions`,
+`chartSlot`, `footerSlot`, `floatingBarSlot`.
+
+## Gotchas
+
+- `DataTableInfinite` already renders `DataTableProvider`, `ControlsProvider`, and
+  `DataTableStoreSync`. Only add `DataTableStoreProvider`.
+- nuqs needs **both** `<NuqsAdapter>` in the root layout and `<Suspense>` around
+  the table, plus server-parsed search params as `initialState` for SSR.
+- `field.string()`, never `field.string().default("")` — the latter creates
+  phantom filters.
+- Tailwind v4 only; v3 class syntax breaks silently.
+- `SheetField.type` must match the filter type to render a dropdown, or use
+  `generateSheetFields()`.
+- Filter not rendering? The filter type string must be a key of
+  `FILTER_COMPONENTS`.
