@@ -4,12 +4,12 @@
   "title": "Data Table AI Filter Command Palette",
   "description": "AI-powered command palette that translates natural language queries into structured table filters. Provider-agnostic — works with any LLM via Vercel AI SDK.",
   "dependencies": [
-    "ai",
-    "@ai-sdk/react",
-    "zod",
-    "date-fns",
-    "lucide-react",
-    "sonner"
+    "ai@^6.0.137",
+    "@ai-sdk/react@^3.0.139",
+    "zod@^4.3.6",
+    "date-fns@^3.6.0",
+    "lucide-react@^0.469.0",
+    "sonner@^1.7.2"
   ],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json",

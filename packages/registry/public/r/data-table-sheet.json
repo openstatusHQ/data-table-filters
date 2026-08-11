@@ -4,10 +4,10 @@
   "title": "Data Table Sheet Detail Panel",
   "description": "Row detail side panel with cell renderers, keyboard navigation, and copy-to-clipboard.",
   "dependencies": [
-    "@radix-ui/react-dialog",
-    "class-variance-authority",
-    "date-fns",
-    "lucide-react"
+    "@radix-ui/react-dialog@^1.1.4",
+    "class-variance-authority@^0.7.1",
+    "date-fns@^3.6.0",
+    "lucide-react@^0.469.0"
   ],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json",

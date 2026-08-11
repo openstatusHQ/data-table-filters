@@ -4,9 +4,9 @@
   "title": "Data Table Query Layer",
   "description": "React Query infinite query integration with SuperJSON serialization and faceted search helpers.",
   "dependencies": [
-    "@tanstack/react-query",
-    "@tanstack/react-table",
-    "superjson"
+    "@tanstack/react-query@^5.101.4",
+    "@tanstack/react-table@^8.20.6",
+    "superjson@^2.2.2"
   ],
   "registryDependencies": [
     "https://data-table.openstatus.dev/r/data-table.json"

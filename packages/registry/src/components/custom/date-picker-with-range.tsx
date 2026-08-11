@@ -102,7 +102,9 @@ export function DatePickerWithRange({
             </div>
             <Separator orientation="vertical" className="h-auto w-px" />
             <Calendar
-              initialFocus
+              // `initialFocus` until react-day-picker 9 deprecated it; gone in
+              // 10, which is what shadcn's `calendar` installs today.
+              autoFocus
               mode="range"
               defaultMonth={date?.from}
               selected={date}

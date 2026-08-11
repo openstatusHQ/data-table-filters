@@ -250,23 +250,22 @@
         "select"
       ],
       "dependencies": [
-        "@tanstack/react-table",
-        "@tanstack/react-query",
-        "@tanstack/react-virtual",
-        "lucide-react",
-        "zod",
-        "date-fns",
-        "clsx",
-        "tailwind-merge",
-        "class-variance-authority",
-        "react-day-picker",
-        "@radix-ui/react-slider",
-        "@radix-ui/react-visually-hidden",
-        "@radix-ui/react-slot",
-        "@dnd-kit/core",
-        "@dnd-kit/modifiers",
-        "@dnd-kit/sortable",
-        "@dnd-kit/utilities"
+        "@tanstack/react-table@^8.20.6",
+        "@tanstack/react-query@^5.101.4",
+        "@tanstack/react-virtual@^3.11.2",
+        "lucide-react@^0.469.0",
+        "zod@^4.3.6",
+        "date-fns@^3.6.0",
+        "clsx@^2.1.1",
+        "tailwind-merge@^2.6.0",
+        "class-variance-authority@^0.7.1",
+        "@radix-ui/react-slider@^1.2.2",
+        "@radix-ui/react-visually-hidden@^1.1.1",
+        "@radix-ui/react-slot@^1.1.1",
+        "@dnd-kit/core@^6.3.1",
+        "@dnd-kit/modifiers@^9.0.0",
+        "@dnd-kit/sortable@^10.0.0",
+        "@dnd-kit/utilities@^3.2.2"
       ],
       "cssVars": {
         "theme": {
@@ -311,7 +310,7 @@
         "kbd",
         "separator"
       ],
-      "dependencies": ["date-fns", "lucide-react"]
+      "dependencies": ["date-fns@^3.6.0", "lucide-react@^0.469.0"]
     },
     {
       "name": "data-table-cell",
@@ -397,7 +396,12 @@
         "tooltip",
         "hover-card"
       ],
-      "dependencies": ["lucide-react", "date-fns", "@date-fns/utc", "sonner"]
+      "dependencies": [
+        "lucide-react@^0.469.0",
+        "date-fns@^3.6.0",
+        "@date-fns/utc@^2.1.0",
+        "sonner@^1.7.2"
+      ]
     },
     {
       "name": "data-table-sheet",
@@ -437,10 +441,10 @@
         "tooltip"
       ],
       "dependencies": [
-        "@radix-ui/react-dialog",
-        "class-variance-authority",
-        "date-fns",
-        "lucide-react"
+        "@radix-ui/react-dialog@^1.1.4",
+        "class-variance-authority@^0.7.1",
+        "date-fns@^3.6.0",
+        "lucide-react@^0.469.0"
       ]
     },
     {
@@ -469,7 +473,7 @@
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json"
       ],
-      "dependencies": ["nuqs"]
+      "dependencies": ["nuqs@^2.3.0"]
     },
     {
       "name": "data-table-zustand",
@@ -493,7 +497,7 @@
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json"
       ],
-      "dependencies": ["zustand"]
+      "dependencies": ["zustand@^5.0.9"]
     },
     {
       "name": "data-table-schema",
@@ -556,7 +560,7 @@
         "https://data-table.openstatus.dev/r/data-table-sheet.json",
         "https://data-table.openstatus.dev/r/data-table-filter-command.json"
       ],
-      "dependencies": ["@tanstack/react-table"]
+      "dependencies": ["@tanstack/react-table@^8.20.6"]
     },
     {
       "name": "data-table-drizzle",
@@ -597,7 +601,7 @@
         "https://data-table.openstatus.dev/r/data-table.json",
         "https://data-table.openstatus.dev/r/data-table-schema.json"
       ],
-      "dependencies": ["drizzle-orm", "date-fns"]
+      "dependencies": ["drizzle-orm@^0.45.2", "date-fns@^3.6.0"]
     },
     {
       "name": "data-table-query",
@@ -618,9 +622,9 @@
         "https://data-table.openstatus.dev/r/data-table.json"
       ],
       "dependencies": [
-        "@tanstack/react-query",
-        "@tanstack/react-table",
-        "superjson"
+        "@tanstack/react-query@^5.101.4",
+        "@tanstack/react-table@^8.20.6",
+        "superjson@^2.2.2"
       ]
     },
     {
@@ -683,20 +687,24 @@
         "separator"
       ],
       "dependencies": [
-        "ai",
-        "@ai-sdk/react",
-        "zod",
-        "date-fns",
-        "lucide-react",
-        "sonner"
+        "ai@^6.0.137",
+        "@ai-sdk/react@^3.0.139",
+        "zod@^4.3.6",
+        "date-fns@^3.6.0",
+        "lucide-react@^0.469.0",
+        "sonner@^1.7.2"
       ],
       "tailwind": {
         "config": {
           "theme": {
             "keyframes": {
               "shimmer": {
-                "0%": { "backgroundPosition": "200% 50%" },
-                "100%": { "backgroundPosition": "-200% 50%" }
+                "0%": {
+                  "backgroundPosition": "200% 50%"
+                },
+                "100%": {
+                  "backgroundPosition": "-200% 50%"
+                }
               }
             }
           }
@@ -733,7 +741,7 @@
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json"
       ],
-      "dependencies": ["@modelcontextprotocol/sdk", "zod"],
+      "dependencies": ["@modelcontextprotocol/sdk@^1.30.0", "zod@^4.3.6"],
       "docs": "https://data-table.openstatus.dev/docs/mcp"
     }
   ]
