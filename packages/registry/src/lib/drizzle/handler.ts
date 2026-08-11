@@ -1,6 +1,6 @@
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
 import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
-import { and, count, sql, type SQL } from "drizzle-orm";
+import { and, count, eq, sql, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { computeFacets } from "./facets";
 import { buildWhereConditions } from "./filters";
@@ -226,20 +226,14 @@ export function createDrizzleHandler(config: DrizzleHandlerConfig) {
         ? sql`${cursorOrderBy}, ${orderBy}`
         : cursorOrderBy;
 
+      // One extra row reveals whether the page boundary splits a group of
+      // rows sharing the same cursor value.
       const rows = await db
         .select()
         .from(table)
         .where(dataWhere)
         .orderBy(orderClauses)
-        .limit(size);
-
-      if (needsReverse) {
-        rows.reverse();
-      }
-
-      // --- Cursors ---
-      const lastRow = rows[rows.length - 1];
-      const firstRow = rows[0];
+        .limit(size + 1);
 
       const getCursorValue = (row: Record<string, unknown>): number | null => {
         if (!row) return null;
@@ -249,13 +243,64 @@ export function createDrizzleHandler(config: DrizzleHandlerConfig) {
         return null;
       };
 
+      // --- Page boundary must fall between cursor values ---
+      //
+      // The next page is fetched with a strict `<` (or `>`) predicate on the
+      // cursor column, so any row sharing the boundary value that did not fit
+      // on this page would never be returned by any page. Rather than split a
+      // group of tied rows, end the page before it and let the group start the
+      // next one.
+      let page = rows;
+
+      const boundaryValue =
+        rows.length > size ? getCursorValue(rows[size]) : null;
+
+      // A cursor column that yields neither a Date nor a number cannot be
+      // serialized into a cursor at all, so leave those tables untouched.
+      if (boundaryValue !== null) {
+        const overflowRow = rows[size];
+
+        page = rows.slice(0, size);
+        while (
+          page.length > 0 &&
+          getCursorValue(page[page.length - 1]) === boundaryValue
+        ) {
+          page.pop();
+        }
+
+        // Degenerate case: a single cursor value spans the whole page, so
+        // there is no boundary to retreat to. Return the entire tied group —
+        // overflowing `size` is the only way to make progress without
+        // dropping rows.
+        if (page.length === 0) {
+          page = await db
+            .select()
+            .from(table)
+            .where(
+              and(
+                ...dataConditions,
+                eq(cursorCol, overflowRow[cursorCol.name]),
+              ),
+            )
+            .orderBy(orderClauses);
+        }
+      }
+
+      if (needsReverse) {
+        page.reverse();
+      }
+
+      // --- Cursors ---
+      const lastRow = page[page.length - 1];
+      const firstRow = page[0];
+
       const nextCursor = lastRow ? getCursorValue(lastRow) : null;
       const prevCursor = firstRow
         ? getCursorValue(firstRow)
         : new Date().getTime();
 
       return {
-        data: rows,
+        data: page,
         facets,
         totalRowCount,
         filterRowCount,

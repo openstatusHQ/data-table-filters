@@ -335,44 +335,107 @@ describe.skipIf(!hasDatabase)(
       });
     }
 
-    it("BUG(plan 004): rows sharing the boundary timestamp are skipped", async () => {
+    /** Page forward until exhausted, collecting labels in order. */
+    async function pageThrough(size: number) {
       const handler = createTieHandler();
+      const labels: string[] = [];
+      const pageSizes: number[] = [];
+      let cursor: number | null = null;
 
-      const page1 = await handler.execute({ size: 2, direction: "next" });
-      const page2 = await handler.execute({
+      for (let guard = 0; guard < 20; guard++) {
+        const page = await handler.execute({
+          size,
+          direction: "next",
+          ...(cursor === null ? {} : { cursor }),
+        });
+        if (page.data.length === 0) break;
+
+        labels.push(...page.data.map((row) => row.label as string));
+        pageSizes.push(page.data.length);
+        if (page.nextCursor === null) break;
+        cursor = page.nextCursor;
+      }
+
+      return { labels, pageSizes };
+    }
+
+    it("pages through tied rows without dropping any", async () => {
+      const { labels } = await pageThrough(2);
+
+      // Every row is returned exactly once, even though B and C share T2 and
+      // the page-1 boundary falls between them.
+      expect([...labels].sort()).toEqual(["A", "B", "C", "D"]);
+      expect(new Set(labels).size).toBe(tieRows.length);
+    });
+
+    it("ends the page before a tied group rather than splitting it", async () => {
+      const page1 = await createTieHandler().execute({
+        size: 2,
+        direction: "next",
+      });
+
+      // A alone: B would have split the T2 group, so it starts page 2 instead.
+      expect(page1.data.map((row) => row.label as string)).toEqual(["A"]);
+      expect(page1.data.length).toBeLessThan(2);
+      expect(page1.nextCursor).toBe(T1.getTime());
+
+      const page2 = await createTieHandler().execute({
         size: 2,
         direction: "next",
         cursor: page1.nextCursor,
       });
 
-      const seen = [
-        ...page1.data.map((row) => row.label as string),
-        ...page2.data.map((row) => row.label as string),
-      ];
-
-      expect(page1.data.length).toBe(2);
-      expect(page1.nextCursor).toBe(T2.getTime());
-
-      // The cursor is `date < T2`, so whichever of B/C did not fit on page 1 is
-      // silently dropped: paging through every page never returns all 4 rows.
-      //
-      // BUG(plan 004): rows sharing the boundary timestamp are skipped — this
-      // assertion documents current behavior and must be UPDATED by plan 004
-      // (expected: 4 rows seen, no row missing).
-      expect(seen.length).toBe(3);
-      expect(new Set(seen).size).toBe(3);
-      expect(seen).toContain("A");
-      expect(seen).toContain("D");
-      expect(["B", "C"].filter((label) => seen.includes(label)).length).toBe(1);
-      expect(seen.length).toBeLessThan(tieRows.length);
+      expect(page2.data.map((row) => row.label as string).sort()).toEqual([
+        "B",
+        "C",
+      ]);
     });
 
-    it("both tied rows are reachable in a single page (the data is there)", async () => {
+    it("overflows the page when one cursor value fills it entirely", async () => {
+      // size 1 cannot hold the two rows at T2, and retreating would leave an
+      // empty page — so the whole tied group comes back at once.
+      const { labels, pageSizes } = await pageThrough(1);
+
+      expect([...labels].sort()).toEqual(["A", "B", "C", "D"]);
+      expect(Math.max(...pageSizes)).toBe(2);
+    });
+
+    it("pages backwards through tied rows without dropping any", async () => {
+      const handler = createTieHandler();
+
+      // Start from the oldest row and walk newer, the way live mode prepends.
+      const first = await handler.execute({
+        size: 2,
+        direction: "prev",
+        cursor: T3.getTime(),
+      });
+
+      const labels = [...first.data.map((row) => row.label as string)];
+      let cursor = first.prevCursor;
+
+      for (let guard = 0; guard < 20 && cursor !== null; guard++) {
+        const page = await handler.execute({
+          size: 2,
+          direction: "prev",
+          cursor,
+        });
+        if (page.data.length === 0) break;
+        labels.push(...page.data.map((row) => row.label as string));
+        cursor = page.prevCursor;
+      }
+
+      expect([...labels].sort()).toEqual(["A", "B", "C"]);
+      expect(new Set(labels).size).toBe(3);
+    });
+
+    it("returns rows newest-first regardless of page boundaries", async () => {
       const result = await createTieHandler().execute({
         size: 10,
         direction: "next",
       });
 
+      const dates = result.data.map((row) => (row.date as Date).getTime());
+      expect(dates).toEqual([...dates].sort((a, b) => b - a));
       expect(result.data.map((row) => row.label as string).sort()).toEqual([
         "A",
         "B",
