@@ -91,6 +91,7 @@ export function buildLlmsTxt(sections: SectionMeta[]): string {
     `- [llms-full.txt](${BASE_URL}/llms-full.txt): every documentation page inlined in one file`,
     `- [Registry index](${BASE_URL}/r/index.md): block catalog with install commands and dependencies`,
     `- [Registry manifest](${BASE_URL}/r/registry.json): machine-readable shadcn registry`,
+    `- [Claude Code plugin](https://github.com/openstatushq/data-table-filters): \`/plugin marketplace add openstatushq/data-table-filters\` then \`/plugin install data-table-filters@openstatus\``,
     `- [Agent skill](https://github.com/openstatushq/data-table-filters): \`npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters\``,
     "",
   );

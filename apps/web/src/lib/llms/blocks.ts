@@ -6,6 +6,7 @@ export type RegistryItem = {
   description?: string;
   registryDependencies?: string[];
   dependencies?: string[];
+  files?: { path: string; type?: string }[];
 };
 
 export const registryItems: RegistryItem[] = manifest.items;
