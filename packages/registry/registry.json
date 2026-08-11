@@ -605,6 +605,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/drizzle/interval.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/drizzle/pagination.ts",
           "type": "registry:lib"
         },

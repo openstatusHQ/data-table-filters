@@ -103,6 +103,29 @@ function internalImports(filePath: string): string[] {
   );
 }
 
+/**
+ * Relative imports of a source file, resolved to registry-root-relative module
+ * ids (`src/lib/drizzle/interval.ts` -> `lib/drizzle/interval`).
+ *
+ * These are copied verbatim into a consumer's tree, so a relative import
+ * pointing at a file the block does not ship installs code that cannot resolve.
+ * The alias-based check below cannot see them.
+ */
+function relativeImports(filePath: string): string[] {
+  const absolute = resolve(root, filePath);
+  if (!existsSync(absolute)) return [];
+  const content = stripComments(readFileSync(absolute, "utf8"));
+  const specifiers = [
+    ...content.matchAll(/from\s+"(\.[^"]*)"/g),
+    ...content.matchAll(/import\(\s*"(\.[^"]*)"\s*\)/g),
+  ].map((match) => match[1]);
+
+  const fromDir = dirname(filePath);
+  return specifiers.map((specifier) =>
+    toModuleId(join(fromDir, specifier).replace(/\\/g, "/")),
+  );
+}
+
 /** shadcn `init` writes `lib/utils.ts`, and `ui/*` comes from its registry. */
 function isProvidedByShadcn(moduleId: string): boolean {
   return moduleId === "lib/utils" || moduleId.startsWith("components/ui/");
@@ -219,6 +242,28 @@ describe("registry packaging", () => {
           if (provided.has(moduleId)) continue;
           if (provided.has(`${moduleId}/index`)) continue;
           unresolved.push(`${file.path} -> @/${moduleId}`);
+        }
+      }
+
+      expect(unresolved).toEqual([]);
+    },
+  );
+
+  it.each(items.map((item) => item.name))(
+    "%s ships every file its relative imports point at",
+    (name) => {
+      // `interval.ts` was extracted out of a demo route into the drizzle block
+      // and wired up with `./interval` imports, but never added to the manifest.
+      // The block installed, then failed to resolve its own import. The
+      // alias-based check above is blind to relative specifiers.
+      const provided = resolveProvided(name);
+      const unresolved: string[] = [];
+
+      for (const file of byName.get(name)?.files ?? []) {
+        for (const moduleId of relativeImports(file.path)) {
+          if (provided.has(moduleId)) continue;
+          if (provided.has(`${moduleId}/index`)) continue;
+          unresolved.push(`${file.path} -> ${moduleId}`);
         }
       }
 

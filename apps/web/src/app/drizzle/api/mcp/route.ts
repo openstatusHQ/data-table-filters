@@ -19,6 +19,11 @@ const drizzleHandler = createDrizzleHandler({
   columnMapping,
   cursorColumn: "date",
   defaultSize: 40,
+  select: {
+    uuid: logs.uuid,
+    headers: logs.headers,
+    message: logs.message,
+  },
 });
 
 const handler = createTableMCPHandler({
@@ -31,29 +36,15 @@ const handler = createTableMCPHandler({
       filters as Record<string, unknown>,
     );
 
-    // TODO: extract response row mapping — columnMapping already defines
-    // the camelCase↔dot-notation relationship, could be reused here
-    type LogRow = typeof logs.$inferSelect;
-    const rows = result.data.map((row) => {
-      const r = row as LogRow;
-      return {
-        uuid: r.uuid,
-        level: r.level,
-        method: r.method,
-        host: r.host,
-        pathname: r.pathname,
-        status: r.status,
-        latency: r.latency,
-        regions: r.regions,
-        date: r.date.toISOString(),
-        message: r.message ?? undefined,
-        "timing.dns": r.timingDns,
-        "timing.connection": r.timingConnection,
-        "timing.tls": r.timingTls,
-        "timing.ttfb": r.timingTtfb,
-        "timing.transfer": r.timingTransfer,
-      };
-    });
+    // Rows arrive keyed by schema keys. Two differences from the REST payload
+    // remain, both deliberate: MCP serializes `date` as an ISO string, and
+    // `percentile` is REST-only (it is computed in a pass after the handler
+    // returns). This used to be a copy of the REST remap that had already
+    // drifted, silently omitting `headers`.
+    const rows = result.data.map((row) => ({
+      ...row,
+      date: (row.date as Date).toISOString(),
+    }));
 
     return { rows, total: result.filterRowCount, facets: result.facets };
   },
