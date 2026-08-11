@@ -64,6 +64,33 @@ export function createTableMCPHandler<
   const filtersSchema = schemaToZod(config.schema);
 
   return async function handler(request: Request): Promise<Response> {
+    // A GET opens the standalone SSE stream for server-initiated messages.
+    // This handler has none to send, and it closes its server as soon as the
+    // response is returned — which would hand the client a stream that is
+    // already at EOF, and some clients then reconnect in a loop. The spec's
+    // answer for a server that doesn't offer that stream is 405, so routes can
+    // keep exporting GET and get a correct reply.
+    if (request.method === "GET") {
+      return new Response(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          error: {
+            code: -32000,
+            message:
+              "Method Not Allowed: this server has no standalone SSE stream",
+          },
+          id: null,
+        }),
+        {
+          status: 405,
+          headers: {
+            "content-type": "application/json",
+            allow: "POST, DELETE",
+          },
+        },
+      );
+    }
+
     const server = createServer(config, filtersSchema);
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

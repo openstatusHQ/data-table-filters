@@ -66,6 +66,28 @@ async function callHandler(
 }
 
 describe("createTableMCPHandler", () => {
+  describe("transport", () => {
+    // Routes export the handler as GET for spec compliance, but this server
+    // sends nothing on the standalone SSE stream and closes itself as soon as
+    // the response is returned — an open stream would arrive already at EOF.
+    it("answers GET with 405 rather than a stream that is already closed", async () => {
+      const response = await createHandler()(
+        new Request("http://localhost/api/mcp", {
+          method: "GET",
+          headers: { Accept: "text/event-stream" },
+        }),
+      );
+
+      expect(response.status).toBe(405);
+      expect(response.headers.get("allow")).toBe("POST, DELETE");
+      expect(response.headers.get("content-type")).toBe("application/json");
+      expect(await response.json()).toMatchObject({
+        jsonrpc: "2.0",
+        error: { code: -32000 },
+      });
+    });
+  });
+
   describe("initialize", () => {
     it("returns server info and capabilities", async () => {
       const handler = createHandler();
