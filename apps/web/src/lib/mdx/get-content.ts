@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import matter from "gray-matter";
+import { slugify } from "./slugify";
 
 export type TOCItem = { depth: number; text: string; slug: string };
 
@@ -14,16 +15,7 @@ export type SectionMeta = {
   faq?: { question: string; answer: string }[];
 };
 
-export function slugify(str: string) {
-  return str
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/&/g, "-and-")
-    .replace(/[^\w-]+/g, "")
-    .replace(/--+/g, "-");
-}
+export { slugify };
 
 function extractHeadings(source: string): TOCItem[] {
   const headings: TOCItem[] = [];

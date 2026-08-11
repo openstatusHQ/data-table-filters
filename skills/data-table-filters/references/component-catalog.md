@@ -59,16 +59,20 @@ The command palette uses `useDataTable()` internally to access table context. No
 
 ### Available Cells
 
-| Component                     | Use for                                |
-| ----------------------------- | -------------------------------------- |
-| `DataTableCellText`           | Plain text with optional tooltip       |
-| `DataTableCellCode`           | Monospace code snippets                |
-| `DataTableCellBadge`          | Colored badge labels                   |
-| `DataTableCellBoolean`        | Boolean yes/no indicators              |
-| `DataTableCellNumber`         | Formatted numbers with optional unit   |
-| `DataTableCellStatusCode`     | HTTP status codes with color           |
-| `DataTableCellLevelIndicator` | Log level indicators                   |
-| `DataTableCellTimestamp`      | Formatted timestamps with hover detail |
+| Component                     | Use for                                     |
+| ----------------------------- | ------------------------------------------- |
+| `DataTableCellText`           | Plain text with optional tooltip            |
+| `DataTableCellCode`           | Monospace code snippets                     |
+| `DataTableCellBadge`          | Colored badge labels                        |
+| `DataTableCellBoolean`        | Boolean yes/no indicators                   |
+| `DataTableCellNumber`         | Formatted numbers with optional unit        |
+| `DataTableCellBar`            | Numbers with a proportional bar behind      |
+| `DataTableCellHeatmap`        | Numbers shaded by their position in a range |
+| `DataTableCellGauge`          | Numbers with a circular gauge               |
+| `DataTableCellStar`           | Ratings as a filled or outlined star        |
+| `DataTableCellStatusCode`     | HTTP status codes with color                |
+| `DataTableCellLevelIndicator` | Log level indicators                        |
+| `DataTableCellTimestamp`      | Formatted timestamps with hover detail      |
 
 ### Wiring
 

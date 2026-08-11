@@ -3,7 +3,8 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
-      "@dtf/registry/*": ["../../packages/registry/src/*"]
+      "@dtf/registry/*": ["../../packages/registry/src/*"],
+      "@dtf/registry-manifest": ["../../packages/registry/registry.json"]
     },
     "baseUrl": "."
   },

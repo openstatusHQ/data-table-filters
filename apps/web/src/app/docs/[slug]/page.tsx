@@ -1,4 +1,5 @@
 import {
+  CopyPageButton,
   DocsPagination,
   getAllSections,
   getSection,
@@ -44,7 +45,17 @@ export async function generateMetadata({
     description,
     twitter: { ...twitterMetadata, title, description },
     openGraph: { ...ogMetadata, title, description },
-    alternates: { canonical: `/docs/${slug}` },
+    alternates: {
+      canonical: `/docs/${slug}`,
+      // The markdown twin of this page. Pairs with the `canonical` header the
+      // .md route sends back, so the two representations point at each other.
+      types: {
+        "text/markdown": [
+          { url: `/docs/${slug}.md`, title: `${title} (Markdown)` },
+        ],
+        "text/plain": [{ url: "/llms.txt", title: "llms.txt" }],
+      },
+    },
   };
 }
 
@@ -91,6 +102,9 @@ export default async function DocsSectionPage({
           "prose-h1:font-semibold prose-h2:font-semibold prose-h3:font-semibold prose-h4:font-semibold prose-h5:font-semibold prose-h6:font-semibold",
         )}
       >
+        <div className="flex justify-end">
+          <CopyPageButton slug={slug} />
+        </div>
         <HighlightText>
           <Mdx source={source} />
         </HighlightText>

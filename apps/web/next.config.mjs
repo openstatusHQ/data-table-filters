@@ -4,6 +4,15 @@ const nextConfig = {
   // https://react.dev/learn/react-compiler
   reactCompiler: true,
   transpilePackages: ["next-mdx-remote", "@dtf/registry"],
+  async rewrites() {
+    return [
+      // Raw markdown for agents: /docs/quick-start.md -> /docs/quick-start/md
+      {
+        source: "/docs/:slug.md",
+        destination: "/docs/:slug/md",
+      },
+    ];
+  },
   async redirects() {
     return [
       {

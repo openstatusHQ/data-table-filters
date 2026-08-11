@@ -26,6 +26,10 @@ The `data-table-mcp` block exposes your data table as an MCP endpoint. AI agents
 
 Stateless. Serverless-compatible. Schema auto-generated from your existing field definitions.
 
+> Looking for the other direction? These docs are themselves an MCP server, so
+> an agent can ask how to build the table before it queries one — see
+> [For AI Agents](/docs/agents).
+
 ## Installation
 
 ```bash
@@ -41,7 +45,10 @@ This installs `@/lib/mcp` and the `@modelcontextprotocol/sdk` dependency.
 
 ## Route Setup
 
-Create a route handler co-located with your table's API. Export POST, GET, and DELETE for Streamable HTTP spec compliance.
+Create a route handler co-located with your table's API. Export POST, GET, and
+DELETE for Streamable HTTP spec compliance. POST carries every request; GET is
+answered with 405, since the handler is stateless and has nothing to push on the
+standalone SSE stream.
 
 The recommended pattern derives the MCP schema from your existing `filterSchema`, excluding UI-only fields (`live`, `uuid`) via destructuring. This automatically includes all filter fields, sorting, and cursor-based pagination.
 

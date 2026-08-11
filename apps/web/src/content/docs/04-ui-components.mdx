@@ -7,7 +7,7 @@ faq:
   - question: "What UI components are included?"
     answer: "The library provides DataTableInfinite (infinite scroll table), DataTableFilterControls (sidebar filters with accordions), DataTableFilterCommand (command palette with filter syntax), DataTableFilterAICommand (AI-enhanced command palette with natural language support), DataTableSheetDetails (row detail drawer), and DataTableFloatingBar (bulk action bar for selected rows)."
   - question: "What cell renderers are available?"
-    answer: "Built-in cell components include text, code, number, timestamp, badge, boolean, star, status code, and level indicator renderers."
+    answer: "12 cell renderers (text, code, number, bar, heatmap, gauge, timestamp, badge, boolean, star, status-code, level-indicator), used automatically by generateColumns and by the row detail sheet."
 ---
 
 # UI Components
@@ -167,6 +167,9 @@ Built-in cell renderers (used automatically by `generateColumns`):
 - `DataTableCellText` — plain text with overflow tooltip
 - `DataTableCellCode` — monospace
 - `DataTableCellNumber` — formatted with optional unit
+- `DataTableCellBar` — the number over a bar filled to its share of `min`–`max`
+- `DataTableCellHeatmap` — the number over a cell tinted by that same share
+- `DataTableCellGauge` — the number beside a circular gauge
 - `DataTableCellTimestamp` — relative time with absolute tooltip
 - `DataTableCellBadge` — colored chip
 - `DataTableCellBoolean` — checkmark / dash
@@ -174,7 +177,9 @@ Built-in cell renderers (used automatically by `generateColumns`):
 - `DataTableCellStatusCode` — HTTP status styling
 - `DataTableCellLevelIndicator` — severity dot
 
-All support an optional `colorMap` for value-based coloring.
+Each takes an optional `color` (a hex string). Rather than passing it per cell,
+set `colorMap` on the column's display config — `generateColumns` and the sheet
+look the row's value up in it and pass the result through as `color`.
 
 ## Filter Functions
 

@@ -40,5 +40,10 @@ export const defaultMetadata: Metadata = {
     "react server side data table",
     "react data table infinite scroll",
   ],
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    // Advertise the agent-readable index on every page. An agent that lands on
+    // the HTML can follow this instead of scraping the DOM.
+    types: { "text/plain": [{ url: "/llms.txt", title: "llms.txt" }] },
+  },
 };

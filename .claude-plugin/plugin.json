@@ -1,0 +1,23 @@
+{
+  "name": "data-table-filters",
+  "displayName": "Data Table Filters",
+  "description": "Install and wire up data-table-filters — filterable, sortable React data tables with server-side filtering, faceted counts, infinite scroll, and virtualization, delivered as shadcn registry blocks.",
+  "version": "1.0.0",
+  "author": {
+    "name": "openstatus",
+    "url": "https://openstatus.dev"
+  },
+  "homepage": "https://data-table.openstatus.dev",
+  "repository": "https://github.com/openstatushq/data-table-filters",
+  "license": "MIT",
+  "keywords": [
+    "data-table",
+    "react",
+    "shadcn",
+    "tanstack-table",
+    "filters",
+    "drizzle",
+    "nextjs"
+  ],
+  "skills": "./skills"
+}

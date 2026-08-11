@@ -5,7 +5,7 @@ author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
   - question: "How do I install data-table-filters?"
-    answer: "Run `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json` to install the core block with 53 files, including the table engine, memory store adapter, and all 4 filter types."
+    answer: "Run `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json` to install the core block with 55 files, including the table engine, memory store adapter, and all 4 filter types."
   - question: "What are the prerequisites?"
     answer: "You need a React project with shadcn/ui initialized and Tailwind CSS v4. The shadcn CLI handles all dependency resolution automatically."
 ---
@@ -38,7 +38,14 @@ See the [/auto](/auto) example for a live demo.
 
 ## Agent Skill
 
-Install the skill and let your AI agent handle the setup:
+Install the plugin in Claude Code:
+
+```bash
+/plugin marketplace add openstatushq/data-table-filters
+/plugin install data-table-filters@openstatus
+```
+
+Or install the skill with any agent that supports the `skills` CLI:
 
 ```bash
 npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters
@@ -48,7 +55,9 @@ Let the agent handle the rest:
 
 > Add a data table with filters to my project
 
-It detects your stack, installs the right blocks, and wires them up.
+It detects your stack, installs the right blocks, and wires them up. For agents
+without the skill, see [For AI Agents](/docs/agents) — `llms.txt`, raw markdown
+docs, and Cursor rules.
 
 ## Install Components
 

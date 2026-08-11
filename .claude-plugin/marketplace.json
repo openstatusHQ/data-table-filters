@@ -1,0 +1,24 @@
+{
+  "name": "openstatus",
+  "description": "Plugins from openstatus for building data-heavy React interfaces.",
+  "owner": {
+    "name": "openstatus",
+    "url": "https://github.com/openstatushq"
+  },
+  "plugins": [
+    {
+      "name": "data-table-filters",
+      "source": "./",
+      "description": "Install and wire up data-table-filters — filterable, sortable React data tables with server-side filtering, faceted counts, infinite scroll, and virtualization, delivered as shadcn registry blocks.",
+      "version": "1.0.0",
+      "author": {
+        "name": "openstatus",
+        "url": "https://openstatus.dev"
+      },
+      "homepage": "https://data-table.openstatus.dev",
+      "license": "MIT",
+      "category": "development",
+      "tags": ["react", "data-table", "shadcn", "tanstack-table", "drizzle"]
+    }
+  ]
+}

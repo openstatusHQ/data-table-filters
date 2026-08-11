@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { cn } from "../utils";
 import type { SectionMeta } from "./get-content";
+import { tokenize } from "./search";
 
 type SearchResult = {
   title: string;
@@ -171,19 +172,25 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
   );
 }
 
-/** Splits `text` on `search` matches and wraps them in <mark> — no innerHTML needed. */
+/**
+ * Splits `text` on the search terms and wraps them in <mark> — no innerHTML
+ * needed. Marks the terms the search ranked on rather than the raw query, so a
+ * multi-word question highlights the words that actually matched.
+ */
 function HighlightMatch({ text, search }: { text: string; search: string }) {
-  if (!search) return <>{text}</>;
-  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const terms = tokenize(search);
+  if (terms.length === 0) return <>{text}</>;
+
+  const escaped = terms
+    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+  const lowered = new Set(terms);
   const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+
   return (
     <>
       {parts.map((part, i) =>
-        part.toLowerCase() === search.toLowerCase() ? (
-          <mark key={i}>{part}</mark>
-        ) : (
-          part
-        ),
+        lowered.has(part.toLowerCase()) ? <mark key={i}>{part}</mark> : part,
       )}
     </>
   );

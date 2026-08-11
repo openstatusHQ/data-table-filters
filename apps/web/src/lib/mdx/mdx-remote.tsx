@@ -4,12 +4,14 @@ import React from "react";
 import rehypePrettyCode from "rehype-pretty-code";
 import remarkGfm from "remark-gfm";
 import { CustomImage } from "./custom-image";
-import { slugify } from "./get-content";
+import { headingText } from "./heading-text";
 import { Pre } from "./pre";
+import { slugify } from "./slugify";
 
 function createHeading(level: number) {
   const Heading = ({ children }: { children: React.ReactNode }) => {
-    const slug = slugify(children?.toString() ?? "");
+    const text = headingText(children);
+    const slug = slugify(text);
     return React.createElement(
       `h${level}`,
       { id: slug },
@@ -18,7 +20,7 @@ function createHeading(level: number) {
           href: `#${slug}`,
           key: `link-${slug}`,
           className: "anchor",
-          "aria-label": `Link to section: ${children?.toString()}`,
+          "aria-label": `Link to section: ${text}`,
         }),
       ],
       children,

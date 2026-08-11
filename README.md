@@ -14,31 +14,57 @@ Install blocks via the shadcn registry:
 npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
 ```
 
-| Block                          | Install URL                               | What it adds                                                                                   |
-| ------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `data-table`                   | `.../r/data-table.json`                   | Core: table engine, store, 4 filter types, memory adapter                                      |
-| `data-table-filter-command`    | `.../r/data-table-filter-command.json`    | Command palette with history + keyboard shortcuts                                              |
-| `data-table-cell`              | `.../r/data-table-cell.json`              | 8 cell renderers (text, code, badge, boolean, number, status-code, level-indicator, timestamp) |
-| `data-table-sheet`             | `.../r/data-table-sheet.json`             | Row detail side panel                                                                          |
-| `data-table-nuqs`              | `.../r/data-table-nuqs.json`              | nuqs URL state adapter                                                                         |
-| `data-table-zustand`           | `.../r/data-table-zustand.json`           | zustand state adapter                                                                          |
-| `data-table-schema`            | `.../r/data-table-schema.json`            | Declarative schema system with `col.*` factories                                               |
-| `data-table-drizzle`           | `.../r/data-table-drizzle.json`           | Drizzle ORM server-side helpers                                                                |
-| `data-table-query`             | `.../r/data-table-query.json`             | React Query infinite query integration                                                         |
-| `data-table-filter-command-ai` | `.../r/data-table-filter-command-ai.json` | AI-powered natural language → filter inference                                                 |
-| `data-table-mcp`               | `.../r/data-table-mcp.json`               | MCP server endpoint for AI agents                                                              |
+| Block                          | Install URL                               | What it adds                                                                                                               |
+| ------------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `data-table`                   | `.../r/data-table.json`                   | Core: table engine, store, 4 filter types, memory adapter                                                                  |
+| `data-table-filter-command`    | `.../r/data-table-filter-command.json`    | Command palette with history + keyboard shortcuts                                                                          |
+| `data-table-cell`              | `.../r/data-table-cell.json`              | 12 cell renderers (text, code, number, bar, heatmap, gauge, badge, boolean, star, status-code, level-indicator, timestamp) |
+| `data-table-sheet`             | `.../r/data-table-sheet.json`             | Row detail side panel                                                                                                      |
+| `data-table-nuqs`              | `.../r/data-table-nuqs.json`              | nuqs URL state adapter                                                                                                     |
+| `data-table-zustand`           | `.../r/data-table-zustand.json`           | zustand state adapter                                                                                                      |
+| `data-table-schema`            | `.../r/data-table-schema.json`            | Declarative schema system with `col.*` factories                                                                           |
+| `data-table-drizzle`           | `.../r/data-table-drizzle.json`           | Drizzle ORM server-side helpers                                                                                            |
+| `data-table-query`             | `.../r/data-table-query.json`             | React Query infinite query integration                                                                                     |
+| `data-table-filter-command-ai` | `.../r/data-table-filter-command-ai.json` | AI-powered natural language → filter inference                                                                             |
+| `data-table-mcp`               | `.../r/data-table-mcp.json`               | MCP server endpoint for AI agents                                                                                          |
 
 All URLs use base `https://data-table.openstatus.dev`.
 
-## Agent Skill
+## For AI Agents
 
-Install the agent skill to let Claude Code (or any compatible AI coding tool) set up data-table-filters in your project:
+Install the plugin in Claude Code:
+
+```bash
+/plugin marketplace add openstatushq/data-table-filters
+/plugin install data-table-filters@openstatus
+```
+
+Or install the skill with any agent that supports the `skills` CLI:
 
 ```bash
 npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters
 ```
 
 Then just say "add a filterable data table" — the skill detects your stack, installs the right blocks, generates a schema, and wires everything up.
+
+Or point any MCP client at the docs and let the agent ask them questions —
+`search_docs`, `get_doc`, `list_blocks`, `get_install_plan`:
+
+```bash
+claude mcp add --transport http data-table-filters https://data-table.openstatus.dev/api/mcp
+```
+
+Machine-readable docs, for agents without the skill:
+
+| Endpoint                                                            | What it is                                           |
+| ------------------------------------------------------------------- | ---------------------------------------------------- |
+| [`/api/mcp`](https://data-table.openstatus.dev/api/mcp)             | These docs as an MCP server (Streamable HTTP)        |
+| [`/llms.txt`](https://data-table.openstatus.dev/llms.txt)           | Index: blocks, install recipes, docs links           |
+| [`/llms-full.txt`](https://data-table.openstatus.dev/llms-full.txt) | Every documentation page in one file                 |
+| [`/r/index.md`](https://data-table.openstatus.dev/r/index.md)       | Block catalog with install commands and dependencies |
+| `/docs/<page>.md`                                                   | Any docs page as raw markdown                        |
+
+Cursor users can copy [`.cursor/rules/data-table-filters.mdc`](./.cursor/rules/data-table-filters.mdc) into their project; [`AGENTS.md`](./AGENTS.md) covers every other agent. See the [For AI Agents](https://data-table.openstatus.dev/docs/agents) docs page for the full rundown.
 
 ## Table Schema
 

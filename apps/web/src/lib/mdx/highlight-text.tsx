@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
+import { tokenize } from "./search";
 
 function clearHighlights(root: HTMLElement) {
   for (const mark of Array.from(root.querySelectorAll("mark"))) {
@@ -16,7 +17,15 @@ function highlight(root: HTMLElement, query: string) {
   clearHighlights(root);
   if (!query) return;
 
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Highlight the terms the search actually ranked on. Matching the raw query
+  // would light up nothing for "keep filter state in the url" — a phrase that
+  // now returns results but appears verbatim on no page.
+  const terms = tokenize(query);
+  if (terms.length === 0) return;
+
+  const escaped = terms
+    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
   const regex = new RegExp(`(${escaped})`, "gi");
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
 
