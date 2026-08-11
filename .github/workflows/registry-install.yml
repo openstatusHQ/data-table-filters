@@ -1,0 +1,58 @@
+name: Registry install
+
+# Installs the blocks into throwaway apps with the real shadcn CLI and checks
+# that the result compiles. This is the check that would have caught #79: the
+# manifest tests in registry.test.ts pass on a tree that a consumer cannot build.
+#
+# Slow (an npm install per case), so it runs only when the registry changes, on
+# a nightly schedule, or on demand.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/registry/**"
+      - ".github/workflows/registry-install.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/registry/**"
+  schedule:
+    # 04:00 UTC daily, against the latest shadcn CLI rather than the pinned one.
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+    inputs:
+      shadcn_version:
+        description: "shadcn CLI version to install with"
+        required: false
+        default: ""
+
+jobs:
+  install:
+    name: ${{ matrix.case }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case:
+          - next-src:core
+          - next-src:large-table
+          - next-no-src:core
+          - next-no-src:large-table
+    env:
+      REGISTRY_E2E: "1"
+      E2E_CASE: ${{ matrix.case }}
+      # Scheduled runs track the latest CLI so a breaking release surfaces here
+      # rather than in someone's install.
+      SHADCN_VERSION: ${{ inputs.shadcn_version || (github.event_name == 'schedule' && 'latest') || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The harness serves packages/registry/public/r, so it has to be current.
+      - run: pnpm turbo registry:build
+      - run: pnpm --filter @dtf/registry test -- e2e/install.test.ts

@@ -18,10 +18,22 @@ type RegistryItem = {
   name: string;
   files?: RegistryFile[];
   registryDependencies?: string[];
+  dependencies?: string[];
 };
 
 const items = registry.items as RegistryItem[];
 const byName = new Map(items.map((item) => [item.name, item]));
+
+/** react/react-dom/next are the consumer's, not ours to install. */
+const peerDependencies = new Set(
+  Object.keys(
+    (
+      JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
+        peerDependencies?: Record<string, string>;
+      }
+    ).peerDependencies ?? {},
+  ),
+);
 
 /** `https://data-table.openstatus.dev/r/data-table-cell.json` -> `data-table-cell` */
 function toBlockName(dep: string): string | null {
@@ -71,6 +83,81 @@ function isProvidedByShadcn(moduleId: string): boolean {
   return moduleId === "lib/utils" || moduleId.startsWith("components/ui/");
 }
 
+/**
+ * npm packages that shadcn's own components install alongside themselves, keyed
+ * by the bare registryDependency that pulls them in. A block that depends on
+ * `command` gets `cmdk` without having to declare it.
+ */
+const SHADCN_PROVIDED_PACKAGES: Record<string, string[]> = {
+  command: ["cmdk"],
+  "react-day-picker": ["react-day-picker"],
+  calendar: ["react-day-picker"],
+  sonner: ["sonner"],
+  drawer: ["vaul"],
+  chart: ["recharts"],
+};
+
+/** Strip comments so a package named only in a JSDoc `@example` doesn't count. */
+function stripComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
+/** Bare npm package specifiers imported by a source file. */
+function externalImports(filePath: string): string[] {
+  const absolute = resolve(root, filePath);
+  if (!existsSync(absolute)) return [];
+
+  const content = stripComments(readFileSync(absolute, "utf8"));
+  const specifiers = [
+    ...content.matchAll(/from\s+"([^"]+)"/g),
+    ...content.matchAll(/import\(\s*"([^"]+)"\s*\)/g),
+  ].map((match) => match[1]);
+
+  return specifiers
+    .filter(
+      (specifier) =>
+        !specifier.startsWith(".") &&
+        !specifier.startsWith("@/") &&
+        !specifier.startsWith("@dtf/") &&
+        !specifier.startsWith("node:"),
+    )
+    .map((specifier) => {
+      const segments = specifier.split("/");
+      return specifier.startsWith("@")
+        ? segments.slice(0, 2).join("/")
+        : segments[0];
+    });
+}
+
+/** npm packages a block installs, following registryDependencies transitively. */
+function resolveDependencies(
+  name: string,
+  seen = new Set<string>(),
+): Set<string> {
+  const packages = new Set<string>();
+  if (seen.has(name)) return packages;
+  seen.add(name);
+
+  const item = byName.get(name);
+  if (!item) return packages;
+
+  for (const dependency of item.dependencies ?? []) packages.add(dependency);
+
+  for (const dep of item.registryDependencies ?? []) {
+    const blockName = toBlockName(dep);
+    if (blockName) {
+      for (const pkg of resolveDependencies(blockName, seen)) packages.add(pkg);
+      continue;
+    }
+    // Bare name — a shadcn component, which brings its own npm packages.
+    for (const pkg of SHADCN_PROVIDED_PACKAGES[dep] ?? []) packages.add(pkg);
+  }
+
+  return packages;
+}
+
 describe("registry packaging", () => {
   it.each(items.map((item) => item.name))(
     "%s resolves every internal import from itself or its registryDependencies",
@@ -88,6 +175,27 @@ describe("registry packaging", () => {
       }
 
       expect(unresolved).toEqual([]);
+    },
+  );
+
+  it.each(items.map((item) => item.name))(
+    "%s declares every npm package it imports",
+    (name) => {
+      // The import-resolution test above covers `@/` imports; this covers the
+      // other half of "installs but doesn't compile" — a bare package import
+      // that no block, dependency, or shadcn component installs.
+      const installed = resolveDependencies(name);
+      const undeclared: string[] = [];
+
+      for (const file of byName.get(name)?.files ?? []) {
+        for (const pkg of externalImports(file.path)) {
+          if (peerDependencies.has(pkg)) continue;
+          if (installed.has(pkg)) continue;
+          undeclared.push(`${file.path} -> ${pkg}`);
+        }
+      }
+
+      expect(undeclared).toEqual([]);
     },
   );
 
