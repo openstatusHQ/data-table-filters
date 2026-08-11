@@ -5,7 +5,9 @@ author: "openstatus"
 publishedAt: "2026-08-11"
 faq:
   - question: "How do I point an AI agent at these docs?"
-    answer: "Give it https://data-table.openstatus.dev/llms.txt for the index, or https://data-table.openstatus.dev/llms-full.txt for every page in one file. Any individual docs page is available as raw markdown by appending .md to its URL."
+    answer: "Add the MCP server at https://data-table.openstatus.dev/api/mcp, which exposes search_docs, get_doc, list_blocks, and get_install_plan. Without MCP, give the agent https://data-table.openstatus.dev/llms.txt for the index, or https://data-table.openstatus.dev/llms-full.txt for every page in one file. Any individual docs page is available as raw markdown by appending .md to its URL."
+  - question: "What is the difference between the docs MCP server and the data-table-mcp block?"
+    answer: "The docs server at /api/mcp answers questions about the library — which blocks to install, how to wire them up, what an API does. The data-table-mcp block is something you install: it turns your own table into an MCP endpoint so agents can query your data. One helps an agent build the table, the other lets an agent query it."
   - question: "Is there an agent skill?"
     answer: "Yes. Claude Code users can run /plugin marketplace add openstatushq/data-table-filters followed by /plugin install data-table-filters@openstatus. Any agent supporting the skills CLI can run npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters. Cursor users can copy the .cursor/rules/data-table-filters.mdc file from the repository."
   - question: "Which blocks should an agent install for a large table?"
@@ -24,6 +26,7 @@ blocks, and wire them up without guessing.
 
 | Endpoint                                                                | What it is                                           |
 | ----------------------------------------------------------------------- | ---------------------------------------------------- |
+| `/api/mcp`                                                              | These docs as an MCP server — see below              |
 | [`/llms.txt`](https://data-table.openstatus.dev/llms.txt)               | Index: blocks, install recipes, links to every page  |
 | [`/llms-full.txt`](https://data-table.openstatus.dev/llms-full.txt)     | Every documentation page inlined in one file         |
 | [`/r/index.md`](https://data-table.openstatus.dev/r/index.md)           | Block catalog with install commands and dependencies |
@@ -34,6 +37,48 @@ Every docs page has a **Copy as markdown** button, and appending `.md` to any do
 URL returns the source — [`/docs/drizzle-orm.md`](https://data-table.openstatus.dev/docs/drizzle-orm.md),
 for example. Agents fetching the rendered HTML pay several times the tokens and
 lose code-fence fidelity on the way through.
+
+## Ask the docs instead of reading them
+
+The endpoints above hand an agent pages. `/api/mcp` serves the same content as
+an MCP server, so the agent asks a question and gets back the section that
+answers it — a targeted section costs a fraction of the page it lives in, and
+the page costs a fraction of `llms-full.txt`.
+
+```bash
+claude mcp add --transport http data-table-filters https://data-table.openstatus.dev/api/mcp
+```
+
+Any MCP client works — it speaks Streamable HTTP, needs no auth, and holds no
+session:
+
+```json
+{
+  "mcpServers": {
+    "data-table-filters": {
+      "type": "http",
+      "url": "https://data-table.openstatus.dev/api/mcp"
+    }
+  }
+}
+```
+
+Four read-only tools:
+
+| Tool               | Ask it                                                            |
+| ------------------ | ----------------------------------------------------------------- |
+| `get_install_plan` | "I need a table over 2M Postgres rows" → the exact shadcn command |
+| `search_docs`      | "how do faceted counts work" → the sections that answer it        |
+| `get_doc`          | A page in full, or one section of it, as markdown                 |
+| `list_blocks`      | The catalog: what each block adds and when it applies             |
+
+Start with `get_install_plan` — it returns the command, the wiring notes, and
+the pages to read next, which is the whole decision an agent has to make before
+it writes any code.
+
+> This is the docs server. The [`data-table-mcp`](/docs/mcp) block is the other
+> direction: it turns _your_ table into an MCP endpoint so agents can query your
+> data.
 
 ## Agent rules and skills
 

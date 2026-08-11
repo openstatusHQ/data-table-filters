@@ -15,6 +15,7 @@ dependency. Stack: React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui.
 
 Full docs for agents:
 
+- MCP server (ask instead of fetch): https://data-table.openstatus.dev/api/mcp
 - Index: https://data-table.openstatus.dev/llms.txt
 - Everything in one file: https://data-table.openstatus.dev/llms-full.txt
 - Block catalog: https://data-table.openstatus.dev/r/index.md

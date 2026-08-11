@@ -47,10 +47,14 @@ export const BLOCK_GUIDANCE: Record<string, string> = {
 };
 
 export type Recipe = {
+  /** Stable key — the `goal` an MCP client asks for. */
+  id: string;
   title: string;
   when: string;
   blocks: string[];
   notes: string;
+  /** Docs slugs to read after installing, in order. */
+  docs: string[];
 };
 
 /**
@@ -59,6 +63,8 @@ export type Recipe = {
  */
 export const RECIPES: Recipe[] = [
   {
+    id: "large-table",
+    docs: ["table-schema", "drizzle-orm", "data-fetching"],
     title: "Large table (server-side, 100k+ rows)",
     when: "Rows live in Postgres/MySQL/SQLite and cannot be shipped to the client.",
     blocks: [
@@ -74,6 +80,8 @@ export const RECIPES: Recipe[] = [
       "Define the table once with createTableSchema, pass it to createDrizzleHandler in a route handler, and to createDataTableQueryOptions on the client. Filtering, faceted counts, sorting, and cursor pagination all run in SQL; the client only ever holds the pages it rendered.",
   },
   {
+    id: "client-side-table",
+    docs: ["quick-start", "state-management", "ui-components"],
     title: "Client-side table (data already in memory)",
     when: "A few thousand rows at most, already fetched or imported.",
     blocks: ["data-table", "data-table-cell", "data-table-sheet"],
@@ -81,6 +89,8 @@ export const RECIPES: Recipe[] = [
       "Use the memory adapter via useMemoryAdapter. No API route and no schema block required.",
   },
   {
+    id: "unknown-data-shape",
+    docs: ["quick-start", "builder"],
     title: "Zero-config table from raw JSON",
     when: "The shape of the data is not known ahead of time.",
     blocks: ["data-table", "data-table-schema"],
@@ -88,6 +98,8 @@ export const RECIPES: Recipe[] = [
       "Render <DataTableAuto data={json} />, or call inferSchemaFromJSON + createTableSchema.fromJSON to get columns, filters, and sheet fields inferred from the data itself.",
   },
   {
+    id: "ai-queryable-table",
+    docs: ["table-schema", "ai-filters", "mcp"],
     title: "AI-queryable table",
     when: "Agents or end users should query the table in natural language.",
     blocks: [

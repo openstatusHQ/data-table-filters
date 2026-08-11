@@ -47,10 +47,18 @@ npx skills add https://github.com/openstatushq/data-table-filters --skill data-t
 
 Then just say "add a filterable data table" — the skill detects your stack, installs the right blocks, generates a schema, and wires everything up.
 
+Or point any MCP client at the docs and let the agent ask them questions —
+`search_docs`, `get_doc`, `list_blocks`, `get_install_plan`:
+
+```bash
+claude mcp add --transport http data-table-filters https://data-table.openstatus.dev/api/mcp
+```
+
 Machine-readable docs, for agents without the skill:
 
 | Endpoint                                                            | What it is                                           |
 | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| [`/api/mcp`](https://data-table.openstatus.dev/api/mcp)             | These docs as an MCP server (Streamable HTTP)        |
 | [`/llms.txt`](https://data-table.openstatus.dev/llms.txt)           | Index: blocks, install recipes, docs links           |
 | [`/llms-full.txt`](https://data-table.openstatus.dev/llms-full.txt) | Every documentation page in one file                 |
 | [`/r/index.md`](https://data-table.openstatus.dev/r/index.md)       | Block catalog with install commands and dependencies |

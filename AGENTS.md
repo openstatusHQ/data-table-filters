@@ -18,10 +18,20 @@ Router is first-class; the blocks work in any React app.
 
 | Resource                                                | What it gives you                                       |
 | ------------------------------------------------------- | ------------------------------------------------------- |
+| <https://data-table.openstatus.dev/api/mcp>             | These docs as an MCP server — see below                 |
 | <https://data-table.openstatus.dev/llms.txt>            | Index: blocks, install recipes, docs links              |
 | <https://data-table.openstatus.dev/llms-full.txt>       | Every documentation page in one file                    |
 | <https://data-table.openstatus.dev/r/index.md>          | Block catalog with install commands and dependencies    |
 | <https://data-table.openstatus.dev/docs/quick-start.md> | Any docs page as raw markdown — append `.md` to the URL |
+
+**If you can use MCP,** add the docs server and ask it instead of fetching
+pages. Streamable HTTP, no auth, four read-only tools: `get_install_plan` (goal
+→ the exact shadcn command, wiring notes, and what to read next), `search_docs`,
+`get_doc`, `list_blocks`.
+
+```bash
+claude mcp add --transport http data-table-filters https://data-table.openstatus.dev/api/mcp
+```
 
 **Claude Code users:** install the skill instead of reading the docs each time.
 

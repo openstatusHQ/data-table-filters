@@ -63,6 +63,23 @@ describe("block guidance", () => {
       expect(recipe.blocks[0]).toBe("data-table");
     }
   });
+
+  it("gives every recipe a unique id", () => {
+    const ids = RECIPES.map((recipe) => recipe.id);
+
+    expect(ids).toHaveLength(new Set(ids).size);
+  });
+
+  it("only sends readers to docs pages that exist", async () => {
+    const slugs = new Set(
+      (await getAllSections("docs")).map((section) => section.slug),
+    );
+    const unknown = RECIPES.flatMap((recipe) => recipe.docs).filter(
+      (slug) => !slugs.has(slug),
+    );
+
+    expect(unknown).toEqual([]);
+  });
 });
 
 describe("installCommand", () => {
