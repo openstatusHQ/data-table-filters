@@ -145,7 +145,10 @@ function run(
  * Pinned by default so CI is deterministic; set `SHADCN_VERSION=latest` in a
  * scheduled run to find out when a new CLI release breaks the blocks.
  */
-export const SHADCN_VERSION = process.env.SHADCN_VERSION ?? "4.16.2";
+// `||`, not `??`: the workflow passes an empty string on PR and push runs, and
+// `??` would take that as a version, installing `shadcn@` — which resolves to
+// latest and quietly defeats the pin.
+export const SHADCN_VERSION = process.env.SHADCN_VERSION || "4.16.2";
 
 export function installBlocks(
   dir: string,
