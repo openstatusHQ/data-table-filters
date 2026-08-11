@@ -42,7 +42,6 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "date-fns": "^3.6.0",
-    "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.469.0",
     "radix-ui": "^1.4.3",
     "react-day-picker": "^9.14.0",
@@ -55,6 +54,7 @@
     "zustand": "^5.0.9"
   },
   "peerDependencies": {
+    "drizzle-orm": "^0.45.2",
     "next": ">=15",
     "nuqs": "^2.3.0",
     "react": ">=19",
@@ -62,9 +62,11 @@
   },
   "devDependencies": {
     "@dtf/tsconfig": "workspace:*",
+    "@electric-sql/pglite": "^0.5.4",
     "@types/node": "^22.20.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "drizzle-orm": "^0.45.2",
     "prettier": "^3.5.3",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",

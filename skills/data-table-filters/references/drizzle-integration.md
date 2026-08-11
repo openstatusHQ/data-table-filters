@@ -16,15 +16,16 @@ Auto-installs the schema block. Requires `drizzle-orm` in the project.
 
 ## createDrizzleHandler
 
-### With Schema (Recommended)
+### With the table schema (recommended)
 
 ```tsx
 import { createDrizzleHandler } from "@/lib/drizzle";
+import { defineFilters } from "@/lib/filters";
 
 const handler = createDrizzleHandler({
   db, // Drizzle database instance
   table: logs, // Drizzle table reference
-  schema: tableSchema.definition, // Auto-derives sliderKeys, facetKeys, dateKeys
+  filters: defineFilters(tableSchema.definition), // declared filter semantics
   columnMapping: {
     level: logs.level,
     date: logs.date,
@@ -36,22 +37,39 @@ const handler = createDrizzleHandler({
 });
 ```
 
-### With Explicit Keys
+### When the schema is `"use client"`
 
-Use when schema is `"use client"` and can't be imported server-side:
+Pass the serialized schema — the declaration crosses the boundary as data, so the server still
+gets real filter semantics instead of untyped key lists:
 
 ```tsx
 const handler = createDrizzleHandler({
   db,
   table: logs,
+  filters: defineFilters(schemaJson), // tableSchema.toJSON(), committed or fetched
   columnMapping: {
     /* ... */
   },
   cursorColumn: "date",
-  sliderKeys: ["latency"],
-  facetKeys: ["level", "method", "latency"],
-  dateKeys: ["date"],
 });
+```
+
+You can also hand-write `FilterSpec[]` when neither is available:
+
+```tsx
+filters: defineFilters([
+  { key: "level", type: "checkbox", kind: "enum" },
+  { key: "status", type: "checkbox", kind: "number" },
+  { key: "latency", type: "slider", kind: "number", min: 0, max: 5000 },
+  { key: "regions", type: "checkbox", kind: "array", itemKind: "enum" },
+  { key: "date", type: "timerange", kind: "timestamp" },
+]);
+```
+
+Guard a hand-written list against drift with a test:
+
+```tsx
+expect(defineFilters(tableSchema.definition).specs).toEqual(filters.specs);
 ```
 
 ### Return Value

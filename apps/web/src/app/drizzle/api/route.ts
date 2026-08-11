@@ -5,6 +5,7 @@ import {
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
 import { createDrizzleHandler } from "@dtf/registry/lib/drizzle";
+import { defineFilters } from "@dtf/registry/lib/filters";
 import { and, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import SuperJSON from "superjson";
@@ -19,7 +20,7 @@ export const dynamic = "force-dynamic";
 const handler = createDrizzleHandler({
   db,
   table: logs,
-  schema: tableSchema.definition,
+  filters: defineFilters(tableSchema.definition),
   columnMapping,
   cursorColumn: "date",
   defaultSize: 40,

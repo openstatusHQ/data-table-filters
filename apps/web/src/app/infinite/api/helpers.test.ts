@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { evaluateInterval } from "./helpers";
 
-// NOTE: filterData, sortData, splitData depend on ColumnSchema with Date objects
-// and domain-specific constants. We test the pure utility functions here.
+// Filtering is no longer tested here: `filterData` is gone, and the semantics
+// it used to implement are covered by the conformance corpus in
+// `@dtf/registry/lib/filters`, which exercises this route's engine and the SQL
+// engine against the same hand-written expectations.
+//
+// `evaluateInterval` stays because nothing else covers its 13-rung ladder.
+// `sortData`, `splitData`, `groupChartData`, and `getFacetsFromData` remain
+// untested — they are chart/pagination concerns, not filter semantics.
 
 describe("evaluateInterval", () => {
   function makeDates(minutesApart: number): [Date, Date] {

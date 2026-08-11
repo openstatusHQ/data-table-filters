@@ -8,6 +8,7 @@ import {
   hasDatabase,
   seedRows,
   setupTestDb,
+  testFilters,
   testMapping,
 } from "./setup";
 
@@ -20,8 +21,8 @@ describe.skipIf(!hasDatabase)("SQL injection resistance", () => {
     await destroyTestDb();
   });
 
-  async function queryWithFilters(filters: Record<string, unknown>) {
-    const conditions = buildWhereConditions(testMapping, filters);
+  async function queryWithFilters(values: Record<string, unknown>) {
+    const conditions = buildWhereConditions(testFilters, values, testMapping);
     const where = conditions.length > 0 ? and(...conditions) : undefined;
     return getDb().select().from(getTable()).where(where);
   }

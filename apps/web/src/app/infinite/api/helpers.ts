@@ -1,126 +1,41 @@
-import { LEVELS } from "@/constants/levels";
-import { REGIONS } from "@/constants/region";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
-import { isArrayOfDates, isArrayOfNumbers } from "@dtf/registry/lib/is-array";
-import {
-  addDays,
-  addMilliseconds,
-  differenceInMinutes,
-  isSameDay,
-} from "date-fns";
+import { defineFilters } from "@dtf/registry/lib/filters";
+import { addDays, addMilliseconds, differenceInMinutes } from "date-fns";
 import type {
   ColumnSchema,
   FacetMetadataSchema,
   TimelineChartSchema,
 } from "../schema";
 import type { SearchParamsType } from "../search-params";
+import { tableSchema } from "../table-schema";
 
-export const sliderFilterValues = [
-  "latency",
-  "timing.dns",
-  "timing.connection",
-  "timing.tls",
-  "timing.ttfb",
-  "timing.transfer",
-] as const satisfies (keyof ColumnSchema)[];
+/**
+ * The one interpretation of this table's filter semantics, shared with the
+ * Drizzle route and the TanStack client.
+ *
+ * This replaces `filterData` — an 85-line per-key `if` chain that disagreed
+ * with the SQL engine on array overlap (it compared only `row[key][0]`) and on
+ * case sensitivity (it was case-*sensitive* where `ilike` is not).
+ */
+export const filters = defineFilters(tableSchema.definition);
 
-export const filterValues = [
-  "level",
-  ...sliderFilterValues,
-  "status",
-  "regions",
-  "method",
-  "host",
-  "pathname",
-] as const satisfies (keyof ColumnSchema)[];
+/** Slider keys, for the three-pass facet strategy. */
+export const sliderKeys = filters.specs
+  .filter((spec) => spec.type === "slider")
+  .map((spec) => spec.key);
 
-export function filterData(
-  data: ColumnSchema[],
-  search: Partial<SearchParamsType>,
-): ColumnSchema[] {
-  // Only iterate over actual filter fields (exclude pagination, sorting, selection, live mode)
-  const filterKeys = [
-    "level",
-    "method",
-    "host",
-    "pathname",
-    "latency",
-    "timing.dns",
-    "timing.connection",
-    "timing.tls",
-    "timing.ttfb",
-    "timing.transfer",
-    "status",
-    "regions",
-    "date",
-  ] as const;
-  return data.filter((row) => {
-    for (const key of filterKeys) {
-      const filter = search[key];
-      if (filter === undefined || filter === null) continue;
-      if (Array.isArray(filter) && filter.length === 0) continue; // Skip empty arrays
-      if (
-        (key === "latency" ||
-          key === "timing.dns" ||
-          key === "timing.connection" ||
-          key === "timing.tls" ||
-          key === "timing.ttfb" ||
-          key === "timing.transfer") &&
-        isArrayOfNumbers(filter)
-      ) {
-        if (filter.length === 1 && row[key] !== filter[0]) {
-          return false;
-        } else if (
-          filter.length === 2 &&
-          (row[key] < filter[0] || row[key] > filter[1])
-        ) {
-          return false;
-        }
-      }
-      if (key === "method" && Array.isArray(filter)) {
-        if (!(filter as string[]).includes(row[key] as string)) return false;
-      }
-      if (key === "host" && typeof filter === "string" && filter) {
-        if (!(row[key] as string).includes(filter)) return false;
-      }
-      if (key === "pathname" && typeof filter === "string" && filter) {
-        if (!(row[key] as string).includes(filter)) return false;
-      }
-      if (key === "status" && isArrayOfNumbers(filter)) {
-        if (!filter.includes(row[key])) {
-          return false;
-        }
-      }
-      if (key === "regions" && Array.isArray(filter)) {
-        const typedFilter = filter as unknown as typeof REGIONS;
-        if (!typedFilter.includes(row[key]?.[0])) {
-          return false;
-        }
-      }
-      if (key === "date" && isArrayOfDates(filter)) {
-        if (filter.length === 1 && !isSameDay(row[key], filter[0])) {
-          return false;
-        } else if (
-          filter.length === 2 &&
-          (row[key].getTime() < filter[0].getTime() ||
-            row[key].getTime() > filter[1].getTime())
-        ) {
-          return false;
-        }
-      }
-      if (key === "level" && Array.isArray(filter)) {
-        const typedFilter = filter as unknown as (typeof LEVELS)[number][];
-        if (!typedFilter.includes(row[key])) {
-          return false;
-        }
-      }
-    }
-    return true;
-  });
-}
+/** Date keys, for the three-pass facet strategy. */
+export const dateKeys = filters.specs
+  .filter((spec) => spec.type === "timerange")
+  .map((spec) => spec.key);
+
+/** Keys that get facet counts — everything filterable except date ranges. */
+export const facetKeys = filters.specs
+  .filter((spec) => spec.type !== "timerange")
+  .map((spec) => spec.key);
 
 export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
   if (!sort) return data;
@@ -182,7 +97,7 @@ export function splitData(
 export function getFacetsFromData(data: ColumnSchema[]) {
   const valuesMap = data.reduce((prev, curr) => {
     Object.entries(curr).forEach(([key, value]) => {
-      if (filterValues.includes(key as any)) {
+      if (facetKeys.includes(key)) {
         // REMINDER: because regions is an array with a single value we need to convert to string
         // TODO: we should make the region a single string instead of an array?!?
         const _value = Array.isArray(value) ? value.toString() : value;

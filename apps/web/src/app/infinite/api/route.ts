@@ -6,11 +6,12 @@ import type { InfiniteQueryResponse, LogsMeta } from "../query-options";
 import type { ColumnSchema } from "../schema";
 import { searchParamsCache } from "../search-params";
 import {
-  filterData,
+  dateKeys,
+  filters,
   getFacetsFromData,
   groupChartData,
   percentileData,
-  sliderFilterValues,
+  sliderKeys,
   sortData,
   splitData,
 } from "./helpers";
@@ -36,17 +37,17 @@ export async function GET(req: NextRequest): Promise<Response> {
         ? [validDates[0], addDays(validDates[0], 1)]
         : validDates;
 
-  // REMINDER: we need to filter out the slider values because they are not part of the search params
-  const _rest = Object.fromEntries(
-    Object.entries(search).filter(
-      ([key]) => !sliderFilterValues.includes(key as any),
-    ),
-  );
-
-  const rangedData = filterData(totalData, { date: _date });
-  const withoutSliderData = filterData(rangedData, { ..._rest, date: null });
-
-  const filteredData = filterData(withoutSliderData, { ...search, date: null });
+  // Three passes, matching the Drizzle handler exactly: date range, then
+  // everything except sliders (the set slider bounds are computed over), then
+  // the sliders themselves.
+  const values = search as Record<string, unknown>;
+  const rangedData = filters.apply(totalData, values, { only: dateKeys });
+  const withoutSliderData = filters.apply(rangedData, values, {
+    exclude: [...sliderKeys, ...dateKeys],
+  });
+  const filteredData = filters.apply(withoutSliderData, values, {
+    only: sliderKeys,
+  });
   const chartData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
   const sortedData = sortData(filteredData, search.sort);
   const withoutSliderFacets = getFacetsFromData(withoutSliderData);
@@ -79,9 +80,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         facets: {
           ...withoutSliderFacets,
           ...Object.fromEntries(
-            Object.entries(facets).filter(
-              ([key]) => !sliderFilterValues.includes(key as any),
-            ),
+            Object.entries(facets).filter(([key]) => !sliderKeys.includes(key)),
           ),
         },
         metadata: { currentPercentiles },
