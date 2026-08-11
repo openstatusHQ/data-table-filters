@@ -1,3 +1,4 @@
+import { columnMapping } from "@/app/drizzle/column-mapping";
 import { logs } from "@/db/drizzle/schema";
 import { seedRows } from "@/db/drizzle/seed-data";
 import type { ColumnMapping } from "@dtf/registry/lib/drizzle/types";
@@ -45,23 +46,15 @@ export const testFilters = defineFilters(testSpecs);
 
 let db: NodePgDatabase;
 
-/** Column mapping used across all tests — mirrors the real app's mapping. */
-export const testMapping: ColumnMapping = {
-  level: logs.level,
-  method: logs.method,
-  host: logs.host,
-  pathname: logs.pathname,
-  status: logs.status,
-  latency: logs.latency,
-  regions: logs.regions,
-  date: logs.date,
-  "timing.dns": logs.timingDns,
-  "timing.connection": logs.timingConnection,
-  "timing.tls": logs.timingTls,
-  "timing.ttfb": logs.timingTtfb,
-  "timing.transfer": logs.timingTransfer,
-  message: logs.message,
-};
+/**
+ * The PRODUCTION column mapping, imported rather than restated.
+ *
+ * This used to be a hand-copied seventh mapping that had already drifted from
+ * the real one (it added `message`). A mapping that is never exercised by a
+ * test is exactly where an unmapped key hides, so the tests now run against
+ * the same object the app does.
+ */
+export const testMapping: ColumnMapping = columnMapping;
 
 export function getDb() {
   return db;

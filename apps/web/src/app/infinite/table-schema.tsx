@@ -305,7 +305,10 @@ export const tableSchema = createTableSchema({
     .label("Message")
     .sheetOnly()
     .sheet({
-      condition: (props) => (props as ColumnSchema).message !== undefined,
+      // `!= null` covers both: the mock route omits `message` entirely, while
+      // the Drizzle route projects the column and gets SQL NULL. The deleted
+      // row remap used to normalize one into the other.
+      condition: (props) => (props as ColumnSchema).message != null,
       component: (props) => (
         <CopyToClipboardContainer variant="destructive">
           {JSON.stringify((props as ColumnSchema).message, null, 2)}

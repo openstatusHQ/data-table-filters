@@ -1,5 +1,8 @@
 import { logs } from "@/db/drizzle/schema";
-import { createDrizzleHandler } from "@dtf/registry/lib/drizzle";
+import {
+  createDrizzleHandler,
+  evaluateIntervalMs,
+} from "@dtf/registry/lib/drizzle";
 import type { ColumnMapping, DrizzleDB } from "@dtf/registry/lib/drizzle/types";
 import { defineFilters } from "@dtf/registry/lib/filters";
 import { col, createTableSchema } from "@dtf/registry/lib/table-schema";
@@ -154,16 +157,50 @@ describe.skipIf(!hasDatabase)("createDrizzleHandler", () => {
       expect(result.totalRowCount).toBe(seedRows.length);
     });
 
-    it("returns the combined conditions of all three passes", async () => {
+    it("exposes a scope carrying the composed WHERE of all three passes", async () => {
+      const from = seedByDateDesc[4].date;
+      const to = seedByDateDesc[0].date;
       const result = await createHandler().execute({
-        date: [seedByDateDesc[4].date, seedByDateDesc[0].date],
+        date: [from, to],
         level: ["error"],
         latency: latencyFilter,
         size: 10,
       });
 
-      // date + level + latency → one condition per applied filter
-      expect(result.allConditions.length).toBe(3);
+      const { scope } = result;
+      expect(scope.where).toBeDefined();
+      // The slider-bounds pass deliberately excludes the slider itself, so the
+      // two WHEREs must not be the same object.
+      expect(scope.whereWithoutSliders).not.toBe(scope.where);
+      expect(scope.columns).toBe(testMapping);
+      expect(scope.table).toBe(getTable());
+    });
+
+    it("resolves the scope range from an explicit date filter", async () => {
+      const from = seedByDateDesc[4].date;
+      const to = seedByDateDesc[0].date;
+      const { scope } = await createHandler().execute({
+        date: [from, to],
+        size: 10,
+      });
+
+      expect(scope.range).not.toBeNull();
+      expect(scope.range!.from.getTime()).toBe(from.getTime());
+      expect(scope.range!.to.getTime()).toBe(to.getTime());
+      // The interval ladder is applied, so callers never re-derive it.
+      expect(scope.bucketMs).toBe(
+        evaluateIntervalMs(to.getTime() - from.getTime()),
+      );
+    });
+
+    it("discovers the scope range from MIN/MAX when no date filter is set", async () => {
+      const { scope } = await createHandler().execute({ size: 10 });
+
+      expect(scope.range).not.toBeNull();
+      const oldest = seedByDateDesc[seedByDateDesc.length - 1].date;
+      const newest = seedByDateDesc[0].date;
+      expect(scope.range!.from.getTime()).toBe(oldest.getTime());
+      expect(scope.range!.to.getTime()).toBe(newest.getTime());
     });
   });
 

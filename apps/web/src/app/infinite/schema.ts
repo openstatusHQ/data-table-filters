@@ -24,7 +24,9 @@ export const columnSchema = z
     regions: z.enum(REGIONS).array(),
     date: z.date(),
     headers: z.record(z.string(), z.string()),
-    message: z.string().optional(),
+    // Nullable: the Drizzle route projects the column directly, so a row with
+    // no message carries SQL NULL rather than an absent key.
+    message: z.string().nullish(),
     percentile: z.number().optional(),
   })
   .extend(timingSchema.shape);
