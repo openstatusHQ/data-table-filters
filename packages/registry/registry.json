@@ -198,6 +198,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/data-table/faceted.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/table-schema/types.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/react-table.d.ts",
           "type": "registry:lib"
         },
@@ -368,6 +376,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/request/status-code.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/components/custom/text-with-tooltip.tsx",
           "type": "registry:component"
         },
@@ -494,10 +506,6 @@
           "type": "registry:lib"
         },
         {
-          "path": "src/lib/table-schema/types.ts",
-          "type": "registry:lib"
-        },
-        {
           "path": "src/lib/table-schema/col.ts",
           "type": "registry:lib"
         },
@@ -545,7 +553,8 @@
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json",
         "https://data-table.openstatus.dev/r/data-table-cell.json",
-        "https://data-table.openstatus.dev/r/data-table-sheet.json"
+        "https://data-table.openstatus.dev/r/data-table-sheet.json",
+        "https://data-table.openstatus.dev/r/data-table-filter-command.json"
       ],
       "dependencies": ["@tanstack/react-table"]
     },
@@ -602,10 +611,6 @@
         },
         {
           "path": "src/lib/data-table/create-query-options.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "src/lib/data-table/faceted.ts",
           "type": "registry:lib"
         }
       ],
