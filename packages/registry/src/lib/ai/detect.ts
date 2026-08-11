@@ -1,4 +1,7 @@
-import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import {
+  resolveColumn,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 
 /**
  * Determines if the user's input is a structured `key:value` filter query
@@ -21,7 +24,7 @@ export function isStructuredQuery(
   // Collect known filterable field keys
   const fieldKeys = new Set<string>();
   for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
+    const config = resolveColumn(builder);
     if (config.filter && !config.filter.commandDisabled) {
       fieldKeys.add(key);
     }

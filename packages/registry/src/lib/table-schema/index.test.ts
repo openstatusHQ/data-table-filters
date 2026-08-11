@@ -43,7 +43,7 @@ describe("createTableSchema", () => {
       host: col.string().label("Host"),
     });
     const json = schema.toJSON();
-    expect(json).toHaveProperty("columns");
+    expect(json.version).toBe(1);
     expect(Array.isArray(json.columns)).toBe(true);
     expect(json.columns[0]?.key).toBe("host");
   });
@@ -89,26 +89,49 @@ describe("createTableSchema.fromJSON", () => {
   });
 
   it("throws when JSON produces an invalid schema (empty label)", () => {
+    const valid = createTableSchema({
+      host: col.string().label("Host").filterable("input"),
+    }).toJSON();
     const badJSON: SchemaJSON = {
-      columns: [
-        {
-          key: "host",
-          label: "",
-          dataType: "string",
-          optional: false,
-          hidden: false,
-          sortable: false,
-          display: { type: "text" },
-          filter: { type: "input", defaultOpen: false, commandDisabled: false },
-          sheet: null,
-        },
-      ],
+      ...valid,
+      columns: valid.columns.map((column) => ({ ...column, label: "" })),
     };
     expect(() => createTableSchema.fromJSON(badJSON)).toThrow();
   });
 
   it("returns a schema with a working toJSON method", () => {
+    // Hand-written rather than round-tripped from a builder: `fromJSON` takes
+    // `unknown`, and this is the externally-authored v1 payload it must accept.
     const json: SchemaJSON = {
+      version: 1,
+      columns: [
+        {
+          key: "active",
+          kind: "boolean",
+          label: "Active",
+          optional: false,
+          hidden: false,
+          enableHiding: true,
+          hideHeader: false,
+          resizable: false,
+          sortable: false,
+          display: { type: "boolean" },
+          filter: {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+          },
+          sheet: null,
+          provenance: { source: "manual" },
+        },
+      ],
+    };
+    const schema = createTableSchema.fromJSON(json);
+    expect(schema.toJSON().columns[0]?.label).toBe("Active");
+  });
+
+  it("migrates a v0 payload (dataType, no version) on the way in", () => {
+    const v0 = {
       columns: [
         {
           key: "active",
@@ -127,8 +150,10 @@ describe("createTableSchema.fromJSON", () => {
         },
       ],
     };
-    const schema = createTableSchema.fromJSON(json);
-    expect(schema.toJSON().columns[0]?.label).toBe("Active");
+    const json = createTableSchema.fromJSON(v0).toJSON();
+    expect(json.version).toBe(1);
+    expect(json.columns[0]?.kind).toBe("boolean");
+    expect(json.columns[0]?.provenance).toEqual({ source: "manual" });
   });
 });
 

@@ -1,4 +1,7 @@
-import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import {
+  resolveColumn,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 
 export type AIFieldContext = {
   key: string;
@@ -28,7 +31,7 @@ export function generateAIContext(schema: TableSchemaDefinition): AIContext {
   const fields: AIFieldContext[] = [];
 
   for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
+    const config = resolveColumn(builder);
     if (!config.filter) continue;
 
     const field: AIFieldContext = {

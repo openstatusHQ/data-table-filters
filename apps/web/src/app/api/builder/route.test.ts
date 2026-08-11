@@ -1,3 +1,4 @@
+import type { SchemaJSON } from "@dtf/registry/lib/table-schema";
 import { describe, expect, it } from "vitest";
 import { getBuilderData } from "./cache";
 import { PATCH, POST } from "./route";
@@ -59,13 +60,13 @@ describe("POST /api/builder", () => {
     const res = await POST(makeRequest({ data: SAMPLE_DATA }));
     const { schema } = await res.json();
 
-    const nameCol = schema.columns.find((c: any) => c.key === "name");
-    const ageCol = schema.columns.find((c: any) => c.key === "age");
-    const activeCol = schema.columns.find((c: any) => c.key === "active");
+    const byKey = (key: string) =>
+      (schema as SchemaJSON).columns.find((c) => c.key === key);
 
-    expect(nameCol?.dataType).toBe("string");
-    expect(ageCol?.dataType).toBe("number");
-    expect(activeCol?.dataType).toBe("boolean");
+    expect(byKey("name")?.kind).toBe("string");
+    expect(byKey("age")?.kind).toBe("number");
+    expect(byKey("active")?.kind).toBe("boolean");
+    expect((schema as SchemaJSON).version).toBe(1);
   });
 
   it("returns 400 when data is not an array", async () => {

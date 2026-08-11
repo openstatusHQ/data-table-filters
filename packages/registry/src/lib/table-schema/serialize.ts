@@ -1,270 +1,220 @@
-import { col } from "./col";
+import { createColBuilder, defaultDisplayForKind } from "./col";
 import type {
-  ColBuilder,
-  ColConfig,
+  ColKind,
   ColumnDescriptor,
-  DisplayConfig,
+  DisplayDescriptor,
   FilterDescriptor,
+  Provenance,
   SchemaJSON,
-  SerializableDisplayConfig,
+  SchemaJSONVersion,
   SheetDescriptor,
   TableSchemaDefinition,
 } from "./types";
 
-// ── Serialization (schema → JSON) ────────────────────────────────────────────
+/** The current `SchemaJSON` version. Bump alongside a `migrateSchemaJSON` step. */
+export const SCHEMA_JSON_VERSION: SchemaJSONVersion = 1;
 
-function serializeFilter(filter: ColConfig["filter"]): FilterDescriptor | null {
-  if (!filter) return null;
-  const descriptor: FilterDescriptor = {
-    type: filter.type,
-    defaultOpen: filter.defaultOpen,
-    commandDisabled: filter.commandDisabled,
-  };
-  if (filter.options) {
-    descriptor.options = filter.options.map((o) => ({
-      label: o.label,
-      value: o.value as string | number | boolean,
-    }));
-  }
-  if (filter.min !== undefined) descriptor.min = filter.min;
-  if (filter.max !== undefined) descriptor.max = filter.max;
-  // filter.component and filter.presets are functions/complex objects — stripped
-  return descriptor;
-}
-
-function serializeSheet(sheet: ColConfig["sheet"]): SheetDescriptor | null {
-  if (!sheet) return null;
-  const descriptor: SheetDescriptor = {};
-  if (sheet.label) descriptor.label = sheet.label;
-  if (sheet.className) descriptor.className = sheet.className;
-  if (sheet.skeletonClassName)
-    descriptor.skeletonClassName = sheet.skeletonClassName;
-  // sheet.component and sheet.condition are functions — stripped
-  return descriptor;
-}
-
-function serializeDisplay(display: DisplayConfig): SerializableDisplayConfig {
-  switch (display.type) {
-    case "custom":
-      // Custom renderers are not serializable — fall back to text
-      return { type: "text" };
-    case "number": {
-      const d: SerializableDisplayConfig = { type: "number" };
-      if (display.unit)
-        (d as { type: "number"; unit?: string }).unit = display.unit;
-      if (display.colorMap)
-        (d as { colorMap?: Record<string, string> }).colorMap =
-          display.colorMap;
-      return d;
-    }
-    case "bar": {
-      const d = { type: "bar" as const, min: display.min, max: display.max };
-      return {
-        ...d,
-        ...(display.unit ? { unit: display.unit } : {}),
-        ...(display.colorMap ? { colorMap: display.colorMap } : {}),
-      };
-    }
-    case "heatmap": {
-      const d: SerializableDisplayConfig = {
-        type: "heatmap" as const,
-        min: display.min,
-        max: display.max,
-      };
-      if (display.unit) (d as { unit?: string }).unit = display.unit;
-      if (display.color) (d as { color?: string }).color = display.color;
-      if (display.colorMap)
-        (d as { colorMap?: Record<string, string> }).colorMap =
-          display.colorMap;
-      return d;
-    }
-    case "gauge": {
-      const d: SerializableDisplayConfig = {
-        type: "gauge" as const,
-        min: display.min,
-        max: display.max,
-      };
-      if (display.unit) (d as { unit?: string }).unit = display.unit;
-      if (display.color) (d as { color?: string }).color = display.color;
-      return d;
-    }
-    default: {
-      const d: SerializableDisplayConfig = { type: display.type };
-      if (display.colorMap)
-        (d as { colorMap?: Record<string, string> }).colorMap =
-          display.colorMap;
-      return d;
-    }
-  }
-}
+// ── Serialization ───────────────────────────────────────────────────────────
+//
+// The descriptor IS the serializable state, so serialization is a rename of the
+// key and nothing else. There is no projection to keep in sync, which is why
+// `unit`, `presets`, and `resizable` can no longer be silently dropped.
 
 export function serializeSchema(definition: TableSchemaDefinition): SchemaJSON {
-  const columns: ColumnDescriptor[] = Object.entries(definition).map(
-    ([key, builder]) => {
-      const c = builder._config;
-      const descriptor: ColumnDescriptor = {
-        key,
-        label: c.label,
-        dataType: c.kind,
-        optional: c.optional,
-        hidden: c.hidden,
-        sortable: c.sortable,
-        display: serializeDisplay(c.display),
-        filter: serializeFilter(c.filter),
-        sheet: serializeSheet(c.sheet),
-      };
-      if (c.description) descriptor.description = c.description;
-      if (c.enumValues) descriptor.enumValues = c.enumValues;
-      if (c.arrayItem) {
-        descriptor.arrayItemType = {
-          dataType: c.arrayItem.kind,
-          ...(c.arrayItem.enumValues
-            ? { enumValues: c.arrayItem.enumValues }
-            : {}),
-        };
-      }
-      if (c.size !== undefined) descriptor.size = c.size;
-      if (c.hideHeader) descriptor.hideHeader = true;
-      if (c.enableHiding === false) descriptor.enableHiding = false;
-      return descriptor;
-    },
-  );
-  return { columns };
+  return {
+    version: SCHEMA_JSON_VERSION,
+    columns: Object.entries(definition).map(([key, builder]) => ({
+      key,
+      ...builder._descriptor,
+    })),
+  };
 }
 
-// ── Deserialization (JSON → schema) ─────────────────────────────────────────
+// ── Deserialization ─────────────────────────────────────────────────────────
 //
-// Reconstructs col.* builders from a SchemaJSON descriptor.
-// Limitation: custom renderers (display.cell, filter.component, sheet.component,
-// sheet.condition) are not serialized and therefore cannot be reconstructed.
-// Columns with display.type === "custom" fall back to the col kind's default
-// display. Developers can override renderers on the returned builders.
+// Descriptors are stored verbatim, so reconstruction hands the descriptor
+// straight back to the builder. The old ~40-branch replay of the fluent chain
+// — including the `enableHiding === false && hidden ⇒ .sheetOnly()` inference
+// archaeology — is gone.
+//
+// Limitation, unchanged: renderers (display cell, filter component, sheet
+// component/condition) are closures and cannot be serialized. A deserialized
+// column falls back to its descriptor's display, which is why the descriptor
+// keeps a real display type even when a custom renderer was supplied.
 
 export function deserializeSchema(json: SchemaJSON): TableSchemaDefinition {
   const definition: TableSchemaDefinition = {};
+  for (const { key, ...descriptor } of json.columns) {
+    definition[key] = createColBuilder(descriptor as ColumnDescriptor, {});
+  }
+  return definition;
+}
 
-  for (const col_ of json.columns) {
-    // 1. Pick the right col.* factory.
-    // F is typed as `any` on the variable so we can call filterable() dynamically
-    // without knowing the col kind at compile time — this is intentional since
-    // deserializeSchema is a runtime operation reading from JSON.
+// ── Migration ───────────────────────────────────────────────────────────────
 
-    let builder: ColBuilder<unknown, any> =
-      col_.dataType === "select"
-        ? col.select()
-        : col_.dataType === "enum" && col_.enumValues
-          ? col.enum(col_.enumValues as readonly string[])
-          : col_.dataType === "array" &&
-              col_.arrayItemType?.dataType === "enum" &&
-              col_.arrayItemType.enumValues
-            ? col.array(
-                col.enum(col_.arrayItemType.enumValues as readonly string[]),
-              )
-            : col_.dataType === "boolean"
-              ? col.boolean()
-              : col_.dataType === "timestamp"
-                ? col.timestamp()
-                : col_.dataType === "number"
-                  ? col.number()
-                  : col_.dataType === "record"
-                    ? col.record()
-                    : col.string();
+const COL_KINDS: readonly ColKind[] = [
+  "string",
+  "number",
+  "boolean",
+  "timestamp",
+  "enum",
+  "array",
+  "record",
+  "select",
+];
 
-    // 2. Label + description
-    builder = builder.label(col_.label);
-    if (col_.description) builder = builder.description(col_.description);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
-    // 3. Display
-    const display = col_.display;
-    if (display.type === "number") {
-      const opts: { unit?: string; colorMap?: Record<string, string> } = {};
-      if (display.unit) opts.unit = display.unit;
-      if (display.colorMap) opts.colorMap = display.colorMap;
-      builder = builder.display(
-        "number",
-        Object.keys(opts).length > 0 ? opts : undefined,
-      );
-    } else if (
-      display.type === "bar" ||
-      display.type === "heatmap" ||
-      display.type === "gauge"
-    ) {
-      const opts: {
-        min?: number;
-        max?: number;
-        unit?: string;
-        color?: string;
-      } = {};
-      if (display.min !== undefined) opts.min = display.min;
-      if (display.max !== undefined) opts.max = display.max;
-      if (display.unit) opts.unit = display.unit;
-      if (display.color) opts.color = display.color;
-      builder = builder.display(
-        display.type,
-        Object.keys(opts).length > 0 ? opts : undefined,
-      );
-    } else if (
-      display.type === "text" ||
-      display.type === "code" ||
-      display.type === "boolean" ||
-      display.type === "star" ||
-      display.type === "badge" ||
-      display.type === "timestamp" ||
-      display.type === "status-code" ||
-      display.type === "level-indicator"
-    ) {
-      builder = builder.display(
-        display.type,
-        display.colorMap ? { colorMap: display.colorMap } : undefined,
-      );
-    }
+function asKind(value: unknown, key: unknown): ColKind {
+  if (COL_KINDS.includes(value as ColKind)) return value as ColKind;
+  // Falling back is better than throwing — one bad column should not make a
+  // whole saved schema unloadable — but it is a real loss, so say so.
+  if (value !== undefined) {
+    console.warn(
+      `[migrateSchemaJSON] Column ${JSON.stringify(key)} has unknown kind ` +
+        `${JSON.stringify(value)}. Falling back to "string".`,
+    );
+  }
+  return "string";
+}
 
-    // 4. Filter
-    if (col_.filter === null) {
-      builder = builder.notFilterable();
-    } else {
-      const f = col_.filter;
-      if (f.type === "slider" && f.min !== undefined && f.max !== undefined) {
-        builder = builder.filterable("slider", { min: f.min, max: f.max });
-      } else if (f.type === "checkbox") {
-        builder = builder.filterable("checkbox", {
-          ...(f.options ? { options: f.options } : {}),
-        });
-      } else if (f.type === "timerange") {
-        builder = builder.filterable("timerange");
-      } else {
-        builder = builder.filterable("input");
+/**
+ * Normalize an array column's item descriptor.
+ *
+ * v1 nests a full `ColumnDescriptor`; v0 carried only `{ dataType, enumValues }`
+ * under `arrayItemType` — and, for non-enum items, nothing at all, which is
+ * exactly how `string[]` columns used to collapse into `string` columns.
+ */
+function normalizeArrayItem(raw: unknown): ColumnDescriptor {
+  const { key: _key, ...item } = normalizeColumn(raw);
+  return item as ColumnDescriptor;
+}
+
+function isProvenance(value: unknown): value is Provenance {
+  if (!isRecord(value)) return false;
+  return (
+    value.source === "manual" ||
+    (value.source === "preset" &&
+      typeof value.preset === "string" &&
+      Array.isArray(value.args)) ||
+    (value.source === "inferred" && typeof value.rule === "string")
+  );
+}
+
+/**
+ * Normalize one column from either version into a complete `ColumnDescriptor`.
+ *
+ * v1 payloads go through this too rather than being trusted: `fromJSON` accepts
+ * user-typed text, so "it says version 1" is not evidence that its columns are
+ * well-formed. Every required field is filled or defaulted here, which is what
+ * makes the unchecked `as SchemaJSON` cast on untrusted input unnecessary.
+ */
+function normalizeColumn(raw: unknown): ColumnDescriptor & { key: string } {
+  const c = isRecord(raw) ? raw : {};
+  // v1 writes `kind`; v0 wrote `dataType`.
+  const kind = asKind(c.kind ?? c.dataType, c.key);
+
+  // v0 wrote `{ type: "text" }` for custom displays and omitted `unit`,
+  // `presets`, and `resizable` entirely. Nothing can recover those — the
+  // migration fills the type-required defaults and stops there.
+  const display = isRecord(c.display)
+    ? (c.display as DisplayDescriptor)
+    : defaultDisplayForKind(kind);
+
+  // Carried through wholesale, like `display` and `sheet`. Whitelisting the
+  // optional fields here would reintroduce exactly the hand-maintained
+  // projection this split removed from `serializeSchema` — a new
+  // `FilterDescriptor` field would be dropped on migration and nothing would
+  // say so. Only the three required fields are coerced, because they must exist.
+  const filter: FilterDescriptor | null = isRecord(c.filter)
+    ? {
+        ...(c.filter as Partial<FilterDescriptor>),
+        type: (c.filter.type ?? "input") as FilterDescriptor["type"],
+        defaultOpen: c.filter.defaultOpen === true,
+        commandDisabled: c.filter.commandDisabled === true,
       }
-      if (f.defaultOpen) builder = builder.defaultOpen();
-      if (f.commandDisabled) builder = builder.commandDisabled();
-    }
+    : null;
 
-    // 5. Structural modifiers
-    // sheetOnly() sets both enableHiding: false AND hidden: true.
-    // enableHiding: false alone (e.g. col.select()) should NOT trigger sheetOnly().
-    if (col_.enableHiding === false && col_.hidden) {
-      builder = builder.sheetOnly();
-    } else if (col_.hidden) {
-      builder = builder.hidden();
-    }
-    if (col_.hideHeader) builder = builder.hideHeader();
-    if (col_.sortable) builder = builder.sortable();
-    if (col_.optional) builder = builder.optional();
-    if (col_.size !== undefined) builder = builder.size(col_.size);
+  const sheet: SheetDescriptor | null = isRecord(c.sheet)
+    ? (c.sheet as SheetDescriptor)
+    : null;
 
-    // 6. Sheet
-    if (col_.sheet !== null) {
-      builder = builder.sheet({
-        ...(col_.sheet.label ? { label: col_.sheet.label } : {}),
-        ...(col_.sheet.className ? { className: col_.sheet.className } : {}),
-        ...(col_.sheet.skeletonClassName
-          ? { skeletonClassName: col_.sheet.skeletonClassName }
-          : {}),
-      });
-    }
+  const common = {
+    label: typeof c.label === "string" ? c.label : "",
+    ...(typeof c.description === "string"
+      ? { description: c.description }
+      : {}),
+    optional: c.optional === true,
+    display,
+    ...(typeof c.size === "number" ? { size: c.size } : {}),
+    hidden: c.hidden === true,
+    enableHiding: c.enableHiding !== false,
+    hideHeader: c.hideHeader === true,
+    // v0 had no `resizable` at all, so it defaults to false there; v1 writes it.
+    resizable: c.resizable === true,
+    sortable: c.sortable === true,
+    filter,
+    sheet,
+    provenance: (isProvenance(c.provenance)
+      ? c.provenance
+      : { source: "manual" }) as Provenance,
+  };
 
-    definition[col_.key] = builder;
+  const key = typeof c.key === "string" ? c.key : "";
+
+  if (kind === "enum") {
+    return {
+      key,
+      ...common,
+      kind: "enum",
+      enumValues: Array.isArray(c.enumValues) ? (c.enumValues as string[]) : [],
+    };
+  }
+  if (kind === "array") {
+    return {
+      key,
+      ...common,
+      kind: "array",
+      // v1 nests a full descriptor under `arrayItem`; v0 carried only
+      // `{ dataType, enumValues }` under `arrayItemType`.
+      arrayItem: normalizeArrayItem(c.arrayItem ?? c.arrayItemType),
+    };
+  }
+  return { key, ...common, kind } as ColumnDescriptor & { key: string };
+}
+
+/**
+ * Bring untrusted schema JSON up to the current version.
+ *
+ * `SchemaJSON` is persisted (the builder cache) and pasted by hand into the
+ * schema editor, so every entry point that accepts it must run through here
+ * first. This is the one hand-written conversion the descriptor split
+ * deliberately keeps.
+ *
+ * v0 (no `version` field) → v1: `dataType` → `kind`, `arrayItemType` →
+ * recursive `arrayItem`, and the newly-required `resizable`, `enableHiding`,
+ * `hideHeader`, and `provenance` get their defaults.
+ *
+ * @throws if `json` is not an object with a `columns` array.
+ */
+export function migrateSchemaJSON(json: unknown): SchemaJSON {
+  if (!isRecord(json) || !Array.isArray(json.columns)) {
+    throw new Error(
+      "[migrateSchemaJSON] Expected an object with a `columns` array.",
+    );
   }
 
-  return definition;
+  if (json.version !== undefined && json.version !== SCHEMA_JSON_VERSION) {
+    throw new Error(
+      `[migrateSchemaJSON] Unknown schema version ${JSON.stringify(json.version)}. ` +
+        `This build understands version ${SCHEMA_JSON_VERSION}.`,
+    );
+  }
+
+  return {
+    version: SCHEMA_JSON_VERSION,
+    columns: json.columns.map(normalizeColumn),
+  };
 }

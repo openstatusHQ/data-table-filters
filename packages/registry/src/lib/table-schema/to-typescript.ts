@@ -1,257 +1,242 @@
-import type { ColumnDescriptor, SchemaJSON } from "./types";
+import { col } from "./col";
+import { presets } from "./presets";
+import type {
+  ColBuilder,
+  ColumnDescriptor,
+  ColumnDescriptorCommon,
+  DatePresetDescriptor,
+  JsonValue,
+  SchemaJSON,
+} from "./types";
 
-interface PresetMatch {
-  factory: string;
-  skipDisplay: boolean;
-  skipFilter: boolean;
-  skipSortable: boolean;
+/**
+ * Emit the `col.*` / `col.presets.*` factory call a descriptor came from, and
+ * produce the descriptor that call yields on its own.
+ *
+ * Provenance is recorded at construction, so this reads it instead of
+ * pattern-matching the descriptor's shape back into a guess at the preset.
+ */
+function factoryFor(c: ColumnDescriptor): {
+  source: string;
+  baseline: ColumnDescriptor;
+} {
+  if (c.provenance.source === "preset") {
+    const factory = presets[c.provenance.preset as keyof typeof presets];
+    if (typeof factory === "function") {
+      const args = c.provenance.args;
+      // Re-running the preset with its recorded arguments gives the exact
+      // baseline the author started from, so the chain below emits only what
+      // they actually changed.
+      const builder = (
+        factory as (...a: unknown[]) => ColBuilder<unknown, any>
+      )(...args.map((a) => (a === null ? undefined : a)));
+      return {
+        source: `col.presets.${c.provenance.preset}(${args.map(emitValue).join(", ")})`,
+        baseline: builder._descriptor,
+      };
+    }
+    // Unknown preset name (schema written by a newer build) — fall through to
+    // the primitive factory rather than emitting a call that will not compile.
+  }
+
+  if (c.kind === "enum") {
+    return {
+      source: `col.enum([${c.enumValues.map(emitValue).join(", ")}])`,
+      baseline: col.enum(c.enumValues)._descriptor,
+    };
+  }
+
+  if (c.kind === "array") {
+    const item = factoryFor(c.arrayItem);
+    const itemChain = chainFor(c.arrayItem, item.baseline);
+    // `col.array()` requires an item builder — emitting a bare `col.array()`
+    // is what used to produce code that did not compile.
+    const itemSource = item.source + itemChain.join("");
+    return {
+      source: `col.array(${itemSource})`,
+      baseline: col.array(rebuild(c.arrayItem))._descriptor,
+    };
+  }
+
+  const factory = col[c.kind] as () => ColBuilder<unknown, any>;
+  return { source: `col.${c.kind}()`, baseline: factory()._descriptor };
+}
+
+/** Rebuild a builder from a descriptor — used to seed `col.array`'s baseline. */
+function rebuild(c: ColumnDescriptor): ColBuilder<unknown, any> {
+  if (c.kind === "enum") return col.enum(c.enumValues);
+  if (c.kind === "array") return col.array(rebuild(c.arrayItem));
+  return (col[c.kind] as () => ColBuilder<unknown, any>)();
+}
+
+function emitValue(value: JsonValue | readonly string[] | undefined): string {
+  if (value === undefined || value === null) return "undefined";
+  // Arrays are spaced by hand so preset args (`logLevel(["a", "b"])`) match the
+  // per-value assembly used elsewhere (`col.enum(["a", "b"])`) — bare
+  // `JSON.stringify` would emit one of them without spaces.
+  if (Array.isArray(value)) {
+    return `[${value.map((v) => emitValue(v as JsonValue)).join(", ")}]`;
+  }
+  return JSON.stringify(value);
 }
 
 /**
- * Detect whether a descriptor matches a known `col.presets.*` pattern.
- * Returns the preset factory call and which method chain steps it already covers.
+ * Emit a timerange preset.
+ *
+ * The descriptor stores `from`/`to` as ISO strings so they survive JSON, but
+ * `.filterable("timerange", { presets })` takes `DatePreset`s holding real
+ * `Date`s — printing the descriptor verbatim produced code that threw
+ * `preset.from.toISOString is not a function` on the first run.
  */
-function detectPreset(c: ColumnDescriptor): PresetMatch | null {
-  // traceId: string + code display + not filterable
-  if (
-    c.dataType === "string" &&
-    c.display.type === "code" &&
-    c.filter === null
-  ) {
-    return {
-      factory: "col.presets.traceId()",
-      skipDisplay: true,
-      skipFilter: true,
-      skipSortable: false,
-    };
-  }
+function emitDatePreset(preset: DatePresetDescriptor): string {
+  return (
+    `{ label: ${JSON.stringify(preset.label)}, ` +
+    `shortcut: ${JSON.stringify(preset.shortcut)}, ` +
+    `from: new Date(${JSON.stringify(preset.from)}), ` +
+    `to: new Date(${JSON.stringify(preset.to)}) }`
+  );
+}
 
-  // timestamp + sortable → col.presets.timestamp()
-  if (c.dataType === "timestamp" && c.sortable) {
-    return {
-      factory: "col.presets.timestamp()",
-      skipDisplay: true,
-      skipFilter: true,
-      skipSortable: true,
-    };
-  }
+/** Emit an object literal with unquoted keys, matching the docs' house style. */
+function emitObject(entries: Record<string, unknown>): string {
+  const parts = Object.entries(entries)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`);
+  return `{ ${parts.join(", ")} }`;
+}
 
-  // duration: number + slider + number display → col.presets.duration(unit?, bounds?)
-  if (
-    c.dataType === "number" &&
-    c.filter?.type === "slider" &&
-    c.display.type === "number"
-  ) {
-    const unit = c.display.unit;
-    const min = c.filter.min ?? 0;
-    const max = c.filter.max ?? 100;
-    const defaultBounds = min === 0 && max === 5000;
-    const args: string[] = [];
-    if (unit) {
-      args.push(JSON.stringify(unit));
-      if (!defaultBounds) args.push(`{ min: ${min}, max: ${max} }`);
-    } else if (!defaultBounds) {
-      args.push(`undefined, { min: ${min}, max: ${max} }`);
-    }
-    return {
-      factory: `col.presets.duration(${args.join(", ")})`,
-      skipDisplay: true,
-      skipFilter: true,
-      skipSortable: false,
-    };
-  }
-
-  // logLevel: enum + badge + checkbox + defaultOpen
-  if (
-    c.dataType === "enum" &&
-    c.enumValues &&
-    c.filter?.type === "checkbox" &&
-    c.filter?.defaultOpen &&
-    c.display.type === "badge"
-  ) {
-    const vals = c.enumValues.map((v) => JSON.stringify(v)).join(", ");
-    return {
-      factory: `col.presets.logLevel([${vals}])`,
-      skipDisplay: true,
-      skipFilter: true,
-      skipSortable: false,
-    };
-  }
-
-  // httpStatus: number + number display + checkbox with all-numeric options
-  if (
-    c.dataType === "number" &&
-    c.display.type === "number" &&
-    c.filter?.type === "checkbox" &&
-    c.filter?.options?.every((o) => typeof o.value === "number")
-  ) {
-    const codes = c.filter.options!.map((o) => o.value);
-    return {
-      factory: `col.presets.httpStatus([${codes.join(", ")}])`,
-      skipDisplay: true,
-      skipFilter: true,
-      skipSortable: false,
-    };
-  }
-
-  // httpMethod: enum + text + checkbox + !defaultOpen
-  if (
-    c.dataType === "enum" &&
-    c.enumValues &&
-    c.filter?.type === "checkbox" &&
-    !c.filter?.defaultOpen &&
-    c.display.type === "text"
-  ) {
-    const vals = c.enumValues.map((v) => JSON.stringify(v)).join(", ");
-    return {
-      factory: `col.presets.httpMethod([${vals}])`,
-      skipDisplay: true,
-      skipFilter: true,
-      skipSortable: false,
-    };
-  }
-
-  return null;
+function sameJSON(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
 
 /**
- * Build the `col.*` factory call and method chain for one column descriptor.
+ * One emitter per serializable descriptor field.
+ *
+ * The `-?` plus full key coverage means adding a field to
+ * `ColumnDescriptorCommon` without adding an emitter here is a **compile
+ * error**, not a silently dropped chain step.
  */
-function buildChain(c: ColumnDescriptor): string {
-  const parts: string[] = [];
-  let skipDisplay = false;
-  let skipFilter = false;
-  let skipSortable = false;
+type Emitter<K extends keyof ColumnDescriptorCommon> = (
+  value: ColumnDescriptorCommon[K],
+  baseline: ColumnDescriptor,
+  descriptor: ColumnDescriptor,
+) => string[];
 
-  // 1. Factory (with preset detection)
-  const preset = detectPreset(c);
-  if (preset) {
-    parts.push(preset.factory);
-    skipDisplay = preset.skipDisplay;
-    skipFilter = preset.skipFilter;
-    skipSortable = preset.skipSortable;
-  } else if (c.dataType === "enum" && c.enumValues) {
-    const vals = c.enumValues.map((v) => JSON.stringify(v)).join(", ");
-    parts.push(`col.enum([${vals}])`);
-  } else if (
-    c.dataType === "array" &&
-    c.arrayItemType?.dataType === "enum" &&
-    c.arrayItemType.enumValues
-  ) {
-    const vals = c.arrayItemType.enumValues
-      .map((v) => JSON.stringify(v))
-      .join(", ");
-    parts.push(`col.array(col.enum([${vals}]))`);
-  } else {
-    parts.push(`col.${c.dataType}()`);
-  }
+type EmitterMap = { [K in keyof ColumnDescriptorCommon]-?: Emitter<K> };
 
-  // 2. .label()
-  parts.push(`.label(${JSON.stringify(c.label)})`);
+const EMITTERS: EmitterMap = {
+  label: (value) => [`.label(${JSON.stringify(value)})`],
 
-  // 3. .description()
-  if (c.description) {
-    parts.push(`.description(${JSON.stringify(c.description)})`);
-  }
+  description: (value) =>
+    value === undefined ? [] : [`.description(${JSON.stringify(value)})`],
 
-  // 4. .display() — skip if covered by preset (unless colorMap needs emitting)
-  if (!skipDisplay) {
-    const display = c.display;
-    const hasColorMap = !!display.colorMap;
-    if (
-      display.type === "heatmap" ||
-      display.type === "bar" ||
-      display.type === "gauge"
-    ) {
-      const opts: Record<string, unknown> = {};
-      if (display.min !== undefined) opts.min = display.min;
-      if (display.max !== undefined) opts.max = display.max;
-      if (display.unit) opts.unit = display.unit;
-      if (display.color) opts.color = display.color;
+  display: (value) => {
+    const { type, ...options } = value as { type: string } & Record<
+      string,
+      unknown
+    >;
+    const hasOptions = Object.values(options).some((v) => v !== undefined);
+    return [
+      hasOptions
+        ? `.display(${JSON.stringify(type)}, ${emitObject(options)})`
+        : `.display(${JSON.stringify(type)})`,
+    ];
+  },
+
+  filter: (value) => {
+    if (value === null) return [".notFilterable()"];
+    const parts: string[] = [];
+    const { type, defaultOpen, commandDisabled, options, presets, ...rest } =
+      value;
+
+    if (type === "checkbox") {
       parts.push(
-        Object.keys(opts).length > 0
-          ? `.display(${JSON.stringify(display.type)}, ${JSON.stringify(opts)})`
-          : `.display(${JSON.stringify(display.type)})`,
+        options
+          ? `.filterable("checkbox", { options: [${options
+              .map((o) => emitObject({ label: o.label, value: o.value }))
+              .join(", ")}] })`
+          : `.filterable("checkbox")`,
       );
-    } else if (display.type === "number" && (display.unit || hasColorMap)) {
-      const opts: Record<string, unknown> = {};
-      if (display.unit) opts.unit = display.unit;
-      if (hasColorMap) opts.colorMap = display.colorMap;
-      parts.push(`.display("number", ${JSON.stringify(opts)})`);
-    } else if (hasColorMap) {
+    } else if (type === "slider") {
+      parts.push(`.filterable("slider", ${emitObject(rest)})`);
+    } else if (type === "timerange") {
       parts.push(
-        `.display(${JSON.stringify(display.type)}, ${JSON.stringify({ colorMap: display.colorMap })})`,
+        presets
+          ? `.filterable("timerange", { presets: [${presets
+              .map(emitDatePreset)
+              .join(", ")}] })`
+          : `.filterable("timerange")`,
       );
-    } else if (
-      display.type !== "text" // "text" is the default for string/record, skip it
-    ) {
-      parts.push(`.display(${JSON.stringify(display.type)})`);
-    }
-  } else if (c.display.colorMap) {
-    // Preset covers display type, but colorMap still needs to be emitted
-    parts.push(
-      `.display(${JSON.stringify(c.display.type)}, ${JSON.stringify({ colorMap: c.display.colorMap })})`,
-    );
-  }
-
-  // 5. .filterable() / .notFilterable() — skip if covered by preset
-  if (!skipFilter) {
-    if (c.filter === null) {
-      parts.push(`.notFilterable()`);
     } else {
-      const f = c.filter;
-      if (f.type === "slider" && f.min !== undefined && f.max !== undefined) {
-        parts.push(`.filterable("slider", { min: ${f.min}, max: ${f.max} })`);
-      } else if (f.type === "checkbox") {
-        if (f.options && f.options.length > 0) {
-          const opts = f.options
-            .map(
-              (o) =>
-                `{ label: ${JSON.stringify(o.label)}, value: ${JSON.stringify(o.value)} }`,
-            )
-            .join(", ");
-          parts.push(`.filterable("checkbox", { options: [${opts}] })`);
-        } else {
-          parts.push(`.filterable("checkbox")`);
-        }
-      } else if (f.type === "timerange") {
-        parts.push(`.filterable("timerange")`);
-      } else {
-        parts.push(`.filterable("input")`);
-      }
-
-      if (f.defaultOpen) parts.push(`.defaultOpen()`);
-      if (f.commandDisabled) parts.push(`.commandDisabled()`);
+      parts.push(`.filterable("input")`);
     }
-  } else if (c.filter) {
-    // Preset covers the filter, but still emit behavioral flags if set
-    if (c.filter.defaultOpen) parts.push(`.defaultOpen()`);
-    if (c.filter.commandDisabled) parts.push(`.commandDisabled()`);
+
+    if (defaultOpen) parts.push(".defaultOpen()");
+    if (commandDisabled) parts.push(".commandDisabled()");
+    return parts;
+  },
+
+  sheet: (value) => {
+    if (value === null) return [];
+    const args = emitObject(value as Record<string, unknown>);
+    return [args === "{  }" ? ".sheet()" : `.sheet(${args})`];
+  },
+
+  size: (value) => (value === undefined ? [] : [`.size(${value})`]),
+  hidden: (value) => (value ? [".hidden()"] : []),
+  hideHeader: (value) => (value ? [".hideHeader()"] : []),
+  resizable: (value) => (value ? [".resizable()"] : []),
+  sortable: (value) => (value ? [".sortable()"] : []),
+  optional: (value) => (value ? [".optional()"] : []),
+
+  // `enableHiding: false` together with `hidden` is exactly `.sheetOnly()`;
+  // on its own it is only reachable via `col.select()`, whose baseline already
+  // has it, so nothing needs emitting.
+  enableHiding: (value, _baseline, descriptor) =>
+    value === false && descriptor.hidden ? [".sheetOnly()"] : [],
+
+  // Not a chain step — provenance is how the factory call was chosen.
+  provenance: () => [],
+};
+
+/**
+ * The order chain steps are emitted in. Listed explicitly because `.sheetOnly()`
+ * clears the filter and must come after `.filterable()` would have set it.
+ */
+export const EMIT_ORDER: (keyof ColumnDescriptorCommon)[] = [
+  "label",
+  "description",
+  "display",
+  "filter",
+  "enableHiding",
+  "sortable",
+  "hidden",
+  "hideHeader",
+  "resizable",
+  "optional",
+  "size",
+  "sheet",
+];
+
+/** Emit only the steps where the descriptor differs from the factory baseline. */
+function chainFor(c: ColumnDescriptor, baseline: ColumnDescriptor): string[] {
+  const parts: string[] = [];
+  for (const key of EMIT_ORDER) {
+    const value = c[key];
+    if (sameJSON(value, baseline[key])) continue;
+    // `.sheetOnly()` already implies `.hidden()` and `.notFilterable()`.
+    if (
+      c.enableHiding === false &&
+      c.hidden &&
+      baseline.enableHiding !== false &&
+      (key === "hidden" || key === "filter")
+    ) {
+      continue;
+    }
+    const emit = EMITTERS[key] as Emitter<typeof key>;
+    parts.push(...emit(value as never, baseline, c));
   }
-
-  // 6. Structural modifiers
-  if (!skipSortable && c.sortable) parts.push(`.sortable()`);
-  if (c.hidden) parts.push(`.hidden()`);
-  if (c.optional) parts.push(`.optional()`);
-  if (c.size !== undefined) parts.push(`.size(${c.size})`);
-
-  // 7. .sheet()
-  if (c.sheet !== null) {
-    const sheetArgs: string[] = [];
-    if (c.sheet.label)
-      sheetArgs.push(`label: ${JSON.stringify(c.sheet.label)}`);
-    if (c.sheet.className)
-      sheetArgs.push(`className: ${JSON.stringify(c.sheet.className)}`);
-    if (c.sheet.skeletonClassName)
-      sheetArgs.push(
-        `skeletonClassName: ${JSON.stringify(c.sheet.skeletonClassName)}`,
-      );
-    parts.push(
-      sheetArgs.length > 0 ? `.sheet({ ${sheetArgs.join(", ")} })` : `.sheet()`,
-    );
-  }
-
-  return parts.join("\n    ");
+  return parts;
 }
 
 /**
@@ -259,7 +244,8 @@ function buildChain(c: ColumnDescriptor): string {
  * source code string.
  *
  * The output is ready to copy-paste into a project that imports from
- * `@/lib/table-schema`.
+ * `@/lib/table-schema`. Custom cell renderers are not serialized, so the
+ * emitted chain uses the descriptor's fallback display for those columns.
  *
  * @example
  * ```ts
@@ -274,9 +260,11 @@ export function schemaToTypeScript(json: SchemaJSON): string {
     "export const schema = createTableSchema({",
   ];
 
-  for (const descriptor of json.columns) {
-    const chain = buildChain(descriptor);
-    lines.push(`  ${descriptor.key}: ${chain},`);
+  for (const { key, ...descriptor } of json.columns) {
+    const c = descriptor as ColumnDescriptor;
+    const { source, baseline } = factoryFor(c);
+    const chain = [source, ...chainFor(c, baseline)].join("\n    ");
+    lines.push(`  ${key}: ${chain},`);
   }
 
   lines.push("});");

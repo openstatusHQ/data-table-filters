@@ -1,4 +1,7 @@
-import type { SchemaJSON } from "@dtf/registry/lib/table-schema";
+import {
+  migrateSchemaJSON,
+  type SchemaJSON,
+} from "@dtf/registry/lib/table-schema";
 import { inferSchemaFromJSON } from "@dtf/registry/lib/table-schema/infer";
 import { NextResponse } from "next/server";
 import {
@@ -57,7 +60,7 @@ export async function PATCH(request: Request) {
   try {
     const body = (await request.json()) as {
       dataId: string;
-      schema: SchemaJSON;
+      schema: unknown;
     };
 
     if (!body.dataId || !body.schema) {
@@ -67,7 +70,11 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const updated = updateBuilderSchema(body.dataId, body.schema);
+    // Never store an unvalidated payload: migrate on the way in so the cache
+    // only ever holds current-version schemas, whatever the client sent.
+    const schema = migrateSchemaJSON(body.schema);
+
+    const updated = updateBuilderSchema(body.dataId, schema);
     if (!updated) {
       return NextResponse.json({ error: "Dataset not found" }, { status: 404 });
     }

@@ -1,6 +1,10 @@
-import { col as _col } from "./col";
+import { col as _col, resolveColumns } from "./col";
 import { presets } from "./presets";
-import { deserializeSchema, serializeSchema } from "./serialize";
+import {
+  deserializeSchema,
+  migrateSchemaJSON,
+  serializeSchema,
+} from "./serialize";
 import { validateSchema } from "./validate";
 
 /**
@@ -42,24 +46,39 @@ import { validateSchema } from "./validate";
 export const col = { ..._col, presets };
 export type {
   ColBuilder,
-  ColConfig,
   ColKind,
+  ColRenderers,
   ColumnDescriptor,
+  ColumnDescriptorCommon,
+  DatePresetDescriptor,
   DisplayConfig,
-  FilterConfig,
+  DisplayDescriptor,
   FilterDescriptor,
   FilterType,
   InferTableType,
+  JsonValue,
+  OptionDescriptor,
+  Provenance,
+  ResolvedColumn,
+  ResolvedColumnEntry,
   SchemaJSON,
+  SchemaJSONVersion,
+  SerializableDisplayConfig,
   SheetConfig,
   SheetDescriptor,
   TableSchemaDefinition,
 } from "./types";
+export { resolveColumn, resolveColumns } from "./col";
 export { generateColumns } from "./generators/columns";
 export { generateFilterFields } from "./generators/filter-fields";
 export { generateFilterSchema } from "./generators/filter-schema";
 export { generateSheetFields } from "./generators/sheet-fields";
-export { serializeSchema, deserializeSchema } from "./serialize";
+export {
+  SCHEMA_JSON_VERSION,
+  deserializeSchema,
+  migrateSchemaJSON,
+  serializeSchema,
+} from "./serialize";
 
 /**
  * Derive defaultColumnVisibility from the schema.
@@ -69,10 +88,8 @@ export function getDefaultColumnVisibility(
   schema: import("./types").TableSchemaDefinition,
 ): Record<string, boolean> {
   const visibility: Record<string, boolean> = {};
-  for (const [key, builder] of Object.entries(schema)) {
-    if (builder._config.hidden) {
-      visibility[key] = false;
-    }
+  for (const { key, hidden } of resolveColumns(schema)) {
+    if (hidden) visibility[key] = false;
   }
   return visibility;
 }
@@ -118,11 +135,19 @@ export function createTableSchema<
   };
 }
 
+/**
+ * Reconstruct a schema from a JSON descriptor.
+ *
+ * Takes `unknown` on purpose: the builder pastes user-typed text in here, and
+ * the cache replays JSON written by an older build. `migrateSchemaJSON` brings
+ * older versions forward and throws on anything unrecognisable, so the cast
+ * that used to sit on untrusted input is gone.
+ */
 createTableSchema.fromJSON = (
-  json: import("./types").SchemaJSON,
+  json: unknown,
 ): {
   definition: import("./types").TableSchemaDefinition;
   toJSON(): import("./types").SchemaJSON;
 } => {
-  return createTableSchema(deserializeSchema(json));
+  return createTableSchema(deserializeSchema(migrateSchemaJSON(json)));
 };

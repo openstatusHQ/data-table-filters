@@ -1,37 +1,6 @@
 import type { SheetField } from "@dtf/registry/components/data-table/types";
-import type {
-  ColConfig,
-  SerializableDisplayConfig,
-  TableSchemaDefinition,
-} from "../types";
-
-function defaultDisplayForKind(
-  kind: ColConfig["kind"],
-): SerializableDisplayConfig {
-  switch (kind) {
-    case "enum":
-    case "array":
-      return { type: "badge" };
-    case "boolean":
-      return { type: "boolean" };
-    case "timestamp":
-      return { type: "timestamp" };
-    case "number":
-      return { type: "number" };
-    case "string":
-    case "record":
-    case "select":
-    default:
-      return { type: "text" };
-  }
-}
-
-function getDisplayDescriptor(config: ColConfig): SerializableDisplayConfig {
-  if (config.display.type === "custom") {
-    return defaultDisplayForKind(config.kind);
-  }
-  return config.display as SerializableDisplayConfig;
-}
+import { resolveColumns } from "../col";
+import type { TableSchemaDefinition } from "../types";
 
 /**
  * Generate SheetField[] from a table schema definition.
@@ -45,24 +14,25 @@ export function generateSheetFields<TData>(
 ): SheetField<TData>[] {
   const result: SheetField<TData>[] = [];
 
-  for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
-    if (config.sheet === null) continue;
-
+  for (const config of resolveColumns(schema)) {
     const sheetConfig = config.sheet;
-    const filterConfig = config.filter;
+    if (sheetConfig === null) continue;
 
     // Derive sheet type from filter type, or "readonly" if not filterable
     const sheetType: SheetField<TData>["type"] =
-      filterConfig?.type ?? "readonly";
+      config.filter?.type ?? "readonly";
 
     result.push({
-      id: key as keyof TData,
+      id: config.key as keyof TData,
       label: sheetConfig.label ?? config.label,
       type: sheetType,
-      display: getDisplayDescriptor(config),
-      component: sheetConfig.component as SheetField<TData>["component"],
-      condition: sheetConfig.condition as SheetField<TData>["condition"],
+      // The descriptor's display is always a real serializable display, even
+      // when a custom cell renderer was supplied — no per-kind fallback needed.
+      display: config.display,
+      component: config.renderers
+        .sheetComponent as SheetField<TData>["component"],
+      condition: config.renderers
+        .sheetCondition as SheetField<TData>["condition"],
       className: sheetConfig.className,
       skeletonClassName: sheetConfig.skeletonClassName,
     });

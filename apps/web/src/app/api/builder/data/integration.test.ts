@@ -1,4 +1,7 @@
-import { createTableSchema } from "@dtf/registry/lib/table-schema";
+import {
+  createTableSchema,
+  resolveColumn,
+} from "@dtf/registry/lib/table-schema";
 import { inferSchemaFromJSON } from "@dtf/registry/lib/table-schema/infer";
 import { describe, expect, it } from "vitest";
 import {
@@ -81,9 +84,11 @@ describe("builder pipeline integration", () => {
     const definition = inferDefinition(RAW_DATA);
 
     // latency should be inferred as a number with slider filter
-    const latencyConfig = definition.latency?._config;
-    expect(latencyConfig?.kind).toBe("number");
-    expect(latencyConfig?.filter?.type).toBe("slider");
+    const latencyColumn = definition.latency;
+    expect(latencyColumn).toBeDefined();
+    const latency = resolveColumn(latencyColumn!);
+    expect(latency.kind).toBe("number");
+    expect(latency.filter?.type).toBe("slider");
 
     const filtered = filterGenericData(
       RAW_DATA,

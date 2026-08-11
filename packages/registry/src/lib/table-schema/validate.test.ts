@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { col } from "./col";
+import { col, createColBuilder } from "./col";
 import { validateSchema } from "./validate";
 
 describe("validateSchema", () => {
@@ -28,18 +28,23 @@ describe("validateSchema", () => {
   });
 
   it("throws when slider min and max are missing (undefined)", () => {
-    // Inject a broken config directly to simulate what runtime fromJSON might produce
-    const builder = col
-      .number()
-      .label("Latency")
-      .filterable("slider", { min: 0, max: 5000 });
-    // Override the filter to remove min/max
-    const brokenConfig = {
-      ...builder._config,
-      filter: { ...builder._config.filter!, min: undefined, max: undefined },
-    };
-    const def = { latency: { _config: brokenConfig } as typeof builder };
-    expect(() => validateSchema(def)).toThrowError(
+    // Build the descriptor directly to simulate a slider filter arriving from
+    // `fromJSON` without bounds — the fluent API requires min/max.
+    const broken = createColBuilder<number, "slider">({
+      kind: "number",
+      label: "Latency",
+      optional: false,
+      display: { type: "number" },
+      hidden: false,
+      enableHiding: true,
+      hideHeader: false,
+      resizable: false,
+      sortable: false,
+      filter: { type: "slider", defaultOpen: false, commandDisabled: false },
+      sheet: null,
+      provenance: { source: "manual" },
+    });
+    expect(() => validateSchema({ latency: broken })).toThrowError(
       "slider filter is missing min/max bounds",
     );
   });

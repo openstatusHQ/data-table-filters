@@ -18,18 +18,23 @@ import { DataTableColumnHeader } from "@dtf/registry/components/data-table/data-
 import { Checkbox } from "@dtf/registry/components/ui/checkbox";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { JSX } from "react";
-import type { ColConfig, DisplayConfig, TableSchemaDefinition } from "../types";
+import { resolveColumns } from "../col";
+import type {
+  DisplayDescriptor,
+  ResolvedColumn,
+  TableSchemaDefinition,
+} from "../types";
 
 /**
- * Derive the TanStack Table filterFn name from a column config.
+ * Derive the TanStack Table filterFn name from a resolved column.
  *
  * Custom filterFns (arrSome, inDateRange) must be registered on the table:
  *   filterFns: { inDateRange, arrSome }  // from src/lib/table/filterfns.ts
  */
-function getFilterFn(config: ColConfig): string | undefined {
+function getFilterFn(config: ResolvedColumn): string | undefined {
   if (!config.filter) return undefined;
 
-  const { kind, filter, arrayItem } = config;
+  const { kind, filter } = config;
 
   switch (filter.type) {
     case "timerange":
@@ -50,9 +55,8 @@ function getFilterFn(config: ColConfig): string | undefined {
  * Render the cell based on the display config.
  */
 function renderCell(
-  display: DisplayConfig,
+  display: DisplayDescriptor,
   value: unknown,
-  row: unknown,
   context?: { min: number; max: number },
 ): JSX.Element | null {
   const fallback = <DataTableCellText value={String(value ?? "")} />;
@@ -144,8 +148,6 @@ function renderCell(
         fallback
       );
     }
-    case "custom":
-      return display.cell(value, row);
     case "heatmap": {
       const { min = 0, max = 100 } = context ?? {};
       return typeof value === "number" ? (
@@ -217,8 +219,8 @@ function renderCell(
 export function generateColumns<TData>(
   schema: TableSchemaDefinition,
 ): ColumnDef<TData>[] {
-  return Object.entries(schema).map(([key, builder]) => {
-    const config = builder._config;
+  return resolveColumns(schema).map((config) => {
+    const { key } = config;
 
     // Select column — checkbox header + cell
     if (config.kind === "select") {
@@ -258,7 +260,7 @@ export function generateColumns<TData>(
         ...(config.size !== undefined
           ? { size: config.size, minSize: config.size, maxSize: config.size }
           : {}),
-        meta: { label: config.label, kind: "select", hidden: false },
+        meta: { label: config.label, kind: "select", hidden: config.hidden },
       } as ColumnDef<TData>;
     }
 
@@ -280,6 +282,8 @@ export function generateColumns<TData>(
       config.display.type === "bar" ||
       config.display.type === "gauge";
 
+    const customCell = config.renderers.cell;
+
     const cell = ({
       getValue,
       row,
@@ -289,6 +293,10 @@ export function generateColumns<TData>(
       row: { original: TData };
       column: { getFacetedMinMaxValues?: () => [number, number] | undefined };
     }) => {
+      // A custom renderer overrides the descriptor's display. The descriptor
+      // still carries a real display type, which is what the sheet and
+      // `toJSON()` fall back to.
+      if (customCell) return customCell(getValue(), row.original);
       if (needsMinMax) {
         const display = config.display as {
           min?: number;
@@ -297,12 +305,9 @@ export function generateColumns<TData>(
         const faceted = column.getFacetedMinMaxValues?.();
         const min = faceted?.[0] ?? display.min ?? 0;
         const max = faceted?.[1] ?? display.max ?? 100;
-        return renderCell(config.display, getValue(), row.original, {
-          min,
-          max,
-        });
+        return renderCell(config.display, getValue(), { min, max });
       }
-      return renderCell(config.display, getValue(), row.original);
+      return renderCell(config.display, getValue());
     };
 
     const meta = {

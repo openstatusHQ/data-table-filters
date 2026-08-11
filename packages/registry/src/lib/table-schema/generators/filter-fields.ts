@@ -1,4 +1,5 @@
 import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
+import { fromPresetDescriptor, resolveColumns } from "../col";
 import type { TableSchemaDefinition } from "../types";
 
 /**
@@ -15,11 +16,9 @@ export function generateFilterFields<TData>(
 ): DataTableFilterField<TData>[] {
   const result: DataTableFilterField<TData>[] = [];
 
-  for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
-    if (!config.filter) continue;
-
-    const { filter, label, kind, enumValues, arrayItem } = config;
+  for (const config of resolveColumns(schema)) {
+    const { key, filter, label, kind } = config;
+    if (!filter) continue;
 
     const base = {
       label,
@@ -37,7 +36,7 @@ export function generateFilterFields<TData>(
         result.push({
           ...base,
           type: "timerange",
-          presets: filter.presets,
+          presets: filter.presets?.map(fromPresetDescriptor),
         });
         break;
       }
@@ -45,34 +44,34 @@ export function generateFilterFields<TData>(
         // Derive options if not explicitly provided
         let options = filter.options;
         if (!options) {
-          if (kind === "enum" && enumValues) {
-            options = enumValues.map((v) => ({ label: v, value: v }));
+          if (config.kind === "enum") {
+            options = config.enumValues.map((v) => ({ label: v, value: v }));
           } else if (kind === "boolean") {
             options = [
               { label: "Yes", value: true },
               { label: "No", value: false },
             ];
           } else if (
-            kind === "array" &&
-            arrayItem?.kind === "enum" &&
-            arrayItem.enumValues
+            config.kind === "array" &&
+            config.arrayItem.kind === "enum"
           ) {
-            options = arrayItem.enumValues.map((v) => ({ label: v, value: v }));
+            options = config.arrayItem.enumValues.map((v) => ({
+              label: v,
+              value: v,
+            }));
           }
         }
         result.push({
           ...base,
           type: "checkbox",
           options,
-          component: filter.component,
+          component: config.renderers.filterComponent,
         });
         break;
       }
       case "slider": {
         const displayUnit =
-          config.display.type === "number" && "unit" in config.display
-            ? config.display.unit
-            : undefined;
+          "unit" in config.display ? config.display.unit : undefined;
         result.push({
           ...base,
           type: "slider",

@@ -1,3 +1,4 @@
+import { resolveColumns } from "./col";
 import type { TableSchemaDefinition } from "./types";
 
 /**
@@ -14,8 +15,8 @@ import type { TableSchemaDefinition } from "./types";
  * and the AI-generated path (`createTableSchema.fromJSON(json)`).
  */
 export function validateSchema(definition: TableSchemaDefinition): void {
-  for (const [key, builder] of Object.entries(definition)) {
-    const c = builder._config;
+  for (const c of resolveColumns(definition)) {
+    const { key } = c;
 
     // 1. Label is required — col.* factories default to label: ""
     if (!c.label) {

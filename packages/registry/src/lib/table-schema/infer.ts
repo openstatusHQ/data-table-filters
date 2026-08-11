@@ -1,9 +1,15 @@
+import { defaultDisplayForKind } from "./col";
+import { SCHEMA_JSON_VERSION } from "./serialize";
 import type {
+  ColKind,
   ColumnDescriptor,
+  DisplayDescriptor,
   FilterDescriptor,
   SchemaJSON,
-  SerializableDisplayConfig,
 } from "./types";
+
+/** A descriptor plus the key it will be registered under. */
+type InferredColumn = ColumnDescriptor & { key: string };
 
 // Unix ms timestamps are 13-digit numbers (> Sep 2001, < Nov 2286)
 const UNIX_MS_MIN = 1_000_000_000_000;
@@ -29,44 +35,39 @@ function keyToLabel(key: string): string {
   return label.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function displayForDataType(
-  dataType: ColumnDescriptor["dataType"],
-): SerializableDisplayConfig {
-  switch (dataType) {
-    case "number":
-      return { type: "number" };
-    case "boolean":
-      return { type: "boolean" };
-    case "timestamp":
-      return { type: "timestamp" };
-    case "enum":
-    case "array":
-      return { type: "badge" };
-    case "string":
-    case "record":
-    case "select":
-    default:
-      return { type: "text" };
-  }
+/**
+ * The fields every inferred column shares. `display` comes from the one
+ * `defaultDisplayForKind` in `col.ts` — this module used to carry its own copy.
+ */
+function inferredCommon(
+  label: string,
+  kind: ColKind,
+  filter: FilterDescriptor | null,
+  rule: string,
+) {
+  return {
+    label,
+    optional: false,
+    display: defaultDisplayForKind(kind) as DisplayDescriptor,
+    hidden: false,
+    enableHiding: true,
+    hideHeader: false,
+    resizable: false,
+    sortable: false,
+    filter,
+    sheet: {} as { label?: string },
+    provenance: { source: "inferred" as const, rule },
+  };
 }
 
 function makeDescriptor(
   key: string,
   label: string,
-  dataType: ColumnDescriptor["dataType"],
+  kind: Exclude<ColKind, "array" | "enum">,
   filter: FilterDescriptor | null,
-): ColumnDescriptor {
-  return {
-    key,
-    label,
-    dataType,
-    optional: false,
-    hidden: false,
-    sortable: false,
-    display: displayForDataType(dataType),
-    filter,
-    sheet: {},
-  };
+  rule: string,
+): InferredColumn {
+  return { key, ...inferredCommon(label, kind, filter, rule), kind };
 }
 
 /** Split a key into lowercase words, handling camelCase, snake_case, and kebab-case. */
@@ -167,7 +168,7 @@ function generateColorMap(values: readonly string[]): Record<string, string> {
 }
 
 /** Post-process an inferred descriptor with smart display/config heuristics. */
-function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
+function enhanceDescriptor(descriptor: InferredColumn): InferredColumn {
   const words = keyToWords(descriptor.key);
   const joined = words.join("");
   const d = { ...descriptor };
@@ -197,12 +198,12 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
     }
   }
   // Favorite/starred booleans → star display, hide column header
-  else if (hasFavoriteWord && d.dataType === "boolean") {
+  else if (hasFavoriteWord && d.kind === "boolean") {
     d.display = { type: "star" };
     d.hideHeader = true;
   }
   // Email columns → code display
-  else if (hasEmailWord && d.dataType === "string") {
+  else if (hasEmailWord && d.kind === "string") {
     d.display = { type: "code" };
   }
   // Path/URL-like columns → code display
@@ -210,7 +211,7 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
     d.display = { type: "code" };
   }
   // Latency-like number columns → heatmap with ms unit, sortable
-  else if (hasLatencyWord && d.dataType === "number") {
+  else if (hasLatencyWord && d.kind === "number") {
     d.display = {
       type: "heatmap",
       unit: "ms",
@@ -220,40 +221,40 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
     d.sortable = true;
   }
   // Size-like number columns → number with B unit, sortable
-  else if (hasSizeWord && d.dataType === "number") {
+  else if (hasSizeWord && d.kind === "number") {
     d.display = { type: "number", unit: "B" };
     d.sortable = true;
   }
   // Health/score/rating → gauge display (min always 0 for visual baseline)
-  else if (hasHealthWord && d.dataType === "number") {
+  else if (hasHealthWord && d.kind === "number") {
     d.display = { type: "gauge", min: 0, max: d.filter?.max };
     d.sortable = true;
   }
   // HP/hitpoints → bar display (min always 0 for visual baseline)
-  else if (hasHpWord && d.dataType === "number") {
+  else if (hasHpWord && d.kind === "number") {
     d.display = { type: "bar", min: 0, max: d.filter?.max };
     d.sortable = true;
   }
   // Progress/completion → bar display (min always 0 for visual baseline)
-  else if (hasProgressWord && d.dataType === "number") {
+  else if (hasProgressWord && d.kind === "number") {
     d.display = { type: "bar", min: 0, max: d.filter?.max };
     d.sortable = true;
   }
 
   // Sortable defaults by type (unless ID-like)
   if (!hasIdWord) {
-    if (d.dataType === "timestamp" || d.dataType === "number") {
+    if (d.kind === "timestamp" || d.kind === "number") {
       d.sortable = true;
     }
   }
 
   // Log level / severity enums: expand filter by default (matches col.presets.logLevel())
-  if (hasLevelWord && d.dataType === "enum" && d.filter) {
+  if (hasLevelWord && d.kind === "enum" && d.filter) {
     d.filter = { ...d.filter, defaultOpen: true };
   }
 
   // Status/state enums → semantic colorMap on badge display
-  if (hasStatusWord && d.dataType === "enum" && d.enumValues) {
+  if (hasStatusWord && d.kind === "enum") {
     d.display = { type: "badge", colorMap: generateColorMap(d.enumValues) };
   }
 
@@ -264,50 +265,98 @@ function enhanceDescriptor(descriptor: ColumnDescriptor): ColumnDescriptor {
     number: 120,
     enum: 130,
   };
-  if (sizeDefaults[d.dataType] !== undefined) {
-    d.size = sizeDefaults[d.dataType];
+  if (sizeDefaults[d.kind] !== undefined) {
+    d.size = sizeDefaults[d.kind];
   }
 
   return d;
 }
 
-function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
+/** Infer the item descriptor of an array column from its flattened items. */
+function inferArrayItem(items: unknown[]): ColumnDescriptor {
+  const common = (kind: ColKind, rule: string) =>
+    inferredCommon("", kind, null, rule);
+
+  if (items.length === 0) {
+    return { ...common("string", "array-item:empty"), kind: "string" };
+  }
+  if (items.every((v) => typeof v === "string")) {
+    const distinct = new Set(items as string[]);
+    if (distinct.size <= 10) {
+      return {
+        ...common("enum", "array-item:enum"),
+        kind: "enum",
+        enumValues: Array.from(distinct),
+      };
+    }
+    return { ...common("string", "array-item:string"), kind: "string" };
+  }
+  if (items.every((v) => typeof v === "number")) {
+    return { ...common("number", "array-item:number"), kind: "number" };
+  }
+  if (items.every((v) => typeof v === "boolean")) {
+    return { ...common("boolean", "array-item:boolean"), kind: "boolean" };
+  }
+  return { ...common("string", "array-item:mixed"), kind: "string" };
+}
+
+function inferColDescriptor(key: string, values: unknown[]): InferredColumn {
   const label = keyToLabel(key);
   const nonNull = values.filter((v) => v !== null && v !== undefined);
 
   if (nonNull.length === 0) {
-    return makeDescriptor(key, label, "string", {
-      type: "input",
-      defaultOpen: false,
-      commandDisabled: false,
-    });
+    return makeDescriptor(
+      key,
+      label,
+      "string",
+      { type: "input", defaultOpen: false, commandDisabled: false },
+      "empty-column",
+    );
   }
 
   // Timestamp: ISO 8601 strings
   if (nonNull.every((v) => typeof v === "string" && isIso8601(v as string))) {
-    return makeDescriptor(key, label, "timestamp", {
-      type: "timerange",
-      defaultOpen: false,
-      commandDisabled: true,
-    });
+    return makeDescriptor(
+      key,
+      label,
+      "timestamp",
+      { type: "timerange", defaultOpen: false, commandDisabled: true },
+      "iso8601-string",
+    );
   }
 
   // Timestamp: Unix ms numbers
   if (nonNull.every((v) => typeof v === "number" && isUnixMs(v as number))) {
-    return makeDescriptor(key, label, "timestamp", {
-      type: "timerange",
-      defaultOpen: false,
-      commandDisabled: true,
-    });
+    return makeDescriptor(
+      key,
+      label,
+      "timestamp",
+      { type: "timerange", defaultOpen: false, commandDisabled: true },
+      "unix-ms-number",
+    );
   }
 
-  // Boolean
+  // Boolean — options match `col.boolean()` exactly. Inference used to omit
+  // them and let `generateFilterFields` derive "Yes"/"No", while the factory
+  // baked in "true"/"false": two construction paths producing different filter
+  // options for the same column kind. The codegen round trip cannot hold while
+  // they disagree, because no chain step can clear the factory's options.
   if (nonNull.every((v) => v === true || v === false)) {
-    return makeDescriptor(key, label, "boolean", {
-      type: "checkbox",
-      defaultOpen: false,
-      commandDisabled: false,
-    });
+    return makeDescriptor(
+      key,
+      label,
+      "boolean",
+      {
+        type: "checkbox",
+        defaultOpen: false,
+        commandDisabled: false,
+        options: [
+          { label: "true", value: true },
+          { label: "false", value: false },
+        ],
+      },
+      "boolean",
+    );
   }
 
   // Number
@@ -325,49 +374,36 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
             max,
           }
         : { type: "input", defaultOpen: false, commandDisabled: false };
-    return {
-      ...makeDescriptor(key, label, "number", filter),
-      display: { type: "number" },
-    };
+    return makeDescriptor(key, label, "number", filter, "number");
   }
 
-  // Array
+  // Array — the item type is always described, so a `string[]` column with more
+  // distinct values than the enum threshold stays a `string[]` column.
   if (nonNull.every((v) => Array.isArray(v))) {
     const allItems = (nonNull as unknown[][])
       .flat()
       .filter((v) => v !== null && v !== undefined);
-    const allStrings =
-      allItems.length > 0 && allItems.every((v) => typeof v === "string");
-    if (allStrings) {
-      const distinct = new Set(allItems as string[]);
-      if (distinct.size <= 10) {
-        const enumValues = Array.from(distinct);
-        return {
-          key,
-          label,
-          dataType: "array",
-          arrayItemType: { dataType: "enum", enumValues },
-          optional: false,
-          hidden: false,
-          sortable: false,
-          display: { type: "badge" },
-          filter: {
+    const arrayItem = inferArrayItem(allItems);
+    const filter: FilterDescriptor | null =
+      arrayItem.kind === "enum"
+        ? {
             type: "checkbox",
             defaultOpen: false,
             commandDisabled: false,
-            options: enumValues.map((v) => ({ label: v, value: v })),
-          },
-          sheet: {},
-        };
-      }
-    }
-    // Non-enum array: not filterable
-    return makeDescriptor(key, label, "array", null);
+            options: arrayItem.enumValues.map((v) => ({ label: v, value: v })),
+          }
+        : null;
+    return {
+      key,
+      ...inferredCommon(label, "array", filter, "array"),
+      kind: "array",
+      arrayItem,
+    };
   }
 
   // Record (plain object, non-array)
   if (nonNull.every((v) => typeof v === "object" && !Array.isArray(v))) {
-    return makeDescriptor(key, label, "record", null);
+    return makeDescriptor(key, label, "record", null, "record");
   }
 
   // String: check if enum (≤ 10 distinct values)
@@ -377,27 +413,28 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
       const enumValues = Array.from(distinct);
       return {
         key,
-        label,
-        dataType: "enum",
+        ...inferredCommon(
+          label,
+          "enum",
+          {
+            type: "checkbox",
+            defaultOpen: false,
+            commandDisabled: false,
+            options: enumValues.map((v) => ({ label: v, value: v })),
+          },
+          "string-enum",
+        ),
+        kind: "enum",
         enumValues,
-        optional: false,
-        hidden: false,
-        sortable: false,
-        display: { type: "badge" },
-        filter: {
-          type: "checkbox",
-          defaultOpen: false,
-          commandDisabled: false,
-          options: enumValues.map((v) => ({ label: v, value: v })),
-        },
-        sheet: {},
       };
     }
-    return makeDescriptor(key, label, "string", {
-      type: "input",
-      defaultOpen: false,
-      commandDisabled: false,
-    });
+    return makeDescriptor(
+      key,
+      label,
+      "string",
+      { type: "input", defaultOpen: false, commandDisabled: false },
+      "string",
+    );
   }
 
   // Fallback: mixed or unrecognised types — warn and treat as string
@@ -408,11 +445,13 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
     `[inferSchemaFromJSON] Column "${key}" has mixed or ambiguous types (${types.join(", ")}). ` +
       `Falling back to string input filter.`,
   );
-  return makeDescriptor(key, label, "string", {
-    type: "input",
-    defaultOpen: false,
-    commandDisabled: false,
-  });
+  return makeDescriptor(
+    key,
+    label,
+    "string",
+    { type: "input", defaultOpen: false, commandDisabled: false },
+    "mixed-fallback",
+  );
 }
 
 /**
@@ -432,7 +471,7 @@ function inferColDescriptor(key: string, values: unknown[]): ColumnDescriptor {
  */
 export function inferSchemaFromJSON(data: unknown[]): SchemaJSON {
   if (!Array.isArray(data) || data.length === 0) {
-    return { columns: [] };
+    return { version: SCHEMA_JSON_VERSION, columns: [] };
   }
 
   // Collect all keys and their values across rows (preserving insertion order)
@@ -450,5 +489,5 @@ export function inferSchemaFromJSON(data: unknown[]): SchemaJSON {
     enhanceDescriptor(inferColDescriptor(key, values)),
   );
 
-  return { columns };
+  return { version: SCHEMA_JSON_VERSION, columns };
 }

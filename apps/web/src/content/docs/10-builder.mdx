@@ -49,6 +49,8 @@ const json = tableSchema.toJSON();
 // JSON.stringify(tableSchema) also works
 
 // JSON → Schema (e.g. from an AI agent)
+// Takes `unknown` — untrusted, hand-pasted, or older JSON is migrated and
+// validated on the way in, and throws with a message if it cannot be.
 const reconstructed = createTableSchema.fromJSON(json);
 
 // JSON → TypeScript code
@@ -56,4 +58,6 @@ import { schemaToTypeScript } from "@/lib/table-schema/to-typescript";
 const tsCode = schemaToTypeScript(json);
 ```
 
-> Custom renderers (`display("custom", ...)`, `filter.component`, `sheet.component`) are functions and cannot be serialized. They are stripped during `toJSON()` and must be applied manually on reconstructed schemas.
+The descriptor carries a `version` field. `createTableSchema.fromJSON` runs `migrateSchemaJSON` first, so JSON written by an older build still loads.
+
+> Custom renderers (`display("custom", ...)`, `filter.component`, `sheet.component`, `sheet.condition`) are functions and cannot be serialized. They are stripped during `toJSON()` and must be applied manually on reconstructed schemas. The column's _other_ state is not affected: a column with a custom cell still serializes its real display type, so the reconstructed schema renders the built-in cell for that kind rather than falling back to plain text.

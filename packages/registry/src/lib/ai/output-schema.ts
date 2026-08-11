@@ -1,4 +1,7 @@
-import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import {
+  resolveColumn,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 import { z } from "zod";
 
 /**
@@ -20,7 +23,7 @@ export function generateAIOutputSchema(schema: TableSchemaDefinition) {
   const shape: Record<string, z.ZodType> = {};
 
   for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
+    const config = resolveColumn(builder);
     if (!config.filter) continue;
 
     const filterType = config.filter.type;
