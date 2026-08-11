@@ -32,10 +32,20 @@ const manifest = JSON.parse(
 };
 
 /** react/react-dom/next are the consumer's, not ours to install. */
-const peerDependencies = new Set(Object.keys(manifest.peerDependencies ?? {}));
+const ambientPeers = new Set(["next", "react", "react-dom"]);
 
-/** The versions the blocks are typechecked against in this workspace. */
-const workspaceRanges = manifest.dependencies ?? {};
+/**
+ * The versions the blocks are typechecked against in this workspace.
+ *
+ * `nuqs` is a peer rather than a dependency so that this package and the app
+ * resolve one instance of it — two copies mean two React contexts and
+ * `<NuqsAdapter>` stops being visible to the store adapter. Consumers still
+ * install it through the block, so its range is checked like any other.
+ */
+const workspaceRanges: Record<string, string> = {
+  ...manifest.peerDependencies,
+  ...manifest.dependencies,
+};
 
 /** `date-fns@^3.6.0` -> `date-fns`, `@dnd-kit/core@^6.3.1` -> `@dnd-kit/core`. */
 function toPackageName(dependency: string): string {
@@ -226,7 +236,7 @@ describe("registry packaging", () => {
 
       for (const file of byName.get(name)?.files ?? []) {
         for (const pkg of externalImports(file.path)) {
-          if (peerDependencies.has(pkg)) continue;
+          if (ambientPeers.has(pkg)) continue;
           if (installed.has(pkg)) continue;
           undeclared.push(`${file.path} -> ${pkg}`);
         }
