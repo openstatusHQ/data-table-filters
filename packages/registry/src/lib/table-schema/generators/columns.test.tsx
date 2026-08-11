@@ -36,7 +36,7 @@ type ColumnDefRead = {
   accessorFn?: (row: unknown) => unknown;
   header?: unknown;
   cell?: unknown;
-  filterFn?: string;
+  filterFn?: GeneratedFilterFn;
   size?: number;
   minSize?: number;
   maxSize?: number;
@@ -45,6 +45,20 @@ type ColumnDefRead = {
   enableHiding?: boolean;
   meta?: { label?: string; kind?: string; hidden?: boolean };
 };
+
+/**
+ * The `filterFn` a ColumnDef now carries.
+ *
+ * It is a *function* from the shared filter-semantics module, not one of the
+ * string names (`"arrSome"`, `"inDateRange"`, …) that used to require a matching
+ * `filterFns: { … }` registration on the table. There is nothing to assert about
+ * its identity, so the tests assert what it does.
+ */
+type GeneratedFilterFn = (
+  row: { getValue: (id: string) => unknown },
+  columnId: string,
+  value: unknown,
+) => boolean;
 
 type AnyElement = ReactElement<Record<string, unknown>>;
 
@@ -80,6 +94,21 @@ function invokeCell(
     row: context.row ?? { original: {} },
     column: context.column ?? {},
   });
+}
+
+/**
+ * Run a generated `filterFn` over one cell value and report whether the row
+ * survives. TanStack calls the predicate with the row accessor, so the cell is
+ * handed over through a `getValue` stub.
+ */
+function keeps(
+  def: ColumnDefRead,
+  cell: unknown,
+  filterValue: unknown,
+): boolean {
+  const filterFn = def.filterFn;
+  if (!filterFn) throw new Error("column has no filterFn");
+  return filterFn({ getValue: () => cell }, "column", filterValue);
 }
 
 function invokeHeader(
@@ -160,13 +189,37 @@ describe("generateColumns — raw rows → usable table config", () => {
     });
   });
 
-  it("derives a filterFn per column from the inferred filter types", () => {
+  it("derives a working filterFn per column from the inferred filter types", () => {
     const byKey = defsByKey(inferredDefinition());
-    expect(byKey.id!.filterFn).toBe("includesString");
-    expect(byKey.level!.filterFn).toBe("arrSome");
-    expect(byKey.latency!.filterFn).toBe("inNumberRange");
-    expect(byKey.createdAt!.filterFn).toBe("inDateRange");
-    expect(byKey.tags!.filterFn).toBe("arrIncludesSome");
+
+    // string → case-insensitive substring
+    expect(keeps(byKey.id!, "req_7", "REQ_7")).toBe(true);
+    expect(keeps(byKey.id!, "req_7", "req_8")).toBe(false);
+
+    // enum → set membership
+    expect(keeps(byKey.level!, "error", ["error", "warn"])).toBe(true);
+    expect(keeps(byKey.level!, "info", ["error", "warn"])).toBe(false);
+
+    // number + slider → inclusive range
+    expect(keeps(byKey.latency!, 150, [100, 200])).toBe(true);
+    expect(keeps(byKey.latency!, 250, [100, 200])).toBe(false);
+
+    // timestamp → inclusive date range
+    const range = [
+      new Date("2024-01-01T00:00:00Z"),
+      new Date("2024-01-05T00:00:00Z"),
+    ];
+    expect(
+      keeps(byKey.createdAt!, new Date("2024-01-03T00:00:00Z"), range),
+    ).toBe(true);
+    expect(
+      keeps(byKey.createdAt!, new Date("2024-01-09T00:00:00Z"), range),
+    ).toBe(false);
+
+    // array → set overlap, including on a non-first element
+    expect(keeps(byKey.tags!, ["edge", "cache"], ["cache"])).toBe(true);
+    expect(keeps(byKey.tags!, ["edge"], ["cache"])).toBe(false);
+
     // traceId loses its filter during inference → no filterFn at all.
     expect(byKey.traceId!.filterFn).toBeUndefined();
   });
@@ -183,47 +236,86 @@ describe("generateColumns — raw rows → usable table config", () => {
 // ── filterFn derivation ──────────────────────────────────────────────────────
 
 describe("generateColumns — filterFn derivation", () => {
-  it("maps timerange → inDateRange", () => {
+  it("timerange filters by a date range, inclusive on both ends", () => {
     const [def] = defs({
       date: col.timestamp().label("Date").filterable("timerange"),
     });
-    expect(def!.filterFn).toBe("inDateRange");
+    const range = [
+      new Date("2024-03-01T00:00:00Z"),
+      new Date("2024-03-31T00:00:00Z"),
+    ];
+    expect(keeps(def!, new Date("2024-03-15T12:00:00Z"), range)).toBe(true);
+    expect(keeps(def!, new Date("2024-03-01T00:00:00Z"), range)).toBe(true);
+    expect(keeps(def!, new Date("2024-03-31T00:00:00Z"), range)).toBe(true);
+    expect(keeps(def!, new Date("2024-04-02T00:00:00Z"), range)).toBe(false);
   });
 
-  it("maps slider → inNumberRange", () => {
+  it("slider filters by a number range, inclusive on both ends", () => {
     const [def] = defs({
       latency: col
         .number()
         .label("Latency")
         .filterable("slider", { min: 0, max: 100 }),
     });
-    expect(def!.filterFn).toBe("inNumberRange");
+    expect(keeps(def!, 50, [10, 60])).toBe(true);
+    expect(keeps(def!, 10, [10, 60])).toBe(true);
+    expect(keeps(def!, 60, [10, 60])).toBe(true);
+    expect(keeps(def!, 5, [10, 60])).toBe(false);
+    // A single handle is a degenerate range, not an equality on a stringified
+    // number.
+    expect(keeps(def!, 42, [42])).toBe(true);
+    expect(keeps(def!, 43, [42])).toBe(false);
   });
 
-  it("maps input → includesString", () => {
+  it("input on a string column filters by case-insensitive substring", () => {
     const [def] = defs({
       host: col.string().label("Host").filterable("input"),
     });
-    expect(def!.filterFn).toBe("includesString");
+    expect(keeps(def!, "ALPHA.example.com", "alpha")).toBe(true);
+    expect(keeps(def!, "beta.example.com", "EXAMPLE")).toBe(true);
+    expect(keeps(def!, "beta.example.com", "alpha")).toBe(false);
   });
 
-  it("maps checkbox on a scalar column → arrSome", () => {
+  it("input on a number column filters by equality, not substring", () => {
+    const [def] = defs({
+      port: col.number().label("Port").filterable("input"),
+    });
+    expect(keeps(def!, 5, 5)).toBe(true);
+    // "5" used to substring-match a stringified 1500 on the client only.
+    expect(keeps(def!, 1500, 5)).toBe(false);
+  });
+
+  it("checkbox on a scalar column filters by set membership", () => {
     const byKey = defsByKey({
       level: col.enum(["error", "warn"] as const).label("Level"),
       active: col.boolean().label("Active"),
+      status: col.number().label("Status").filterable("checkbox"),
     });
-    expect(byKey.level!.filterFn).toBe("arrSome");
-    expect(byKey.active!.filterFn).toBe("arrSome");
+
+    expect(keeps(byKey.level!, "error", ["error"])).toBe(true);
+    expect(keeps(byKey.level!, "warn", ["error"])).toBe(false);
+
+    expect(keeps(byKey.active!, true, [true])).toBe(true);
+    expect(keeps(byKey.active!, false, [true])).toBe(false);
+
+    // The shipping bug, at the generator boundary: two selected numbers are a
+    // set, never `BETWEEN 200 AND 500`.
+    expect(keeps(byKey.status!, 200, [200, 500])).toBe(true);
+    expect(keeps(byKey.status!, 500, [200, 500])).toBe(true);
+    expect(keeps(byKey.status!, 404, [200, 500])).toBe(false);
   });
 
-  it("maps checkbox on an array column → arrIncludesSome", () => {
+  it("checkbox on an array column filters by set overlap", () => {
     const [def] = defs({
       tags: col
         .array(col.enum(["edge", "cache"] as const))
         .label("Tags")
         .filterable("checkbox"),
     });
-    expect(def!.filterFn).toBe("arrIncludesSome");
+    // The match is at index 1 — comparing only the first element misses it.
+    expect(keeps(def!, ["edge", "cache"], ["cache"])).toBe(true);
+    expect(keeps(def!, ["edge"], ["cache"])).toBe(false);
+    expect(keeps(def!, [], ["cache"])).toBe(false);
   });
 
   it("omits filterFn when the column is not filterable", () => {

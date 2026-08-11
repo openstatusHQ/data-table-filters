@@ -16,40 +16,11 @@ import {
 } from "@dtf/registry/components/data-table/data-table-cell";
 import { DataTableColumnHeader } from "@dtf/registry/components/data-table/data-table-column-header";
 import { Checkbox } from "@dtf/registry/components/ui/checkbox";
+import { defineFilters } from "@dtf/registry/lib/filters";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { JSX } from "react";
 import { resolveColumns } from "../col";
-import type {
-  DisplayDescriptor,
-  ResolvedColumn,
-  TableSchemaDefinition,
-} from "../types";
-
-/**
- * Derive the TanStack Table filterFn name from a resolved column.
- *
- * Custom filterFns (arrSome, inDateRange) must be registered on the table:
- *   filterFns: { inDateRange, arrSome }  // from src/lib/table/filterfns.ts
- */
-function getFilterFn(config: ResolvedColumn): string | undefined {
-  if (!config.filter) return undefined;
-
-  const { kind, filter } = config;
-
-  switch (filter.type) {
-    case "timerange":
-      return "inDateRange"; // custom — must be registered
-    case "slider":
-      return "inNumberRange"; // TanStack built-in
-    case "input":
-      return "includesString"; // TanStack built-in; works for strings and numbers (via toString)
-    case "checkbox":
-      // Array columns use arrIncludesSome (checks row's array for filter values)
-      if (kind === "array") return "arrIncludesSome"; // TanStack built-in
-      // Single-value columns use arrSome (checks if row value is in filter array)
-      return "arrSome"; // custom — must be registered
-  }
-}
+import type { DisplayDescriptor, TableSchemaDefinition } from "../types";
 
 /**
  * Render the cell based on the display config.
@@ -200,12 +171,9 @@ function renderCell(
  * - Dotted keys (e.g. "timing.dns") → id + accessorFn
  * - Non-dotted keys → accessorKey
  * - Sortable columns get DataTableColumnHeader; others get a plain string header
- * - filterFn is derived from col kind + filter type
+ * - filterFn comes from the shared filter-semantics module
  * - Cell renders via built-in display components or the "custom" cell function
  * - meta.label is always set; meta.hidden reflects .hidden() calls
- *
- * The consuming component must register custom filterFns:
- *   filterFns: { inDateRange, arrSome }
  *
  * Composite/virtual columns that span multiple fields must be appended manually:
  * @example
@@ -219,6 +187,12 @@ function renderCell(
 export function generateColumns<TData>(
   schema: TableSchemaDefinition,
 ): ColumnDef<TData>[] {
+  // One interpretation of filter semantics, shared with the SQL and in-memory
+  // engines. `filterFn` returns a *function*, so the consuming table no longer
+  // has to register `filterFns: { inDateRange, arrSome }` — a contract that was
+  // undocumented outside a comment and silently broke filtering when missed.
+  const filters = defineFilters(schema);
+
   return resolveColumns(schema).map((config) => {
     const { key } = config;
 
@@ -265,7 +239,7 @@ export function generateColumns<TData>(
     }
 
     const isDotted = key.includes(".");
-    const filterFn = getFilterFn(config);
+    const filterFn = filters.filterFn(key);
 
     const header = config.hideHeader
       ? () => <span className="sr-only">{config.label}</span>

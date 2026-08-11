@@ -1,8 +1,5 @@
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
-import {
-  resolveColumns,
-  type TableSchemaDefinition,
-} from "@dtf/registry/lib/table-schema";
+import type { Filters } from "@dtf/registry/lib/filters";
 import { and, count, eq, sql, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { computeFacets } from "./facets";
@@ -12,60 +9,47 @@ import { buildOrderBy } from "./sorting";
 import type { ColumnMapping, DrizzleDB, SortDescriptor } from "./types";
 
 /**
- * Derive slider, facet, and date keys from a tableSchema definition.
- * Reads each column's descriptor filter type so no manual key lists are needed.
+ * Derive slider, facet, and date keys from declared filter semantics.
+ *
+ * These are pass groupings for the three-pass strategy, not semantics — the
+ * semantics live in `Filters` and are the same everywhere.
  */
-function deriveKeys(schema: TableSchemaDefinition) {
+function deriveKeys(filters: Filters) {
   const sliderKeys: string[] = [];
   const facetKeys: string[] = [];
   const dateKeys: string[] = [];
 
-  for (const { key, filter } of resolveColumns(schema)) {
-    if (!filter) continue;
-    if (filter.type === "slider") {
+  for (const { key, type } of filters.specs) {
+    if (type === "slider") {
       sliderKeys.push(key);
       facetKeys.push(key);
     }
-    if (filter.type === "checkbox") facetKeys.push(key);
-    if (filter.type === "input") facetKeys.push(key);
-    if (filter.type === "timerange") dateKeys.push(key);
+    if (type === "checkbox") facetKeys.push(key);
+    if (type === "input") facetKeys.push(key);
+    if (type === "timerange") dateKeys.push(key);
   }
 
   return { sliderKeys, facetKeys, dateKeys };
 }
 
-type DrizzleHandlerKeys = {
-  sliderKeys: string[];
-  facetKeys: string[];
-  dateKeys: string[];
-};
-
-type DrizzleHandlerConfigBase = {
+/**
+ * One config shape.
+ *
+ * The old two-shape union existed because `tableSchema` lives in a
+ * `"use client"` file and could not be imported on the server, so the server
+ * had to be handed three untyped `string[]`s instead. `defineFilters` accepts
+ * `SchemaJSON`, so the declaration now crosses that boundary as data and one
+ * field carries the semantics.
+ */
+export type DrizzleHandlerConfig = {
   db: DrizzleDB;
   table: PgTable;
+  /** Built with `defineFilters(tableSchema.definition | schemaJson | specs)`. */
+  filters: Filters;
   columnMapping: ColumnMapping;
   cursorColumn: string;
   defaultSize?: number;
 };
-
-/**
- * Config with explicit key lists — use when `tableSchema` is in a
- * `"use client"` file and cannot be imported on the server.
- */
-export type DrizzleHandlerConfigWithKeys = DrizzleHandlerConfigBase &
-  DrizzleHandlerKeys;
-
-/**
- * Config with `tableSchema.definition` — slider/facet/date keys are
- * derived automatically from each column's descriptor filter type.
- */
-export type DrizzleHandlerConfigWithSchema = DrizzleHandlerConfigBase & {
-  schema: TableSchemaDefinition;
-};
-
-export type DrizzleHandlerConfig =
-  | DrizzleHandlerConfigWithKeys
-  | DrizzleHandlerConfigWithSchema;
 
 export type DrizzleHandlerResult<TRow = Record<string, unknown>> = {
   data: TRow[];
@@ -78,17 +62,6 @@ export type DrizzleHandlerResult<TRow = Record<string, unknown>> = {
   allConditions: SQL[];
 };
 
-function resolveKeys(config: DrizzleHandlerConfig): DrizzleHandlerKeys {
-  if ("schema" in config) {
-    return deriveKeys(config.schema);
-  }
-  return {
-    sliderKeys: config.sliderKeys,
-    facetKeys: config.facetKeys,
-    dateKeys: config.dateKeys,
-  };
-}
-
 /**
  * Create a high-level query handler that encapsulates the three-pass filtering
  * strategy, faceted search, counts, and cursor pagination.
@@ -97,32 +70,37 @@ function resolveKeys(config: DrizzleHandlerConfig): DrizzleHandlerKeys {
  *
  * @example
  * ```ts
- * // Option 1: Derive keys from tableSchema (when importable)
+ * // `tableSchema` is importable (not a "use client" file)
  * const handler = createDrizzleHandler({
  *   db,
  *   table: logs,
- *   schema: tableSchema.definition,
+ *   filters: defineFilters(tableSchema.definition),
  *   columnMapping,
  *   cursorColumn: "date",
  * });
  *
- * // Option 2: Explicit keys (when tableSchema is "use client")
+ * // `tableSchema` is "use client" — the declaration crosses as data
  * const handler = createDrizzleHandler({
  *   db,
  *   table: logs,
+ *   filters: defineFilters(schemaJson),
  *   columnMapping,
  *   cursorColumn: "date",
- *   sliderKeys: ["latency", "timing.dns", ...],
- *   facetKeys: ["level", "method", "latency", ...],
- *   dateKeys: ["date"],
  * });
  *
  * const result = await handler.execute(search);
  * ```
  */
 export function createDrizzleHandler(config: DrizzleHandlerConfig) {
-  const { db, table, columnMapping, cursorColumn, defaultSize = 40 } = config;
-  const { sliderKeys, facetKeys, dateKeys } = resolveKeys(config);
+  const {
+    db,
+    table,
+    filters,
+    columnMapping,
+    cursorColumn,
+    defaultSize = 40,
+  } = config;
+  const { sliderKeys, facetKeys, dateKeys } = deriveKeys(filters);
 
   const cursorCol = columnMapping[cursorColumn];
   if (!cursorCol) {
@@ -148,30 +126,30 @@ export function createDrizzleHandler(config: DrizzleHandlerConfig) {
       // --- Three-pass filtering strategy ---
 
       // Pass 1: Date range conditions only
-      const dateFilters = Object.fromEntries(
-        Object.entries(search).filter(([key]) => dateKeys.includes(key)),
+      const dateConditions = buildWhereConditions(
+        filters,
+        search,
+        columnMapping,
+        {
+          only: dateKeys,
+        },
       );
-      const dateConditions = buildWhereConditions(columnMapping, dateFilters);
 
       // Pass 2: Date + non-slider filters (for slider facet bounds)
-      const nonSliderFilters = Object.fromEntries(
-        Object.entries(search).filter(
-          ([key]) => !sliderKeys.includes(key) && !dateKeys.includes(key),
-        ),
-      );
       const nonSliderConditions = buildWhereConditions(
+        filters,
+        search,
         columnMapping,
-        nonSliderFilters,
+        { exclude: [...sliderKeys, ...dateKeys] },
       );
       const pass2Conditions = [...dateConditions, ...nonSliderConditions];
 
       // Pass 3: All conditions including sliders
-      const sliderFilters = Object.fromEntries(
-        Object.entries(search).filter(([key]) => sliderKeys.includes(key)),
-      );
       const sliderConditions = buildWhereConditions(
+        filters,
+        search,
         columnMapping,
-        sliderFilters,
+        { only: sliderKeys },
       );
       const allConditions = [...pass2Conditions, ...sliderConditions];
 

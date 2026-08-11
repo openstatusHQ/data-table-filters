@@ -1,8 +1,8 @@
 import {
-  filterData,
   getFacetsFromData,
   sortData,
   splitData,
+  filters as tableFilters,
 } from "@/app/infinite/api/helpers";
 import { mock, mockLive } from "@/app/infinite/api/mock";
 import { filterSchema } from "@/app/infinite/filter-schema";
@@ -20,7 +20,7 @@ const handler = createTableMCPHandler({
   schema: mcpSchema,
   getData: async ({ filters }) => {
     const totalData = [...mockLive, ...mock];
-    const filtered = filterData(totalData, filters);
+    const filtered = tableFilters.apply(totalData, filters);
     const sorted = sortData(filtered, filters.sort ?? null);
     const paginated = splitData(sorted, {
       cursor: filters.cursor ?? null,

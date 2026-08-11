@@ -35,9 +35,9 @@ export const BLOCK_GUIDANCE: Record<string, string> = {
   "data-table-zustand":
     "Filter state must live in client app state instead of the URL, or the app already uses zustand.",
   "data-table-schema":
-    "One declarative definition should drive columns, filters, sheet fields, and sorting. Required by the drizzle, mcp, and ai-filters blocks.",
+    "One declarative definition should drive columns, filters, sheet fields, and sorting. Required by the drizzle, mcp, and ai-filters blocks. Also carries the shared filter-semantics module that the SQL, in-memory, and TanStack engines all read from.",
   "data-table-drizzle":
-    "Rows live in a SQL database and must be filtered server-side. This is the block for large tables: SQL-side filtering, faceted counts, cursor pagination, and sorting.",
+    "Rows live in a SQL database and must be filtered server-side. This is the block for large tables: SQL-side filtering, faceted counts, cursor pagination, and sorting. If you installed this block before the filter-semantics fix, re-run `shadcn add` for both data-table-drizzle and data-table-schema: earlier copies compiled a numeric checkbox with exactly two values selected to `BETWEEN`, silently matching everything in between.",
   "data-table-query":
     "The table fetches pages from an API endpoint — React Query infinite-query wiring with SuperJSON and facet merging.",
   "data-table-filter-command-ai":

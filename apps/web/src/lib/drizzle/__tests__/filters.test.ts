@@ -8,9 +8,26 @@ import {
   hasDatabase,
   seedRows,
   setupTestDb,
+  testFilters,
   testMapping,
 } from "./setup";
 
+/**
+ * Tier 2 — the same engine against a real Postgres server, in CI only.
+ *
+ * The per-operator assertions that used to live here (one `it` per filter
+ * kind: ilike, eq, inArray, overlap, between, date range, …) have moved to
+ * `packages/registry/src/lib/drizzle/__tests__/conformance-sql.test.ts`, which
+ * drives the shared corpus against PGLite and so runs on every commit rather
+ * than only when `DATABASE_URL` is set. That corpus covers each operator far
+ * more thoroughly than the six cases here did — and, unlike them, it walks
+ * every checkbox arity, which is how `[200, 500]` compiling to
+ * `BETWEEN 200 AND 500` went unnoticed.
+ *
+ * What stays is what the corpus deliberately does not model, because it is
+ * about this function rather than about an operator: the `selection`
+ * parameter, the column mapping, and conjunction across keys.
+ */
 describe.skipIf(!hasDatabase)("buildWhereConditions", () => {
   beforeAll(async () => {
     await setupTestDb();
@@ -21,132 +38,107 @@ describe.skipIf(!hasDatabase)("buildWhereConditions", () => {
   });
 
   async function queryWithFilters(
-    filters: Record<string, unknown>,
-    options?: { exclude?: string[]; only?: string[] },
+    values: Record<string, unknown>,
+    selection?: { exclude?: string[]; only?: string[] },
   ) {
-    const conditions = buildWhereConditions(testMapping, filters, options);
+    const conditions = buildWhereConditions(
+      testFilters,
+      values,
+      testMapping,
+      selection,
+    );
     const where = conditions.length > 0 ? and(...conditions) : undefined;
     return getDb().select().from(getTable()).where(where);
   }
 
-  it("string filter → ilike on host", async () => {
-    const rows = await queryWithFilters({ host: "api" });
-    const expected = seedRows.filter((r) => r.host.includes("api")).length;
-    expect(rows.length).toBe(expected);
-    expect(rows.every((r) => r.host.includes("api"))).toBe(true);
-  });
-
-  it("number filter → eq on status", async () => {
-    const rows = await queryWithFilters({ status: 200 });
-    expect(rows.length).toBe(seedRows.filter((r) => r.status === 200).length);
-    expect(rows.every((r) => r.status === 200)).toBe(true);
-  });
-
-  it("string array on regular column → inArray on level", async () => {
-    const rows = await queryWithFilters({ level: ["success", "error"] });
-    const expected = seedRows.filter(
-      (r) => r.level === "success" || r.level === "error",
-    ).length;
-    expect(rows.length).toBe(expected);
-    expect(
-      rows.every((r) => r.level === "success" || r.level === "error"),
-    ).toBe(true);
-  });
-
-  it("string array on array column → pg overlap on regions", async () => {
-    const rows = await queryWithFilters({ regions: ["ap-south-1"] });
-    const expected = seedRows.filter((r) =>
-      r.regions.includes("ap-south-1"),
-    ).length;
-    expect(rows.length).toBe(expected);
-  });
-
-  it("number array (2 elements) → between for slider range", async () => {
-    const rows = await queryWithFilters({ latency: [100, 300] });
-    const expected = seedRows.filter(
-      (r) => r.latency >= 100 && r.latency <= 300,
-    ).length;
-    expect(rows.length).toBe(expected);
-    expect(rows.every((r) => r.latency >= 100 && r.latency <= 300)).toBe(true);
-  });
-
-  it("number array (3+ elements) → inArray for checkbox", async () => {
-    const rows = await queryWithFilters({ status: [200, 404, 500] });
-    const expected = seedRows.filter((r) =>
-      [200, 404, 500].includes(r.status),
-    ).length;
-    expect(rows.length).toBe(expected);
-  });
-
-  it("number array (1 element) → eq", async () => {
-    const rows = await queryWithFilters({ status: [404] });
-    const expected = seedRows.filter((r) => r.status === 404).length;
-    expect(rows.length).toBe(expected);
-  });
-
-  it("date array (2 elements) → date range", async () => {
-    const from = seedRows[4].date; // 5 hours ago
-    const to = seedRows[1].date; // 2 hours ago
-    const rows = await queryWithFilters({ date: [from, to] });
-    const expected = seedRows.filter(
-      (r) => r.date >= from && r.date <= to,
-    ).length;
-    expect(rows.length).toBe(expected);
-  });
-
-  it("date array (1 element) → single day range", async () => {
-    // All seed rows are on the same day (2025-01-15), so all should match
-    const rows = await queryWithFilters({
-      date: [new Date("2025-01-15T10:00:00Z")],
+  describe("selection", () => {
+    it("exclude skips the excluded key", async () => {
+      const rows = await queryWithFilters(
+        { host: "api", status: [200] },
+        { exclude: ["status"] },
+      );
+      const expected = seedRows.filter((r) => r.host.includes("api")).length;
+      expect(rows.length).toBe(expected);
     });
-    expect(rows.length).toBe(seedRows.length);
-  });
 
-  it("null / undefined / empty array → no conditions", async () => {
-    const rows = await queryWithFilters({
-      host: null,
-      status: undefined,
-      level: [],
+    it("only applies the listed key", async () => {
+      const rows = await queryWithFilters(
+        { host: "api", status: [200] },
+        { only: ["status"] },
+      );
+      const expected = seedRows.filter((r) => r.status === 200).length;
+      expect(rows.length).toBe(expected);
     });
-    expect(rows.length).toBe(seedRows.length);
-  });
 
-  it("unknown column key → no conditions", async () => {
-    const rows = await queryWithFilters({ nonexistent: "value" });
-    expect(rows.length).toBe(seedRows.length);
-  });
-
-  it("options.exclude → skips excluded key", async () => {
-    const rows = await queryWithFilters(
-      { host: "api", status: 200 },
-      { exclude: ["status"] },
-    );
-    const expected = seedRows.filter((r) => r.host.includes("api")).length;
-    expect(rows.length).toBe(expected);
-  });
-
-  it("options.only → only applies listed key", async () => {
-    const rows = await queryWithFilters(
-      { host: "api", status: 200 },
-      { only: ["status"] },
-    );
-    const expected = seedRows.filter((r) => r.status === 200).length;
-    expect(rows.length).toBe(expected);
-  });
-
-  it("multiple filters combined", async () => {
-    const rows = await queryWithFilters({
-      host: "api",
-      level: ["success"],
-      latency: [0, 100],
+    it("exclude wins over only for the same key", async () => {
+      // The three-pass strategy never does this, but `isSelected` gives
+      // `exclude` precedence and a pass grouping that silently inverted would
+      // be very hard to spot from query results.
+      const rows = await queryWithFilters(
+        { status: [200] },
+        { only: ["status"], exclude: ["status"] },
+      );
+      expect(rows.length).toBe(seedRows.length);
     });
-    const expected = seedRows.filter(
-      (r) =>
-        r.host.includes("api") &&
-        r.level === "success" &&
-        r.latency >= 0 &&
-        r.latency <= 100,
-    ).length;
-    expect(rows.length).toBe(expected);
+  });
+
+  describe("column mapping", () => {
+    it("drops a key with no mapped column", async () => {
+      // `plan` happily emits an op for any declared key; this function is
+      // where an op with no column has to be discarded rather than crash.
+      const rows = await queryWithFilters({ nonexistent: "value" });
+      expect(rows.length).toBe(seedRows.length);
+    });
+
+    it("drops a declared key that the mapping omits", async () => {
+      const partial = { host: testMapping.host! };
+      const conditions = buildWhereConditions(
+        testFilters,
+        { host: "api", status: [200] },
+        partial,
+      );
+      expect(conditions.length).toBe(1);
+    });
+  });
+
+  describe("conjunction", () => {
+    it("ANDs every active filter across mixed operators", async () => {
+      const rows = await queryWithFilters({
+        host: "api",
+        level: ["success"],
+        latency: [0, 100],
+      });
+      const expected = seedRows.filter(
+        (r) =>
+          r.host.includes("api") &&
+          r.level === "success" &&
+          r.latency >= 0 &&
+          r.latency <= 100,
+      ).length;
+      expect(rows.length).toBe(expected);
+      expect(rows.length).toBeGreaterThan(0);
+    });
+
+    it("emits nothing for inactive values, so unrelated filters still apply", async () => {
+      const rows = await queryWithFilters({
+        host: null,
+        status: undefined,
+        level: [],
+        latency: [0, 100],
+      });
+      const expected = seedRows.filter(
+        (r) => r.latency >= 0 && r.latency <= 100,
+      ).length;
+      expect(rows.length).toBe(expected);
+    });
+
+    it("emits one condition per active filter", async () => {
+      const conditions = buildWhereConditions(
+        testFilters,
+        { host: "api", level: ["success"], latency: [0, 100], status: null },
+        testMapping,
+      );
+      expect(conditions.length).toBe(3);
+    });
   });
 });

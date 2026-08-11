@@ -1,6 +1,7 @@
 import { logs } from "@/db/drizzle/schema";
 import { createDrizzleHandler } from "@dtf/registry/lib/drizzle";
 import type { ColumnMapping, DrizzleDB } from "@dtf/registry/lib/drizzle/types";
+import { defineFilters } from "@dtf/registry/lib/filters";
 import { col, createTableSchema } from "@dtf/registry/lib/table-schema";
 import { sql } from "drizzle-orm";
 import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
@@ -12,41 +13,21 @@ import {
   hasDatabase,
   seedRows,
   setupTestDb,
+  testFilters,
   testMapping,
 } from "./setup";
 
 /**
  * Characterization tests for `createDrizzleHandler` — the orchestrator that
  * wires the three-pass filtering strategy, facets, counts and cursor
- * pagination together. These document CURRENT behavior, including the known
- * cursor bug marked `BUG(plan 004)` below.
+ * pagination together. These document CURRENT behavior.
+ *
+ * The config used to be a two-shape union: `schema:` when the caller could
+ * import the table schema, and loose `sliderKeys`/`facetKeys`/`dateKeys`
+ * string lists when it could not. It is now one field, `filters: Filters`,
+ * and the pass groupings are derived from `filters.specs` — so the three key
+ * lists can no longer drift out of agreement with the semantics they group.
  */
-
-/**
- * Key lists mirroring `apps/web/src/app/drizzle/api/route.ts`, which passes
- * `schema: tableSchema.definition`. That schema lives in a `.tsx` file, so the
- * DB suite uses the equivalent explicit-key config; the derivation itself is
- * covered by the pure describe at the bottom of this file.
- */
-const sliderKeys = [
-  "latency",
-  "timing.dns",
-  "timing.connection",
-  "timing.tls",
-  "timing.ttfb",
-  "timing.transfer",
-];
-const facetKeys = [
-  "level",
-  "status",
-  "method",
-  "host",
-  "pathname",
-  "latency",
-  "regions",
-  ...sliderKeys.filter((key) => key !== "latency"),
-];
-const dateKeys = ["date"];
 
 describe.skipIf(!hasDatabase)("createDrizzleHandler", () => {
   beforeAll(async () => {
@@ -66,11 +47,9 @@ describe.skipIf(!hasDatabase)("createDrizzleHandler", () => {
       columnMapping: testMapping,
       cursorColumn: "date",
       defaultSize: 40,
-      sliderKeys,
-      facetKeys,
-      dateKeys,
+      filters: testFilters,
       ...overrides,
-    } as Parameters<typeof createDrizzleHandler>[0]);
+    });
   }
 
   /** Seed rows newest-first, matching the handler's default date-desc order. */
@@ -323,15 +302,19 @@ describe.skipIf(!hasDatabase)(
       await destroyTestDb();
     });
 
+    const tieFilters = defineFilters([
+      { key: "label", type: "checkbox", kind: "string" },
+      { key: "latency", type: "slider", kind: "number" },
+      { key: "date", type: "timerange", kind: "timestamp" },
+    ]);
+
     function createTieHandler() {
       return createDrizzleHandler({
         db: getDb(),
         table: tieTable,
         columnMapping: tieMapping,
         cursorColumn: "date",
-        sliderKeys: ["latency"],
-        facetKeys: ["label", "latency"],
-        dateKeys: ["date"],
+        filters: tieFilters,
       });
     }
 
@@ -460,22 +443,22 @@ describe("createDrizzleHandler (config)", () => {
         table: logs,
         columnMapping: { level: logs.level },
         cursorColumn: "nonexistent",
-        sliderKeys: [],
-        facetKeys: [],
-        dateKeys: [],
+        filters: defineFilters([]),
       }),
     ).toThrow('cursorColumn "nonexistent" not found in columnMapping');
   });
 
-  it("passes explicit key lists through unchanged", () => {
+  it("derives key lists from explicit filter specs", () => {
     const handler = createDrizzleHandler({
       db: stubDb,
       table: logs,
       columnMapping: testMapping,
       cursorColumn: "date",
-      sliderKeys: ["latency"],
-      facetKeys: ["level", "latency"],
-      dateKeys: ["date"],
+      filters: defineFilters([
+        { key: "level", type: "checkbox", kind: "enum" },
+        { key: "latency", type: "slider", kind: "number" },
+        { key: "date", type: "timerange", kind: "timestamp" },
+      ]),
     });
 
     expect(handler.sliderKeys).toEqual(["latency"]);
@@ -500,12 +483,69 @@ describe("createDrizzleHandler (config)", () => {
       table: logs,
       columnMapping: testMapping,
       cursorColumn: "date",
-      schema: schema.definition,
+      filters: defineFilters(schema.definition),
     });
 
     expect(handler.sliderKeys).toEqual(["latency"]);
     // Sliders are facets too, in schema declaration order.
     expect(handler.facetKeys).toEqual(["level", "host", "latency"]);
     expect(handler.dateKeys).toEqual(["date"]);
+  });
+
+  it("derives the same key lists from a schema and from its JSON", () => {
+    // `defineFilters` accepts `SchemaJSON` so the declaration can cross the
+    // `"use client"` boundary as data — that is what removed the need for the
+    // loose-string-list config shape in the first place. The two paths have to
+    // agree, or the boundary reintroduces the drift it was meant to remove.
+    const schema = createTableSchema({
+      level: col.enum(["success", "error"]).label("Level"),
+      host: col.string().label("Host").filterable("input"),
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 0, max: 1000 }),
+      date: col.timestamp().label("Date"),
+    });
+
+    const fromDefinition = defineFilters(schema.definition);
+    const fromJSON = defineFilters(schema.toJSON());
+
+    expect(fromJSON.specs).toEqual(fromDefinition.specs);
+  });
+
+  it("passes the same handler config shape as the live route", () => {
+    // `apps/web/src/app/drizzle/api/route.ts` builds its handler with exactly
+    // this one field; a second config shape reappearing would fail here.
+    const handler = createDrizzleHandler({
+      db: stubDb,
+      table: logs,
+      columnMapping: testMapping,
+      cursorColumn: "date",
+      filters: testFilters,
+    });
+
+    expect(handler.dateKeys).toEqual(["date"]);
+    expect(handler.sliderKeys).toEqual([
+      "latency",
+      "timing.dns",
+      "timing.connection",
+      "timing.tls",
+      "timing.ttfb",
+      "timing.transfer",
+    ]);
+    expect(handler.facetKeys).toEqual([
+      "level",
+      "status",
+      "method",
+      "host",
+      "pathname",
+      "latency",
+      "regions",
+      "timing.dns",
+      "timing.connection",
+      "timing.tls",
+      "timing.ttfb",
+      "timing.transfer",
+    ]);
   });
 });

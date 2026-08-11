@@ -183,7 +183,12 @@ look the row's value up in it and pass the result through as `color`.
 
 ## Filter Functions
 
-Register custom filter functions on your table:
+Columns produced by `generateColumns` carry their `filterFn` as a **function**, resolved from
+the table schema's declared semantics. They need no registration — the same interpretation runs
+on the client, in the in-memory routes, and in SQL.
+
+Registration is only needed for columns you write by hand that refer to a filter function by
+name:
 
 ```ts
 import { inDateRange, arrSome } from "@/lib/table/filterfns";

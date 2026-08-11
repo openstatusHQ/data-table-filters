@@ -1,4 +1,5 @@
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
+import { defineFilters } from "@dtf/registry/lib/filters";
 import {
   createTableSchema,
   resolveColumn,
@@ -10,99 +11,18 @@ import type {
 } from "@dtf/registry/lib/table-schema";
 
 /**
- * Schema-aware filtering for generic builder data.
+ * Filter builder data using the schema's declared semantics.
  *
- * Uses the table schema definition to determine how each filter should be applied:
- * - slider → range check (array of two numbers: [min, max])
- * - checkbox → inclusion check (array of values)
- * - input → substring match (string) or exact match (number)
- * - timerange → date range check (array of two date strings)
+ * This used to be a third hand-written engine, dispatching on
+ * `filterConfig.type` with its own case-sensitivity and array rules. It now
+ * shares one interpretation with the SQL and TanStack engines.
  */
 export function filterGenericData(
   data: Record<string, unknown>[],
-  filters: Record<string, unknown>,
+  filterValues: Record<string, unknown>,
   schema: TableSchemaDefinition,
 ): Record<string, unknown>[] {
-  const activeFilters = Object.entries(filters).filter(([, value]) => {
-    if (value === undefined || value === null) return false;
-    if (Array.isArray(value) && value.length === 0) return false;
-    if (typeof value === "string" && value === "") return false;
-    return true;
-  });
-
-  if (activeFilters.length === 0) return data;
-
-  return data.filter((row) => {
-    for (const [key, filterValue] of activeFilters) {
-      const colBuilder = schema[key];
-      if (!colBuilder) continue;
-
-      const filterConfig = resolveColumn(colBuilder).filter;
-      if (!filterConfig) continue;
-
-      const cellValue = row[key];
-
-      switch (filterConfig.type) {
-        case "slider": {
-          if (!Array.isArray(filterValue) || filterValue.length !== 2) continue;
-          const [min, max] = filterValue as [number, number];
-          const numValue = Number(cellValue);
-          if (isNaN(numValue) || numValue < min || numValue > max) return false;
-          break;
-        }
-        case "checkbox": {
-          if (!Array.isArray(filterValue) || filterValue.length === 0) continue;
-          // Handle array column values (e.g., regions)
-          if (Array.isArray(cellValue)) {
-            const hasMatch = cellValue.some(
-              (v) => filterValue.includes(v) || filterValue.includes(String(v)),
-            );
-            if (!hasMatch) return false;
-          } else {
-            // Check both typed and stringified value to handle
-            // boolean/number filter values from nuqs
-            if (
-              !filterValue.includes(cellValue) &&
-              !filterValue.includes(String(cellValue))
-            )
-              return false;
-          }
-          break;
-        }
-        case "input": {
-          if (typeof filterValue === "string" && filterValue !== "") {
-            const cellStr = String(cellValue ?? "").toLowerCase();
-            if (!cellStr.includes(filterValue.toLowerCase())) return false;
-          } else if (typeof filterValue === "number") {
-            if (Number(cellValue) !== filterValue) return false;
-          }
-          break;
-        }
-        case "timerange": {
-          if (!Array.isArray(filterValue) || filterValue.length < 1) continue;
-          const cellDate =
-            cellValue instanceof Date ? cellValue : new Date(String(cellValue));
-          if (isNaN(cellDate.getTime())) return false;
-          const dates = filterValue.map((d) =>
-            d instanceof Date ? d : new Date(String(d)),
-          );
-          if (dates.length === 1) {
-            // Same day check
-            if (cellDate.toDateString() !== dates[0].toDateString())
-              return false;
-          } else if (dates.length === 2) {
-            if (
-              cellDate.getTime() < dates[0].getTime() ||
-              cellDate.getTime() > dates[1].getTime()
-            )
-              return false;
-          }
-          break;
-        }
-      }
-    }
-    return true;
-  });
+  return defineFilters(schema).apply(data, filterValues);
 }
 
 /**

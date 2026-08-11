@@ -2,6 +2,7 @@ import { filterSchema } from "@/app/infinite/filter-schema";
 import { db } from "@/db/drizzle";
 import { logs } from "@/db/drizzle/schema";
 import { createDrizzleHandler } from "@dtf/registry/lib/drizzle";
+import { defineFilters } from "@dtf/registry/lib/filters";
 import { createTableMCPHandler } from "@dtf/registry/lib/mcp";
 import type { SchemaDefinition } from "@dtf/registry/lib/store/schema";
 import { columnMapping } from "../../column-mapping";
@@ -14,7 +15,7 @@ const { live, uuid, ...mcpSchema } =
 const drizzleHandler = createDrizzleHandler({
   db,
   table: logs,
-  schema: tableSchema.definition,
+  filters: defineFilters(tableSchema.definition),
   columnMapping,
   cursorColumn: "date",
   defaultSize: 40,

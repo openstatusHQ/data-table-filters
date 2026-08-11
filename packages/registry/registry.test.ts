@@ -29,6 +29,7 @@ const manifest = JSON.parse(
 ) as {
   dependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
 };
 
 /** react/react-dom/next are the consumer's, not ours to install. */
@@ -307,6 +308,55 @@ describe("registry packaging", () => {
     ].map((match) => match[1]);
 
     expect(exports).toEqual(["cn"]);
+  });
+
+  it("ships no test scaffolding to consumers", () => {
+    // Blocks are copy-in: every listed file lands in the consumer's `src/`.
+    // The filter semantics now have a shared conformance corpus at
+    // `src/lib/filters/testing/conformance.ts`, which sits inside the same
+    // `src/lib/filters/` directory whose four other files DO ship — so it is one
+    // careless glob away from being copied into every consumer project, where it
+    // would import `vitest` and fail to compile.
+    const shipped = items.flatMap((item) =>
+      (item.files ?? [])
+        .filter((file) =>
+          /(^|\/)(testing|__tests__)\/|\.test\.(ts|tsx)$/.test(file.path),
+        )
+        .map((file) => `${item.name}: ${file.path}`),
+    );
+
+    expect(shipped).toEqual([]);
+  });
+
+  it("declares no devDependency as a block dependency", () => {
+    // `@electric-sql/pglite` is the live example: it is how the SQL engine is
+    // tested without a hosted Postgres, and it is a devDependency of this
+    // package only. A block that listed it would make every consumer install a
+    // 100MB WASM Postgres to render a table.
+    const devOnly = new Set(
+      Object.keys(manifest.devDependencies ?? {}).filter(
+        (name) => !(name in workspaceRanges),
+      ),
+    );
+
+    const leaked = items.flatMap((item) =>
+      (item.dependencies ?? [])
+        .map(toPackageName)
+        .filter((name) => devOnly.has(name))
+        .map((name) => `${item.name}: ${name} is a devDependency`),
+    );
+
+    expect(leaked).toEqual([]);
+    // Pinned by name so this keeps testing something if pglite is ever moved
+    // between dependency groups.
+    expect(
+      items.flatMap((item) =>
+        (item.dependencies ?? [])
+          .map(toPackageName)
+          .filter((name) => name === "@electric-sql/pglite")
+          .map((name) => `${item.name}: ${name}`),
+      ),
+    ).toEqual([]);
   });
 
   it("lists only files that exist on disk", () => {
