@@ -42,12 +42,29 @@ function toSQL(op: FilterOp, column: Column): SQL {
     case "oneOf":
       return inArray(column, op.values);
 
-    case "overlaps":
+    case "overlaps": {
       // Postgres array overlap. The column is a set on both sides.
+      //
+      // The literal is cast to the column's OWN array type, read off the
+      // schema. `&&` resolves no implicit casts whatsoever: `integer[] &&
+      // text[]` is a type error, and so is `integer[] && numeric[]`. This used
+      // to emit `::text[]` unconditionally, so `col.array(col.number())` — a
+      // combination the builder permits and its docstring endorses — failed at
+      // query time with `operator does not exist`.
+      //
+      // Deriving the cast from the declared `itemKind` cannot work either: a
+      // `number` item says nothing about whether the column is `integer[]`,
+      // `bigint[]` or `double precision[]`, and Postgres rejects all three
+      // mismatches. The column knows, so the column is asked.
+      //
+      // `sql.raw` is safe here for the same reason `${column}` is: the type
+      // comes from the Drizzle schema, never from a request.
+      const arrayType = column.getSQLType();
       return sql`${column} && ARRAY[${sql.join(
         op.values.map((value) => sql`${value}`),
         sql`, `,
-      )}]::text[]`;
+      )}]::${sql.raw(arrayType)}`;
+    }
 
     case "numberRange":
       return between(column, op.min, op.max);
