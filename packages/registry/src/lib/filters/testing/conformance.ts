@@ -83,6 +83,22 @@ export const conformanceSchema: TableSchemaDefinition = {
       options: REGIONS.map((r) => ({ label: r, value: r })),
     }),
 
+  // array × checkbox → overlaps, over a NON-text item type.
+  //
+  // `array:checkbox` is one pair, so `regions` alone satisfies the coverage
+  // test — and `itemKind` is the axis a pair cannot see. A SQL engine that
+  // compiles the members to a text array answers every `regions` case
+  // correctly and still cannot run this column at all.
+  codes: col
+    .array(col.number())
+    .label("Codes")
+    .filterable("checkbox", {
+      options: [200, 201, 301, 404, 429, 500].map((v) => ({
+        label: String(v),
+        value: v,
+      })),
+    }),
+
   // timestamp × timerange → dateRange
   createdAt: col.timestamp().label("Created At").filterable("timerange"),
 
@@ -101,6 +117,7 @@ export type ConformanceRow = {
   active: boolean;
   level: (typeof LEVELS)[number];
   regions: (typeof REGIONS)[number][];
+  codes: number[];
   createdAt: Date;
   headers: Record<string, string>;
 };
@@ -129,6 +146,9 @@ function jan(day: number, hour = 0, minute = 0): Date {
  * `port` holds both `5` and `1500` so an exact match has something to prove.
  * `regions` puts the interesting member at index 1 on rows 3, 6 and 7 so an
  * overlap has something to prove, and row 4 is empty so it can never match.
+ * `codes` repeats that shape with numeric members, because the item type is
+ * invisible to `(kind, type)` coverage and a backend can get it wrong on its
+ * own.
  */
 export const conformanceRows: readonly ConformanceRow[] = [
   {
@@ -140,6 +160,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: true,
     level: "error",
     regions: ["ams", "fra"],
+    codes: [200, 500],
     createdAt: jan(1, 0, 0),
     headers: { "content-type": "text/html" },
   },
@@ -152,6 +173,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: false,
     level: "warn",
     regions: ["fra"],
+    codes: [201],
     createdAt: jan(1, 23, 59),
     headers: { "content-type": "application/json" },
   },
@@ -164,6 +186,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: true,
     level: "info",
     regions: ["gru", "ams"],
+    codes: [301, 200],
     createdAt: jan(2, 8, 0),
     headers: { location: "/moved" },
   },
@@ -176,6 +199,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: false,
     level: "error",
     regions: [],
+    codes: [],
     createdAt: jan(3, 12, 0),
     headers: {},
   },
@@ -188,6 +212,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: true,
     level: "debug",
     regions: ["iad"],
+    codes: [404],
     createdAt: jan(4, 0, 0),
     headers: { "cache-control": "no-store" },
   },
@@ -200,6 +225,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: false,
     level: "warn",
     regions: ["ams", "iad"],
+    codes: [200, 429],
     createdAt: jan(5, 9, 30),
     headers: { "content-type": "text/plain" },
   },
@@ -212,6 +238,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: true,
     level: "info",
     regions: ["fra", "gru"],
+    codes: [429, 301],
     createdAt: jan(6, 0, 0),
     headers: { "retry-after": "30" },
   },
@@ -224,6 +251,7 @@ export const conformanceRows: readonly ConformanceRow[] = [
     active: false,
     level: "debug",
     regions: ["gru"],
+    codes: [200],
     createdAt: jan(7, 18, 45),
     headers: { "content-type": "text/html" },
   },
@@ -557,6 +585,38 @@ export const conformanceCases: readonly ConformanceCase[] = [
     key: "regions",
     value: [],
     expect: ALL_IDS,
+  },
+
+  // ── array × checkbox → overlaps, numeric members ─────────────────────────
+  //
+  // Same op, same pair, different item type. A backend that turns the members
+  // into text passes every case above and fails every case here.
+  {
+    // Rows 1, 8 hold 200 first; rows 3, 6 hold it at index 1.
+    id: "checkbox-number-array/match-is-not-the-first-element",
+    key: "codes",
+    value: [200],
+    expect: [1, 3, 6, 8],
+  },
+  {
+    // Two members — the arity the old corpus stepped around for `status`.
+    id: "checkbox-number-array/two-values-overlap",
+    key: "codes",
+    value: [404, 429],
+    expect: [5, 6, 7],
+  },
+  {
+    // Row 4's cell is [] and must never match.
+    id: "checkbox-number-array/empty-cell-never-matches",
+    key: "codes",
+    value: [301],
+    expect: [3, 7],
+  },
+  {
+    id: "checkbox-number-array/no-match",
+    key: "codes",
+    value: [418],
+    expect: [],
   },
 
   // ── timestamp × timerange → dateRange ────────────────────────────────────

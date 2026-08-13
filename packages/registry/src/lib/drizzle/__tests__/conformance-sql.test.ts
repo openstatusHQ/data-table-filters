@@ -51,6 +51,9 @@ const conformance = pgTable("conformance", {
   // filter engine — and `sql-injection.test.ts` already pins the enum behaviour.
   level: text("level").notNull(),
   regions: text("regions").array().notNull(),
+  // `integer[]`, so the emitted overlap has to cast to something other than
+  // `text[]` — the item type is the axis `(kind, type)` coverage cannot see.
+  codes: integer("codes").array().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   headers: jsonb("headers").$type<Record<string, string>>().notNull(),
 });
@@ -64,6 +67,7 @@ const columnMapping: ColumnMapping = {
   active: conformance.active,
   level: conformance.level,
   regions: conformance.regions,
+  codes: conformance.codes,
   createdAt: conformance.createdAt,
 };
 
@@ -83,6 +87,7 @@ async function setup() {
       active boolean NOT NULL,
       level text NOT NULL,
       regions text[] NOT NULL,
+      codes integer[] NOT NULL,
       created_at timestamptz NOT NULL,
       headers jsonb NOT NULL
     )
@@ -91,6 +96,7 @@ async function setup() {
     conformanceRows.map((row) => ({
       ...row,
       regions: [...row.regions],
+      codes: [...row.codes],
     })),
   );
 }
@@ -180,7 +186,8 @@ describe("ilike vs toLowerCase().includes() — pinned divergences", () => {
     await db.execute(sql`DELETE FROM conformance WHERE id = 999`);
     await db.execute(sql`
       INSERT INTO conformance VALUES (
-        999, ${cell}, 0, 0, 0, true, 'info', ARRAY[]::text[], now(), '{}'::jsonb
+        999, ${cell}, 0, 0, 0, true, 'info', ARRAY[]::text[], ARRAY[]::integer[],
+        now(), '{}'::jsonb
       )
     `);
     const conditions = buildWhereConditions(
