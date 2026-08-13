@@ -78,6 +78,47 @@ describe("validateSchema", () => {
     expect(() => validateSchema(def)).not.toThrow();
   });
 
+  it("throws when a sheet-only column still carries a filter", () => {
+    // Unreachable through the builder — `.sheetOnly()` clears the filter — but
+    // hand-written or AI-generated JSON can describe it, and it has no chain
+    // form, so `schemaToTypeScript` would have to drop half of it.
+    const def = {
+      latency: createColBuilder<number, "slider">({
+        kind: "number",
+        label: "Latency",
+        optional: false,
+        display: { type: "number" },
+        hidden: true,
+        enableHiding: false,
+        hideHeader: false,
+        resizable: false,
+        sortable: false,
+        filter: {
+          type: "slider",
+          defaultOpen: false,
+          commandDisabled: false,
+          min: 1,
+          max: 5,
+        },
+        sheet: null,
+        provenance: { source: "manual" },
+      }),
+    };
+    expect(() => validateSchema(def)).toThrowError(
+      '[createTableSchema] Column "latency": a sheet-only column cannot have a filter.',
+    );
+  });
+
+  it("does not throw for a real sheetOnly column", () => {
+    const def = { trace: col.string().label("Trace").sheetOnly() };
+    expect(() => validateSchema(def)).not.toThrow();
+  });
+
+  it("does not throw for a select column (enableHiding false, not hidden)", () => {
+    const def = { select: col.select() };
+    expect(() => validateSchema(def)).not.toThrow();
+  });
+
   it("validates every column — throws on the second if first is valid", () => {
     const def = {
       valid: col.string().label("Valid"),

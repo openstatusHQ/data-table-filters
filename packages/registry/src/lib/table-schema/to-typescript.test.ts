@@ -448,6 +448,28 @@ describe("schemaToTypeScript — factory selection reads provenance", () => {
       provenance: { source: "manual" },
     });
   });
+
+  it("does not swallow the filter of a column that merely looks sheet-only", () => {
+    // `enableHiding: false` + `hidden` is the shape `.sheetOnly()` leaves
+    // behind, and the emitter skips the `filter` step for it because
+    // `.sheetOnly()` nulls the filter itself. A builder cannot produce that
+    // shape with a filter still attached — `validateSchema` rejects it — but
+    // `schemaToTypeScript` takes raw `SchemaJSON`, so it can still be handed
+    // one. It used to emit `.sheetOnly()` and drop the filter with no trace.
+    const json = createTableSchema({
+      latency: col
+        .number()
+        .label("Latency")
+        .filterable("slider", { min: 1, max: 5 }),
+    }).toJSON();
+    const forged: SchemaJSON = {
+      version: json.version,
+      columns: [{ ...json.columns[0]!, hidden: true, enableHiding: false }],
+    };
+
+    const ts = schemaToTypeScript(forged);
+    expect(ts).toContain('.filterable("slider", { min: 1, max: 5 })');
+  });
 });
 
 // ── Exhaustive emitter coverage ─────────────────────────────────────────────

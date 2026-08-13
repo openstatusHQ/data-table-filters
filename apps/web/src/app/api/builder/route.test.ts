@@ -132,4 +132,29 @@ describe("PATCH /api/builder", () => {
     const res = await PATCH(makePatchRequest({ dataId: "some-id" }));
     expect(res.status).toBe(400);
   });
+
+  it("rejects a schema no builder could have produced, before it reaches the cache", async () => {
+    const postRes = await POST(makeRequest({ data: SAMPLE_DATA }));
+    const { dataId, schema } = await postRes.json();
+
+    // A sheet-only column (`enableHiding: false` + `hidden`) that still
+    // carries a filter. Migration alone accepts it — it is well-formed JSON of
+    // the right version — so the route has to build the schema to find out.
+    const invalid = {
+      ...schema,
+      columns: schema.columns.map((c: SchemaJSON["columns"][number]) =>
+        c.key === "age" ? { ...c, hidden: true, enableHiding: false } : c,
+      ),
+    };
+
+    const res = await PATCH(makePatchRequest({ dataId, schema: invalid }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain("sheet-only column");
+
+    // The cached schema is untouched.
+    const cached = getBuilderData(dataId)!.schemaJson.columns.find(
+      (c) => c.key === "age",
+    );
+    expect(cached?.enableHiding).toBe(true);
+  });
 });

@@ -451,6 +451,35 @@ describe("inferSchemaFromJSON — numeric display heuristics", () => {
     expect(columns[0]?.sortable).toBe(true);
   });
 
+  it("omits heatmap bounds entirely when the sample has no variance", () => {
+    // No variance → `input` filter, which carries no min/max. The display has
+    // to omit the keys rather than carry `min: undefined`: `JSON.stringify`
+    // erases the difference, so a descriptor holding one compares unequal to
+    // its own round trip while looking identical through JSON.
+    const data = [{ latency: 100 }, { latency: 100 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.filter?.type).toBe("input");
+    expect(Object.keys(columns[0]!.display!)).toEqual(["type", "unit"]);
+    expect(columns[0]?.display).toStrictEqual({ type: "heatmap", unit: "ms" });
+  });
+
+  it("omits the gauge/bar max when the sample has no variance", () => {
+    const { columns: score } = inferSchemaFromJSON([
+      { score: 7 },
+      { score: 7 },
+    ]);
+    expect(score[0]?.display).toStrictEqual({ type: "gauge", min: 0 });
+
+    const { columns: progress } = inferSchemaFromJSON([
+      { progress: 50 },
+      { progress: 50 },
+    ]);
+    expect(progress[0]?.display).toStrictEqual({ type: "bar", min: 0 });
+
+    const { columns: hp } = inferSchemaFromJSON([{ hp: 3 }, { hp: 3 }]);
+    expect(hp[0]?.display).toStrictEqual({ type: "bar", min: 0 });
+  });
+
   it("matches compound latency words that are not in the word list (responseTime)", () => {
     const data = [{ responseTime: 80 }, { responseTime: 120 }];
     const { columns } = inferSchemaFromJSON(data);

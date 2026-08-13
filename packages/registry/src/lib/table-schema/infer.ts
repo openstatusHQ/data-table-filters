@@ -1,4 +1,4 @@
-import { defaultDisplayForKind } from "./col";
+import { compact, defaultDisplayForKind } from "./col";
 import { SCHEMA_JSON_VERSION } from "./serialize";
 import type {
   ColKind,
@@ -212,12 +212,15 @@ function enhanceDescriptor(descriptor: InferredColumn): InferredColumn {
   }
   // Latency-like number columns → heatmap with ms unit, sortable
   else if (hasLatencyWord && d.kind === "number") {
-    d.display = {
+    // `compact` for the same reason the builder uses it: a zero-variance
+    // sample gives the column an `input` filter with no bounds, and a display
+    // carrying `min: undefined` is not the canonical form of one that omits it.
+    d.display = compact({
       type: "heatmap",
       unit: "ms",
       min: d.filter?.min,
       max: d.filter?.max,
-    };
+    }) as DisplayDescriptor;
     d.sortable = true;
   }
   // Size-like number columns → number with B unit, sortable
@@ -227,17 +230,29 @@ function enhanceDescriptor(descriptor: InferredColumn): InferredColumn {
   }
   // Health/score/rating → gauge display (min always 0 for visual baseline)
   else if (hasHealthWord && d.kind === "number") {
-    d.display = { type: "gauge", min: 0, max: d.filter?.max };
+    d.display = compact({
+      type: "gauge",
+      min: 0,
+      max: d.filter?.max,
+    }) as DisplayDescriptor;
     d.sortable = true;
   }
   // HP/hitpoints → bar display (min always 0 for visual baseline)
   else if (hasHpWord && d.kind === "number") {
-    d.display = { type: "bar", min: 0, max: d.filter?.max };
+    d.display = compact({
+      type: "bar",
+      min: 0,
+      max: d.filter?.max,
+    }) as DisplayDescriptor;
     d.sortable = true;
   }
   // Progress/completion → bar display (min always 0 for visual baseline)
   else if (hasProgressWord && d.kind === "number") {
-    d.display = { type: "bar", min: 0, max: d.filter?.max };
+    d.display = compact({
+      type: "bar",
+      min: 0,
+      max: d.filter?.max,
+    }) as DisplayDescriptor;
     d.sortable = true;
   }
 

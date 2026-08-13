@@ -57,5 +57,17 @@ export function validateSchema(definition: TableSchemaDefinition): void {
         );
       }
     }
+
+    // 4. A sheet-only column cannot carry a filter. `.sheetOnly()` is the only
+    //    chain step that sets `enableHiding: false` on a hideable column, and
+    //    it clears the filter, so no builder can produce this combination —
+    //    only hand-written or AI-generated JSON can. It has no chain form,
+    //    which means `schemaToTypeScript` would have to drop one half of it.
+    if (c.enableHiding === false && c.hidden && c.filter !== null) {
+      throw new Error(
+        `[createTableSchema] Column "${key}": a sheet-only column cannot have a filter.\n` +
+          `  Fix: drop the filter (.sheetOnly() implies it), or make the column filterable and hidden instead.`,
+      );
+    }
   }
 }

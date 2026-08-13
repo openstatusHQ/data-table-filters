@@ -225,9 +225,17 @@ function chainFor(c: ColumnDescriptor, baseline: ColumnDescriptor): string[] {
     const value = c[key];
     if (sameJSON(value, baseline[key])) continue;
     // `.sheetOnly()` already implies `.hidden()` and `.notFilterable()`.
+    //
+    // The `filter === null` check is the whole reason this branch is safe:
+    // without it, any descriptor shaped like a sheet-only column had its
+    // filter dropped from the emitted source, silently. `validateSchema`
+    // rejects that combination, so it can only arrive here through a raw
+    // `SchemaJSON` that never went through a schema — and then the filter is
+    // emitted rather than swallowed.
     if (
       c.enableHiding === false &&
       c.hidden &&
+      c.filter === null &&
       baseline.enableHiding !== false &&
       (key === "hidden" || key === "filter")
     ) {

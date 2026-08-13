@@ -58,8 +58,11 @@ const MANUAL: Provenance = { source: "manual" };
  * identical through `JSON`. `display("number", { unit: undefined })` — which
  * `col.presets.duration()` produces whenever no unit is given — is the case
  * that actually occurs.
+ *
+ * Exported for `infer.ts`, which builds descriptors outside the builder and so
+ * has to hold the same invariant.
  */
-function compact<T extends Record<string, unknown>>(object: T): T {
+export function compact<T extends Record<string, unknown>>(object: T): T {
   const result = {} as Record<string, unknown>;
   for (const [key, value] of Object.entries(object)) {
     if (value !== undefined) result[key] = value;
