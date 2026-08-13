@@ -97,6 +97,16 @@ export type DrizzleHandlerConfig = {
   /** Built with `defineFilters(tableSchema.definition | schemaJson | specs)`. */
   filters: Filters;
   columnMapping: ColumnMapping;
+  /**
+   * The schema key rows are paged by. A `Date` or numeric column, since the
+   * cursor is serialized as a number.
+   *
+   * `scope.range` and `scope.bucketMs` are read off THIS column when no
+   * explicit date filter is set, so a non-time cursor (an auto-increment id,
+   * say) still paginates correctly but hands aggregate callers a range built
+   * from `new Date(id)`. Page by your time column unless you have no use for
+   * `scope.range`.
+   */
   cursorColumn: string;
   defaultSize?: number;
   /**

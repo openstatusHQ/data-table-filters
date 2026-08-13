@@ -1,9 +1,9 @@
 /**
  * The bucket-size ladder for time-series aggregation.
  *
- * Thirteen rungs, from one second to twelve-and-a-half minutes, plus a
- * fall-through. Given how long a range is, this picks a bucket that yields a
- * readable number of points.
+ * Thirteen rungs, from one second to 384 minutes (6.4 hours), plus a
+ * fall-through at 768 minutes for anything longer. Given how long a range is,
+ * this picks a bucket that yields a readable number of points.
  *
  * This lived inline in a demo route with no test at any level. It is exported
  * here so `DrizzleQueryScope.bucketMs` can be tested directly rather than
