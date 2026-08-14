@@ -31,6 +31,9 @@ const handler = createDrizzleHandler({
     date: logs.date,
     latency: logs.latency,
     "timing.dns": logs.timingDns, // Dotted keys map to flat columns
+    // This mapping is also the projection: rows come back keyed by these keys,
+    // so no caller ever sees `timingDns`. A filterable key missing from here
+    // throws at construction instead of silently not filtering.
   },
   cursorColumn: "date", // Column for cursor pagination
   defaultSize: 40, // Page size (optional, default varies)
@@ -88,6 +91,17 @@ const result = await execute({
   size: 40,
 });
 ```
+
+`result.data` is keyed by **schema keys** — `"timing.dns"`, never `timingDns` — because the handler projects with `columnMapping`. Columns that belong in the payload but are never filtered or sorted go in `select`:
+
+```tsx
+createDrizzleHandler({
+  /* ... */
+  select: { uuid: logs.uuid, headers: logs.headers, message: logs.message },
+});
+```
+
+`result.scope` gives custom aggregate SQL the resolved query context — `{ db, table, columns, where, whereWithoutSliders, range, bucketMs }` — instead of raw `SQL[]` it would have to re-derive from.
 
 ---
 
