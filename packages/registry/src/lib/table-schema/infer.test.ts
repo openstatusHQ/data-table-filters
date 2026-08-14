@@ -1,21 +1,97 @@
 import { describe, expect, it } from "vitest";
 import { inferSchemaFromJSON } from "./infer";
+import type { ColumnDescriptor } from "./types";
 
-// ── edge cases ────────────────────────────────────────────────────────────────
+// The heuristics in `infer.ts` are driven by private word lists (ID_WORDS,
+// CODE_WORDS, EMAIL_WORDS, …). These tests pin the *intent* of each rule family
+// with one representative key per family plus the negative cases. They do not
+// enumerate the word lists — adding a synonym is not a behaviour change, and a
+// test that fails when one is added is testing the implementation, not the user.
 
-describe("inferSchemaFromJSON — edge cases", () => {
-  it("returns empty columns for an empty array", () => {
-    expect(inferSchemaFromJSON([])).toEqual({ columns: [] });
+/** Narrow to an array column and return its item descriptor. */
+function arrayItemOf(column: ColumnDescriptor): ColumnDescriptor {
+  if (column.kind !== "array") {
+    throw new Error(`expected an array column, got "${column.kind}"`);
+  }
+  return column.arrayItem;
+}
+
+/** Narrow to an enum column and return its values. */
+function enumValuesOf(column: ColumnDescriptor): readonly string[] {
+  if (column.kind !== "enum") {
+    throw new Error(`expected an enum column, got "${column.kind}"`);
+  }
+  return column.enumValues;
+}
+
+// ── envelope ─────────────────────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — envelope", () => {
+  it("returns a versioned envelope", () => {
+    const schema = inferSchemaFromJSON([{ host: "localhost" }]);
+    expect(schema.version).toBe(1);
   });
 
-  it("returns empty columns for a non-array input", () => {
+  it("returns a versioned empty envelope for an empty array", () => {
+    expect(inferSchemaFromJSON([])).toEqual({ version: 1, columns: [] });
+  });
+
+  it("returns a versioned empty envelope for a non-array input", () => {
     expect(inferSchemaFromJSON("not an array" as unknown as unknown[])).toEqual(
-      {
-        columns: [],
-      },
+      { version: 1, columns: [] },
     );
   });
+});
 
+// ── provenance ───────────────────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — provenance", () => {
+  it("marks every column as inferred with a non-empty rule", () => {
+    const data = [
+      {
+        host: "alpha",
+        latency: 100,
+        active: true,
+        createdAt: "2024-01-01T00:00:00Z",
+        tags: ["a", "b"],
+        headers: { "content-type": "application/json" },
+        level: "error",
+      },
+      {
+        host: "beta",
+        latency: 200,
+        active: false,
+        createdAt: "2024-01-02",
+        tags: ["c"],
+        headers: {},
+        level: "warn",
+      },
+    ];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns).toHaveLength(7);
+    for (const column of columns) {
+      expect(column.provenance.source).toBe("inferred");
+      // The rule name is what `schemaToTypeScript` reads to pick a factory.
+      expect(
+        column.provenance.source === "inferred" && column.provenance.rule,
+      ).toBeTruthy();
+    }
+  });
+
+  it("records the rule that fired", () => {
+    const { columns } = inferSchemaFromJSON([
+      { createdAt: "2024-01-01T00:00:00Z" },
+    ]);
+    expect(columns[0]?.provenance).toEqual({
+      source: "inferred",
+      rule: "iso8601-string",
+    });
+  });
+});
+
+// ── edge cases ───────────────────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — edge cases", () => {
   it("skips non-object rows (null, primitives) and processes valid rows", () => {
     const data = [null, undefined, "string", { host: "localhost" }];
     const { columns } = inferSchemaFromJSON(data as unknown[]);
@@ -26,7 +102,7 @@ describe("inferSchemaFromJSON — edge cases", () => {
   it("falls back to string/input for all-null values", () => {
     const data = [{ metadata: null }, { metadata: null }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("string");
+    expect(columns[0]?.kind).toBe("string");
     expect(columns[0]?.filter?.type).toBe("input");
   });
 
@@ -37,11 +113,10 @@ describe("inferSchemaFromJSON — edge cases", () => {
   });
 });
 
-// ── label derivation ──────────────────────────────────────────────────────────
+// ── label derivation ─────────────────────────────────────────────────────────
 
 describe("inferSchemaFromJSON — label derivation", () => {
   it("converts camelCase keys to Title Case labels", () => {
-    // 2 distinct string values → enum
     const data = [{ hostName: "localhost" }, { hostName: "server1" }];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.label).toBe("Host Name");
@@ -53,10 +128,10 @@ describe("inferSchemaFromJSON — label derivation", () => {
     expect(columns[0]?.label).toBe("Created At");
   });
 
-  it("capitalises every word in the label", () => {
-    const data = [{ some_long_key: "val1" }, { some_long_key: "val2" }];
+  it("converts kebab-case keys to space-separated labels", () => {
+    const data = [{ "content-type": "application/json" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.label).toBe("Some Long Key");
+    expect(columns[0]?.label).toBe("Content Type");
   });
 
   it("capitalises single-word keys", () => {
@@ -66,13 +141,15 @@ describe("inferSchemaFromJSON — label derivation", () => {
   });
 });
 
-// ── string / enum inference ───────────────────────────────────────────────────
+// ── string / enum inference ──────────────────────────────────────────────────
 
 describe("inferSchemaFromJSON — string inference", () => {
   it("infers 'string' with 'input' filter when there are more than 10 distinct values", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({ host: `host-${i}` }));
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      message: `msg-${i}`,
+    }));
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("string");
+    expect(columns[0]?.kind).toBe("string");
     expect(columns[0]?.filter?.type).toBe("input");
   });
 
@@ -84,17 +161,15 @@ describe("inferSchemaFromJSON — string inference", () => {
       { level: "error" },
     ];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("enum");
+    expect(columns[0]?.kind).toBe("enum");
     expect(columns[0]?.filter?.type).toBe("checkbox");
+    expect(enumValuesOf(columns[0]!)).toEqual(["error", "warn", "info"]);
   });
 
   it("auto-derives checkbox options from the distinct enum values", () => {
     const data = [{ level: "error" }, { level: "warn" }, { level: "info" }];
     const { columns } = inferSchemaFromJSON(data);
-    const options = (columns[0]?.filter as any)?.options as Array<{
-      label: string;
-      value: string;
-    }>;
+    const options = columns[0]?.filter?.options ?? [];
     expect(options).toHaveLength(3);
     expect(options.map((o) => o.value).sort()).toEqual([
       "error",
@@ -104,34 +179,35 @@ describe("inferSchemaFromJSON — string inference", () => {
   });
 });
 
-// ── boolean inference ─────────────────────────────────────────────────────────
+// ── boolean inference ────────────────────────────────────────────────────────
 
 describe("inferSchemaFromJSON — boolean inference", () => {
   it("infers 'boolean' with 'checkbox' filter for true/false values", () => {
     const data = [{ active: true }, { active: false }, { active: true }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("boolean");
+    expect(columns[0]?.kind).toBe("boolean");
     expect(columns[0]?.filter?.type).toBe("checkbox");
   });
 });
 
-// ── number inference ──────────────────────────────────────────────────────────
+// ── number inference ─────────────────────────────────────────────────────────
 
 describe("inferSchemaFromJSON — number inference", () => {
   it("infers 'number' with 'slider' filter and correct bounds when min ≠ max", () => {
     const data = [{ latency: 100 }, { latency: 200 }, { latency: 300 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("number");
-    const filter = columns[0]?.filter as any;
-    expect(filter?.type).toBe("slider");
-    expect(filter?.min).toBe(100);
-    expect(filter?.max).toBe(300);
+    expect(columns[0]?.kind).toBe("number");
+    expect(columns[0]?.filter).toMatchObject({
+      type: "slider",
+      min: 100,
+      max: 300,
+    });
   });
 
   it("infers 'number' with 'input' filter when all values are equal", () => {
     const data = [{ port: 443 }, { port: 443 }, { port: 443 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("number");
+    expect(columns[0]?.kind).toBe("number");
     expect(columns[0]?.filter?.type).toBe("input");
   });
 
@@ -139,12 +215,12 @@ describe("inferSchemaFromJSON — number inference", () => {
     const data = [{ count: 42 }, { count: 100 }];
     const { columns } = inferSchemaFromJSON(data);
     // 42 and 100 are below the Unix-ms threshold → number, not timestamp
-    expect(columns[0]?.dataType).toBe("number");
+    expect(columns[0]?.kind).toBe("number");
     expect(columns[0]?.filter?.type).toBe("slider");
   });
 });
 
-// ── timestamp inference ───────────────────────────────────────────────────────
+// ── timestamp inference ──────────────────────────────────────────────────────
 
 describe("inferSchemaFromJSON — timestamp inference", () => {
   it("infers 'timestamp' from ISO 8601 strings", () => {
@@ -153,14 +229,14 @@ describe("inferSchemaFromJSON — timestamp inference", () => {
       { createdAt: "2024-06-15T12:30:00Z" },
     ];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("timestamp");
+    expect(columns[0]?.kind).toBe("timestamp");
     expect(columns[0]?.filter?.type).toBe("timerange");
   });
 
   it("infers 'timestamp' from ISO 8601 date-only strings", () => {
     const data = [{ date: "2024-01-01" }, { date: "2024-06-15" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("timestamp");
+    expect(columns[0]?.kind).toBe("timestamp");
     expect(columns[0]?.filter?.type).toBe("timerange");
   });
 
@@ -170,66 +246,69 @@ describe("inferSchemaFromJSON — timestamp inference", () => {
       { ts: 1717416600000 }, // 2024-06-03
     ];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("timestamp");
+    expect(columns[0]?.kind).toBe("timestamp");
     expect(columns[0]?.filter?.type).toBe("timerange");
   });
 });
 
-// ── array inference ───────────────────────────────────────────────────────────
+// ── array inference ──────────────────────────────────────────────────────────
 
 describe("inferSchemaFromJSON — array inference", () => {
-  it("infers 'array' with 'checkbox' when items are strings with ≤ 10 distinct values", () => {
+  it("infers 'array' of enum with 'checkbox' when items are strings with ≤ 10 distinct values", () => {
     const data = [{ tags: ["foo", "bar"] }, { tags: ["foo", "baz"] }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("array");
+    expect(columns[0]?.kind).toBe("array");
     expect(columns[0]?.filter?.type).toBe("checkbox");
+    const item = arrayItemOf(columns[0]!);
+    expect(item.kind).toBe("enum");
+    expect(enumValuesOf(item)).toEqual(
+      expect.arrayContaining(["foo", "bar", "baz"]),
+    );
   });
 
   it("auto-derives checkbox options from the distinct array item values", () => {
     const data = [{ tags: ["foo", "bar"] }, { tags: ["baz"] }];
     const { columns } = inferSchemaFromJSON(data);
-    const options = (columns[0]?.filter as any)?.options as Array<{
-      label: string;
-      value: string;
-    }>;
+    const options = columns[0]?.filter?.options ?? [];
     expect(options.map((o) => o.value).sort()).toEqual(["bar", "baz", "foo"]);
   });
 
-  it("infers non-filterable 'array' when items are not strings", () => {
+  it("infers a non-filterable number array when items are numbers", () => {
     const data = [{ ids: [1, 2, 3] }, { ids: [4, 5] }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("array");
+    expect(columns[0]?.kind).toBe("array");
+    expect(arrayItemOf(columns[0]!).kind).toBe("number");
     expect(columns[0]?.filter).toBeNull();
   });
 
-  it("infers non-filterable 'array' when string items exceed 10 distinct values", () => {
+  it("keeps a high-cardinality string[] column an array of strings", () => {
+    // Regression: a `string[]` column whose items exceed the enum threshold used
+    // to degrade to `kind: "string"`, losing the array-ness entirely.
     const data = Array.from({ length: 12 }, (_, i) => ({
       tags: [`tag-${i}`, `tag-${i + 1}`],
     }));
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("array");
+    expect(columns[0]?.kind).toBe("array");
+    expect(arrayItemOf(columns[0]!).kind).toBe("string");
     expect(columns[0]?.filter).toBeNull();
+  });
+
+  it("handles rows with empty arrays", () => {
+    const data = [{ tags: [] }, { tags: ["foo", "bar"] }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.kind).toBe("array");
+    expect(columns[0]?.filter?.type).toBe("checkbox");
   });
 });
 
-// ── record inference ──────────────────────────────────────────────────────────
+// ── record inference ─────────────────────────────────────────────────────────
 
 describe("inferSchemaFromJSON — record inference", () => {
   it("infers 'record' with null filter for plain object values", () => {
     const data = [{ headers: { "content-type": "application/json" } }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("record");
+    expect(columns[0]?.kind).toBe("record");
     expect(columns[0]?.filter).toBeNull();
-  });
-});
-
-// ── label derivation: kebab-case ─────────────────────────────────────────────
-
-describe("inferSchemaFromJSON — label derivation (extended)", () => {
-  it("converts kebab-case keys to space-separated labels", () => {
-    const data = [{ "content-type": "application/json" }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.label).toBe("Content Type");
   });
 });
 
@@ -239,7 +318,7 @@ describe("inferSchemaFromJSON — mixed types fallback", () => {
   it("falls back to string/input for columns with mixed types", () => {
     const data = [{ value: "hello" }, { value: 42 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("string");
+    expect(columns[0]?.kind).toBe("string");
     expect(columns[0]?.filter?.type).toBe("input");
   });
 });
@@ -254,34 +333,14 @@ describe("inferSchemaFromJSON — nullable values", () => {
       { status: "inactive" },
     ];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("enum");
+    expect(columns[0]?.kind).toBe("enum");
     expect(columns[0]?.filter?.type).toBe("checkbox");
   });
 
   it("ignores undefined and infers type from remaining values", () => {
     const data = [{ count: undefined }, { count: 1 }, { count: 5 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("number");
-  });
-});
-
-// ── array edge cases ─────────────────────────────────────────────────────────
-
-describe("inferSchemaFromJSON — array edge cases", () => {
-  it("handles rows with empty arrays", () => {
-    const data = [{ tags: [] }, { tags: ["foo", "bar"] }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("array");
-    expect(columns[0]?.filter?.type).toBe("checkbox");
-  });
-
-  it("sets arrayItemType for enum arrays", () => {
-    const data = [{ tags: ["foo", "bar"] }, { tags: ["baz"] }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect((columns[0] as any)?.arrayItemType).toEqual({
-      dataType: "enum",
-      enumValues: expect.arrayContaining(["foo", "bar", "baz"]),
-    });
+    expect(columns[0]?.kind).toBe("number");
   });
 });
 
@@ -291,78 +350,78 @@ describe("inferSchemaFromJSON — default column properties", () => {
   it("sets default optional, hidden, sortable, and sheet fields", () => {
     const data = [{ name: "Alice" }];
     const { columns } = inferSchemaFromJSON(data);
-    const col = columns[0];
-    expect(col?.optional).toBe(false);
-    expect(col?.hidden).toBe(false);
-    expect(col?.sortable).toBe(false);
-    expect(col?.sheet).toEqual({});
-  });
-
-  it("sets display type to 'gauge' for score columns", () => {
-    const data = [{ score: 100 }, { score: 200 }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({
-      type: "gauge",
-      min: 0,
-      max: 200,
+    expect(columns[0]).toMatchObject({
+      optional: false,
+      hidden: false,
+      sortable: false,
+      enableHiding: true,
+      hideHeader: false,
+      resizable: false,
+      sheet: {},
     });
   });
 
-  it("sets display type to 'number' for number columns", () => {
-    const data = [{ count: 100 }, { count: 200 }];
+  it("uses the kind-default display for plain columns", () => {
+    const data = [
+      {
+        count: 100,
+        level: "error",
+        createdAt: "2024-01-01T00:00:00Z",
+        meta: { a: 1 },
+      },
+      {
+        count: 200,
+        level: "warn",
+        createdAt: "2024-02-01T00:00:00Z",
+        meta: { a: 2 },
+      },
+    ];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({ type: "number" });
+    expect(columns[1]?.display).toEqual({ type: "badge" });
+    expect(columns[2]?.display).toEqual({ type: "timestamp" });
+    expect(columns[3]?.display).toEqual({ type: "text" });
   });
+});
 
-  it("sets display type to 'badge' for enum columns", () => {
-    const data = [{ level: "error" }, { level: "warn" }];
+// ── heuristics: one representative per rule family ───────────────────────────
+
+describe("inferSchemaFromJSON — id heuristics", () => {
+  it("gives ID-like columns a code display and leaves them unsorted", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({ userId: `usr_${i}` }));
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "badge" });
+    expect(columns[0]?.display).toEqual({ type: "code" });
+    expect(columns[0]?.sortable).toBe(false);
   });
 
-  it("sets display type to 'timestamp' for timestamp columns", () => {
-    const data = [{ createdAt: "2024-01-01T00:00:00Z" }];
+  it("hides trace-scoped IDs and drops their filter (matches col.presets.traceId)", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      traceId: `trace_${i}`,
+    }));
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "timestamp" });
+    expect(columns[0]?.display).toEqual({ type: "code" });
+    expect(columns[0]?.hidden).toBe(true);
+    expect(columns[0]?.filter).toBeNull();
   });
 
-  it("sets display type to 'text' for record columns", () => {
-    const data = [{ meta: { a: 1 } }];
+  it("does NOT hide generic ID columns", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({ userId: `usr_${i}` }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.hidden).toBe(false);
+    expect(columns[0]?.filter).not.toBeNull();
+  });
+
+  it("matches whole words only (e.g. 'hidden' does not contain 'id')", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      hidden: `value_${i}`,
+    }));
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({ type: "text" });
   });
 });
 
-// ── smart display enhancement ────────────────────────────────────────────────
-
-describe("inferSchemaFromJSON — smart display enhancement", () => {
-  it("sets 'code' display for ID-like columns (camelCase)", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      userId: `usr_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-    expect(columns[0]?.sortable).toBe(false);
-  });
-
-  it("sets 'code' display for ID-like columns (snake_case)", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      request_id: `req_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-    expect(columns[0]?.sortable).toBe(false);
-  });
-
-  it("sets 'code' display for uuid columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      uuid: `550e8400-e29b-41d4-a716-${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-  });
-
-  it("sets 'code' display for path-like columns", () => {
+describe("inferSchemaFromJSON — code-like string heuristics", () => {
+  it("gives path/URL-like columns a code display", () => {
     const data = Array.from({ length: 15 }, (_, i) => ({
       path: `/api/v1/resource/${i}`,
     }));
@@ -370,15 +429,17 @@ describe("inferSchemaFromJSON — smart display enhancement", () => {
     expect(columns[0]?.display).toEqual({ type: "code" });
   });
 
-  it("sets 'code' display for host columns", () => {
+  it("gives email columns a code display", () => {
     const data = Array.from({ length: 15 }, (_, i) => ({
-      host: `server-${i}.example.com`,
+      email: `user${i}@example.com`,
     }));
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({ type: "code" });
   });
+});
 
-  it("sets heatmap display with 'ms' unit for latency columns", () => {
+describe("inferSchemaFromJSON — numeric display heuristics", () => {
+  it("gives latency-like columns a heatmap in ms, bounded by the slider filter", () => {
     const data = [{ latency: 100 }, { latency: 200 }, { latency: 300 }];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({
@@ -390,107 +451,89 @@ describe("inferSchemaFromJSON — smart display enhancement", () => {
     expect(columns[0]?.sortable).toBe(true);
   });
 
-  it("sets heatmap display with 'ms' unit for duration columns", () => {
-    const data = [{ duration: 50 }, { duration: 150 }];
+  it("omits heatmap bounds entirely when the sample has no variance", () => {
+    // No variance → `input` filter, which carries no min/max. The display has
+    // to omit the keys rather than carry `min: undefined`: `JSON.stringify`
+    // erases the difference, so a descriptor holding one compares unequal to
+    // its own round trip while looking identical through JSON.
+    const data = [{ latency: 100 }, { latency: 100 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({
-      type: "heatmap",
-      unit: "ms",
-      min: 50,
-      max: 150,
-    });
-    expect(columns[0]?.sortable).toBe(true);
+    expect(columns[0]?.filter?.type).toBe("input");
+    expect(Object.keys(columns[0]!.display!)).toEqual(["type", "unit"]);
+    expect(columns[0]?.display).toStrictEqual({ type: "heatmap", unit: "ms" });
   });
 
-  it("sets heatmap display with 'ms' unit for responseTime (compound word)", () => {
+  it("omits the gauge/bar max when the sample has no variance", () => {
+    const { columns: score } = inferSchemaFromJSON([
+      { score: 7 },
+      { score: 7 },
+    ]);
+    expect(score[0]?.display).toStrictEqual({ type: "gauge", min: 0 });
+
+    const { columns: progress } = inferSchemaFromJSON([
+      { progress: 50 },
+      { progress: 50 },
+    ]);
+    expect(progress[0]?.display).toStrictEqual({ type: "bar", min: 0 });
+
+    const { columns: hp } = inferSchemaFromJSON([{ hp: 3 }, { hp: 3 }]);
+    expect(hp[0]?.display).toStrictEqual({ type: "bar", min: 0 });
+  });
+
+  it("matches compound latency words that are not in the word list (responseTime)", () => {
     const data = [{ responseTime: 80 }, { responseTime: 120 }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({
-      type: "heatmap",
-      unit: "ms",
-      min: 80,
-      max: 120,
-    });
-    expect(columns[0]?.sortable).toBe(true);
+    expect(columns[0]?.display).toMatchObject({ type: "heatmap", unit: "ms" });
   });
 
-  it("sets number display with 'B' unit for size columns", () => {
+  it("gives size-like columns a byte unit", () => {
     const data = [{ fileSize: 1024 }, { fileSize: 2048 }];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({ type: "number", unit: "B" });
     expect(columns[0]?.sortable).toBe(true);
   });
 
-  it("sets sortable for timestamp columns", () => {
+  it("gives score-like columns a gauge with a zero baseline", () => {
+    const data = [{ score: 100 }, { score: 200 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "gauge", min: 0, max: 200 });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("gives progress-like columns a bar with a zero baseline", () => {
+    const data = [{ progress: 10 }, { progress: 90 }];
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns[0]?.display).toEqual({ type: "bar", min: 0, max: 90 });
+    expect(columns[0]?.sortable).toBe(true);
+  });
+
+  it("sorts timestamps and numbers by default, but not booleans", () => {
     const data = [
-      { createdAt: "2024-01-01T00:00:00Z" },
-      { createdAt: "2024-06-15T12:30:00Z" },
+      { createdAt: "2024-01-01T00:00:00Z", count: 1, active: true },
+      { createdAt: "2024-06-15T12:30:00Z", count: 5, active: false },
     ];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.sortable).toBe(true);
-  });
-
-  it("sets sortable for generic number columns", () => {
-    const data = [{ score: 10 }, { score: 90 }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.sortable).toBe(true);
-  });
-
-  it("does not set sortable for boolean columns", () => {
-    const data = [{ active: true }, { active: false }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.sortable).toBe(false);
-  });
-
-  it("does not match partial words (e.g. 'hidden' does not match 'id')", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      hidden: `value_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "text" });
+    expect(columns.map((c) => c.sortable)).toEqual([true, true, false]);
   });
 });
 
-// ── column sizing defaults ───────────────────────────────────────────────────
-
-describe("inferSchemaFromJSON — column sizing defaults", () => {
-  it("sets size 100 for boolean columns", () => {
-    const data = [{ active: true }, { active: false }];
+describe("inferSchemaFromJSON — boolean display heuristics", () => {
+  it("gives favourite-like booleans a star display and hides the header", () => {
+    const data = [{ favorite: true }, { favorite: false }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.size).toBe(100);
+    expect(columns[0]?.display).toEqual({ type: "star" });
+    expect(columns[0]?.hideHeader).toBe(true);
   });
 
-  it("sets size 220 for timestamp columns", () => {
-    const data = [{ createdAt: "2024-01-01T00:00:00Z" }];
+  it("does not apply the favourite heuristic to non-boolean columns", () => {
+    const data = [{ favorite: "yes" }, { favorite: "no" }];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.size).toBe(220);
-  });
-
-  it("sets size 120 for number columns", () => {
-    const data = [{ score: 10 }, { score: 90 }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.size).toBe(120);
-  });
-
-  it("sets size 130 for enum columns", () => {
-    const data = [{ level: "error" }, { level: "warn" }, { level: "info" }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.size).toBe(130);
-  });
-
-  it("does not set size for string columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      message: `msg_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.size).toBeUndefined();
+    expect(columns[0]?.display).toEqual({ type: "badge" });
   });
 });
 
-// ── preset-aware enhancement ─────────────────────────────────────────────────
-
-describe("inferSchemaFromJSON — preset-aware enhancement", () => {
-  it("sets defaultOpen for 'level' enum columns (matches col.presets.logLevel)", () => {
+describe("inferSchemaFromJSON — enum heuristics", () => {
+  it("expands level/severity enum filters by default (matches col.presets.logLevel)", () => {
     const data = [
       { level: "error" },
       { level: "warn" },
@@ -498,166 +541,17 @@ describe("inferSchemaFromJSON — preset-aware enhancement", () => {
       { level: "debug" },
     ];
     const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.dataType).toBe("enum");
+    expect(columns[0]?.kind).toBe("enum");
     expect(columns[0]?.filter?.defaultOpen).toBe(true);
   });
 
-  it("sets defaultOpen for 'severity' enum columns", () => {
-    const data = [
-      { severity: "critical" },
-      { severity: "high" },
-      { severity: "low" },
-    ];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.filter?.defaultOpen).toBe(true);
-  });
-
-  it("sets defaultOpen for 'logLevel' camelCase enum columns", () => {
-    const data = [
-      { logLevel: "error" },
-      { logLevel: "warn" },
-      { logLevel: "info" },
-    ];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.filter?.defaultOpen).toBe(true);
-  });
-
-  it("does not set defaultOpen for non-level enum columns", () => {
+  it("does not expand non-level enum filters", () => {
     const data = [{ status: "active" }, { status: "inactive" }];
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.filter?.defaultOpen).toBe(false);
   });
 
-  it("hides traceId columns and removes filter (matches col.presets.traceId)", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      traceId: `trace_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-    expect(columns[0]?.hidden).toBe(true);
-    expect(columns[0]?.filter).toBeNull();
-  });
-
-  it("hides requestId columns and removes filter", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      requestId: `req_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.hidden).toBe(true);
-    expect(columns[0]?.filter).toBeNull();
-  });
-
-  it("hides span_id columns (snake_case)", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      span_id: `span_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.hidden).toBe(true);
-    expect(columns[0]?.filter).toBeNull();
-  });
-
-  it("does NOT hide generic ID columns like userId", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      userId: `usr_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-    expect(columns[0]?.hidden).toBe(false);
-    expect(columns[0]?.filter).not.toBeNull();
-  });
-
-  it("does NOT hide plain 'id' columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      id: `item_${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.hidden).toBe(false);
-  });
-});
-
-// ── visual heuristics: favorites ────────────────────────────────────────────
-
-describe("inferSchemaFromJSON — favorite/starred heuristics", () => {
-  it("sets 'star' display for 'favorite' boolean columns", () => {
-    const data = [{ favorite: true }, { favorite: false }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "star" });
-    expect(columns[0]?.hideHeader).toBe(true);
-  });
-
-  it("sets 'star' display for 'starred' boolean columns", () => {
-    const data = [{ starred: true }, { starred: false }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "star" });
-    expect(columns[0]?.hideHeader).toBe(true);
-  });
-
-  it("sets 'star' display for 'bookmarked' boolean columns", () => {
-    const data = [{ bookmarked: true }, { bookmarked: false }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "star" });
-    expect(columns[0]?.hideHeader).toBe(true);
-  });
-
-  it("does not apply favorite heuristic to non-boolean columns", () => {
-    const data = [{ favorite: "yes" }, { favorite: "no" }];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "badge" });
-  });
-});
-
-// ── visual heuristics: email ────────────────────────────────────────────────
-
-describe("inferSchemaFromJSON — email heuristics", () => {
-  it("sets 'code' display for 'email' string columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      email: `user${i}@example.com`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-  });
-
-  it("sets 'code' display for 'mail' string columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      mail: `user${i}@example.com`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-  });
-});
-
-// ── visual heuristics: link/href/website ────────────────────────────────────
-
-describe("inferSchemaFromJSON — link/href/website heuristics", () => {
-  it("sets 'code' display for 'link' string columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      link: `https://example.com/${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-  });
-
-  it("sets 'code' display for 'href' string columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      href: `https://example.com/${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-  });
-
-  it("sets 'code' display for 'website' string columns", () => {
-    const data = Array.from({ length: 15 }, (_, i) => ({
-      website: `https://example.com/${i}`,
-    }));
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({ type: "code" });
-  });
-});
-
-// ── visual heuristics: status/state enums ───────────────────────────────────
-
-describe("inferSchemaFromJSON — status/state enum heuristics", () => {
-  it("generates semantic colorMap for 'status' enum columns", () => {
+  it("generates a semantic colorMap for status-like enums", () => {
     const data = [
       { status: "active" },
       { status: "pending" },
@@ -666,47 +560,48 @@ describe("inferSchemaFromJSON — status/state enum heuristics", () => {
     const { columns } = inferSchemaFromJSON(data);
     expect(columns[0]?.display).toEqual({
       type: "badge",
-      colorMap: {
-        active: "#22c55e",
-        pending: "#f59e0b",
-        error: "#ef4444",
-      },
+      colorMap: { active: "#22c55e", pending: "#f59e0b", error: "#ef4444" },
     });
   });
 
-  it("generates semantic colorMap for 'state' enum columns", () => {
-    const data = [
-      { state: "published" },
-      { state: "draft" },
-      { state: "archived" },
-    ];
-    const { columns } = inferSchemaFromJSON(data);
-    expect(columns[0]?.display).toEqual({
-      type: "badge",
-      colorMap: {
-        published: "#22c55e",
-        draft: "#f59e0b",
-        archived: "#6b7280",
-      },
-    });
-  });
-
-  it("uses neutral palette for unknown status values", () => {
+  it("falls back to the neutral palette for status values without meaning", () => {
     const data = [{ status: "alpha" }, { status: "beta" }];
     const { columns } = inferSchemaFromJSON(data);
-    const colorMap = (columns[0]?.display as any)?.colorMap;
-    expect(colorMap).toBeDefined();
-    expect(colorMap.alpha).toBe("#6366f1");
-    expect(colorMap.beta).toBe("#8b5cf6");
+    expect(columns[0]?.display.colorMap).toEqual({
+      alpha: "#6366f1",
+      beta: "#8b5cf6",
+    });
   });
 
-  it("does not apply status heuristic to non-enum columns", () => {
+  it("does not apply the status heuristic to non-enum columns", () => {
     const data = Array.from({ length: 15 }, (_, i) => ({
       status: `status_${i}`,
     }));
     const { columns } = inferSchemaFromJSON(data);
-    // >10 distinct values → string, not enum → no colorMap
-    expect(columns[0]?.dataType).toBe("string");
-    expect((columns[0]?.display as any)?.colorMap).toBeUndefined();
+    // > 10 distinct values → string, not enum → no colorMap
+    expect(columns[0]?.kind).toBe("string");
+    expect(columns[0]?.display.colorMap).toBeUndefined();
+  });
+});
+
+// ── column sizing defaults ───────────────────────────────────────────────────
+
+describe("inferSchemaFromJSON — column sizing defaults", () => {
+  it("sets a per-kind default size, and none for strings", () => {
+    const data = Array.from({ length: 15 }, (_, i) => ({
+      active: i % 2 === 0,
+      createdAt: `2024-01-01T00:00:${String(i).padStart(2, "0")}Z`,
+      count: i,
+      level: (["error", "warn", "info"] as const)[i % 3]!,
+      message: `msg_${i}`,
+    }));
+    const { columns } = inferSchemaFromJSON(data);
+    expect(columns.map((c) => [c.key, c.size])).toEqual([
+      ["active", 100],
+      ["createdAt", 220],
+      ["count", 120],
+      ["level", 130],
+      ["message", undefined],
+    ]);
   });
 });

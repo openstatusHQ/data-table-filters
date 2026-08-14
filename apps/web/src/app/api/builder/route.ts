@@ -1,5 +1,10 @@
-import type { SchemaJSON } from "@dtf/registry/lib/table-schema";
+import {
+  migrateSchemaJSON,
+  type SchemaJSON,
+} from "@dtf/registry/lib/table-schema";
 import { inferSchemaFromJSON } from "@dtf/registry/lib/table-schema/infer";
+import { deserializeSchema } from "@dtf/registry/lib/table-schema/serialize";
+import { validateSchema } from "@dtf/registry/lib/table-schema/validate";
 import { NextResponse } from "next/server";
 import {
   storeBuilderData,
@@ -57,7 +62,7 @@ export async function PATCH(request: Request) {
   try {
     const body = (await request.json()) as {
       dataId: string;
-      schema: SchemaJSON;
+      schema: unknown;
     };
 
     if (!body.dataId || !body.schema) {
@@ -67,7 +72,23 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const updated = updateBuilderSchema(body.dataId, body.schema);
+    // Never store an unvalidated payload: migrate on the way in so the cache
+    // only ever holds current-version schemas, whatever the client sent, and
+    // reject anything that cannot be built into a real schema — the client
+    // runs the same two steps before it gets here, so only a hand-rolled
+    // request reaches this branch.
+    let schema;
+    try {
+      schema = migrateSchemaJSON(body.schema);
+      validateSchema(deserializeSchema(schema));
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "Invalid schema" },
+        { status: 400 },
+      );
+    }
+
+    const updated = updateBuilderSchema(body.dataId, schema);
     if (!updated) {
       return NextResponse.json({ error: "Dataset not found" }, { status: 404 });
     }

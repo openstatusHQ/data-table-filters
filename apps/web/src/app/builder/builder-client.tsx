@@ -27,7 +27,10 @@ import { parseCSV } from "@/lib/csv-parser";
 import { cn } from "@/lib/utils";
 import { TextShimmer } from "@dtf/registry/components/data-table/data-table-filter-command-ai/text-shimmer";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
-import { type SchemaJSON } from "@dtf/registry/lib/table-schema";
+import {
+  migrateSchemaJSON,
+  type SchemaJSON,
+} from "@dtf/registry/lib/table-schema";
 import { inferSchemaFromJSON } from "@dtf/registry/lib/table-schema/infer";
 import { deserializeSchema } from "@dtf/registry/lib/table-schema/serialize";
 import { schemaToTypeScript } from "@dtf/registry/lib/table-schema/to-typescript";
@@ -600,7 +603,10 @@ function BuilderSchemaEditor({
 
   const handleApply = schemaForm.handleSubmit(async ({ schema }) => {
     try {
-      const parsed = JSON.parse(schema) as SchemaJSON;
+      // The textarea is free text. `migrateSchemaJSON` is what turns it into a
+      // `SchemaJSON` — it brings older payloads forward and throws on anything
+      // it cannot make sense of, so the parsed value is never blind-cast.
+      const parsed = migrateSchemaJSON(JSON.parse(schema));
       const definition = deserializeSchema(parsed);
       validateSchema(definition);
 

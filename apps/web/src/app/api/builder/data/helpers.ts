@@ -1,5 +1,9 @@
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
-import { createTableSchema } from "@dtf/registry/lib/table-schema";
+import {
+  createTableSchema,
+  resolveColumn,
+  resolveColumns,
+} from "@dtf/registry/lib/table-schema";
 import type {
   SchemaJSON,
   TableSchemaDefinition,
@@ -33,7 +37,7 @@ export function filterGenericData(
       const colBuilder = schema[key];
       if (!colBuilder) continue;
 
-      const filterConfig = colBuilder._config.filter;
+      const filterConfig = resolveColumn(colBuilder).filter;
       if (!filterConfig) continue;
 
       const cellValue = row[key];
@@ -137,16 +141,16 @@ export function getGenericFacets(
   allData: Record<string, unknown>[],
   schema: TableSchemaDefinition,
 ): Record<string, FacetMetadataSchema> {
-  const filterableEntries = Object.entries(schema).filter(
-    ([, builder]) => builder._config.filter !== null,
+  const filterableColumns = resolveColumns(schema).filter(
+    (column) => column.filter !== null,
   );
-  const filterableKeys = filterableEntries.map(([key]) => key);
+  const filterableKeys = filterableColumns.map((column) => column.key);
 
   // Track which columns are booleans so we can preserve their type
   const booleanKeys = new Set(
-    filterableEntries
-      .filter(([, builder]) => builder._config.kind === "boolean")
-      .map(([key]) => key),
+    filterableColumns
+      .filter((column) => column.kind === "boolean")
+      .map((column) => column.key),
   );
 
   // Count values from filtered data

@@ -1,3 +1,4 @@
+import type { SchemaJSON } from "@dtf/registry/lib/table-schema";
 import { describe, expect, it } from "vitest";
 import { getBuilderData } from "./cache";
 import { PATCH, POST } from "./route";
@@ -59,13 +60,13 @@ describe("POST /api/builder", () => {
     const res = await POST(makeRequest({ data: SAMPLE_DATA }));
     const { schema } = await res.json();
 
-    const nameCol = schema.columns.find((c: any) => c.key === "name");
-    const ageCol = schema.columns.find((c: any) => c.key === "age");
-    const activeCol = schema.columns.find((c: any) => c.key === "active");
+    const byKey = (key: string) =>
+      (schema as SchemaJSON).columns.find((c) => c.key === key);
 
-    expect(nameCol?.dataType).toBe("string");
-    expect(ageCol?.dataType).toBe("number");
-    expect(activeCol?.dataType).toBe("boolean");
+    expect(byKey("name")?.kind).toBe("string");
+    expect(byKey("age")?.kind).toBe("number");
+    expect(byKey("active")?.kind).toBe("boolean");
+    expect((schema as SchemaJSON).version).toBe(1);
   });
 
   it("returns 400 when data is not an array", async () => {
@@ -130,5 +131,30 @@ describe("PATCH /api/builder", () => {
   it("returns 400 when schema is missing", async () => {
     const res = await PATCH(makePatchRequest({ dataId: "some-id" }));
     expect(res.status).toBe(400);
+  });
+
+  it("rejects a schema no builder could have produced, before it reaches the cache", async () => {
+    const postRes = await POST(makeRequest({ data: SAMPLE_DATA }));
+    const { dataId, schema } = await postRes.json();
+
+    // A sheet-only column (`enableHiding: false` + `hidden`) that still
+    // carries a filter. Migration alone accepts it — it is well-formed JSON of
+    // the right version — so the route has to build the schema to find out.
+    const invalid = {
+      ...schema,
+      columns: schema.columns.map((c: SchemaJSON["columns"][number]) =>
+        c.key === "age" ? { ...c, hidden: true, enableHiding: false } : c,
+      ),
+    };
+
+    const res = await PATCH(makePatchRequest({ dataId, schema: invalid }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain("sheet-only column");
+
+    // The cached schema is untouched.
+    const cached = getBuilderData(dataId)!.schemaJson.columns.find(
+      (c) => c.key === "age",
+    );
+    expect(cached?.enableHiding).toBe(true);
   });
 });

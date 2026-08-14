@@ -57,42 +57,12 @@ export type DisplayConfig =
       colorMap?: Record<string, string>;
     };
 
-export type FilterConfig = {
-  type: FilterType;
-  defaultOpen: boolean;
-  commandDisabled: boolean;
-  options?: Option[];
-  component?: (props: Option) => JSX.Element | null;
-  min?: number;
-  max?: number;
-  unit?: string;
-  presets?: DatePreset[];
-};
-
 export type SheetConfig = {
   label?: string;
   component?: (row: unknown) => JSX.Element | null | string;
   condition?: (row: unknown) => boolean;
   className?: string;
   skeletonClassName?: string;
-};
-
-export type ColConfig = {
-  kind: ColKind;
-  enumValues?: readonly string[];
-  arrayItem?: ColConfig;
-  optional: boolean;
-  label: string;
-  description?: string;
-  display: DisplayConfig;
-  size?: number;
-  hidden: boolean;
-  enableHiding: boolean;
-  hideHeader: boolean;
-  resizable: boolean;
-  sortable: boolean;
-  filter: FilterConfig | null;
-  sheet: SheetConfig | null;
 };
 
 /**
@@ -114,8 +84,17 @@ export type ColConfig = {
  * Calling `filterable(type)` with a type not in `F` is a **compile-time error**.
  */
 export interface ColBuilder<T, F extends FilterType = FilterType> {
-  /** @internal Raw column configuration. Used by generators — do not access directly. */
-  readonly _config: ColConfig;
+  /**
+   * @internal The serializable half of the column. Read it through
+   * {@link resolveColumn} / {@link resolveColumns} rather than directly.
+   */
+  readonly _descriptor: ColumnDescriptor;
+
+  /**
+   * @internal The non-serializable half — the closures. Disjoint from
+   * `_descriptor`: the two share no property name.
+   */
+  readonly _renderers: ColRenderers;
 
   /**
    * Sets the column header label shown in the table and filter sidebar.
@@ -388,14 +367,63 @@ export type InferTableType<T extends TableSchemaDefinition> = {
 };
 
 // ── Serializable descriptors (function-free) ────────────────────────────────
+//
+// `ColumnDescriptor` is TOTAL: no serializable property of a column may live
+// outside it. `ColRenderers` holds everything that cannot survive JSON. The two
+// are disjoint — they share no property name — and that disjointness is
+// asserted at compile time in `descriptor-laws.test-d.ts`.
+
+/** A JSON value. Used for `Provenance.args`. */
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue };
+
+/** Serializable display config — excludes the `custom` variant (contains JSX). */
+export type SerializableDisplayConfig = Exclude<
+  DisplayConfig,
+  { type: "custom" }
+>;
+
+/** Alias kept for symmetry with the other `*Descriptor` names. */
+export type DisplayDescriptor = SerializableDisplayConfig;
+
+/** A checkbox option, stripped to its serializable fields. */
+export type OptionDescriptor = {
+  label: string;
+  value: string | number | boolean;
+};
+
+/**
+ * A timerange preset with its bounds as ISO 8601 instants.
+ *
+ * Known residual loss: presets are usually *relative* ("last hour") and computed
+ * at construction, so a schema saved on Monday and loaded on Friday round-trips
+ * byte-exactly but yields a stale range. A relative descriptor
+ * (`{ duration: "PT1H" }`) is the correct long-term model; the point of storing
+ * them here is that the loss stops being silent.
+ */
+export type DatePresetDescriptor = {
+  label: string;
+  shortcut: string;
+  /** ISO 8601 instant. */
+  from: string;
+  /** ISO 8601 instant. */
+  to: string;
+};
 
 export type FilterDescriptor = {
   type: FilterType;
   defaultOpen: boolean;
   commandDisabled: boolean;
-  options?: Array<{ label: string; value: string | number | boolean }>;
+  options?: OptionDescriptor[];
   min?: number;
   max?: number;
+  unit?: string;
+  presets?: DatePresetDescriptor[];
 };
 
 export type SheetDescriptor = {
@@ -404,30 +432,70 @@ export type SheetDescriptor = {
   skeletonClassName?: string;
 };
 
-/** Serializable display config — excludes the `custom` variant (contains JSX). */
-export type SerializableDisplayConfig = Exclude<
-  DisplayConfig,
-  { type: "custom" }
->;
+/**
+ * How the column came to be. Recorded at construction so `schemaToTypeScript`
+ * can read it instead of reverse-engineering the shape of the descriptor.
+ */
+export type Provenance =
+  | { source: "manual" }
+  | { source: "preset"; preset: string; args: readonly JsonValue[] }
+  | { source: "inferred"; rule: string };
 
-export type ColumnDescriptor = {
-  key: string;
+export type ColumnDescriptorCommon = {
   label: string;
   description?: string;
-  dataType: ColKind;
-  enumValues?: readonly string[];
-  arrayItemType?: { dataType: ColKind; enumValues?: readonly string[] };
   optional: boolean;
-  hidden: boolean;
-  hideHeader?: boolean;
-  enableHiding?: boolean;
-  sortable: boolean;
+  display: DisplayDescriptor;
   size?: number;
-  display: SerializableDisplayConfig;
+  hidden: boolean;
+  enableHiding: boolean;
+  hideHeader: boolean;
+  resizable: boolean;
+  sortable: boolean;
   filter: FilterDescriptor | null;
   sheet: SheetDescriptor | null;
+  provenance: Provenance;
 };
 
+/**
+ * Everything about a column that survives JSON.
+ *
+ * `arrayItem` and `enumValues` are **required** on their respective kinds — an
+ * `array` column can no longer exist without a described item type, which is
+ * what stopped `string[]` columns from silently degrading to `string`.
+ */
+export type ColumnDescriptor = ColumnDescriptorCommon &
+  (
+    | { kind: "array"; arrayItem: ColumnDescriptor }
+    | { kind: "enum"; enumValues: readonly string[] }
+    | { kind: Exclude<ColKind, "array" | "enum"> }
+  );
+
+/** Everything that CANNOT survive JSON. Disjoint from `ColumnDescriptor`. */
+export type ColRenderers = {
+  cell?: (value: unknown, row: unknown) => JSX.Element | null;
+  filterComponent?: (props: Option) => JSX.Element | null;
+  sheetComponent?: (row: unknown) => JSX.Element | null | string;
+  sheetCondition?: (row: unknown) => boolean;
+};
+
+/** The public read model: one column's complete state, both halves. */
+export type ResolvedColumn = ColumnDescriptor & {
+  readonly renderers: ColRenderers;
+};
+
+/** `ResolvedColumn` plus the key it is registered under in the definition. */
+export type ResolvedColumnEntry = ResolvedColumn & { readonly key: string };
+
+/**
+ * The current `SchemaJSON` version. Bump when the descriptor shape changes and
+ * add a step to `migrateSchemaJSON`. The runtime constant lives in
+ * `serialize.ts` — this module stays type-only so it can keep shipping in the
+ * `data-table` block.
+ */
+export type SchemaJSONVersion = 1;
+
 export type SchemaJSON = {
-  columns: ColumnDescriptor[];
+  version: SchemaJSONVersion;
+  columns: Array<ColumnDescriptor & { key: string }>;
 };

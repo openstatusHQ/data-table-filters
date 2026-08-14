@@ -1,4 +1,7 @@
-import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import {
+  resolveColumn,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 
 /**
  * Validates and coerces a complete LLM response into clean filter state.
@@ -17,7 +20,7 @@ export function parseAIResponse(
   let hasFields = false;
 
   for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
+    const config = resolveColumn(builder);
     if (!config.filter) continue;
 
     const value = response[key];

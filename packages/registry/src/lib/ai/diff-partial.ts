@@ -1,4 +1,7 @@
-import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import {
+  resolveColumn,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 
 export type CompletedField = {
   key: string;
@@ -27,7 +30,7 @@ export function diffPartialState(
   const completed: CompletedField[] = [];
 
   for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
+    const config = resolveColumn(builder);
     if (!config.filter) continue;
 
     const nextVal = next[key];

@@ -58,16 +58,13 @@ export function DataTableAuto({ data }: DataTableAutoProps) {
     [definition],
   );
 
-  const filterSchema = React.useMemo(() => {
-    const generated = generateFilterSchema(definition);
-    return {
-      ...generated,
-      definition: {
-        ...generated.definition,
-        sort: field.sort(),
-      },
-    };
-  }, [definition]);
+  // Merge `sort` BEFORE createSchema so `defaults` cannot disagree with
+  // `definition` — splicing it in afterwards left `definition.sort` present
+  // while `defaults.sort` was missing.
+  const filterSchema = React.useMemo(
+    () => generateFilterSchema(definition, { sort: field.sort() }),
+    [definition],
+  );
 
   const adapter = useMemoryAdapter(filterSchema.definition, { id: "auto" });
 

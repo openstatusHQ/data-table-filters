@@ -9,6 +9,7 @@ import type {
   Schema,
   SchemaDefinition,
 } from "@dtf/registry/lib/store/schema";
+import { resolveColumns } from "../col";
 import type { ColBuilder, TableSchemaDefinition } from "../types";
 
 /**
@@ -60,11 +61,9 @@ function buildFilterDefinition(
 ): SchemaDefinition {
   const definition: SchemaDefinition = {};
 
-  for (const [key, builder] of Object.entries(schema)) {
-    const config = builder._config;
-    if (!config.filter) continue;
-
-    const { kind, filter, enumValues, arrayItem } = config;
+  for (const config of resolveColumns(schema)) {
+    const { key, kind, filter } = config;
+    if (!filter) continue;
 
     switch (filter.type) {
       case "input": {
@@ -76,10 +75,8 @@ function buildFilterDefinition(
         break;
       }
       case "checkbox": {
-        if (kind === "enum" && enumValues) {
-          definition[key] = field.array(
-            field.stringLiteral(enumValues as readonly string[]),
-          );
+        if (config.kind === "enum") {
+          definition[key] = field.array(field.stringLiteral(config.enumValues));
         } else if (kind === "number") {
           definition[key] = field
             .array(field.number())
@@ -89,13 +86,18 @@ function buildFilterDefinition(
             .array(field.boolean())
             .delimiter(ARRAY_DELIMITER);
         } else if (
-          kind === "array" &&
-          arrayItem?.kind === "enum" &&
-          arrayItem.enumValues
+          config.kind === "array" &&
+          config.arrayItem.kind === "enum"
         ) {
           definition[key] = field.array(
-            field.stringLiteral(arrayItem.enumValues as readonly string[]),
+            field.stringLiteral(config.arrayItem.enumValues),
           );
+        } else if (config.kind === "array") {
+          // Non-enum array item — filter on the item's own scalar type.
+          definition[key] =
+            config.arrayItem.kind === "number"
+              ? field.array(field.number()).delimiter(ARRAY_DELIMITER)
+              : field.array(field.string()).delimiter(ARRAY_DELIMITER);
         }
         break;
       }

@@ -60,7 +60,24 @@ const original = createTableSchema({
 const restored = createTableSchema.fromJSON(original.toJSON());
 ```
 
-Custom renderers (`display.cell`, `filter.component`, `sheet.component`) are not serialized — apply manually on reconstructed builders.
+`fromJSON` accepts `unknown`: the JSON is migrated to the current `version` and validated on the way in, so pasted or older payloads either load or throw with a message.
+
+Custom renderers (`display.cell`, `filter.component`, `sheet.component`, `sheet.condition`) are not serialized — apply manually on reconstructed builders. Everything else round-trips, including `filter.unit`, `filter.presets` (as ISO instants), and `.resizable()`.
+
+### Reading a schema
+
+Read columns through the public accessors rather than reaching into a builder:
+
+```tsx
+import { resolveColumn, resolveColumns } from "@/lib/table-schema";
+
+for (const column of resolveColumns(tableSchema.definition)) {
+  column.key; // the definition key
+  column.kind; // "string" | "number" | "enum" | "array" | ...
+  column.filter; // FilterDescriptor | null
+  column.renderers.cell; // the custom cell renderer, if any
+}
+```
 
 See [auto-infer.md](auto-infer.md) for inference heuristics and the `DataTableAuto` component.
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { col } from "./col";
+import { col, createColBuilder } from "./col";
 import { validateSchema } from "./validate";
 
 describe("validateSchema", () => {
@@ -28,18 +28,23 @@ describe("validateSchema", () => {
   });
 
   it("throws when slider min and max are missing (undefined)", () => {
-    // Inject a broken config directly to simulate what runtime fromJSON might produce
-    const builder = col
-      .number()
-      .label("Latency")
-      .filterable("slider", { min: 0, max: 5000 });
-    // Override the filter to remove min/max
-    const brokenConfig = {
-      ...builder._config,
-      filter: { ...builder._config.filter!, min: undefined, max: undefined },
-    };
-    const def = { latency: { _config: brokenConfig } as typeof builder };
-    expect(() => validateSchema(def)).toThrowError(
+    // Build the descriptor directly to simulate a slider filter arriving from
+    // `fromJSON` without bounds — the fluent API requires min/max.
+    const broken = createColBuilder<number, "slider">({
+      kind: "number",
+      label: "Latency",
+      optional: false,
+      display: { type: "number" },
+      hidden: false,
+      enableHiding: true,
+      hideHeader: false,
+      resizable: false,
+      sortable: false,
+      filter: { type: "slider", defaultOpen: false, commandDisabled: false },
+      sheet: null,
+      provenance: { source: "manual" },
+    });
+    expect(() => validateSchema({ latency: broken })).toThrowError(
       "slider filter is missing min/max bounds",
     );
   });
@@ -70,6 +75,47 @@ describe("validateSchema", () => {
 
   it("does not throw for a notFilterable column (filter is null)", () => {
     const def = { id: col.string().label("ID").notFilterable() };
+    expect(() => validateSchema(def)).not.toThrow();
+  });
+
+  it("throws when a sheet-only column still carries a filter", () => {
+    // Unreachable through the builder — `.sheetOnly()` clears the filter — but
+    // hand-written or AI-generated JSON can describe it, and it has no chain
+    // form, so `schemaToTypeScript` would have to drop half of it.
+    const def = {
+      latency: createColBuilder<number, "slider">({
+        kind: "number",
+        label: "Latency",
+        optional: false,
+        display: { type: "number" },
+        hidden: true,
+        enableHiding: false,
+        hideHeader: false,
+        resizable: false,
+        sortable: false,
+        filter: {
+          type: "slider",
+          defaultOpen: false,
+          commandDisabled: false,
+          min: 1,
+          max: 5,
+        },
+        sheet: null,
+        provenance: { source: "manual" },
+      }),
+    };
+    expect(() => validateSchema(def)).toThrowError(
+      '[createTableSchema] Column "latency": a sheet-only column cannot have a filter.',
+    );
+  });
+
+  it("does not throw for a real sheetOnly column", () => {
+    const def = { trace: col.string().label("Trace").sheetOnly() };
+    expect(() => validateSchema(def)).not.toThrow();
+  });
+
+  it("does not throw for a select column (enableHiding false, not hidden)", () => {
+    const def = { select: col.select() };
     expect(() => validateSchema(def)).not.toThrow();
   });
 

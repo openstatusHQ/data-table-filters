@@ -1,22 +1,11 @@
 import type { SchemaJSON } from "@dtf/registry/lib/table-schema";
+import { col, createTableSchema } from "@dtf/registry/lib/table-schema";
 import { describe, expect, it } from "vitest";
 import { getBuilderData, storeBuilderData, updateBuilderSchema } from "./cache";
 
-const SAMPLE_SCHEMA: SchemaJSON = {
-  columns: [
-    {
-      key: "name",
-      dataType: "string",
-      label: "Name",
-      optional: false,
-      hidden: false,
-      sortable: false,
-      filter: { type: "input", defaultOpen: false, commandDisabled: false },
-      display: { type: "text" },
-      sheet: null,
-    },
-  ],
-};
+const SAMPLE_SCHEMA: SchemaJSON = createTableSchema({
+  name: col.string().label("Name").filterable("input"),
+}).toJSON();
 
 const SAMPLE_DATA = [{ name: "Alice" }, { name: "Bob" }];
 
@@ -54,25 +43,9 @@ describe("builder cache", () => {
   describe("updateBuilderSchema", () => {
     it("updates the schema for an existing entry", () => {
       const id = storeBuilderData(SAMPLE_DATA, SAMPLE_SCHEMA);
-      const newSchema: SchemaJSON = {
-        columns: [
-          {
-            key: "name",
-            dataType: "string",
-            label: "Full Name",
-            optional: false,
-            hidden: false,
-            sortable: false,
-            filter: {
-              type: "input",
-              defaultOpen: false,
-              commandDisabled: false,
-            },
-            display: { type: "text" },
-            sheet: null,
-          },
-        ],
-      };
+      const newSchema: SchemaJSON = createTableSchema({
+        name: col.string().label("Full Name").filterable("input"),
+      }).toJSON();
       const result = updateBuilderSchema(id, newSchema);
       expect(result).toBe(true);
       expect(getBuilderData(id)!.schemaJson).toEqual(newSchema);
@@ -80,7 +53,7 @@ describe("builder cache", () => {
 
     it("preserves original data after schema update", () => {
       const id = storeBuilderData(SAMPLE_DATA, SAMPLE_SCHEMA);
-      const newSchema: SchemaJSON = { columns: [] };
+      const newSchema: SchemaJSON = { version: 1, columns: [] };
       updateBuilderSchema(id, newSchema);
       expect(getBuilderData(id)!.data).toEqual(
         SAMPLE_DATA.map((row, i) => ({ ...row, __rowId: `${i}` })),

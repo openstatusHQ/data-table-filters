@@ -1,5 +1,8 @@
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
-import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
+import {
+  resolveColumns,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 import { and, count, eq, sql, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { computeFacets } from "./facets";
@@ -10,15 +13,14 @@ import type { ColumnMapping, DrizzleDB, SortDescriptor } from "./types";
 
 /**
  * Derive slider, facet, and date keys from a tableSchema definition.
- * Reads `builder._config.filter.type` so no manual key lists are needed.
+ * Reads each column's descriptor filter type so no manual key lists are needed.
  */
 function deriveKeys(schema: TableSchemaDefinition) {
   const sliderKeys: string[] = [];
   const facetKeys: string[] = [];
   const dateKeys: string[] = [];
 
-  for (const [key, builder] of Object.entries(schema)) {
-    const filter = builder._config.filter;
+  for (const { key, filter } of resolveColumns(schema)) {
     if (!filter) continue;
     if (filter.type === "slider") {
       sliderKeys.push(key);
@@ -55,7 +57,7 @@ export type DrizzleHandlerConfigWithKeys = DrizzleHandlerConfigBase &
 
 /**
  * Config with `tableSchema.definition` — slider/facet/date keys are
- * derived automatically from `builder._config.filter.type`.
+ * derived automatically from each column's descriptor filter type.
  */
 export type DrizzleHandlerConfigWithSchema = DrizzleHandlerConfigBase & {
   schema: TableSchemaDefinition;

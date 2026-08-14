@@ -1,5 +1,29 @@
-import { col } from "./col";
-import type { ColBuilder } from "./types";
+import { col, withProvenance } from "./col";
+import type { ColBuilder, FilterType, JsonValue } from "./types";
+
+/**
+ * Tag a preset-built column so `schemaToTypeScript` can re-emit the exact call
+ * instead of reverse-engineering it from the descriptor's shape.
+ */
+function tag<T, F extends FilterType>(
+  preset: string,
+  args: readonly (JsonValue | undefined)[],
+  builder: ColBuilder<T, F>,
+): ColBuilder<T, F> {
+  // Trailing omitted args are dropped so the re-emitted call matches what the
+  // author wrote: `duration("ms")`, not `duration("ms", undefined)`. An omitted
+  // arg in the *middle* becomes `null`, which the emitter prints as `undefined`
+  // — `undefined` inside a JSON array does not survive `JSON.stringify`.
+  const trimmed = [...args];
+  while (trimmed.length > 0 && trimmed[trimmed.length - 1] === undefined) {
+    trimmed.pop();
+  }
+  return withProvenance(builder, {
+    source: "preset",
+    preset,
+    args: trimmed.map((a) => (a === undefined ? null : a)),
+  });
+}
 
 const DEFAULT_HTTP_STATUS_CODES = [
   200, 201, 204, 301, 302, 400, 401, 403, 404, 422, 429, 500, 502, 503, 504,
@@ -45,13 +69,17 @@ export const presets = {
   logLevel<T extends readonly string[]>(
     values: T,
   ): ColBuilder<T[number], "checkbox"> {
-    return col
-      .enum(values)
-      .label("Level")
-      .filterable("checkbox", {
-        options: values.map((v) => ({ label: v, value: v })),
-      })
-      .defaultOpen();
+    return tag(
+      "logLevel",
+      [values as readonly string[]],
+      col
+        .enum(values)
+        .label("Level")
+        .filterable("checkbox", {
+          options: values.map((v) => ({ label: v, value: v })),
+        })
+        .defaultOpen(),
+    );
   },
 
   /**
@@ -70,13 +98,17 @@ export const presets = {
   httpMethod<T extends readonly string[]>(
     values: T,
   ): ColBuilder<T[number], "checkbox"> {
-    return col
-      .enum(values)
-      .label("Method")
-      .display("text")
-      .filterable("checkbox", {
-        options: values.map((v) => ({ label: v, value: v })),
-      });
+    return tag(
+      "httpMethod",
+      [values as readonly string[]],
+      col
+        .enum(values)
+        .label("Method")
+        .display("text")
+        .filterable("checkbox", {
+          options: values.map((v) => ({ label: v, value: v })),
+        }),
+    );
   },
 
   /**
@@ -98,15 +130,19 @@ export const presets = {
   httpStatus(
     codes?: number[],
   ): ColBuilder<number, "input" | "slider" | "checkbox"> {
-    return col
-      .number()
-      .label("Status")
-      .filterable("checkbox", {
-        options: (codes ?? DEFAULT_HTTP_STATUS_CODES).map((code) => ({
-          label: String(code),
-          value: code,
-        })),
-      });
+    return tag(
+      "httpStatus",
+      [codes as readonly number[] | undefined],
+      col
+        .number()
+        .label("Status")
+        .filterable("checkbox", {
+          options: (codes ?? DEFAULT_HTTP_STATUS_CODES).map((code) => ({
+            label: String(code),
+            value: code,
+          })),
+        }),
+    );
   },
 
   /**
@@ -128,11 +164,15 @@ export const presets = {
     unit?: string,
     slider?: { min: number; max: number },
   ): ColBuilder<number, "input" | "slider" | "checkbox"> {
-    return col
-      .number()
-      .label("Duration")
-      .display("number", { unit })
-      .filterable("slider", slider ?? { min: 0, max: 5000 });
+    return tag(
+      "duration",
+      [unit, slider],
+      col
+        .number()
+        .label("Duration")
+        .display("number", { unit })
+        .filterable("slider", slider ?? { min: 0, max: 5000 }),
+    );
   },
 
   /**
@@ -147,7 +187,11 @@ export const presets = {
    * ```
    */
   timestamp(): ColBuilder<Date, "timerange"> {
-    return col.timestamp().label("Timestamp").display("timestamp").sortable();
+    return tag(
+      "timestamp",
+      [],
+      col.timestamp().label("Timestamp").display("timestamp").sortable(),
+    );
   },
 
   /**
@@ -162,7 +206,11 @@ export const presets = {
    * ```
    */
   traceId(): ColBuilder<string, never> {
-    return col.string().label("Trace ID").display("code").notFilterable();
+    return tag(
+      "traceId",
+      [],
+      col.string().label("Trace ID").display("code").notFilterable(),
+    );
   },
 
   /**
@@ -176,7 +224,11 @@ export const presets = {
    * ```
    */
   pathname(): ColBuilder<string, "input"> {
-    return col.string().label("Pathname").filterable("input");
+    return tag(
+      "pathname",
+      [],
+      col.string().label("Pathname").filterable("input"),
+    );
   },
 
   /**
@@ -199,12 +251,16 @@ export const presets = {
     slider?: { min: number; max: number },
   ): ColBuilder<number, "input" | "slider" | "checkbox"> {
     const bounds = slider ?? { min: 0, max: 5000 };
-    return col
-      .number()
-      .label("Latency")
-      .display("heatmap", { unit, min: bounds.min, max: bounds.max })
-      .filterable("slider", bounds)
-      .sortable();
+    return tag(
+      "latency",
+      [unit, slider],
+      col
+        .number()
+        .label("Latency")
+        .display("heatmap", { unit, min: bounds.min, max: bounds.max })
+        .filterable("slider", bounds)
+        .sortable(),
+    );
   },
 
   /**
@@ -225,11 +281,11 @@ export const presets = {
     max: number;
   }): ColBuilder<number, "input" | "slider" | "checkbox"> {
     const { min = 0, max = 100 } = range ?? {};
-    return col
-      .number()
-      .label("Health")
-      .display("gauge", { min, max })
-      .sortable();
+    return tag(
+      "health",
+      [range],
+      col.number().label("Health").display("gauge", { min, max }).sortable(),
+    );
   },
 
   /**
@@ -250,10 +306,10 @@ export const presets = {
     max: number;
   }): ColBuilder<number, "input" | "slider" | "checkbox"> {
     const { min = 0, max = 100 } = range ?? {};
-    return col
-      .number()
-      .label("Progress")
-      .display("bar", { min, max })
-      .sortable();
+    return tag(
+      "progress",
+      [range],
+      col.number().label("Progress").display("bar", { min, max }).sortable(),
+    );
   },
 };

@@ -1,3 +1,4 @@
+import { resolveColumns } from "./col";
 import type { TableSchemaDefinition } from "./types";
 
 /**
@@ -14,8 +15,8 @@ import type { TableSchemaDefinition } from "./types";
  * and the AI-generated path (`createTableSchema.fromJSON(json)`).
  */
 export function validateSchema(definition: TableSchemaDefinition): void {
-  for (const [key, builder] of Object.entries(definition)) {
-    const c = builder._config;
+  for (const c of resolveColumns(definition)) {
+    const { key } = c;
 
     // 1. Label is required — col.* factories default to label: ""
     if (!c.label) {
@@ -55,6 +56,18 @@ export function validateSchema(definition: TableSchemaDefinition): void {
             `  Fix: swap the values — .filterable("slider", { min: ${max}, max: ${min} })`,
         );
       }
+    }
+
+    // 4. A sheet-only column cannot carry a filter. `.sheetOnly()` is the only
+    //    chain step that sets `enableHiding: false` on a hideable column, and
+    //    it clears the filter, so no builder can produce this combination —
+    //    only hand-written or AI-generated JSON can. It has no chain form,
+    //    which means `schemaToTypeScript` would have to drop one half of it.
+    if (c.enableHiding === false && c.hidden && c.filter !== null) {
+      throw new Error(
+        `[createTableSchema] Column "${key}": a sheet-only column cannot have a filter.\n` +
+          `  Fix: drop the filter (.sheetOnly() implies it), or make the column filterable and hidden instead.`,
+      );
     }
   }
 }
