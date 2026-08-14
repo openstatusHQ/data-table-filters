@@ -534,6 +534,22 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/filters/types.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/filters/normalize.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/filters/evaluate.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/filters/index.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/table-schema/generators/columns.tsx",
           "type": "registry:lib"
         },
@@ -631,7 +647,7 @@
       "name": "data-table-filter-command-ai",
       "type": "registry:block",
       "title": "Data Table AI Filter Command Palette",
-      "description": "AI-powered command palette that translates natural language queries into structured table filters. Provider-agnostic — works with any LLM via Vercel AI SDK.",
+      "description": "AI-powered command palette that translates natural language queries into structured table filters. Provider-agnostic \u2014 works with any LLM via Vercel AI SDK.",
       "files": [
         {
           "path": "src/components/data-table/data-table-filter-command-ai/index.tsx",

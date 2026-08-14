@@ -173,9 +173,17 @@ describe("filterGenericData", () => {
     expect(result).toHaveLength(4); // original 4 pass, NaN excluded
   });
 
-  it("slider: skips when filterValue is not a 2-element array", () => {
-    const result = filterGenericData(DATA, { latency: [100] }, schema);
-    expect(result).toEqual(DATA); // filter skipped
+  it("slider: a single handle is a degenerate range, not a skipped filter", () => {
+    // Previously a 1-element array was dropped and the filter did nothing.
+    // A single-handle slider now means [v, v] — the same thing the SQL and
+    // TanStack engines do, so all three agree.
+    const result = filterGenericData(DATA, { latency: [50] }, schema);
+    expect(result).toHaveLength(1);
+    expect(result[0].latency).toBe(50);
+  });
+
+  it("slider: an empty selection is still inactive", () => {
+    expect(filterGenericData(DATA, { latency: [] }, schema)).toEqual(DATA);
   });
 
   // -- input --
