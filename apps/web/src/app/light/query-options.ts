@@ -25,11 +25,11 @@ export const dataOptions = (search: SearchParamsType) => {
   return infiniteQueryOptions({
     queryKey: ["data-table-light", getStableQueryKey(search)],
     queryFn: async ({ pageParam }) => {
-      const cursor = new Date(pageParam.cursor);
+      const cursor = pageParam.cursor ? new Date(pageParam.cursor) : undefined;
       const direction = pageParam.direction as "next" | "prev" | undefined;
       const serialize = searchParamsSerializer({
         ...search,
-        cursor,
+        ...(cursor && { cursor }),
         direction,
       });
       const response = await fetch(`/light/api${serialize}`);
@@ -42,7 +42,7 @@ export const dataOptions = (search: SearchParamsType) => {
 
       return SuperJSON.parse<InfiniteQueryResponse<ColumnType[]>>(json);
     },
-    initialPageParam: { cursor: new Date().getTime(), direction: "next" },
+    initialPageParam: { cursor: null as number | null, direction: "next" },
     // REMINDER: removed the getPreviousPageParam as we are not using live mode
     getNextPageParam: (lastPage, _pages) => {
       if (!lastPage.nextCursor) return null;
