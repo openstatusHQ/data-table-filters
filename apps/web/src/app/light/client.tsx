@@ -30,8 +30,8 @@ type ColumnType =
   (typeof columns)[number] extends import("@tanstack/react-table").ColumnDef<
     infer T
   >
-  ? T
-  : never;
+    ? T
+    : never;
 
 export function Client({ initialState }: { initialState?: SearchParamsType }) {
   const adapter = useNuqsAdapter(filterSchema.definition, {

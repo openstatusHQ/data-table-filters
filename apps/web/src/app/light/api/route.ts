@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     search.cursor &&
     validTimestamp?.length &&
     search.cursor.getTime() <=
-    validTimestamp[validTimestamp.length - 1].getTime()
+      validTimestamp[validTimestamp.length - 1].getTime()
   ) {
     searchParams.set("timestampEnd", search.cursor.getTime().toString());
   } else if (!validTimestamp?.length) {
@@ -95,12 +95,20 @@ export async function GET(req: NextRequest) {
 
   const [dataRes, chartRes, facetsRes] = await Promise.all([
     fetch(`${tbEndpoint}/api/get?${searchParams.toString()}`),
-    isScrollEvent ? null : fetch(`${tbEndpoint}/api/stats?${statsParams.toString()}`),
-    isScrollEvent ? null : fetch(`${tbEndpoint}/api/facets?${facetsParams.toString()}`),
+    isScrollEvent
+      ? null
+      : fetch(`${tbEndpoint}/api/stats?${statsParams.toString()}`),
+    isScrollEvent
+      ? null
+      : fetch(`${tbEndpoint}/api/facets?${facetsParams.toString()}`),
   ]);
 
   // Return empty response on any fetch failure
-  if (!dataRes.ok || (chartRes && !chartRes.ok) || (facetsRes && !facetsRes.ok)) {
+  if (
+    !dataRes.ok ||
+    (chartRes && !chartRes.ok) ||
+    (facetsRes && !facetsRes.ok)
+  ) {
     return Response.json(
       SuperJSON.stringify({
         data: [],
