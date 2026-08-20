@@ -30,8 +30,8 @@ type ColumnType =
   (typeof columns)[number] extends import("@tanstack/react-table").ColumnDef<
     infer T
   >
-    ? T
-    : never;
+  ? T
+  : never;
 
 export function Client({ initialState }: { initialState?: SearchParamsType }) {
   const adapter = useNuqsAdapter(filterSchema.definition, {
@@ -64,8 +64,10 @@ function ClientInner() {
   const totalDBRowCount = lastPage?.meta?.totalRowCount;
   const filterDBRowCount = firstPage?.meta?.filterRowCount;
   const metadata = lastPage?.meta?.metadata;
-  const chartData = lastPage?.meta?.chartData;
-  const facets = lastPage?.meta?.facets;
+  // Read from firstPage: scroll events return empty chartData/facets intentionally,
+  // so if we read from lastPage we'd lose them after the first scroll.
+  const chartData = firstPage?.meta?.chartData;
+  const facets = firstPage?.meta?.facets;
   const totalFetched = flatData?.length;
 
   const { sort, cursor, direction, uuid, ...filter } = search;
