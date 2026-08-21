@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
   // TODO: too many requests, especially when scrolling as stats/facets are not cached and are only needed for initial load
   const [dataRes, chartRes, facetsRes] = await Promise.all([
     fetch(`${tbEndpoint}/api/get?${searchParams.toString()}`),
-    // TODO: we are missing filter in both, the stats and the facets - nothing urgent
+    // NOTE: stats and facets don't respect the applied filters yet - known limitation, fine for now
     fetch(`${tbEndpoint}/api/stats?${statsParams.toString()}`),
     fetch(`${tbEndpoint}/api/facets?${facetsParams.toString()}`),
   ]);
