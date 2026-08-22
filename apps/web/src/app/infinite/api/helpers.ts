@@ -1,3 +1,4 @@
+import { LEVELS } from "@/constants/levels";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
@@ -172,29 +173,44 @@ export function groupChartData(
   );
   const steps = Math.floor(duration / interval);
 
-  const timestamps: { date: Date }[] = [];
+  const startTime = between[0].getTime();
 
-  for (let i = 0; i < steps; i++) {
-    const newTimestamp = addMilliseconds(between[0], i * interval);
-    timestamps.push({ date: newTimestamp });
-  }
+  // 1. DYNAMIC INITIALIZATION
+  // Instead of an empty array, we pre-build our exact 100 buckets.
+  // We loop over `LEVELS` array to dynamically set `success: 0`, `error: 0`, etc.
+  const timestamps = Array.from({ length: steps }).map((_, i) => {
+    const bucket = {
+      timestamp: startTime + i * interval,
+    } as Record<string, number>;
 
-  // TODO: make it dynamic to avoid havin 200, 400, 500 hardcoded
-  // TODO: make it more efficient
-  // e.g. make the "status" prop we use as T generic
-  return timestamps.map((timestamp, i) => {
-    const filteredData = data.filter((row) => {
-      const diff = row.date.getTime() - timestamp.date.getTime();
-      return diff < interval && diff >= 0;
+    LEVELS.forEach((level) => {
+      bucket[level] = 0;
     });
 
-    return {
-      timestamp: timestamp.date.getTime(), // TODO: use date-fns and interval to determine the format
-      success: filteredData.filter((row) => row.level === "success").length,
-      warning: filteredData.filter((row) => row.level === "warning").length,
-      error: filteredData.filter((row) => row.level === "error").length,
-    };
+    return bucket;
   });
+
+  // 2. THE ONE-PASS MATH LOOP (O(n))
+  // We loop the database records EXACTLY once, instead of filtering them 300 times.
+  for (const row of data) {
+    const timeDiff = row.date.getTime() - startTime;
+
+    // Check if the log belongs inside our chart's timeframe
+    if (timeDiff >= 0 && timeDiff <= duration) {
+      // THE MAGIC: This simple math division instantly gives us the exact
+      // index of the bucket this log belongs to (e.g. index 42 out of 100).
+
+      const bucketIndex = Math.floor(timeDiff / interval);
+
+      if (timestamps[bucketIndex]) {
+        // Dynamically increment the correct level!
+        // e.g. timestamps[42]["success"] += 1
+        timestamps[bucketIndex][row.level] += 1;
+      }
+    }
+  }
+
+  return timestamps as unknown as TimelineChartSchema[];
 }
 
 export function evaluateInterval(dates: Date[] | null): number {
