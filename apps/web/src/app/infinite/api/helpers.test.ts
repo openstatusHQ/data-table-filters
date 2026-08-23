@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { evaluateInterval, groupChartData } from "./helpers";
 import type { ColumnSchema } from "../schema";
+import { evaluateInterval, groupChartData } from "./helpers";
 
 // Filtering is no longer tested here: `filterData` is gone, and the semantics
 // it used to implement are covered by the conformance corpus in
@@ -8,8 +8,8 @@ import type { ColumnSchema } from "../schema";
 // engine against the same hand-written expectations.
 //
 // `evaluateInterval` stays because nothing else covers its 13-rung ladder.
-// `sortData`, `splitData`, and `getFacetsFromData` remain untested — they 
-// are chart/pagination concerns, not filter semantics. The `groupChartData` 
+// `sortData`, `splitData`, and `getFacetsFromData` remain untested — they
+// are chart/pagination concerns, not filter semantics. The `groupChartData`
 // function is actively tested due to core mathematical bucketing sensitivity.
 
 describe("evaluateInterval", () => {
@@ -96,7 +96,7 @@ describe("groupChartData", () => {
     const rows = [
       makeRow(1000, "success"), // EXACT start edge -> bucket 0
       makeRow(1999, "warning"), // Before edge      -> bucket 0
-      makeRow(2000, "error"),   // EXACT next edge  -> bucket 1
+      makeRow(2000, "error"), // EXACT next edge  -> bucket 1
       makeRow(3500, "success"), // Mid bucket       -> bucket 2
     ];
 
@@ -114,16 +114,19 @@ describe("groupChartData", () => {
 
   it("ignores rows falling outside generated buckets but within duration boundaries", () => {
     // Test the unallocated bucket edgecase noted in PR.
-    // Start = 1000. End = 3500. duration = 2500. 
+    // Start = 1000. End = 3500. duration = 2500.
     // Evaluated interval = 1000ms. steps = Math.floor(2500/1000) = 2.
     // Creates bucket 0 (1000) and bucket 1 (2000) - Stops at 2999!
     const start = new Date(1000);
     const end = new Date(3500);
 
-    const result = groupChartData([
-      makeRow(1500, "success"), // falls in bucket 0
-      makeRow(3200, "error")    // timeDiff is 2200 (within 2500 duration), but bucket 3 (index 2) does not exist!
-    ], [start, end]);
+    const result = groupChartData(
+      [
+        makeRow(1500, "success"), // falls in bucket 0
+        makeRow(3200, "error"), // timeDiff is 2200 (within 2500 duration), but bucket 3 (index 2) does not exist!
+      ],
+      [start, end],
+    );
 
     expect(result.length).toBe(2);
     expect(result[0].success).toBe(1);
