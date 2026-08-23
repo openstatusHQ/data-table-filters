@@ -4,7 +4,7 @@ import {
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
 import { defineFilters } from "@dtf/registry/lib/filters";
-import { addDays, addMilliseconds, differenceInMinutes } from "date-fns";
+import { addDays, differenceInMinutes } from "date-fns";
 import type {
   ColumnSchema,
   FacetMetadataSchema,
@@ -172,45 +172,33 @@ export function groupChartData(
     between[0].getTime() - between[between.length - 1].getTime(),
   );
   const steps = Math.floor(duration / interval);
-
   const startTime = between[0].getTime();
 
-  // 1. DYNAMIC INITIALIZATION
-  // Instead of an empty array, we pre-build our exact 100 buckets.
-  // We loop over `LEVELS` array to dynamically set `success: 0`, `error: 0`, etc.
-  const timestamps = Array.from({ length: steps }).map((_, i) => {
-    const bucket = {
+  type LevelCounts = Record<(typeof LEVELS)[number], number>;
+
+  const timestamps: TimelineChartSchema[] = Array.from({ length: steps }).map(
+    (_, i) => ({
       timestamp: startTime + i * interval,
-    } as Record<string, number>;
+      ...LEVELS.reduce((acc, level) => {
+        acc[level] = 0;
+        return acc;
+      }, {} as LevelCounts),
+    }),
+  );
 
-    LEVELS.forEach((level) => {
-      bucket[level] = 0;
-    });
-
-    return bucket;
-  });
-
-  // 2. THE ONE-PASS MATH LOOP (O(n))
-  // We loop the database records EXACTLY once, instead of filtering them 300 times.
   for (const row of data) {
     const timeDiff = row.date.getTime() - startTime;
 
-    // Check if the log belongs inside our chart's timeframe
     if (timeDiff >= 0 && timeDiff <= duration) {
-      // THE MAGIC: This simple math division instantly gives us the exact
-      // index of the bucket this log belongs to (e.g. index 42 out of 100).
-
       const bucketIndex = Math.floor(timeDiff / interval);
 
       if (timestamps[bucketIndex]) {
-        // Dynamically increment the correct level!
-        // e.g. timestamps[42]["success"] += 1
         timestamps[bucketIndex][row.level] += 1;
       }
     }
   }
 
-  return timestamps as unknown as TimelineChartSchema[];
+  return timestamps;
 }
 
 export function evaluateInterval(dates: Date[] | null): number {
