@@ -178,7 +178,7 @@ export function groupChartData(
 
   const timestamps: TimelineChartSchema[] = Array.from({ length: steps }).map(
     (_, i) => ({
-      timestamp: startTime + i * interval,
+      timestamp: startTime + i * interval, // TODO: use date-fns and interval to determine the format
       ...LEVELS.reduce((acc, level) => {
         acc[level] = 0;
         return acc;
