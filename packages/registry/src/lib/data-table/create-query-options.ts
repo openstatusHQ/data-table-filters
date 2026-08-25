@@ -61,27 +61,32 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
       queryFn: async ({ pageParam }) => {
         const cursorDate = new Date(pageParam.cursor);
         const direction = pageParam.direction as "next" | "prev" | undefined;
-        const serialize = config.searchParamsSerializer({
+        let serialize = config.searchParamsSerializer({
           ...search,
           cursor: cursorDate,
           direction,
           uuid: null,
           live: null,
         });
+
+        if (!pageParam.isInitial) {
+          serialize += serialize.includes("?") ? "&_meta=false" : "?_meta=false";
+        }
+
         const response = await fetch(
           `${getBaseUrl()}${config.apiEndpoint}${serialize}`,
         );
         const json = await response.json();
         return SuperJSON.parse<InfiniteQueryResponse<TData, TMeta>>(json);
       },
-      initialPageParam: { cursor: initialCursor, direction: "next" },
+      initialPageParam: { cursor: initialCursor, direction: "next", isInitial: true },
       getPreviousPageParam: (firstPage) => {
         if (!firstPage.prevCursor) return null;
-        return { cursor: firstPage.prevCursor, direction: "prev" };
+        return { cursor: firstPage.prevCursor, direction: "prev", isInitial: false };
       },
       getNextPageParam: (lastPage) => {
         if (!lastPage.nextCursor) return null;
-        return { cursor: lastPage.nextCursor, direction: "next" };
+        return { cursor: lastPage.nextCursor, direction: "next", isInitial: false };
       },
       refetchOnWindowFocus: false,
       placeholderData: keepPreviousData,
