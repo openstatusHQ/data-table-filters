@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { useLocalStorage } from "@dtf/registry/hooks/use-local-storage";
-import { act, useState } from "react";
+import { act, useLayoutEffect, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -92,10 +92,25 @@ describe("useLocalStorage — after mount", () => {
   });
 
   it("does not clobber a value written before the mount effect flushed", () => {
+    // The write has to land *before* the hook's passive mount effect runs, so
+    // it is issued from a layout effect: those flush first. Calling setValue
+    // after `mount()` would not set the race up at all — `mount()` already
+    // flushed the mount effect inside its own `act`.
     window.localStorage.setItem("last-searches", JSON.stringify(["stored"]));
 
-    const probe = mount("last-searches", () => [] as string[]);
-    act(() => probe.setValue(["fresh"]));
+    const probe = {} as { value: unknown };
+
+    function Component() {
+      const [value, setValue] = useLocalStorage(
+        "last-searches",
+        [] as string[],
+      );
+      probe.value = value;
+      useLayoutEffect(() => setValue(["fresh"]), [setValue]);
+      return null;
+    }
+
+    act(() => root.render(<Component />));
 
     expect(probe.value).toEqual(["fresh"]);
   });

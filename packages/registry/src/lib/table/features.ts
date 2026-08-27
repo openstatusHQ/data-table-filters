@@ -89,12 +89,15 @@ export const dataTableFeatures = tableFeatures({
    * `lib/filters/__tests__/conformance-tanstack.test.ts`.
    */
   filterFns: {
+    // The `'auto'` set (`inDateRange` is the sixth, ours, below).
     includesString: filterFn_includesString,
     inNumberRange: filterFn_inNumberRange,
     equals: filterFn_equals,
     arrIncludes: filterFn_arrIncludes,
-    arrIncludesSome: filterFn_arrIncludesSome,
     weakEquals: filterFn_weakEquals,
+    // Not auto-resolved — registered because columns name it directly.
+    arrIncludesSome: filterFn_arrIncludesSome,
+    // Ours.
     inDateRange,
     arrSome,
   },

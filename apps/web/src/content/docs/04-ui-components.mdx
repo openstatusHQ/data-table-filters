@@ -206,14 +206,17 @@ import { arrSome, inDateRange } from "@/lib/table/filterfns";
 export const dataTableFeatures = tableFeatures({
   // ...features and row models
   filterFns: {
-    // The set `filterFn: 'auto'` resolves to — register all of it, see below.
+    // The six names `filterFn: 'auto'` resolves to. Register all of them —
+    // see the note below. `inDateRange` is the sixth, supplied further down.
     includesString: filterFn_includesString,
     inNumberRange: filterFn_inNumberRange,
     equals: filterFn_equals,
     arrIncludes: filterFn_arrIncludes,
-    arrIncludesSome: filterFn_arrIncludesSome,
     weakEquals: filterFn_weakEquals,
-    // Ours. `inDateRange` deliberately shadows the v9 built-in of the same name.
+    // Not auto-resolved: registered because columns reference it by name.
+    arrIncludesSome: filterFn_arrIncludesSome,
+    // Ours. `inDateRange` deliberately shadows the v9 built-in of the same
+    // name, so it also serves `'auto'` for Date columns.
     inDateRange,
     arrSome,
   },
