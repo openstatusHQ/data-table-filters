@@ -116,10 +116,17 @@ export const dataTableFeatures = tableFeatures({
  * The feature set as a type, for the `TFeatures` parameter that v9 threads
  * through `Table`, `Row`, `Column`, `Cell` and `ColumnDef`.
  *
- * Use this when you construct a table from `dataTableFeatures`. Do **not** use
- * it in the prop types of shared components: `TFeatures` is invariant in v9
- * (`in out`), so a component typed against this exact set would reject a table
- * built from a customised feature object. Those components take a `TFeatures`
- * generic instead — see `AnyTableFeatures` in `./types`.
+ * Every shared component pins this type rather than staying generic over
+ * `TFeatures`. That is not a shortcut, it is the only thing that compiles:
+ * `TFeatures` is invariant in v9 (`in out`), and TypeScript cannot resolve the
+ * feature-map lookup behind an unresolved type parameter — so a component
+ * generic over `TFeatures` can call no feature API at all (`getCanSort`,
+ * `getFacetedRowModel`, …), and `Table<any, …>` is not a supertype to fall back
+ * on either.
+ *
+ * Registering an extra feature therefore means editing `dataTableFeatures`
+ * above. Because this type is `typeof dataTableFeatures`, every component
+ * follows automatically — which is the shadcn-registry model anyway, since
+ * these files are copied into your project.
  */
 export type DataTableFeatures = typeof dataTableFeatures;

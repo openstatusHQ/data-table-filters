@@ -192,14 +192,30 @@ name. In TanStack Table v9 that registration lives on the feature set, not on th
 
 ```ts
 // lib/table/features.ts
-import { tableFeatures } from "@tanstack/react-table";
+import {
+  filterFn_arrIncludes,
+  filterFn_arrIncludesSome,
+  filterFn_equals,
+  filterFn_includesString,
+  filterFn_inNumberRange,
+  filterFn_weakEquals,
+  tableFeatures,
+} from "@tanstack/react-table";
 import { arrSome, inDateRange } from "@/lib/table/filterfns";
 
 export const dataTableFeatures = tableFeatures({
   // ...features and row models
   filterFns: {
+    // The set `filterFn: 'auto'` resolves to — register all of it, see below.
+    includesString: filterFn_includesString,
+    inNumberRange: filterFn_inNumberRange,
+    equals: filterFn_equals,
+    arrIncludes: filterFn_arrIncludes,
+    arrIncludesSome: filterFn_arrIncludesSome,
+    weakEquals: filterFn_weakEquals,
+    // Ours. `inDateRange` deliberately shadows the v9 built-in of the same name.
     inDateRange,
-    arrSome /* plus the built-ins `filterFn: 'auto'` resolves to */,
+    arrSome,
   },
 });
 ```

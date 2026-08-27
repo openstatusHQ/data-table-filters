@@ -89,6 +89,16 @@ export interface DataTableInfiniteProps<TData extends RowData> {
     columnId: string,
   ) => undefined | [number, number];
   totalRows?: number;
+  /**
+   * How many rows match the active filters, as reported by the server.
+   *
+   * Must be authoritative relative to what `fetchNextPage` can actually return:
+   * both the "Load More" button (`canLoadMore`) and the scroll auto-load stop
+   * once `totalRowsFetched` reaches it. A value that under-reports the real
+   * count makes the remaining rows unreachable, because there is no other way
+   * to trigger a fetch. Leave it undefined rather than pass a guess — the
+   * button then falls back to `hasNextPage` alone.
+   */
   filterRows?: number;
   totalRowsFetched?: number;
   isFetching?: boolean;

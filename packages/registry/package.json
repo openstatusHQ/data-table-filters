@@ -67,6 +67,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "drizzle-orm": "^0.45.2",
+    "jsdom": "^30.0.1",
     "prettier": "^3.5.3",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",

@@ -112,7 +112,11 @@ describe("DataTableInfinite — server pagination opt-out", () => {
       "utf8",
     );
 
-    const useTableCall = source.slice(source.indexOf("useTable({"));
-    expect(useTableCall).toContain("manualPagination: true");
+    // Whitespace-tolerant: anchoring on the literal `useTable({` would break
+    // the moment prettier reformatted the call, and would then fail for a
+    // reason that has nothing to do with the contract being pinned here.
+    const call = source.match(/useTable\(\s*\{[\s\S]*/);
+    expect(call).not.toBeNull();
+    expect(call?.[0]).toMatch(/manualPagination\s*:\s*true/);
   });
 });

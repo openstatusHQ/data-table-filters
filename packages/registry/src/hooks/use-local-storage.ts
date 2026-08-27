@@ -22,23 +22,33 @@ export function useLocalStorage<T>(
   // value is picked up right after mount instead.
   const [storedValue, setStoredValue] = useState<T>(initialValue);
   const initialValueRef = useRef(initialValue);
-  // Set as soon as a value is written, so the post-mount read never overwrites
-  // a fresh write (e.g. an interaction that lands before the effect runs).
-  const isDirtyRef = useRef(false);
+  // Which key was last written to, so the post-mount read never overwrites a
+  // fresh write (e.g. an interaction that lands before the effect runs). Scoped
+  // to the key rather than a bare boolean: a write followed by a `key` change
+  // before the mount effect flushed would otherwise skip hydration for the new
+  // key, which never had a write of its own.
+  const dirtyKeyRef = useRef<string | null>(null);
   const isMountRunRef = useRef(true);
+
+  // Declared before the effect below so it runs first: effects fire in hook
+  // order, and the read needs the defaults belonging to the *current* key, not
+  // the ones captured on the first render.
+  useEffect(() => {
+    initialValueRef.current = initialValue;
+  });
 
   useEffect(() => {
     const isMountRun = isMountRunRef.current;
     isMountRunRef.current = false;
     // Keep a value written before this effect ran; a changed `key` still wins.
-    if (isMountRun && isDirtyRef.current) return;
-    isDirtyRef.current = false;
+    if (isMountRun && dirtyKeyRef.current === key) return;
+    dirtyKeyRef.current = null;
     setStoredValue(getItemFromLocalStorage(key, initialValueRef.current));
   }, [key]);
 
   const setValue: React.Dispatch<React.SetStateAction<T>> = useCallback(
     (value) => {
-      isDirtyRef.current = true;
+      dirtyKeyRef.current = key;
       setStoredValue((prev) => {
         const newValue = value instanceof Function ? value(prev) : value;
         // Save to localStorage asynchronously to avoid blocking UI
