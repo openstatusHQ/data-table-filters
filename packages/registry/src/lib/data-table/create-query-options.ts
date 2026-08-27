@@ -70,7 +70,9 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
         });
 
         if (!pageParam.isInitial) {
-          serialize += serialize.includes("?") ? "&_meta=false" : "?_meta=false";
+          serialize += serialize.includes("?")
+            ? "&_meta=false"
+            : "?_meta=false";
         }
 
         const response = await fetch(
@@ -79,14 +81,26 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
         const json = await response.json();
         return SuperJSON.parse<InfiniteQueryResponse<TData, TMeta>>(json);
       },
-      initialPageParam: { cursor: initialCursor, direction: "next", isInitial: true },
+      initialPageParam: {
+        cursor: initialCursor,
+        direction: "next",
+        isInitial: true,
+      },
       getPreviousPageParam: (firstPage) => {
         if (!firstPage.prevCursor) return null;
-        return { cursor: firstPage.prevCursor, direction: "prev", isInitial: false };
+        return {
+          cursor: firstPage.prevCursor,
+          direction: "prev",
+          isInitial: false,
+        };
       },
       getNextPageParam: (lastPage) => {
         if (!lastPage.nextCursor) return null;
-        return { cursor: lastPage.nextCursor, direction: "next", isInitial: false };
+        return {
+          cursor: lastPage.nextCursor,
+          direction: "next",
+          isInitial: false,
+        };
       },
       refetchOnWindowFocus: false,
       placeholderData: keepPreviousData,
