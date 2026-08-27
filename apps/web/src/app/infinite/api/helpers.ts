@@ -1,9 +1,10 @@
+import { LEVELS } from "@/constants/levels";
 import {
   calculatePercentile,
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
 import { defineFilters } from "@dtf/registry/lib/filters";
-import { addDays, addMilliseconds, differenceInMinutes } from "date-fns";
+import { addDays, differenceInMinutes } from "date-fns";
 import type {
   ColumnSchema,
   FacetMetadataSchema,
@@ -171,30 +172,33 @@ export function groupChartData(
     between[0].getTime() - between[between.length - 1].getTime(),
   );
   const steps = Math.floor(duration / interval);
+  const startTime = between[0].getTime();
 
-  const timestamps: { date: Date }[] = [];
+  type LevelCounts = Record<(typeof LEVELS)[number], number>;
 
-  for (let i = 0; i < steps; i++) {
-    const newTimestamp = addMilliseconds(between[0], i * interval);
-    timestamps.push({ date: newTimestamp });
+  const timestamps: TimelineChartSchema[] = Array.from({ length: steps }).map(
+    (_, i) => ({
+      timestamp: startTime + i * interval, // TODO: use date-fns and interval to determine the format
+      ...LEVELS.reduce((acc, level) => {
+        acc[level] = 0;
+        return acc;
+      }, {} as LevelCounts),
+    }),
+  );
+
+  for (const row of data) {
+    const timeDiff = row.date.getTime() - startTime;
+
+    if (timeDiff >= 0 && timeDiff <= duration) {
+      const bucketIndex = Math.floor(timeDiff / interval);
+
+      if (timestamps[bucketIndex]) {
+        timestamps[bucketIndex][row.level] += 1;
+      }
+    }
   }
 
-  // TODO: make it dynamic to avoid havin 200, 400, 500 hardcoded
-  // TODO: make it more efficient
-  // e.g. make the "status" prop we use as T generic
-  return timestamps.map((timestamp, i) => {
-    const filteredData = data.filter((row) => {
-      const diff = row.date.getTime() - timestamp.date.getTime();
-      return diff < interval && diff >= 0;
-    });
-
-    return {
-      timestamp: timestamp.date.getTime(), // TODO: use date-fns and interval to determine the format
-      success: filteredData.filter((row) => row.level === "success").length,
-      warning: filteredData.filter((row) => row.level === "warning").length,
-      error: filteredData.filter((row) => row.level === "error").length,
-    };
-  });
+  return timestamps;
 }
 
 export function evaluateInterval(dates: Date[] | null): number {
