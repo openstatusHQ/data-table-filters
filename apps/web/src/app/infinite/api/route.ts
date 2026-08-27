@@ -49,10 +49,12 @@ export async function GET(req: NextRequest): Promise<Response> {
     only: sliderKeys,
   });
   const skipMeta = req.nextUrl.searchParams.get("_meta") === "false";
-  
+
   const chartData = skipMeta ? [] : groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
   const sortedData = sortData(filteredData, search.sort);
-  const withoutSliderFacets = skipMeta ? {} : getFacetsFromData(withoutSliderData);
+  const withoutSliderFacets = skipMeta
+    ? {}
+    : getFacetsFromData(withoutSliderData);
   const facets = skipMeta ? {} : getFacetsFromData(filteredData);
   const withPercentileData = skipMeta ? sortedData : percentileData(sortedData);
   const data = splitData(withPercentileData, search);
