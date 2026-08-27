@@ -7,6 +7,7 @@ import { DataTableColumnStatusCode } from "@/components/data-table/data-table-co
 import { DataTableColumnTimestamp } from "@/components/data-table/data-table-column/data-table-column-timestamp";
 import { LEVELS } from "@/constants/levels";
 import { VERCEL_EDGE_REGIONS } from "@/constants/region";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export type ColumnType = {
@@ -21,7 +22,7 @@ export type ColumnType = {
   body: string;
 };
 
-export const columns: ColumnDef<ColumnType>[] = [
+export const columns: ColumnDef<DataTableFeatures, ColumnType>[] = [
   {
     accessorKey: "level",
     header: "",

@@ -13,9 +13,10 @@ import {
   timingPhases,
 } from "@/lib/request/timing";
 import { cn } from "@/lib/utils";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import type { ColumnDef } from "@tanstack/react-table";
 
-export const timingPhasesColumn: ColumnDef<ColumnSchema> = {
+export const timingPhasesColumn: ColumnDef<DataTableFeatures, ColumnSchema> = {
   accessorKey: "timing",
   header: () => <div className="whitespace-nowrap">Timing Phases</div>,
   cell: ({ row }) => {

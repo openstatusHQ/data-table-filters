@@ -6,7 +6,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import type { DataTableFilterField } from "./types";
-import { deserialize, serializeColumnFilters } from "./utils";
+import { canLoadMore, deserialize, serializeColumnFilters } from "./utils";
 
 // ── deserialize ──────────────────────────────────────────────────────────────
 
@@ -247,5 +247,47 @@ describe("serializeColumnFilters", () => {
       filterFields,
     );
     expect(result).toBe(`status:200${ARRAY_DELIMITER}404 `);
+  });
+});
+
+// ── canLoadMore ──────────────────────────────────────────────────────────────
+
+describe("canLoadMore", () => {
+  it("is false once every matching row has been fetched", () => {
+    // The case that showed the bug: 66 rows match, page 1 returned 42 and page
+    // 2 the remaining 24. The API still hands back a non-null `nextCursor`
+    // (it only nulls on an empty page), so `hasNextPage` is still true — but
+    // there is demonstrably nothing left to fetch.
+    expect(
+      canLoadMore({ hasNextPage: true, filterRows: 66, totalRowsFetched: 66 }),
+    ).toBe(false);
+  });
+
+  it("is true while rows are still outstanding", () => {
+    expect(
+      canLoadMore({ hasNextPage: true, filterRows: 66, totalRowsFetched: 42 }),
+    ).toBe(true);
+  });
+
+  it("is false whenever the query itself reports no next page", () => {
+    expect(
+      canLoadMore({ hasNextPage: false, filterRows: 66, totalRowsFetched: 42 }),
+    ).toBe(false);
+    expect(canLoadMore({})).toBe(false);
+  });
+
+  it("guards against overshooting the reported count", () => {
+    // Page boundaries extend past `size` to keep same-timestamp rows together,
+    // so the fetched total can exceed `filterRows` slightly.
+    expect(
+      canLoadMore({ hasNextPage: true, filterRows: 66, totalRowsFetched: 68 }),
+    ).toBe(false);
+  });
+
+  it("falls back to hasNextPage when the server count is unavailable", () => {
+    // Consumers that never pass `filterRows` keep the previous behaviour
+    // rather than losing the button entirely.
+    expect(canLoadMore({ hasNextPage: true, totalRowsFetched: 42 })).toBe(true);
+    expect(canLoadMore({ hasNextPage: true, filterRows: 66 })).toBe(true);
   });
 });

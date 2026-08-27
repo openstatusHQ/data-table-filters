@@ -1,6 +1,11 @@
 "use client";
 
-// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
+// REMINDER: kept through the v9 upgrade. v9 narrows the React Compiler hazard
+// but does not remove it: a nested component that hides a state read behind a
+// row/cell/column method (`row.getIsSelected()`) is still invisible to the
+// compiler. The v9 fix is `Subscribe` around those reads, not a bare opt-in, so
+// dropping this is a follow-up with runtime verification — not part of the
+// mechanical migration. https://tanstack.com/table/latest/docs/framework/react/guide/react-compiler
 "use no memo";
 
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
@@ -94,11 +99,9 @@ function DataTableAutoInner({
   schema,
 }: {
   data: AutoRow[];
-  columns: React.ComponentProps<
-    typeof DataTableInfinite<AutoRow, unknown>
-  >["columns"];
+  columns: React.ComponentProps<typeof DataTableInfinite<AutoRow>>["columns"];
   filterFields: React.ComponentProps<
-    typeof DataTableInfinite<AutoRow, unknown>
+    typeof DataTableInfinite<AutoRow>
   >["filterFields"];
   sheetFields: SheetField<AutoRow>[];
   defaultColumnVisibility: Record<string, boolean>;

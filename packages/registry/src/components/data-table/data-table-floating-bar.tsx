@@ -9,19 +9,20 @@ import {
   TooltipTrigger,
 } from "@dtf/registry/components/ui/tooltip";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
-import type { Row, Table as TTable } from "@tanstack/react-table";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
+import type { Row, RowData, Table as TTable } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import * as React from "react";
 import { useDataTable } from "./data-table-provider";
 
-interface DataTableFloatingBarProps<TData> {
+interface DataTableFloatingBarProps<TData extends RowData> {
   children: (props: {
-    rows: Row<TData>[];
-    table: TTable<TData>;
+    rows: Row<DataTableFeatures, TData>[];
+    table: TTable<DataTableFeatures, TData>;
   }) => React.ReactNode;
 }
 
-export function DataTableFloatingBar<TData>({
+export function DataTableFloatingBar<TData extends RowData>({
   children,
 }: DataTableFloatingBarProps<TData>) {
   const { table, rowSelection } = useDataTable<TData, unknown>();

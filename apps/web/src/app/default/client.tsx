@@ -5,28 +5,29 @@ import type { AdapterType } from "@dtf/registry/lib/store/adapter/types";
 import { useNuqsAdapter } from "@dtf/registry/lib/store/adapters/nuqs";
 import { useZustandAdapter } from "@dtf/registry/lib/store/adapters/zustand";
 import { DataTableStoreProvider } from "@dtf/registry/lib/store/provider/DataTableStoreProvider";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
+import type { ColumnDef, RowData } from "@tanstack/react-table";
 import * as React from "react";
 import { DataTable } from "./data-table";
 import { filterSchema } from "./schema";
 import type { SearchParamsType } from "./search-params";
 import { useFilterStore } from "./store";
 
-export interface ClientProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+export interface ClientProps<TData extends RowData> {
+  columns: ColumnDef<DataTableFeatures, TData>[];
   data: TData[];
   filterFields?: DataTableFilterField<TData>[];
   defaultAdapterType?: AdapterType;
   initialState?: SearchParamsType;
 }
 
-export function Client<TData, TValue>({
+export function Client<TData extends RowData>({
   columns,
   data,
   filterFields = [],
   defaultAdapterType = "nuqs",
   initialState,
-}: ClientProps<TData, TValue>) {
+}: ClientProps<TData>) {
   return (
     <React.Fragment>
       {defaultAdapterType === "nuqs" ? (
@@ -48,19 +49,19 @@ export function Client<TData, TValue>({
   );
 }
 
-interface InnerClientProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+interface InnerClientProps<TData extends RowData> {
+  columns: ColumnDef<DataTableFeatures, TData>[];
   data: TData[];
   filterFields: DataTableFilterField<TData>[];
   initialState?: SearchParamsType;
 }
 
-function NuqsClient<TData, TValue>({
+function NuqsClient<TData extends RowData>({
   columns,
   data,
   filterFields,
   initialState,
-}: InnerClientProps<TData, TValue>) {
+}: InnerClientProps<TData>) {
   const adapter = useNuqsAdapter(filterSchema.definition, {
     id: "default",
     initialState,
@@ -73,12 +74,12 @@ function NuqsClient<TData, TValue>({
   );
 }
 
-function ZustandClient<TData, TValue>({
+function ZustandClient<TData extends RowData>({
   columns,
   data,
   filterFields,
   initialState,
-}: InnerClientProps<TData, TValue>) {
+}: InnerClientProps<TData>) {
   const adapter = useZustandAdapter(useFilterStore, filterSchema.definition, {
     id: "default",
     initialState,

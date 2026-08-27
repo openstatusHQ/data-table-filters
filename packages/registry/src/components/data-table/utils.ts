@@ -59,3 +59,30 @@ export function serializeColumnFilters<TData>(
     return `${prev}${curr.id}:${curr.value} `;
   }, "");
 }
+
+/**
+ * Whether another `fetchNextPage()` would actually return rows.
+ *
+ * `hasNextPage` alone is not enough for cursor pagination as this table's API
+ * implements it: the response reports `nextCursor: null` only once a page comes
+ * back *empty*, so after the final row React Query still believes there is a
+ * next page. Left to `hasNextPage`, the button keeps offering "Load More" until
+ * one wasted click fetches nothing and flips it to "No more data to load".
+ *
+ * When the server reports how many rows match the active filters, that count is
+ * authoritative and lets us stop one page early. Consumers that do not pass
+ * `filterRows` keep the plain `hasNextPage` behaviour.
+ */
+export function canLoadMore({
+  hasNextPage,
+  filterRows,
+  totalRowsFetched,
+}: {
+  hasNextPage?: boolean;
+  filterRows?: number;
+  totalRowsFetched?: number;
+}): boolean {
+  if (!hasNextPage) return false;
+  if (filterRows === undefined || totalRowsFetched === undefined) return true;
+  return totalRowsFetched < filterRows;
+}

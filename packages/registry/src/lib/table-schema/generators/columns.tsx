@@ -17,7 +17,8 @@ import {
 import { DataTableColumnHeader } from "@dtf/registry/components/data-table/data-table-column-header";
 import { Checkbox } from "@dtf/registry/components/ui/checkbox";
 import { defineFilters } from "@dtf/registry/lib/filters";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
+import type { ColumnDef, RowData } from "@tanstack/react-table";
 import type { JSX } from "react";
 import { resolveColumns } from "../col";
 import type { DisplayDescriptor, TableSchemaDefinition } from "../types";
@@ -184,9 +185,9 @@ function renderCell(
  * ];
  * ```
  */
-export function generateColumns<TData>(
+export function generateColumns<TData extends RowData>(
   schema: TableSchemaDefinition,
-): ColumnDef<TData>[] {
+): ColumnDef<DataTableFeatures, TData>[] {
   // One interpretation of filter semantics, shared with the SQL and in-memory
   // engines. `filterFn` returns a *function*, so the consuming table no longer
   // has to register `filterFns: { inDateRange, arrSome }` — a contract that was
@@ -235,7 +236,7 @@ export function generateColumns<TData>(
           ? { size: config.size, minSize: config.size, maxSize: config.size }
           : {}),
         meta: { label: config.label, kind: "select", hidden: config.hidden },
-      } as ColumnDef<TData>;
+      } as ColumnDef<DataTableFeatures, TData>;
     }
 
     const isDotted = key.includes(".");
@@ -310,12 +311,12 @@ export function generateColumns<TData>(
         ...base,
         id: key,
         accessorFn: (row: TData) => (row as Record<string, unknown>)[key],
-      } as ColumnDef<TData>;
+      } as ColumnDef<DataTableFeatures, TData>;
     }
 
     return {
       ...base,
       accessorKey: key,
-    } as ColumnDef<TData>;
+    } as ColumnDef<DataTableFeatures, TData>;
   });
 }

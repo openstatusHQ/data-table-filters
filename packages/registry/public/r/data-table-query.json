@@ -5,7 +5,7 @@
   "description": "React Query infinite query integration with SuperJSON serialization and faceted search helpers.",
   "dependencies": [
     "@tanstack/react-query@^5.101.4",
-    "@tanstack/react-table@^8.20.6",
+    "@tanstack/react-table@^9.2.3",
     "superjson@^2.2.2"
   ],
   "registryDependencies": [
