@@ -114,9 +114,11 @@ describe("DataTableInfinite — memoized options", () => {
       "utf8",
     );
 
+    // Whitespace-tolerant throughout: prettier is free to reflow either call,
+    // and this must fail for the contract, not for the formatting.
     expect(source).toMatch(/const tableOptions = React\.useMemo\(/);
-    expect(source).toMatch(/useTable\(tableOptions\)/);
+    expect(source).toMatch(/useTable\(\s*tableOptions\s*\)/);
     // An options literal passed straight to the hook is the regression.
-    expect(source).not.toMatch(/useTable\(\{/);
+    expect(source).not.toMatch(/useTable\(\s*\{/);
   });
 });

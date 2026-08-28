@@ -6,22 +6,29 @@ import * as React from "react";
 export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
   const live = useFilterState<{ live: boolean }, boolean>((s) => s.live);
   /**
-   * REMINDER: the captured timestamp is state, not a ref.
+   * REMINDER: the captured timestamp is state adjusted during render, not a ref
+   * and not an effect.
    *
    * It is read during render — `getRowClassName` dims every row older than it —
-   * so writing it from an effect left the render that reacted to the toggle
-   * still looking at the previous value, and nothing re-rendered afterwards.
-   * Switching live mode *off* triggers no refetch of its own (`live` is not part
+   * so a ref written from an effect left the render that reacted to the toggle
+   * still looking at the previous value, with nothing to re-render afterwards:
+   * switching live mode *off* triggers no refetch of its own (`live` is not part
    * of the query key), so the rows stayed dimmed until an unrelated fetch
-   * rebuilt them. As state, the write schedules the render that clears them.
+   * rebuilt them. An effect would fix that but only after the browser had
+   * painted the stale frame. Comparing the previous value during render lets
+   * React re-run this component before committing, so the rows are never
+   * painted with a timestamp that belongs to the other mode.
+   * https://react.dev/reference/react/useState#storing-information-from-previous-renders
    */
   const [timestamp, setTimestamp] = React.useState<number | undefined>(() =>
     live ? new Date().getTime() : undefined,
   );
+  const [prevLive, setPrevLive] = React.useState(live);
 
-  React.useEffect(() => {
+  if (prevLive !== live) {
+    setPrevLive(live);
     setTimestamp(live ? new Date().getTime() : undefined);
-  }, [live]);
+  }
 
   const anchorRow = React.useMemo(() => {
     if (!live) return undefined;

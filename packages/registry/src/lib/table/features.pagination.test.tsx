@@ -123,6 +123,6 @@ describe("DataTableInfinite — server pagination opt-out", () => {
     );
     expect(options).not.toBeNull();
     expect(options?.[0]).toMatch(/manualPagination\s*:\s*true/);
-    expect(source).toMatch(/useTable\(tableOptions\)/);
+    expect(source).toMatch(/useTable\(\s*tableOptions\s*\)/);
   });
 });

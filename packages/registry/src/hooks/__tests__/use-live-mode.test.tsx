@@ -86,6 +86,19 @@ describe("useLiveMode", () => {
     expect(latest().row).toBe(data[0]);
   });
 
+  it("keeps the captured timestamp across unrelated re-renders", () => {
+    live.current = true;
+    render();
+    const captured = latest().timestamp;
+
+    vi.setSystemTime(NOW + 5000);
+    render();
+
+    // Only a toggle re-captures; a data fetch or a resize must not move the
+    // line that decides which rows are dimmed.
+    expect(latest().timestamp).toBe(captured);
+  });
+
   it("clears the timestamp in the render that reacts to switching off", () => {
     live.current = true;
     render();
