@@ -58,8 +58,8 @@ export function DataTableFloatingBar<TData extends RowData>({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p>
-                  Deselect all <Kbd>⌘ ⇧ X</Kbd>
+                <p className="text-nowrap">
+                  Deselect all <Kbd className="ml-1">⌘ ⇧ X</Kbd>
                 </p>
               </TooltipContent>
             </Tooltip>
