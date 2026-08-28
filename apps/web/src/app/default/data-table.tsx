@@ -1,13 +1,5 @@
 "use client";
 
-// REMINDER: kept through the v9 upgrade. v9 narrows the React Compiler hazard
-// but does not remove it: a nested component that hides a state read behind a
-// row/cell/column method (`row.getIsSelected()`) is still invisible to the
-// compiler. The v9 fix is `Subscribe` around those reads, not a bare opt-in, so
-// dropping this is a follow-up with runtime verification — not part of the
-// mechanical migration. https://tanstack.com/table/latest/docs/framework/react/guide/react-compiler
-"use no memo";
-
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { cn } from "@/lib/utils";
 import {

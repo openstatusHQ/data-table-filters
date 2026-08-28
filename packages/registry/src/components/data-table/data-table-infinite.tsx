@@ -1,13 +1,5 @@
 "use client";
 
-// REMINDER: kept through the v9 upgrade. v9 narrows the React Compiler hazard
-// but does not remove it: a nested component that hides a state read behind a
-// row/cell/column method (`row.getIsSelected()`) is still invisible to the
-// compiler. The v9 fix is `Subscribe` around those reads, not a bare opt-in, so
-// dropping this is a follow-up with runtime verification — not part of the
-// mechanical migration. https://tanstack.com/table/latest/docs/framework/react/guide/react-compiler
-"use no memo";
-
 import {
   Table,
   TableBody,
@@ -52,7 +44,7 @@ import type {
   TableOptions,
   Table as TTable,
 } from "@tanstack/react-table";
-import { flexRender, useTable } from "@tanstack/react-table";
+import { flexRender, Subscribe, useTable } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
 import { canLoadMore } from "./utils";
@@ -288,21 +280,6 @@ export function DataTableInfinite<TData extends RowData>({
     setColumnVisibility(defaultColumnVisibility);
   }, "u");
 
-  // Memoize column state as strings for efficient row memoization comparison
-  const visibleColumnIds = React.useMemo(
-    () =>
-      table
-        .getVisibleLeafColumns()
-        .map((c) => c.id)
-        .join(","),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [table.state.columnVisibility],
-  );
-  const columnOrderString = React.useMemo(
-    () => columnOrder.join(","),
-    [columnOrder],
-  );
-
   // Read BYOS uuid for detail row visual state (only used in multi-select mode)
   const detailRowId = useFilterState((s) => s.uuid) as
     | string
@@ -482,12 +459,9 @@ export function DataTableInfinite<TData extends RowData>({
                       {renderLiveRow?.({ row })}
                       <MemoizedRow
                         row={row}
-                        table={table}
                         selected={row.getIsSelected()}
                         detailRowId={hasSelectColumn ? detailRowId : undefined}
                         onRowClick={onRowClick}
-                        visibleColumnIds={visibleColumnIds}
-                        columnOrder={columnOrderString}
                       />
                     </React.Fragment>
                   ))
@@ -551,23 +525,16 @@ export function DataTableInfinite<TData extends RowData>({
 
 function Row<TData extends RowData>({
   row,
-  table,
   selected,
   detailRowId,
   onRowClick,
-  visibleColumnIds,
-  columnOrder,
 }: {
   row: Row<DataTableFeatures, TData>;
-  table: TTable<DataTableFeatures, TData>;
   // REMINDER: row.getIsSelected(); - just for memoization
   selected?: boolean;
   // When multi-select is enabled, the BYOS uuid for detail sheet (undefined = single-select mode)
   detailRowId?: string | null;
   onRowClick: (row: Row<DataTableFeatures, TData>) => void;
-  // REMINDER: for memoization - triggers re-render when columns change
-  visibleColumnIds: string;
-  columnOrder: string;
 }) {
   // REMINDER: rerender the row when live mode is toggled - used to opacity the row
   // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
@@ -602,45 +569,73 @@ function Row<TData extends RowData>({
         "data-[state=selected]:outline-solid",
         "data-detail:outline-solid",
         "data-checked:bg-muted/50",
-        table.options.meta?.getRowClassName?.(row),
+        row.table.options.meta?.getRowClassName?.(row),
       )}
     >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell
-          key={cell.id}
-          style={
-            cell.column.getCanResize()
-              ? {
-                  width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                  maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                }
-              : cell.column.columnDef.maxSize
-                ? {
-                    width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                    minWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                    maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                  }
-                : undefined
-          }
-          className={cn(
-            "border-border truncate border-b",
-            cell.column.columnDef.meta?.cellClassName,
-          )}
-        >
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
+      {/*
+        REMINDER: `row.getVisibleCells()` reads `columnVisibility` and
+        `columnOrder` behind a method call, which the React Compiler cannot see.
+        Compiled, it caches the cells on `row` identity alone, so toggling or
+        reordering a column would leave this row rendering its old cells — and
+        `React.memo` below means no parent re-render can fix that. `Subscribe`
+        re-runs this callback when those slices change, which is what lets the
+        rest of the file stay compiled instead of opting out with "use no memo".
+        https://tanstack.com/table/latest/docs/framework/react/guide/react-compiler
+      */}
+      <Subscribe
+        source={row.table.store}
+        selector={(state) => ({
+          columnVisibility: state.columnVisibility,
+          columnOrder: state.columnOrder,
+        })}
+      >
+        {() =>
+          row.getVisibleCells().map((cell) => (
+            <TableCell
+              key={cell.id}
+              style={
+                cell.column.getCanResize()
+                  ? {
+                      width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                      maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                    }
+                  : cell.column.columnDef.maxSize
+                    ? {
+                        width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                        minWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                        maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                      }
+                    : undefined
+              }
+              className={cn(
+                "border-border truncate border-b",
+                cell.column.columnDef.meta?.cellClassName,
+              )}
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableCell>
+          ))
+        }
+      </Subscribe>
     </TableRow>
   );
 }
 
+/**
+ * REMINDER: this comparator cannot be dropped in favour of the React Compiler.
+ * `createCoreRowModel` memoizes on `[table.options.data]`, so every
+ * `fetchNextPage` rebuilds the core row model and hands back a *new* `row`
+ * object for every already-rendered row. Comparing by `row.id` says "same row,
+ * same render" — a fact about this table that the compiler cannot infer, since
+ * it can only ever key on the identity it is given. Without it, each page fetch
+ * re-runs `cn()` (tailwind-merge), `getVisibleCells()` and a full reconcile for
+ * every row on screen, and that count only grows as you scroll.
+ */
 const MemoizedRow = React.memo(
   Row,
   (prev, next) =>
     prev.row.id === next.row.id &&
     prev.selected === next.selected &&
     prev.detailRowId === next.detailRowId &&
-    prev.onRowClick === next.onRowClick &&
-    prev.visibleColumnIds === next.visibleColumnIds &&
-    prev.columnOrder === next.columnOrder,
+    prev.onRowClick === next.onRowClick,
 ) as typeof Row;
