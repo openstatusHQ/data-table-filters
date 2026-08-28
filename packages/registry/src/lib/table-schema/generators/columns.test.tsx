@@ -358,6 +358,34 @@ describe("generateColumns — select column", () => {
     expect(typeof def!.header).toBe("function");
     expect(typeof def!.cell).toBe("function");
   });
+
+  // TanStack Table v9 redefined `getIsSomePageRowsSelected()` to mean "at least
+  // one selected", including when every row is selected — in v8 it meant "some
+  // but not all". The header checkbox reads both predicates, so pin the three
+  // states here: a regression would leave the box stuck on "indeterminate"
+  // while all rows are selected, which no typecheck can catch.
+  it.each([
+    ["none selected", false, false, false],
+    ["some but not all selected", false, true, "indeterminate"],
+    ["all selected", true, true, true],
+  ] as const)(
+    "resolves the header checkbox to %s under v9 selection semantics",
+    (_label, allSelected, someSelected, expected) => {
+      const [def] = defs({ select: col.select() });
+      const header = def!.header as (ctx: {
+        table: unknown;
+      }) => ReactElement<{ children: ReactElement<{ checked: unknown }> }>;
+
+      const checked = header({
+        table: {
+          getIsAllPageRowsSelected: () => allSelected,
+          getIsSomePageRowsSelected: () => someSelected,
+        },
+      }).props.children.props.checked;
+
+      expect(checked).toBe(expected);
+    },
+  );
 });
 
 // ── sizing ───────────────────────────────────────────────────────────────────

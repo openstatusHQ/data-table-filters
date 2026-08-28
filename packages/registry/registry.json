@@ -190,6 +190,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/table/features.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/constants/local-storage.ts",
           "type": "registry:lib"
         },
@@ -250,7 +254,7 @@
         "select"
       ],
       "dependencies": [
-        "@tanstack/react-table@^8.20.6",
+        "@tanstack/react-table@^9.2.3",
         "@tanstack/react-query@^5.101.4",
         "@tanstack/react-virtual@^3.11.2",
         "lucide-react@^0.469.0",
@@ -576,7 +580,7 @@
         "https://data-table.openstatus.dev/r/data-table-sheet.json",
         "https://data-table.openstatus.dev/r/data-table-filter-command.json"
       ],
-      "dependencies": ["@tanstack/react-table@^8.20.6"]
+      "dependencies": ["@tanstack/react-table@^9.2.3"]
     },
     {
       "name": "data-table-drizzle",
@@ -643,7 +647,7 @@
       ],
       "dependencies": [
         "@tanstack/react-query@^5.101.4",
-        "@tanstack/react-table@^8.20.6",
+        "@tanstack/react-table@^9.2.3",
         "superjson@^2.2.2"
       ]
     },

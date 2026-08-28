@@ -34,6 +34,7 @@ import {
   generateSheetFields,
   getDefaultColumnVisibility,
 } from "@dtf/registry/lib/table-schema";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { Check, Copy } from "lucide-react";
@@ -285,7 +286,11 @@ function ClientInner({
   );
 }
 
-function InfiniteFloatingBarSlot({ rows }: { rows: Row<ColumnSchema>[] }) {
+function InfiniteFloatingBarSlot({
+  rows,
+}: {
+  rows: Row<DataTableFeatures, ColumnSchema>[];
+}) {
   const { copy, isCopied } = useCopyToClipboard();
   return (
     <>

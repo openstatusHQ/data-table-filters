@@ -1,8 +1,5 @@
 "use client";
 
-// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
-"use no memo";
-
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
@@ -30,6 +27,7 @@ import {
   generateSheetFields,
 } from "@dtf/registry/lib/table-schema";
 import type { SchemaJSON } from "@dtf/registry/lib/table-schema";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
@@ -104,7 +102,7 @@ function BuilderTableQuery({
   schema,
 }: {
   dataId: string;
-  columns: ColumnDef<BuilderRow, unknown>[];
+  columns: ColumnDef<DataTableFeatures, BuilderRow>[];
   filterFields: DataTableFilterField<BuilderRow>[];
   sheetFields: SheetField<BuilderRow>[];
   schema: SchemaDefinition;

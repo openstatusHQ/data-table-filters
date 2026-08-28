@@ -15,7 +15,9 @@ import {
 import { useNuqsAdapter } from "@dtf/registry/lib/store/adapters/nuqs";
 import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
 import { DataTableStoreProvider } from "@dtf/registry/lib/store/provider/DataTableStoreProvider";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
 import { columns } from "./columns";
 import { filterFields as defaultFilterFields, sheetFields } from "./constants";
@@ -27,9 +29,7 @@ import type { SearchParamsType } from "./search-params";
 type FilterState = typeof filterSchema._type;
 
 type ColumnType =
-  (typeof columns)[number] extends import("@tanstack/react-table").ColumnDef<
-    infer T
-  >
+  (typeof columns)[number] extends ColumnDef<DataTableFeatures, infer T>
     ? T
     : never;
 

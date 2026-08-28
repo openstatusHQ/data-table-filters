@@ -17,7 +17,7 @@ import { DataTableFilterTimerange } from "./data-table-filter-timerange";
 // FIXME: use @container (especially for the slider element) to restructure elements
 
 // TODO: only pass the columns to generate the filters!
-// https://tanstack.com/table/v8/docs/framework/react/examples/filters
+// https://tanstack.com/table/latest/docs/framework/react/examples/filters
 
 // Pluggable filter registry — extend by adding entries
 export const FILTER_COMPONENTS: Record<string, React.ComponentType<any>> = {

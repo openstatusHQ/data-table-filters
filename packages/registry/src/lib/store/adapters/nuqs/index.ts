@@ -93,6 +93,22 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
     listenersRef.current.forEach((listener) => listener());
   }, [currentState]);
 
+  /**
+   * REMINDER: nuqs rebuilds its setter on every render — its own `useAdapter()`
+   * returns a fresh object literal, and that sits in the setter's dep array. So
+   * keeping `setNuqsState` in the adapter's dep array below rebuilt the adapter
+   * on every render, and the `useMemo` never held.
+   *
+   * That is not a local inefficiency: every consumer memoizes on the adapter
+   * identity — `DataTableStoreProvider`'s context value, `useFilterActions`'
+   * `setFilters`, `useFilterState`'s `subscribe` — and `setFilters` reaches the
+   * dep array of the `onRowClick` that `DataTableInfinite` hands to every
+   * memoized row. An unstable adapter therefore re-rendered every row in the
+   * table on every render of the table. Read the setter through a ref instead.
+   */
+  const setNuqsStateRef = useRef(setNuqsState);
+  setNuqsStateRef.current = setNuqsState;
+
   // Create stable adapter reference
   const adapter = useMemo<InternalStoreAdapter<T>>(() => {
     return {
@@ -130,7 +146,7 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
           nuqsPartial[key] = value === undefined ? null : value;
         }
 
-        setNuqsState((prev) => ({ ...prev, ...nuqsPartial }));
+        setNuqsStateRef.current((prev) => ({ ...prev, ...nuqsPartial }));
       },
 
       setField<K extends keyof T>(key: K, value: T[K]) {
@@ -188,7 +204,7 @@ export function useNuqsAdapter<T extends Record<string, unknown>>(
         listenersRef.current.forEach((listener) => listener());
       },
     };
-  }, [id, schema, defaults, initialState, setNuqsState]);
+  }, [id, schema, defaults]);
 
   return adapter;
 }

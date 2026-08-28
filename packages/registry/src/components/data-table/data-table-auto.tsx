@@ -1,8 +1,5 @@
 "use client";
 
-// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
-"use no memo";
-
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
@@ -94,11 +91,9 @@ function DataTableAutoInner({
   schema,
 }: {
   data: AutoRow[];
-  columns: React.ComponentProps<
-    typeof DataTableInfinite<AutoRow, unknown>
-  >["columns"];
+  columns: React.ComponentProps<typeof DataTableInfinite<AutoRow>>["columns"];
   filterFields: React.ComponentProps<
-    typeof DataTableInfinite<AutoRow, unknown>
+    typeof DataTableInfinite<AutoRow>
   >["filterFields"];
   sheetFields: SheetField<AutoRow>[];
   defaultColumnVisibility: Record<string, boolean>;

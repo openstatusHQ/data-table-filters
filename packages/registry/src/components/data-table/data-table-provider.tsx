@@ -1,18 +1,21 @@
 import { DataTableFilterField } from "@dtf/registry/components/data-table/types";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { ControlsProvider } from "@dtf/registry/providers/controls";
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnVisibilityState,
   PaginationState,
+  ReactTable,
+  RowData,
   RowSelectionState,
   SortingState,
   Table,
-  VisibilityState,
 } from "@tanstack/react-table";
 import { createContext, useContext, useMemo } from "react";
 import { DataTableStoreSync } from "./data-table-store-sync";
 
-// REMINDER: read about how to move controlled state out of the useReactTable hook
+// REMINDER: read about how to move controlled state out of the useTable hook
 // https://github.com/TanStack/table/discussions/4005#discussioncomment-7303569
 
 interface DataTableStateContextType {
@@ -20,30 +23,49 @@ interface DataTableStateContextType {
   sorting: SortingState;
   rowSelection: RowSelectionState;
   columnOrder: string[];
-  columnVisibility: VisibilityState;
+  columnVisibility: ColumnVisibilityState;
   pagination: PaginationState;
   enableColumnOrdering: boolean;
 }
 
-interface DataTableBaseContextType<TData = unknown, TValue = unknown> {
-  table: Table<TData>;
+/**
+ * `TFeatures` is pinned to `DataTableFeatures` rather than left generic.
+ *
+ * v9 declares it `in out` — invariant — so a component generic over `TFeatures`
+ * cannot resolve any feature API (TypeScript cannot evaluate the feature-map
+ * lookup behind an unresolved type parameter), and `Table<any, TData>` is not a
+ * supertype it could fall back to. Pinning is the only typing that works, and
+ * it costs nothing here: `features.ts` ships as part of the block, so a
+ * consumer who registers extra features edits that one file and every type
+ * below follows through `typeof dataTableFeatures`.
+ */
+interface DataTableBaseContextType<
+  TData extends RowData = RowData,
+  TValue = unknown,
+> {
+  // `ReactTable`, not the core `Table`: `table.state` (v9's replacement for
+  // `getState()`), `table.Subscribe` and `table.FlexRender` are added by
+  // `useTable` and consumers of this context read them.
+  table: ReactTable<DataTableFeatures, TData>;
   filterFields: DataTableFilterField<TData>[];
-  columns: ColumnDef<TData, TValue>[];
+  columns: ColumnDef<DataTableFeatures, TData, TValue>[];
   isLoading?: boolean;
   totalRows?: number;
   filterRows?: number;
   getFacetedUniqueValues?: (
-    table: Table<TData>,
+    table: Table<DataTableFeatures, TData>,
     columnId: string,
   ) => Map<string, number>;
   getFacetedMinMaxValues?: (
-    table: Table<TData>,
+    table: Table<DataTableFeatures, TData>,
     columnId: string,
   ) => undefined | [number, number];
 }
 
-interface DataTableContextType<TData = unknown, TValue = unknown>
-  extends DataTableStateContextType,
+interface DataTableContextType<
+  TData extends RowData = RowData,
+  TValue = unknown,
+> extends DataTableStateContextType,
     DataTableBaseContextType<TData, TValue> {}
 
 export const DataTableContext = createContext<DataTableContextType<
@@ -51,7 +73,7 @@ export const DataTableContext = createContext<DataTableContextType<
   any
 > | null>(null);
 
-export function DataTableProvider<TData, TValue>({
+export function DataTableProvider<TData extends RowData, TValue>({
   children,
   ...props
 }: Partial<DataTableStateContextType> &
@@ -90,7 +112,11 @@ export function DataTableProvider<TData, TValue>({
   );
 
   return (
-    <DataTableContext.Provider value={value}>
+    // `TData` is invariant in v9, so a concrete `DataTableContextType<TData>`
+    // is not assignable to the erased `<any, any>` the context is declared
+    // with — even though `any` is involved. React contexts cannot be generic,
+    // so the erasure happens here and `useDataTable` casts it back.
+    <DataTableContext.Provider value={value as DataTableContextType<any, any>}>
       <ControlsProvider>
         <DataTableStoreSync />
         {children}
@@ -99,7 +125,7 @@ export function DataTableProvider<TData, TValue>({
   );
 }
 
-export function useDataTable<TData, TValue>() {
+export function useDataTable<TData extends RowData, TValue>() {
   const context = useContext(DataTableContext);
 
   if (!context) {

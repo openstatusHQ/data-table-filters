@@ -72,7 +72,11 @@ export function useZustandAdapter<
   options: ZustandAdapterOptions<TFilters>,
 ): InternalStoreAdapter<TFilters> {
   const { id, initialState } = options;
-  const keys = getFilterSliceKeys(id);
+  // REMINDER: a fresh object literal per call, so calling it unmemoized rebuilt
+  // the adapter below on every render. See the note in the nuqs adapter: every
+  // consumer memoizes on the adapter identity, and an unstable one re-renders
+  // every row of the table on every render.
+  const keys = useMemo(() => getFilterSliceKeys(id), [id]);
   const defaults = useMemo(
     () => getSchemaDefaults(schema) as TFilters,
     [schema],
@@ -215,7 +219,7 @@ export function useZustandAdapter<
         return defaults;
       },
     };
-  }, [useStore, schema, id, defaults, initialState, keys]);
+  }, [useStore, schema, id, defaults, keys]);
 
   return adapter;
 }

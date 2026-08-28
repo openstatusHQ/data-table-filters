@@ -188,39 +188,77 @@ the table schema's declared semantics. They need no registration — the same in
 on the client, in the in-memory routes, and in SQL.
 
 Registration is only needed for columns you write by hand that refer to a filter function by
-name:
+name. In TanStack Table v9 that registration lives on the feature set, not on the table config:
 
 ```ts
-import { inDateRange, arrSome } from "@/lib/table/filterfns";
+// lib/table/features.ts
+import {
+  filterFn_arrIncludes,
+  filterFn_arrIncludesSome,
+  filterFn_equals,
+  filterFn_includesString,
+  filterFn_inNumberRange,
+  filterFn_weakEquals,
+  tableFeatures,
+} from "@tanstack/react-table";
+import { arrSome, inDateRange } from "@/lib/table/filterfns";
 
-// In your table config
-filterFns: {
-  inDateRange, arrSome;
-}
+export const dataTableFeatures = tableFeatures({
+  // ...features and row models
+  filterFns: {
+    // The six names `filterFn: 'auto'` resolves to. Register all of them —
+    // see the note below. `inDateRange` is the sixth, supplied further down.
+    includesString: filterFn_includesString,
+    inNumberRange: filterFn_inNumberRange,
+    equals: filterFn_equals,
+    arrIncludes: filterFn_arrIncludes,
+    weakEquals: filterFn_weakEquals,
+    // Not auto-resolved: registered because columns reference it by name.
+    arrIncludesSome: filterFn_arrIncludesSome,
+    // Ours. `inDateRange` deliberately shadows the v9 built-in of the same
+    // name, so it also serves `'auto'` for Date columns.
+    inDateRange,
+    arrSome,
+  },
+});
 ```
 
 - `inDateRange` — matches dates within [start, end] range
 - `arrSome` — matches if row value is in the filter array
 
+`filterFn` defaults to `'auto'`, which resolves by data type to `includesString`, `inNumberRange`,
+`equals`, `arrIncludes`, `inDateRange`, or `weakEquals`. Unlike v8, an unregistered name does not
+fall back — the column simply stops filtering (and warns in development) — so `features.ts` registers
+that whole set.
+
 ## Extending TanStack Table Types
+
+v9 threads a `TFeatures` type parameter through every table type, including the
+declaration-merged meta interfaces:
 
 ```tsx
 import "@tanstack/react-table";
 
 declare module "@tanstack/react-table" {
-  interface TableMeta<TData extends unknown> {
-    getRowClassName?: (row: Row<TData>) => string;
+  interface TableMeta<
+    in out TFeatures extends TableFeatures,
+    in out TData extends RowData,
+  > {
+    getRowClassName?: (row: Row<TFeatures, TData>) => string;
   }
 
-  interface ColumnMeta {
+  interface ColumnMeta<
+    in out TFeatures extends TableFeatures,
+    in out TData extends RowData,
+    TValue extends CellData = CellData,
+  > {
     headerClassName?: string;
     cellClassName?: string;
     label?: string;
-  }
-
-  interface FilterFns {
-    inDateRange?: FilterFn<any>;
-    arrSome?: FilterFn<any>;
+    kind?: string;
   }
 }
 ```
+
+The v8 `FilterFns` augmentation is gone — filter functions are registered in the
+`filterFns` slot on `tableFeatures()` instead (see [Filter Functions](#filter-functions)).

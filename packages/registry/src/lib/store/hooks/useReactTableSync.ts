@@ -9,16 +9,23 @@
 "use client";
 
 import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
-import type { ColumnFiltersState, Table } from "@tanstack/react-table";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
+import type {
+  ColumnFiltersState,
+  ReactTable,
+  RowData,
+} from "@tanstack/react-table";
 import { useCallback, useEffect, useRef } from "react";
 import { useFilterActions } from "./useFilterActions";
 import { useFilterState } from "./useFilterState";
 
-interface UseReactTableSyncOptions<TData> {
+interface UseReactTableSyncOptions<TData extends RowData> {
   /**
    * React Table instance
    */
-  table: Table<TData>;
+  // `ReactTable` rather than the core `Table`: this hook reads `table.state`,
+  // which `useTable` adds on top of the core instance.
+  table: ReactTable<DataTableFeatures, TData>;
 
   /**
    * Filter field definitions (to know which fields to sync)
@@ -36,7 +43,7 @@ interface UseReactTableSyncOptions<TData> {
  *
  * @example
  * ```typescript
- * const table = useReactTable({ ... });
+ * const table = useTable({ features, ... });
  *
  * useReactTableSync({
  *   table,
@@ -44,7 +51,7 @@ interface UseReactTableSyncOptions<TData> {
  * });
  * ```
  */
-export function useReactTableSync<TData>({
+export function useReactTableSync<TData extends RowData>({
   table,
   filterFields,
   onColumnFiltersChange,
@@ -85,7 +92,7 @@ export function useReactTableSync<TData>({
 
     isSyncingRef.current = true;
 
-    const columnFilters = table.getState().columnFilters;
+    const columnFilters = table.state.columnFilters;
     const updates: Record<string, unknown> = {};
 
     for (const field of filterFields) {

@@ -14,6 +14,7 @@ import {
   DataTableCellTimestamp,
 } from "@dtf/registry/components/data-table/data-table-cell";
 import type { SerializableDisplayConfig } from "@dtf/registry/lib/table-schema/types";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { cn } from "@dtf/registry/lib/utils";
 import { Table } from "@tanstack/react-table";
 import * as React from "react";
@@ -144,10 +145,13 @@ function renderSheetValue(
   }
 }
 
-interface DataTableSheetContentProps<TData, TMeta>
+// v9 requires `TData extends RowData` (`Record<string, any> | Array<any>`).
+// A details sheet indexes its row by field name, so the object half of that
+// union is the accurate constraint here.
+interface DataTableSheetContentProps<TData extends Record<string, any>, TMeta>
   extends React.HTMLAttributes<HTMLDListElement> {
   data?: TData;
-  table: Table<TData>;
+  table: Table<DataTableFeatures, TData>;
   fields: SheetField<TData, TMeta>[];
   filterFields: DataTableFilterField<TData>[];
   // totalRows: number;
@@ -160,7 +164,10 @@ interface DataTableSheetContentProps<TData, TMeta>
   };
 }
 
-export function DataTableSheetContent<TData, TMeta>({
+export function DataTableSheetContent<
+  TData extends Record<string, any>,
+  TMeta,
+>({
   data,
   table,
   className,

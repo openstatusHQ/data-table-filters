@@ -7,8 +7,9 @@ import {
   DropdownMenuTrigger,
 } from "@dtf/registry/components/ui/dropdown-menu";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { cn } from "@dtf/registry/lib/utils";
-import { Table } from "@tanstack/react-table";
+import { RowData, Table } from "@tanstack/react-table";
 import { endOfDay, endOfHour, startOfDay, startOfHour } from "date-fns";
 import {
   CalendarClock,
@@ -23,7 +24,7 @@ import {
 import { DataTableFilterField } from "../types";
 
 interface DataTableSheetRowActionProps<
-  TData,
+  TData extends RowData,
   TFields extends DataTableFilterField<TData>,
 > extends Omit<
     React.ComponentPropsWithRef<typeof DropdownMenuTrigger>,
@@ -32,11 +33,11 @@ interface DataTableSheetRowActionProps<
   fieldValue: TFields["value"];
   filterFields: TFields[];
   value: string | number | boolean;
-  table: Table<TData>;
+  table: Table<DataTableFeatures, TData>;
 }
 
 export function DataTableSheetRowAction<
-  TData,
+  TData extends RowData,
   TFields extends DataTableFilterField<TData>,
 >({
   fieldValue,

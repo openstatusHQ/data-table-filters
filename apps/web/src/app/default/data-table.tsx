@@ -1,8 +1,5 @@
 "use client";
 
-// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
-"use no memo";
-
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import { cn } from "@/lib/utils";
 import {
@@ -20,30 +17,24 @@ import { DataTableToolbar } from "@dtf/registry/components/data-table/data-table
 import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
 import { useLocalStorage } from "@dtf/registry/hooks/use-local-storage";
 import { getColumnVisibilityKey } from "@dtf/registry/lib/constants/local-storage";
+import {
+  dataTableFeatures,
+  type DataTableFeatures,
+} from "@dtf/registry/lib/table/features";
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnVisibilityState,
   PaginationState,
+  RowData,
   SortingState,
-  Table as TTable,
-  VisibilityState,
 } from "@tanstack/react-table";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFacetedMinMaxValues,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 import * as React from "react";
 import { filterSchema } from "./schema";
 
-export interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+export interface DataTableProps<TData extends RowData> {
+  columns: ColumnDef<DataTableFeatures, TData>[];
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;
   // TODO: add sortingColumnFilters
@@ -51,13 +42,13 @@ export interface DataTableProps<TData, TValue> {
   tableId?: string;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends RowData>({
   columns,
   data,
   defaultColumnFilters = [],
   filterFields = [],
   tableId = "default",
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -66,61 +57,45 @@ export function DataTable<TData, TValue>({
     pageSize: 10,
   });
   const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>(getColumnVisibilityKey(tableId), {});
+    useLocalStorage<ColumnVisibilityState>(getColumnVisibilityKey(tableId), {});
 
   // Reset pagination when filters change to avoid showing empty pages
   React.useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [columnFilters]);
 
-  // Custom getFacetedUniqueValues that handles array values
-  const customGetFacetedUniqueValues = React.useCallback(
-    (table: TTable<TData>, columnId: string) => () => {
-      const facets = getFacetedUniqueValues<TData>()(table, columnId)();
-      const customFacets = new Map();
-      for (const [key, value] of facets as any) {
-        if (Array.isArray(key)) {
-          for (const k of key) {
-            const prevValue = customFacets.get(k) || 0;
-            customFacets.set(k, prevValue + value);
-          }
-        } else {
-          const prevValue = customFacets.get(key) || 0;
-          customFacets.set(key, prevValue + value);
-        }
-      }
-      return customFacets;
-    },
-    [],
+  // REMINDER: memoized because v9's `useTable` returns a new table object
+  // whenever the options object changes identity, and `DataTableProvider`
+  // memoizes its context value on that — see `data-table-infinite.tsx`.
+  const tableOptions = React.useMemo(
+    () => ({
+      // Row models and the array-flattening `facetedUniqueValues` factory are
+      // registered once on the shared feature set — see `lib/table/features.ts`.
+      // v8 needed a bespoke flattening wrapper here; v9 puts it in a slot.
+      features: dataTableFeatures,
+      data,
+      columns,
+      state: { columnFilters, sorting, columnVisibility, pagination },
+      onColumnVisibilityChange: setColumnVisibility,
+      onColumnFiltersChange: setColumnFilters,
+      onSortingChange: setSorting,
+      onPaginationChange: setPagination,
+      // Enable global filtering support
+      enableFilters: true,
+      enableColumnFilters: true,
+    }),
+    [
+      data,
+      columns,
+      columnFilters,
+      sorting,
+      columnVisibility,
+      pagination,
+      setColumnVisibility,
+    ],
   );
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: { columnFilters, sorting, columnVisibility, pagination },
-    onColumnVisibilityChange: setColumnVisibility,
-    onColumnFiltersChange: setColumnFilters,
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-    getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    getFacetedUniqueValues: customGetFacetedUniqueValues,
-    // Enable global filtering support
-    enableFilters: true,
-    enableColumnFilters: true,
-  });
-
-  // Wrapper function for the provider (different signature)
-  const getFacetedUniqueValuesForProvider = React.useCallback(
-    (table: TTable<TData>, columnId: string): Map<string, number> => {
-      return customGetFacetedUniqueValues(table, columnId)();
-    },
-    [customGetFacetedUniqueValues],
-  );
+  const table = useTable(tableOptions);
 
   return (
     <DataTableProvider
@@ -130,7 +105,6 @@ export function DataTable<TData, TValue>({
       columnFilters={columnFilters}
       sorting={sorting}
       pagination={pagination}
-      getFacetedUniqueValues={getFacetedUniqueValuesForProvider}
     >
       <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
         <div

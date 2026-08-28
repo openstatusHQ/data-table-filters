@@ -236,8 +236,10 @@ Bidirectional sync between adapter filter state and React Table's `columnFilters
 
 ```tsx
 import { useReactTableSync } from "@/lib/store";
+import { dataTableFeatures } from "@/lib/table/features";
+import { useTable } from "@tanstack/react-table";
 
-const table = useReactTable({ ... });
+const table = useTable({ features: dataTableFeatures, ... });
 
 useReactTableSync({
   table,

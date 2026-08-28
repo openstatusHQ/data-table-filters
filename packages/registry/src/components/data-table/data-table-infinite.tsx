@@ -1,8 +1,5 @@
 "use client";
 
-// REMINDER: React Compiler is not compatible with Tanstack Table v8 https://github.com/TanStack/table/issues/5567
-"use no memo";
-
 import {
   Table,
   TableBody,
@@ -23,11 +20,13 @@ import {
   getColumnOrderKey,
   getColumnVisibilityKey,
 } from "@dtf/registry/lib/constants/local-storage";
-import { getFacetedUniqueValuesFlattened } from "@dtf/registry/lib/data-table/faceted";
 import { formatCompactNumber } from "@dtf/registry/lib/format";
 import { useFilterActions } from "@dtf/registry/lib/store/hooks/useFilterActions";
 import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
-import { arrSome, inDateRange } from "@dtf/registry/lib/table/filterfns";
+import {
+  dataTableFeatures,
+  type DataTableFeatures,
+} from "@dtf/registry/lib/table/features";
 import { cn } from "@dtf/registry/lib/utils";
 import {
   type FetchNextPageOptions,
@@ -37,47 +36,68 @@ import {
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnVisibilityState,
   Row,
+  RowData,
   RowSelectionState,
   SortingState,
   TableOptions,
   Table as TTable,
-  VisibilityState,
 } from "@tanstack/react-table";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFacetedRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getFacetedMinMaxValues as getTTableFacetedMinMaxValues,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, Subscribe, useTable } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
+import { canLoadMore } from "./utils";
 
 // TODO: add a possible chartGroupBy
-export interface DataTableInfiniteProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  getRowClassName?: (row: Row<TData>) => string;
+/**
+ * BREAKING (v9): the `TValue` type parameter is gone.
+ *
+ * It forced every column in the array to share one cell-value type, which was
+ * never true. v9 makes per-column `TValue` explicit (`ColumnDef<TFeatures,
+ * TData, TValue>`, and `columnHelper.columns([...])` to preserve it), and the
+ * `columns` table option is typed against the default `CellData`. Every call
+ * site in this repo passed `unknown` anyway.
+ */
+export interface DataTableInfiniteProps<TData extends RowData> {
+  columns: ColumnDef<DataTableFeatures, TData>[];
+  /**
+   * Extra classes for each row, re-evaluated whenever this callback's identity
+   * changes — that is how live mode dims the rows behind it.
+   *
+   * Keep it stable (the React Compiler, or a `useCallback`): it is compared by
+   * the row memo, so a fresh arrow per render re-renders every row on screen.
+   */
+  getRowClassName?: (row: Row<DataTableFeatures, TData>) => string;
   // REMINDER: make sure to pass the correct id to access the rows
-  getRowId?: TableOptions<TData>["getRowId"];
+  getRowId?: TableOptions<DataTableFeatures, TData>["getRowId"];
   data: TData[];
   defaultColumnFilters?: ColumnFiltersState;
   defaultColumnSorting?: SortingState;
   defaultRowSelection?: RowSelectionState;
-  defaultColumnVisibility?: VisibilityState;
+  defaultColumnVisibility?: ColumnVisibilityState;
   filterFields?: DataTableFilterField<TData>[];
-  // REMINDER: close to the same signature as the `getFacetedUniqueValues` of the `useReactTable`
+  // REMINDER: close to the same signature as the `facetedUniqueValues` slot on
+  // `tableFeatures()`, but resolved rather than curried
   getFacetedUniqueValues?: (
-    table: TTable<TData>,
+    table: TTable<DataTableFeatures, TData>,
     columnId: string,
   ) => Map<string, number>;
   getFacetedMinMaxValues?: (
-    table: TTable<TData>,
+    table: TTable<DataTableFeatures, TData>,
     columnId: string,
   ) => undefined | [number, number];
   totalRows?: number;
+  /**
+   * How many rows match the active filters, as reported by the server.
+   *
+   * Must be authoritative relative to what `fetchNextPage` can actually return:
+   * both the "Load More" button (`canLoadMore`) and the scroll auto-load stop
+   * once `totalRowsFetched` reaches it. A value that under-reports the real
+   * count makes the remaining rows unreachable, because there is no other way
+   * to trigger a fetch. Leave it undefined rather than pass a guess — the
+   * button then falls back to `hasNextPage` alone.
+   */
   filterRows?: number;
   totalRowsFetched?: number;
   isFetching?: boolean;
@@ -90,7 +110,9 @@ export interface DataTableInfiniteProps<TData, TValue> {
     options?: FetchPreviousPageOptions | undefined,
   ) => Promise<unknown>;
   refetch: (options?: RefetchOptions | undefined) => void;
-  renderLiveRow?: (props?: { row: Row<TData> }) => React.ReactNode;
+  renderLiveRow?: (props?: {
+    row: Row<DataTableFeatures, TData>;
+  }) => React.ReactNode;
   // Used to store column order and visibility in local storage for specific data-table namespace
   tableId?: string;
   // Optional slots for extensibility
@@ -103,7 +125,7 @@ export interface DataTableInfiniteProps<TData, TValue> {
   className?: string;
 }
 
-export function DataTableInfinite<TData, TValue>({
+export function DataTableInfinite<TData extends RowData>({
   columns,
   getRowClassName,
   getRowId,
@@ -133,7 +155,7 @@ export function DataTableInfinite<TData, TValue>({
   footerSlot,
   floatingBarSlot,
   className,
-}: DataTableInfiniteProps<TData, TValue>) {
+}: DataTableInfiniteProps<TData>) {
   const [columnFilters, setColumnFilters] =
     React.useState<ColumnFiltersState>(defaultColumnFilters);
   const [sorting, setSorting] =
@@ -145,7 +167,7 @@ export function DataTableInfinite<TData, TValue>({
     [],
   );
   const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>(
+    useLocalStorage<ColumnVisibilityState>(
       getColumnVisibilityKey(tableId),
       defaultColumnVisibility,
     );
@@ -172,6 +194,14 @@ export function DataTableInfinite<TData, TValue>({
     [fetchNextPage, isFetching, filterRows, totalRowsFetched],
   );
 
+  // See `canLoadMore` — `hasNextPage` stays true past the final row because the
+  // API only signals the end with an empty page.
+  const hasMoreToLoad = canLoadMore({
+    hasNextPage,
+    filterRows,
+    totalRowsFetched,
+  });
+
   React.useEffect(() => {
     const observer = new ResizeObserver(() => {
       const rect = topBarRef.current?.getBoundingClientRect();
@@ -187,34 +217,72 @@ export function DataTableInfinite<TData, TValue>({
     return () => observer.unobserve(topBar);
   }, [topBarRef]);
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
+  /**
+   * BREAKING (v9): the options object has to be memoized by the caller.
+   *
+   * `useTable` ends with `useMemo(() => ({ ...table, options, state }), [table,
+   * options, state])`, so an inline literal hands back a *new* table object on
+   * every render — v8's `useReactTable` returned one stable instance. That
+   * identity is what `DataTableProvider` memoizes its context value on, so an
+   * unmemoized literal re-renders every `useDataTable()` consumer (toolbar,
+   * filter controls, command, sheet, floating bar) and re-runs the
+   * `useReactTableSync` effect on each ResizeObserver tick, `isFetching` flip
+   * and live poll.
+   */
+  const tableOptions = React.useMemo(
+    () => ({
+      // Row models, filter fns and sort fns all live on the feature set in v9 —
+      // see `lib/table/features.ts`.
+      features: dataTableFeatures,
+      // This table paginates on the server (cursor-based, via `fetchNextPage`),
+      // so client pagination must be off. It is not optional: the shared feature
+      // set registers `paginatedRowModel` for the paginated blocks, and v9
+      // routes `getRowModel()` through it whenever that slot exists and this
+      // flag is falsy — silently truncating every page to the default pageSize
+      // of 10.
+      manualPagination: true,
+      data,
+      columns,
+      state: {
+        columnFilters,
+        sorting,
+        columnVisibility,
+        rowSelection,
+        columnOrder,
+      },
+      enableMultiRowSelection: hasSelectColumn,
+      columnResizeMode: "onChange" as const,
+      getRowId,
+      onColumnVisibilityChange: setColumnVisibility,
+      onColumnFiltersChange: setColumnFilters,
+      onRowSelectionChange: setRowSelection,
+      onSortingChange: setSorting,
+      onColumnOrderChange: setColumnOrder,
+      debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
+      // Kept on `meta` for consumers that declared it in `react-table.d.ts`;
+      // `Row` reads the prop, not this — see the reminder on that prop.
+      meta: { getRowClassName },
+    }),
+    [
+      data,
+      columns,
       columnFilters,
       sorting,
       columnVisibility,
       rowSelection,
       columnOrder,
-    },
-    enableMultiRowSelection: hasSelectColumn,
-    columnResizeMode: "onChange",
-    getRowId,
-    onColumnVisibilityChange: setColumnVisibility,
-    onColumnFiltersChange: setColumnFilters,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnOrderChange: setColumnOrder,
-    getSortedRowModel: getSortedRowModel(),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValuesFlattened(),
-    getFacetedMinMaxValues: getTTableFacetedMinMaxValues(),
-    filterFns: { inDateRange, arrSome },
-    debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
-    meta: { getRowClassName },
-  });
+      hasSelectColumn,
+      getRowId,
+      setColumnVisibility,
+      setColumnFilters,
+      setRowSelection,
+      setSorting,
+      setColumnOrder,
+      getRowClassName,
+    ],
+  );
+
+  const table = useTable(tableOptions);
 
   // Clear multi-select when filters or sorting change
   React.useEffect(() => {
@@ -226,7 +294,7 @@ export function DataTableInfinite<TData, TValue>({
   // NOTE: Filter, sort, and selection syncing is now handled by DataTableStoreSync
 
   /**
-   * https://tanstack.com/table/v8/docs/guide/column-sizing#advanced-column-resizing-performance
+   * https://tanstack.com/table/latest/docs/guide/column-sizing#advanced-column-resizing-performance
    * Instead of calling `column.getSize()` on every render for every header
    * and especially every data cell (very expensive),
    * we will calculate all column sizes at once at the root table level in a useMemo
@@ -245,9 +313,9 @@ export function DataTableInfinite<TData, TValue>({
     }
     return colSizes;
   }, [
-    table.getState().columnSizingInfo,
-    table.getState().columnSizing,
-    table.getState().columnVisibility,
+    table.state.columnResizing,
+    table.state.columnSizing,
+    table.state.columnVisibility,
   ]);
 
   useHotKey(() => {
@@ -255,38 +323,25 @@ export function DataTableInfinite<TData, TValue>({
     setColumnVisibility(defaultColumnVisibility);
   }, "u");
 
-  // Memoize column state as strings for efficient row memoization comparison
-  const visibleColumnIds = React.useMemo(
-    () =>
-      table
-        .getVisibleLeafColumns()
-        .map((c) => c.id)
-        .join(","),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [table.getState().columnVisibility],
-  );
-  const columnOrderString = React.useMemo(
-    () => columnOrder.join(","),
-    [columnOrder],
-  );
-
-  // Read BYOS uuid for detail row visual state (only used in multi-select mode)
-  const detailRowId = useFilterState((s) => s.uuid) as
-    | string
-    | null
-    | undefined;
   const { setFilters } = useFilterActions();
 
-  // Stable callback for row clicks — lifted here so Row doesn't need useFilterActions
+  /**
+   * REMINDER: the detail row id is deliberately *not* read here.
+   * Subscribing to it at this level re-rendered the entire table on every
+   * detail click, and — because the callback closed over it — handed every
+   * `MemoizedRow` a new `onRowClick`, so all rows re-rendered too. Each row
+   * reads its own detail state instead and passes it back in, which keeps this
+   * callback stable across selections.
+   */
   const onRowClick = React.useCallback(
-    (row: Row<TData>) => {
+    (row: Row<DataTableFeatures, TData>, isDetail: boolean) => {
       if (hasSelectColumn) {
-        setFilters({ uuid: detailRowId === row.id ? null : row.id });
+        setFilters({ uuid: isDetail ? null : row.id });
       } else {
         row.toggleSelected();
       }
     },
-    [hasSelectColumn, detailRowId, setFilters],
+    [hasSelectColumn, setFilters],
   );
 
   return (
@@ -326,7 +381,7 @@ export function DataTableInfinite<TData, TValue>({
             <div className="flex h-[46px] items-center justify-between gap-3">
               <p className="text-foreground px-2 font-medium">Filters</p>
               <div>
-                {table.getState().columnFilters.length ? (
+                {table.state.columnFilters.length ? (
                   <DataTableResetButton />
                 ) : null}
               </div>
@@ -449,12 +504,10 @@ export function DataTableInfinite<TData, TValue>({
                       {renderLiveRow?.({ row })}
                       <MemoizedRow
                         row={row}
-                        table={table}
                         selected={row.getIsSelected()}
-                        detailRowId={hasSelectColumn ? detailRowId : undefined}
+                        isMultiSelect={hasSelectColumn}
                         onRowClick={onRowClick}
-                        visibleColumnIds={visibleColumnIds}
-                        columnOrder={columnOrderString}
+                        getRowClassName={getRowClassName}
                       />
                     </React.Fragment>
                   ))
@@ -473,7 +526,7 @@ export function DataTableInfinite<TData, TValue>({
                 )}
                 <TableRow className="hover:bg-transparent data-[state=selected]:bg-transparent">
                   <TableCell colSpan={columns.length} className="text-center">
-                    {hasNextPage || isFetching || isLoading ? (
+                    {hasMoreToLoad || isFetching || isLoading ? (
                       <Button
                         disabled={isFetching || isLoading}
                         onClick={() => fetchNextPage()}
@@ -516,36 +569,44 @@ export function DataTableInfinite<TData, TValue>({
  * e.g. DataTableFilterControls, DataTableFilterCommand, DataTableToolbar, DataTableHeader
  */
 
-function Row<TData>({
+function Row<TData extends RowData>({
   row,
-  table,
   selected,
-  detailRowId,
+  isMultiSelect,
   onRowClick,
-  visibleColumnIds,
-  columnOrder,
+  getRowClassName,
 }: {
-  row: Row<TData>;
-  table: TTable<TData>;
+  row: Row<DataTableFeatures, TData>;
   // REMINDER: row.getIsSelected(); - just for memoization
   selected?: boolean;
-  // When multi-select is enabled, the BYOS uuid for detail sheet (undefined = single-select mode)
-  detailRowId?: string | null;
-  onRowClick: (row: Row<TData>) => void;
-  // REMINDER: for memoization - triggers re-render when columns change
-  visibleColumnIds: string;
-  columnOrder: string;
+  // Whether the table renders a select column (multi-select + detail sheet)
+  isMultiSelect: boolean;
+  onRowClick: (row: Row<DataTableFeatures, TData>, isDetail: boolean) => void;
+  /**
+   * REMINDER: taken as a prop rather than read back off
+   * `row.table.options.meta`. Compiled, `cn(..., row.table.options.meta
+   * ?.getRowClassName?.(row))` caches on `row` identity alone — the callback is
+   * invisible to the compiler behind that method chain — so the class was
+   * computed once per row object and never again. This row used to subscribe to
+   * `live` to force the recompute; the subscription re-rendered every row on
+   * every toggle and changed nothing. As a prop the callback is a real
+   * dependency of both the compiler and the `MemoizedRow` comparator, so the
+   * class follows live mode and nothing else re-renders for it.
+   */
+  getRowClassName?: (row: Row<DataTableFeatures, TData>) => string;
 }) {
-  // REMINDER: rerender the row when live mode is toggled - used to opacity the row
-  // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
-  useFilterState((s) => s.live);
-
-  const isMultiSelect = detailRowId !== undefined;
-  const isDetail = isMultiSelect && detailRowId === row.id;
+  /**
+   * REMINDER: selects a boolean, not the uuid itself, so `useSyncExternalStore`
+   * bails out for every row whose detail state did not flip. `isMultiSelect`
+   * belongs *inside* the selector: in single-select mode `DataTableStoreSync`
+   * still writes the selected row id to `uuid`, and folding the flag in keeps
+   * that write from waking any row at all.
+   */
+  const isDetail = useFilterState((s) => isMultiSelect && s.uuid === row.id);
 
   const handleClick = React.useCallback(() => {
-    onRowClick(row);
-  }, [onRowClick, row]);
+    onRowClick(row, isDetail);
+  }, [onRowClick, row, isDetail]);
 
   return (
     <TableRow
@@ -569,45 +630,83 @@ function Row<TData>({
         "data-[state=selected]:outline-solid",
         "data-detail:outline-solid",
         "data-checked:bg-muted/50",
-        table.options.meta?.getRowClassName?.(row),
+        getRowClassName?.(row),
       )}
     >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell
-          key={cell.id}
-          style={
-            cell.column.getCanResize()
-              ? {
-                  width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                  maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                }
-              : cell.column.columnDef.maxSize
-                ? {
-                    width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                    minWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                    maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                  }
-                : undefined
-          }
-          className={cn(
-            "border-border truncate border-b",
-            cell.column.columnDef.meta?.cellClassName,
-          )}
-        >
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
+      {/*
+        REMINDER: the cells read table state behind method calls
+        (`row.getVisibleCells()` → `columnVisibility` + `columnOrder`,
+        `row.getIsSelected()` in the select column's checkbox), which the React
+        Compiler cannot see. Compiled, it caches this callback on `row` identity
+        and the `<Subscribe>` element on that callback, so the whole subtree is
+        an unchanged element that React bails out of re-rendering — no prop
+        change on `Row`, and no parent re-render, can reach it. Every slice the
+        cells render from therefore has to be selected here: `Subscribe`'s own
+        store subscription is the only thing that re-runs them. That is what
+        lets the rest of the file stay compiled instead of opting out with
+        "use no memo".
+        https://tanstack.com/table/latest/docs/framework/react/guide/react-compiler
+      */}
+      <Subscribe
+        source={row.table.store}
+        selector={(state) => ({
+          columnVisibility: state.columnVisibility,
+          columnOrder: state.columnOrder,
+          // REMINDER: this row's own selection, not the whole `rowSelection`
+          // map — `shallow` then re-renders the rows that actually flipped
+          // instead of every mounted row on every checkbox click.
+          selected: state.rowSelection?.[row.id] ?? false,
+        })}
+      >
+        {() =>
+          row.getVisibleCells().map((cell) => (
+            <TableCell
+              key={cell.id}
+              style={
+                cell.column.getCanResize()
+                  ? {
+                      width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                      maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                    }
+                  : cell.column.columnDef.maxSize
+                    ? {
+                        width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                        minWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                        maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
+                      }
+                    : undefined
+              }
+              className={cn(
+                "border-border truncate border-b",
+                cell.column.columnDef.meta?.cellClassName,
+              )}
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableCell>
+          ))
+        }
+      </Subscribe>
     </TableRow>
   );
 }
 
+/**
+ * REMINDER: this comparator cannot be dropped in favour of the React Compiler.
+ * `createCoreRowModel` memoizes on `[table.options.data]`, so every
+ * `fetchNextPage` rebuilds the core row model and hands back a *new* `row`
+ * object for every already-rendered row. Comparing by `row.id` says "same row,
+ * same render" — a fact about this table that the compiler cannot infer, since
+ * it can only ever key on the identity it is given. Without it, each page fetch
+ * re-runs `cn()` (tailwind-merge), `getVisibleCells()` and a full reconcile for
+ * every row on screen, and that count only grows as you scroll.
+ */
 const MemoizedRow = React.memo(
   Row,
   (prev, next) =>
     prev.row.id === next.row.id &&
     prev.selected === next.selected &&
-    prev.detailRowId === next.detailRowId &&
+    prev.isMultiSelect === next.isMultiSelect &&
     prev.onRowClick === next.onRowClick &&
-    prev.visibleColumnIds === next.visibleColumnIds &&
-    prev.columnOrder === next.columnOrder,
+    // Changes when live mode is toggled — see the prop's own reminder.
+    prev.getRowClassName === next.getRowClassName,
 ) as typeof Row;

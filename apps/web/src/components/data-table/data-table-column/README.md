@@ -13,13 +13,14 @@ Usage Example:
 "use client";
 
 import { DataTableColumnLevelIndicator } from "@/components/data-table/data-table-column/data-table-column-level-indicator";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export type ColumnSchema = {
   // ...
 };
 
-export const columns: ColumnDef<ColumnSchema>[] = [
+export const columns: ColumnDef<DataTableFeatures, ColumnSchema>[] = [
   {
     accessorKey: "level",
     header: "",
