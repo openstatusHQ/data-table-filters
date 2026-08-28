@@ -54,6 +54,7 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
       live: null,
       cursor: null,
       direction: null,
+      _meta: null,
     });
 
     return infiniteQueryOptions({
@@ -61,19 +62,14 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
       queryFn: async ({ pageParam }) => {
         const cursorDate = new Date(pageParam.cursor);
         const direction = pageParam.direction as "next" | "prev" | undefined;
-        let serialize = config.searchParamsSerializer({
+        const serialize = config.searchParamsSerializer({
           ...search,
           cursor: cursorDate,
           direction,
           uuid: null,
           live: null,
+          _meta: pageParam._meta ? null : false,
         });
-
-        if (!pageParam.isInitial) {
-          serialize += serialize.includes("?")
-            ? "&_meta=false"
-            : "?_meta=false";
-        }
 
         const response = await fetch(
           `${getBaseUrl()}${config.apiEndpoint}${serialize}`,
@@ -84,14 +80,14 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
       initialPageParam: {
         cursor: initialCursor,
         direction: "next",
-        isInitial: true,
+        _meta: true,
       },
       getPreviousPageParam: (firstPage) => {
         if (!firstPage.prevCursor) return null;
         return {
           cursor: firstPage.prevCursor,
           direction: "prev",
-          isInitial: false,
+          _meta: false,
         };
       },
       getNextPageParam: (lastPage) => {
@@ -99,7 +95,7 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
         return {
           cursor: lastPage.nextCursor,
           direction: "next",
-          isInitial: false,
+          _meta: false,
         };
       },
       refetchOnWindowFocus: false,

@@ -26,6 +26,7 @@
  */
 
 import {
+  createParser,
   createSearchParamsCache,
   createSerializer,
   type ParserBuilder,
@@ -110,11 +111,19 @@ export function createNuqsSearchParams<
   // Generate parsers from schema
   const schemaParsers = schemaToNuqsParsers(schema);
 
-  // Combine with extra parsers
+  // Combine with extra parsers, plus a built-in parser for the server-side
+  // metadata control param (`_meta=false` skips the meta payload on pagination).
+  // Registered here so `createDataTableQueryOptions` can serialize it.
   const searchParamsParser = {
     ...schemaParsers,
+    _meta: createParser({
+      parse: (value) => value !== "false",
+      serialize: (value) => (value ? "true" : "false"),
+    }),
     ...extraParsers,
-  } as SchemaToNuqsParsers<TSchema> & TExtra;
+  } as SchemaToNuqsParsers<TSchema> & {
+    _meta: ParserBuilder<boolean>;
+  } & TExtra;
 
   // Create cache and serializer
   const searchParamsCache = createSearchParamsCache(searchParamsParser);
