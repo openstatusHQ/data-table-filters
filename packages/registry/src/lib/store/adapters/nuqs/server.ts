@@ -49,6 +49,15 @@ export interface CreateNuqsSearchParamsOptions<
 }
 
 /**
+ * Combined parser object: schema fields + extra parsers + the built-in
+ * `_meta` control parser used for meta skipping on pagination.
+ */
+export type NuqsParsers<
+  TSchema extends SchemaDefinition,
+  TExtra extends Record<string, ParserBuilder<any>> = {},
+> = SchemaToNuqsParsers<TSchema> & { _meta: ParserBuilder<boolean> } & TExtra;
+
+/**
  * Result of createNuqsSearchParams
  */
 export interface NuqsSearchParamsResult<
@@ -58,20 +67,20 @@ export interface NuqsSearchParamsResult<
   /**
    * Combined parser object for useQueryStates
    */
-  searchParamsParser: SchemaToNuqsParsers<TSchema> & TExtra;
+  searchParamsParser: NuqsParsers<TSchema, TExtra>;
 
   /**
    * Search params cache for server-side parsing
    */
   searchParamsCache: ReturnType<
-    typeof createSearchParamsCache<SchemaToNuqsParsers<TSchema> & TExtra>
+    typeof createSearchParamsCache<NuqsParsers<TSchema, TExtra>>
   >;
 
   /**
    * Serializer for converting state to URL string
    */
   searchParamsSerializer: ReturnType<
-    typeof createSerializer<SchemaToNuqsParsers<TSchema> & TExtra>
+    typeof createSerializer<NuqsParsers<TSchema, TExtra>>
   >;
 }
 
@@ -121,9 +130,7 @@ export function createNuqsSearchParams<
       serialize: (value) => (value ? "true" : "false"),
     }),
     ...extraParsers,
-  } as SchemaToNuqsParsers<TSchema> & {
-    _meta: ParserBuilder<boolean>;
-  } & TExtra;
+  } as NuqsParsers<TSchema, TExtra>;
 
   // Create cache and serializer
   const searchParamsCache = createSearchParamsCache(searchParamsParser);
