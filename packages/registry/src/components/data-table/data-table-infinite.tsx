@@ -280,23 +280,25 @@ export function DataTableInfinite<TData extends RowData>({
     setColumnVisibility(defaultColumnVisibility);
   }, "u");
 
-  // Read BYOS uuid for detail row visual state (only used in multi-select mode)
-  const detailRowId = useFilterState((s) => s.uuid) as
-    | string
-    | null
-    | undefined;
   const { setFilters } = useFilterActions();
 
-  // Stable callback for row clicks — lifted here so Row doesn't need useFilterActions
+  /**
+   * REMINDER: the detail row id is deliberately *not* read here.
+   * Subscribing to it at this level re-rendered the entire table on every
+   * detail click, and — because the callback closed over it — handed every
+   * `MemoizedRow` a new `onRowClick`, so all rows re-rendered too. Each row
+   * reads its own detail state instead and passes it back in, which keeps this
+   * callback stable across selections.
+   */
   const onRowClick = React.useCallback(
-    (row: Row<DataTableFeatures, TData>) => {
+    (row: Row<DataTableFeatures, TData>, isDetail: boolean) => {
       if (hasSelectColumn) {
-        setFilters({ uuid: detailRowId === row.id ? null : row.id });
+        setFilters({ uuid: isDetail ? null : row.id });
       } else {
         row.toggleSelected();
       }
     },
-    [hasSelectColumn, detailRowId, setFilters],
+    [hasSelectColumn, setFilters],
   );
 
   return (
@@ -460,7 +462,7 @@ export function DataTableInfinite<TData extends RowData>({
                       <MemoizedRow
                         row={row}
                         selected={row.getIsSelected()}
-                        detailRowId={hasSelectColumn ? detailRowId : undefined}
+                        isMultiSelect={hasSelectColumn}
                         onRowClick={onRowClick}
                       />
                     </React.Fragment>
@@ -526,26 +528,32 @@ export function DataTableInfinite<TData extends RowData>({
 function Row<TData extends RowData>({
   row,
   selected,
-  detailRowId,
+  isMultiSelect,
   onRowClick,
 }: {
   row: Row<DataTableFeatures, TData>;
   // REMINDER: row.getIsSelected(); - just for memoization
   selected?: boolean;
-  // When multi-select is enabled, the BYOS uuid for detail sheet (undefined = single-select mode)
-  detailRowId?: string | null;
-  onRowClick: (row: Row<DataTableFeatures, TData>) => void;
+  // Whether the table renders a select column (multi-select + detail sheet)
+  isMultiSelect: boolean;
+  onRowClick: (row: Row<DataTableFeatures, TData>, isDetail: boolean) => void;
 }) {
   // REMINDER: rerender the row when live mode is toggled - used to opacity the row
   // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
   useFilterState((s) => s.live);
 
-  const isMultiSelect = detailRowId !== undefined;
-  const isDetail = isMultiSelect && detailRowId === row.id;
+  /**
+   * REMINDER: selects a boolean, not the uuid itself, so `useSyncExternalStore`
+   * bails out for every row whose detail state did not flip. `isMultiSelect`
+   * belongs *inside* the selector: in single-select mode `DataTableStoreSync`
+   * still writes the selected row id to `uuid`, and folding the flag in keeps
+   * that write from waking any row at all.
+   */
+  const isDetail = useFilterState((s) => isMultiSelect && s.uuid === row.id);
 
   const handleClick = React.useCallback(() => {
-    onRowClick(row);
-  }, [onRowClick, row]);
+    onRowClick(row, isDetail);
+  }, [onRowClick, row, isDetail]);
 
   return (
     <TableRow
@@ -573,13 +581,17 @@ function Row<TData extends RowData>({
       )}
     >
       {/*
-        REMINDER: `row.getVisibleCells()` reads `columnVisibility` and
-        `columnOrder` behind a method call, which the React Compiler cannot see.
-        Compiled, it caches the cells on `row` identity alone, so toggling or
-        reordering a column would leave this row rendering its old cells — and
-        `React.memo` below means no parent re-render can fix that. `Subscribe`
-        re-runs this callback when those slices change, which is what lets the
-        rest of the file stay compiled instead of opting out with "use no memo".
+        REMINDER: the cells read table state behind method calls
+        (`row.getVisibleCells()` → `columnVisibility` + `columnOrder`,
+        `row.getIsSelected()` in the select column's checkbox), which the React
+        Compiler cannot see. Compiled, it caches this callback on `row` identity
+        and the `<Subscribe>` element on that callback, so the whole subtree is
+        an unchanged element that React bails out of re-rendering — no prop
+        change on `Row`, and no parent re-render, can reach it. Every slice the
+        cells render from therefore has to be selected here: `Subscribe`'s own
+        store subscription is the only thing that re-runs them. That is what
+        lets the rest of the file stay compiled instead of opting out with
+        "use no memo".
         https://tanstack.com/table/latest/docs/framework/react/guide/react-compiler
       */}
       <Subscribe
@@ -587,6 +599,10 @@ function Row<TData extends RowData>({
         selector={(state) => ({
           columnVisibility: state.columnVisibility,
           columnOrder: state.columnOrder,
+          // REMINDER: this row's own selection, not the whole `rowSelection`
+          // map — `shallow` then re-renders the rows that actually flipped
+          // instead of every mounted row on every checkbox click.
+          selected: state.rowSelection?.[row.id] ?? false,
         })}
       >
         {() =>
@@ -636,6 +652,6 @@ const MemoizedRow = React.memo(
   (prev, next) =>
     prev.row.id === next.row.id &&
     prev.selected === next.selected &&
-    prev.detailRowId === next.detailRowId &&
+    prev.isMultiSelect === next.isMultiSelect &&
     prev.onRowClick === next.onRowClick,
 ) as typeof Row;
