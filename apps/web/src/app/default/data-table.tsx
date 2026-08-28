@@ -64,22 +64,38 @@ export function DataTable<TData extends RowData>({
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [columnFilters]);
 
-  const table = useTable({
-    // Row models and the array-flattening `facetedUniqueValues` factory are
-    // registered once on the shared feature set — see `lib/table/features.ts`.
-    // v8 needed a bespoke flattening wrapper here; v9 puts it in a slot.
-    features: dataTableFeatures,
-    data,
-    columns,
-    state: { columnFilters, sorting, columnVisibility, pagination },
-    onColumnVisibilityChange: setColumnVisibility,
-    onColumnFiltersChange: setColumnFilters,
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-    // Enable global filtering support
-    enableFilters: true,
-    enableColumnFilters: true,
-  });
+  // REMINDER: memoized because v9's `useTable` returns a new table object
+  // whenever the options object changes identity, and `DataTableProvider`
+  // memoizes its context value on that — see `data-table-infinite.tsx`.
+  const tableOptions = React.useMemo(
+    () => ({
+      // Row models and the array-flattening `facetedUniqueValues` factory are
+      // registered once on the shared feature set — see `lib/table/features.ts`.
+      // v8 needed a bespoke flattening wrapper here; v9 puts it in a slot.
+      features: dataTableFeatures,
+      data,
+      columns,
+      state: { columnFilters, sorting, columnVisibility, pagination },
+      onColumnVisibilityChange: setColumnVisibility,
+      onColumnFiltersChange: setColumnFilters,
+      onSortingChange: setSorting,
+      onPaginationChange: setPagination,
+      // Enable global filtering support
+      enableFilters: true,
+      enableColumnFilters: true,
+    }),
+    [
+      data,
+      columns,
+      columnFilters,
+      sorting,
+      columnVisibility,
+      pagination,
+      setColumnVisibility,
+    ],
+  );
+
+  const table = useTable(tableOptions);
 
   return (
     <DataTableProvider

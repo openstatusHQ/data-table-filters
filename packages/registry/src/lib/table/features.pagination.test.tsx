@@ -112,11 +112,17 @@ describe("DataTableInfinite — server pagination opt-out", () => {
       "utf8",
     );
 
-    // Whitespace-tolerant: anchoring on the literal `useTable({` would break
-    // the moment prettier reformatted the call, and would then fail for a
-    // reason that has nothing to do with the contract being pinned here.
-    const call = source.match(/useTable\(\s*\{[\s\S]*/);
-    expect(call).not.toBeNull();
-    expect(call?.[0]).toMatch(/manualPagination\s*:\s*true/);
+    // Anchored on the memoized options object the call site builds, not on the
+    // call itself — v9 requires the caller to memoize (see
+    // `table-options-identity.test.tsx`), so the literal no longer sits inside
+    // `useTable(...)`. Whitespace-tolerant: anchoring on the exact formatting
+    // would fail the moment prettier reflowed it, for a reason that has nothing
+    // to do with the contract being pinned here.
+    const options = source.match(
+      /const tableOptions = React\.useMemo\([\s\S]*/,
+    );
+    expect(options).not.toBeNull();
+    expect(options?.[0]).toMatch(/manualPagination\s*:\s*true/);
+    expect(source).toMatch(/useTable\(tableOptions\)/);
   });
 });

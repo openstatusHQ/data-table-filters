@@ -5,32 +5,38 @@ import * as React from "react";
 // NOTE: Must be called inside DataTableStoreProvider context
 export function useLiveMode<TData extends { date: Date }>(data: TData[]) {
   const live = useFilterState<{ live: boolean }, boolean>((s) => s.live);
-  // REMINDER: used to capture the live mode on timestamp
-  const liveTimestamp = React.useRef<number | undefined>(
+  /**
+   * REMINDER: the captured timestamp is state, not a ref.
+   *
+   * It is read during render — `getRowClassName` dims every row older than it —
+   * so writing it from an effect left the render that reacted to the toggle
+   * still looking at the previous value, and nothing re-rendered afterwards.
+   * Switching live mode *off* triggers no refetch of its own (`live` is not part
+   * of the query key), so the rows stayed dimmed until an unrelated fetch
+   * rebuilt them. As state, the write schedules the render that clears them.
+   */
+  const [timestamp, setTimestamp] = React.useState<number | undefined>(() =>
     live ? new Date().getTime() : undefined,
   );
 
   React.useEffect(() => {
-    if (live) liveTimestamp.current = new Date().getTime();
-    else liveTimestamp.current = undefined;
+    setTimestamp(live ? new Date().getTime() : undefined);
   }, [live]);
 
   const anchorRow = React.useMemo(() => {
     if (!live) return undefined;
 
-    // eslint-disable-next-line react-hooks/refs
     const item = data.find((item) => {
-      // return first item that is there if not liveTimestamp
-      if (!liveTimestamp.current) return true;
-      // return first item that is after the liveTimestamp
-      if (item.date.getTime() > liveTimestamp.current) return false;
+      // return first item that is there if not timestamp
+      if (!timestamp) return true;
+      // return first item that is after the timestamp
+      if (item.date.getTime() > timestamp) return false;
       return true;
-      // return first item if no liveTimestamp
+      // return first item if no timestamp
     });
 
     return item;
-  }, [live, data]);
+  }, [live, data, timestamp]);
 
-  // eslint-disable-next-line react-hooks/refs
-  return { row: anchorRow, timestamp: liveTimestamp.current };
+  return { row: anchorRow, timestamp };
 }

@@ -61,6 +61,13 @@ import { canLoadMore } from "./utils";
  */
 export interface DataTableInfiniteProps<TData extends RowData> {
   columns: ColumnDef<DataTableFeatures, TData>[];
+  /**
+   * Extra classes for each row, re-evaluated whenever this callback's identity
+   * changes — that is how live mode dims the rows behind it.
+   *
+   * Keep it stable (the React Compiler, or a `useCallback`): it is compared by
+   * the row memo, so a fresh arrow per render re-renders every row on screen.
+   */
   getRowClassName?: (row: Row<DataTableFeatures, TData>) => string;
   // REMINDER: make sure to pass the correct id to access the rows
   getRowId?: TableOptions<DataTableFeatures, TData>["getRowId"];
@@ -210,36 +217,72 @@ export function DataTableInfinite<TData extends RowData>({
     return () => observer.unobserve(topBar);
   }, [topBarRef]);
 
-  const table = useTable({
-    // Row models, filter fns and sort fns all live on the feature set in v9 —
-    // see `lib/table/features.ts`.
-    features: dataTableFeatures,
-    // This table paginates on the server (cursor-based, via `fetchNextPage`), so
-    // client pagination must be off. It is not optional: the shared feature set
-    // registers `paginatedRowModel` for the paginated blocks, and v9 routes
-    // `getRowModel()` through it whenever that slot exists and this flag is
-    // falsy — silently truncating every page to the default pageSize of 10.
-    manualPagination: true,
-    data,
-    columns,
-    state: {
+  /**
+   * BREAKING (v9): the options object has to be memoized by the caller.
+   *
+   * `useTable` ends with `useMemo(() => ({ ...table, options, state }), [table,
+   * options, state])`, so an inline literal hands back a *new* table object on
+   * every render — v8's `useReactTable` returned one stable instance. That
+   * identity is what `DataTableProvider` memoizes its context value on, so an
+   * unmemoized literal re-renders every `useDataTable()` consumer (toolbar,
+   * filter controls, command, sheet, floating bar) and re-runs the
+   * `useReactTableSync` effect on each ResizeObserver tick, `isFetching` flip
+   * and live poll.
+   */
+  const tableOptions = React.useMemo(
+    () => ({
+      // Row models, filter fns and sort fns all live on the feature set in v9 —
+      // see `lib/table/features.ts`.
+      features: dataTableFeatures,
+      // This table paginates on the server (cursor-based, via `fetchNextPage`),
+      // so client pagination must be off. It is not optional: the shared feature
+      // set registers `paginatedRowModel` for the paginated blocks, and v9
+      // routes `getRowModel()` through it whenever that slot exists and this
+      // flag is falsy — silently truncating every page to the default pageSize
+      // of 10.
+      manualPagination: true,
+      data,
+      columns,
+      state: {
+        columnFilters,
+        sorting,
+        columnVisibility,
+        rowSelection,
+        columnOrder,
+      },
+      enableMultiRowSelection: hasSelectColumn,
+      columnResizeMode: "onChange" as const,
+      getRowId,
+      onColumnVisibilityChange: setColumnVisibility,
+      onColumnFiltersChange: setColumnFilters,
+      onRowSelectionChange: setRowSelection,
+      onSortingChange: setSorting,
+      onColumnOrderChange: setColumnOrder,
+      debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
+      // Kept on `meta` for consumers that declared it in `react-table.d.ts`;
+      // `Row` reads the prop, not this — see the reminder on that prop.
+      meta: { getRowClassName },
+    }),
+    [
+      data,
+      columns,
       columnFilters,
       sorting,
       columnVisibility,
       rowSelection,
       columnOrder,
-    },
-    enableMultiRowSelection: hasSelectColumn,
-    columnResizeMode: "onChange",
-    getRowId,
-    onColumnVisibilityChange: setColumnVisibility,
-    onColumnFiltersChange: setColumnFilters,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnOrderChange: setColumnOrder,
-    debugAll: process.env.NEXT_PUBLIC_TABLE_DEBUG === "true",
-    meta: { getRowClassName },
-  });
+      hasSelectColumn,
+      getRowId,
+      setColumnVisibility,
+      setColumnFilters,
+      setRowSelection,
+      setSorting,
+      setColumnOrder,
+      getRowClassName,
+    ],
+  );
+
+  const table = useTable(tableOptions);
 
   // Clear multi-select when filters or sorting change
   React.useEffect(() => {
@@ -464,6 +507,7 @@ export function DataTableInfinite<TData extends RowData>({
                         selected={row.getIsSelected()}
                         isMultiSelect={hasSelectColumn}
                         onRowClick={onRowClick}
+                        getRowClassName={getRowClassName}
                       />
                     </React.Fragment>
                   ))
@@ -530,6 +574,7 @@ function Row<TData extends RowData>({
   selected,
   isMultiSelect,
   onRowClick,
+  getRowClassName,
 }: {
   row: Row<DataTableFeatures, TData>;
   // REMINDER: row.getIsSelected(); - just for memoization
@@ -537,11 +582,19 @@ function Row<TData extends RowData>({
   // Whether the table renders a select column (multi-select + detail sheet)
   isMultiSelect: boolean;
   onRowClick: (row: Row<DataTableFeatures, TData>, isDetail: boolean) => void;
+  /**
+   * REMINDER: taken as a prop rather than read back off
+   * `row.table.options.meta`. Compiled, `cn(..., row.table.options.meta
+   * ?.getRowClassName?.(row))` caches on `row` identity alone — the callback is
+   * invisible to the compiler behind that method chain — so the class was
+   * computed once per row object and never again. This row used to subscribe to
+   * `live` to force the recompute; the subscription re-rendered every row on
+   * every toggle and changed nothing. As a prop the callback is a real
+   * dependency of both the compiler and the `MemoizedRow` comparator, so the
+   * class follows live mode and nothing else re-renders for it.
+   */
+  getRowClassName?: (row: Row<DataTableFeatures, TData>) => string;
 }) {
-  // REMINDER: rerender the row when live mode is toggled - used to opacity the row
-  // via the `getRowClassName` prop - but for some reasons it wil render the row on data fetch
-  useFilterState((s) => s.live);
-
   /**
    * REMINDER: selects a boolean, not the uuid itself, so `useSyncExternalStore`
    * bails out for every row whose detail state did not flip. `isMultiSelect`
@@ -577,7 +630,7 @@ function Row<TData extends RowData>({
         "data-[state=selected]:outline-solid",
         "data-detail:outline-solid",
         "data-checked:bg-muted/50",
-        row.table.options.meta?.getRowClassName?.(row),
+        getRowClassName?.(row),
       )}
     >
       {/*
@@ -653,5 +706,7 @@ const MemoizedRow = React.memo(
     prev.row.id === next.row.id &&
     prev.selected === next.selected &&
     prev.isMultiSelect === next.isMultiSelect &&
-    prev.onRowClick === next.onRowClick,
+    prev.onRowClick === next.onRowClick &&
+    // Changes when live mode is toggled — see the prop's own reminder.
+    prev.getRowClassName === next.getRowClassName,
 ) as typeof Row;
