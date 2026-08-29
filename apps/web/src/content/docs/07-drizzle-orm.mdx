@@ -411,3 +411,10 @@ const { db, table, where, range, bucketMs } = result.scope;
 | `columns`             | the column mapping                                                 |
 
 This replaces the older `result.allConditions`, which exposed just enough to make every caller rebuild the range, the bucket size, and the WHERE composition by hand.
+
+## Row actions
+
+The write-side sibling of `createDrizzleHandler` is `createActionHandler`, from the
+`data-table-actions` block. It shares the same `filters` and `columnMapping`, so an
+action's availability guard and a filter-scoped request compile through the very
+same `buildWhereConditions` the list endpoint uses. See [Row Actions](/docs/actions).

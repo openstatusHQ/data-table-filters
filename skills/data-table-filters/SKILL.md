@@ -3,7 +3,7 @@ name: data-table-filters
 description: >
   Install and extend data-table-filters — a React data table system with faceted filters
   (checkbox, input, slider, timerange), sorting, infinite scroll, virtualization, and BYOS
-  state management. Delivered as 11 shadcn registry blocks installable via
+  state management. Delivered as 12 shadcn registry blocks installable via
   `npx shadcn@latest add`. Use when: (1) installing data-table-filters from the shadcn
   registry, (2) adding extension blocks (command palette, AI filters, cell renderers, sheet panel,
   store adapters, schema system, Drizzle helpers, query layer), (3) configuring store
@@ -27,7 +27,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 
 | Block                            | Install URL                                           | What it adds                                                                                                               |
 | -------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (56 files)                                                       |
+| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (57 files)                                                       |
 | **data-table-filter-command**    | `.../r/data-table-filter-command.json`                | Command palette with history + keyboard shortcuts                                                                          |
 | **data-table-cell**              | `.../r/data-table-cell.json`                          | 12 cell renderers (text, code, number, bar, heatmap, gauge, badge, boolean, star, status-code, level-indicator, timestamp) |
 | **data-table-sheet**             | `.../r/data-table-sheet.json`                         | Row detail side panel (auto-installs cells)                                                                                |
@@ -38,6 +38,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 | **data-table-query**             | `.../r/data-table-query.json`                         | React Query infinite query integration                                                                                     |
 | **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                                                         |
 | **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                                                       |
+| **data-table-actions**           | `.../r/data-table-actions.json`                       | Row, bulk, and filter-scoped actions rendered from server metadata (requires drizzle)                                      |
 
 All URLs use base `https://data-table.openstatus.dev`.
 
@@ -131,6 +132,63 @@ import { DataTableFloatingBar } from "@/components/data-table/data-table-floatin
   }
 />;
 ```
+
+### Row Actions → `data-table-actions`
+
+Install: `npx shadcn@latest add .../r/data-table-actions.json` (requires the drizzle block).
+
+Actions are declared once on the server, next to their Drizzle handler. The list endpoint advertises them (`meta.actions`) and stamps each row with the ids that apply (`_actions`); the UI renders from that JSON and never learns what an action does.
+
+```ts
+// app/<table>/api/actions.ts
+export const actionHandler = createActionHandler({
+  db,
+  table,
+  filters,
+  columnMapping, // same as createDrizzleHandler, plus the id column
+  idColumn: "uuid",
+  basePath: "/<table>/api/actions",
+  actions: {
+    acknowledge: {
+      label: "Acknowledge",
+      scope: ["row", "bulk", "filter"],
+      when: { level: ["error"] }, // filter values — evaluated in JS for _actions, compiled to SQL as the WHERE guard
+      handler: async (ctx, tx) =>
+        (
+          await tx
+            .update(table)
+            .set({ level: "warning" })
+            .where(ctx.where)
+            .returning()
+        ).length,
+    },
+  },
+});
+
+// GET route: data = actionHandler.annotate(result.data); meta.actions = actionHandler.descriptors
+// POST app/<table>/api/actions/[id]/route.ts: actionHandler.execute(id, await req.json(), { actor })
+```
+
+```tsx
+// client.tsx
+<DataTableActionsProvider
+  actions={meta?.actions}
+  getRowId={(r) => r.uuid}
+  queryKeyPrefix="<prefix>"
+>
+  <DataTableInfinite
+    columns={[...generateColumns(schema), createActionsColumn()]}
+    toolbarActions={[<DataTableActionsFilterMenu key="actions" />]}
+    floatingBarSlot={
+      <DataTableFloatingBar>
+        {({ rows }) => <DataTableActionsBar rows={rows} />}
+      </DataTableFloatingBar>
+    }
+  />
+</DataTableActionsProvider>
+```
+
+`_actions` is a hint; the handler's `ctx.where` (ids ∩ `when`) is the authority, so `applied` may be lower than the ids sent. Actions enqueue (flip a status), they don't execute. Outcomes are sonner toasts — mount `<Toaster />` once in the layout (`npx shadcn@latest add sonner`).
 
 ### Cell Renderers → column definitions
 

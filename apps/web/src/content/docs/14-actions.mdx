@@ -1,0 +1,292 @@
+---
+title: "Row Actions"
+description: "Declare actions next to their Drizzle handlers; the table renders row menus, a bulk bar, and apply-to-all-matching from server metadata"
+author: "openstatus"
+publishedAt: "2026-08-28"
+faq:
+  - question: "Does the UI know what an action does?"
+    answer: "No. The server publishes an ActionDescriptor per action (id, label, scope, variant, confirm, href) and stamps each row with the ids that currently apply. The client renders buttons from that JSON and POSTs ids back. The same UI renders a dead-letter queue, an audit log with no actions, or anything in between."
+  - question: "What if a row changed between fetch and click?"
+    answer: "The per-row _actions list is a hint. The handler receives a WHERE that is the requested ids (or filter) intersected with the action's `when` guard, so a row that no longer qualifies is skipped, never mis-applied. The response's `applied` count reflects this and the UI shows 'applied to 2 of 3'."
+  - question: "Is delivery exactly-once?"
+    answer: "No — at-least-once. The server keeps no command ledger; cmd_id flows through to the handler and the audit hook so you can dedupe if an action is not idempotent. Most actions should be: flip a status, let a worker do the work."
+  - question: "Who sets the actor?"
+    answer: "The route, from whatever it authenticated. execute() takes it as an option and the handler never reads it from the request body, so a client cannot claim to be someone else."
+  - question: "How does 'apply to all matching' stay safe?"
+    answer: "The client sends the filter values it is showing plus expected_count (the server's own filterRowCount). Inside the transaction the handler counts the set first and answers 409 count_mismatch with the actual number if it drifted. The UI shows the new count and offers to apply anyway, which resends without expected_count."
+---
+
+# Row Actions
+
+The `data-table-actions` block adds a write path to a server-side table: row
+menus, a bulk bar for selections, and an "apply to every matching row" menu —
+all rendered from metadata the list endpoint publishes. Actions are declared
+once, next to their Drizzle handler, and the UI never learns what a "replay" is.
+
+## Installation
+
+```bash
+npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-actions.json
+```
+
+Requires the [Drizzle](/docs/drizzle-orm) block: `createActionHandler` shares
+its `filters` and `columnMapping`.
+
+## The contract
+
+The list response gains two things:
+
+```json
+{
+  "data": [
+    {
+      "uuid": "msg_1",
+      "level": "error",
+      "_actions": ["acknowledge", "delete"]
+    }
+  ],
+  "meta": {
+    "actions": [
+      {
+        "id": "acknowledge",
+        "label": "Acknowledge",
+        "scope": ["row", "bulk", "filter"],
+        "href": "/drizzle/api/actions/acknowledge"
+      },
+      {
+        "id": "delete",
+        "label": "Delete",
+        "scope": ["row", "bulk"],
+        "variant": "destructive",
+        "confirm": "Delete {count} logs?",
+        "href": "/drizzle/api/actions/delete"
+      }
+    ]
+  }
+}
+```
+
+A click is one request:
+
+```http
+POST /drizzle/api/actions/acknowledge
+{ "scope": "ids", "ids": ["msg_1", "msg_7"], "cmd_id": "cmd_…" }
+→ { "applied": 2 }
+```
+
+or, for every row matching the current filters:
+
+```http
+POST /drizzle/api/actions/acknowledge
+{ "scope": "filter", "filter": { "level": ["error"] }, "expected_count": 40, "cmd_id": "cmd_…" }
+→ { "applied": 40 }             // or 409 { "error": "count_mismatch", "actual": 38 }
+```
+
+Errors are `{ "error": code }` with `unknown_action` (404), `scope_not_allowed`
+(400), `invalid_request` (400), `count_mismatch` (409, with `actual`),
+`forbidden` (403) and `failed` (500).
+
+Three rules make the contract hold:
+
+- **`_actions` is a hint; the WHERE is the authority.** The handler's
+  `ctx.where` is the requested ids (or filter) intersected with the action's
+  `when` guard. A stale client cannot make it touch a row the action does not
+  apply to; `applied` simply comes back lower.
+- **Actions enqueue, they don't execute.** A replay sets `status = pending`
+  and lets the worker do the work. That is why one short transaction is
+  enough and why a handler does no I/O.
+- **At-least-once.** There is no ledger. `cmd_id` reaches the handler and the
+  audit hook; if an action is not idempotent, that is where to dedupe.
+
+## Server
+
+### Declare the actions
+
+```ts
+// app/drizzle/api/actions.ts
+import { createActionHandler } from "@/lib/drizzle/actions";
+import { defineFilters } from "@/lib/filters";
+
+export const actionHandler = createActionHandler({
+  db,
+  table: logs,
+  filters: defineFilters(tableSchema.definition), // same as createDrizzleHandler
+  columnMapping, // same as createDrizzleHandler — with the id column added
+  idColumn: "uuid", // a schema key in columnMapping
+  basePath: "/drizzle/api/actions", // href = `${basePath}/${id}`
+  actions: {
+    acknowledge: {
+      label: "Acknowledge",
+      scope: ["row", "bulk", "filter"], // default: ["row", "bulk"]
+      when: { level: ["error"] },
+      handler: async (ctx, tx) => {
+        const rows = await tx
+          .update(logs)
+          .set({ level: "warning" })
+          .where(ctx.where)
+          .returning({ uuid: logs.uuid });
+        return rows.length;
+      },
+    },
+    delete: {
+      label: "Delete",
+      variant: "destructive",
+      confirm: "Delete {count} logs?",
+      handler: async (ctx, tx) =>
+        (await tx.delete(logs).where(ctx.where).returning()).length,
+    },
+  },
+  audit: (event) => auditLog.insert(event), // after commit
+});
+```
+
+`idColumn` is the row identity every request is keyed by. It is usually not
+filtered or sorted, so it may not be in the `columnMapping` you wrote for the
+list handler yet — add it (`uuid: logs.uuid`); the mapping doubles as the
+projection, so the rows the client gets carry it. Like `createDrizzleHandler`,
+construction throws if any filterable column is missing from the mapping — a
+`when` guard on an unmapped column would otherwise silently match every row.
+
+`when` is **filter values**, in exactly the shape the list endpoint reads from
+its search params. One declaration, two engines: `filters.matches` evaluates it
+per row to compute `_actions`, and the SQL engine compiles it into the handler's
+WHERE guard. Keys must be filterable columns — a typo throws at construction
+instead of silently matching every row. For availability the filter semantics
+cannot express, `available: (row) => boolean` is a JS-only escape hatch; it
+shapes `_actions` but has no SQL counterpart, so the handler must guard itself.
+
+The handler runs inside `db.transaction` and **returns the applied row count**
+(`.returning()` makes that driver-agnostic). Throwing rolls everything back.
+
+What the client sees is built by an explicit pick-list — `id`, `label`,
+`scope`, `variant`, `confirm`, `href` — never by spreading the definition, so
+a handler, a `when` clause, or a stray secret cannot leak into `meta.actions`.
+
+### Advertise them from the list route
+
+```ts
+// app/drizzle/api/route.ts
+const result = await handler.execute(search);
+const data = actionHandler.annotate(result.data); // adds `_actions` per row
+
+return Response.json(
+  SuperJSON.stringify({
+    data,
+    meta: {
+      totalRowCount: result.totalRowCount,
+      filterRowCount: result.filterRowCount,
+      chartData,
+      facets: result.facets,
+      actions: actionHandler.descriptors,
+    },
+    prevCursor: result.prevCursor,
+    nextCursor: result.nextCursor,
+  }),
+);
+```
+
+### Accept commands
+
+```ts
+// app/drizzle/api/actions/[id]/route.ts
+import { ActionHandlerError } from "@/lib/drizzle/actions";
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const session = await auth(); // your auth — the actor is never read from the body
+  try {
+    const result = await actionHandler.execute(id, await req.json(), {
+      actor: session.email,
+    });
+    return Response.json(result);
+  } catch (error) {
+    if (error instanceof ActionHandlerError) {
+      return Response.json(error.toJSON(), { status: error.status });
+    }
+    return Response.json({ error: "failed" }, { status: 500 });
+  }
+}
+```
+
+Per-action authorization belongs here too: check the session's role before
+calling `execute`. Hiding a button is not authorization.
+
+## Client
+
+```tsx
+// client.tsx
+import {
+  createActionsColumn,
+  DataTableActionsBar,
+  DataTableActionsFilterMenu,
+  DataTableActionsProvider,
+} from "@/components/data-table/data-table-actions";
+import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
+
+const columns = [
+  ...generateColumns<ColumnSchema>(tableSchema.definition),
+  createActionsColumn<ColumnSchema>(),
+];
+
+function ClientInner() {
+  const { data } = useInfiniteQuery(dataOptions(search));
+  const actions = data?.pages.at(-1)?.meta.actions;
+
+  return (
+    <DataTableActionsProvider<ColumnSchema>
+      actions={actions}
+      getRowId={(row) => row.uuid}
+      queryKeyPrefix="drizzle" // invalidated after every applied action
+    >
+      <DataTableInfinite
+        columns={columns}
+        toolbarActions={[<DataTableActionsFilterMenu key="actions" />]}
+        floatingBarSlot={
+          <DataTableFloatingBar<ColumnSchema>>
+            {({ rows }) => <DataTableActionsBar rows={rows} />}
+          </DataTableFloatingBar>
+        }
+        // …
+      />
+    </DataTableActionsProvider>
+  );
+}
+```
+
+Three surfaces, all reading the same provider:
+
+| Component                    | Scope    | Where                               | Sends                                    |
+| ---------------------------- | -------- | ----------------------------------- | ---------------------------------------- |
+| `createActionsColumn()`      | `row`    | a `⋯` menu cell, per row            | `{ scope: "ids", ids: [rowId] }`         |
+| `DataTableActionsBar`        | `bulk`   | inside `DataTableFloatingBar`       | only the **eligible** selected ids       |
+| `DataTableActionsFilterMenu` | `filter` | the toolbar's `toolbarActions` slot | current filter values + `expected_count` |
+
+Outcomes are reported with [sonner](https://sonner.emilkowal.ski) toasts, so
+mount a `<Toaster />` once in your layout (`npx shadcn@latest add sonner`) —
+without it a failed or partial action gives no visible feedback.
+
+A bulk button stays enabled while _any_ selected row qualifies; the request
+carries only the eligible ids and the confirmation says how many were skipped.
+`confirm` on a descriptor opens an alert dialog with `{count}` interpolated;
+`variant: "destructive"` styles both the button and the dialog's action. After
+a success the provider toasts the result, clears the selection, and invalidates
+`[queryKeyPrefix]`, so rows that no longer match leave the view.
+
+For the filter scope the client sends `expected_count` from the server's own
+`filterRowCount` — the rows matching the filters alone. The server measures
+drift on that same set, then applies within the action's `when` guard, so
+"applied to 12 of 40 matching" is the guard at work, not a partial failure.
+
+Multi-row selection needs `col.select()` in the schema, as for any floating
+bar.
+
+## Demo
+
+The [/drizzle](/drizzle) demo declares `acknowledge` (error → warning) and
+`delete`. Because it runs against a shared database, writes are opt-in: set
+`ALLOW_DEMO_ACTIONS=1` and the list endpoint starts advertising actions;
+without it, `POST /drizzle/api/actions/*` answers 403 and the UI renders no
+buttons.

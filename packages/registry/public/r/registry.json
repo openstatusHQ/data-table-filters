@@ -202,6 +202,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/actions/types.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/data-table/faceted.ts",
           "type": "registry:lib"
         },
@@ -767,6 +771,70 @@
       ],
       "dependencies": ["@modelcontextprotocol/sdk@^1.30.0", "zod@^4.3.6"],
       "docs": "https://data-table.openstatus.dev/docs/mcp"
+    },
+    {
+      "name": "data-table-actions",
+      "type": "registry:block",
+      "title": "Data Table Row Actions",
+      "description": "Row, bulk, and filter-scoped actions declared next to their Drizzle handlers and rendered from JSON: the list endpoint advertises what can be done to each row, the UI renders buttons, one POST applies it in a transaction.",
+      "files": [
+        {
+          "path": "src/lib/actions/index.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/actions/define-actions.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/drizzle/actions.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/components/data-table/data-table-actions/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-actions/provider.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-actions/confirm-dialog.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-actions/bar.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-actions/column.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-actions/filter-menu.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-actions/utils.ts",
+          "type": "registry:component"
+        }
+      ],
+      "registryDependencies": [
+        "https://data-table.openstatus.dev/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table-drizzle.json",
+        "https://data-table.openstatus.dev/r/data-table-query.json",
+        "button",
+        "dropdown-menu",
+        "alert-dialog"
+      ],
+      "dependencies": [
+        "@tanstack/react-query@^5.101.4",
+        "drizzle-orm@^0.45.2",
+        "zod@^4.3.6",
+        "lucide-react@^0.469.0",
+        "sonner@^1.7.2"
+      ],
+      "docs": "https://data-table.openstatus.dev/docs/actions"
     }
   ]
 }

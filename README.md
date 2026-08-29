@@ -27,6 +27,7 @@ npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
 | `data-table-query`             | `.../r/data-table-query.json`             | React Query infinite query integration                                                                                     |
 | `data-table-filter-command-ai` | `.../r/data-table-filter-command-ai.json` | AI-powered natural language → filter inference                                                                             |
 | `data-table-mcp`               | `.../r/data-table-mcp.json`               | MCP server endpoint for AI agents                                                                                          |
+| `data-table-actions`           | `.../r/data-table-actions.json`           | Row, bulk, and filter-scoped actions rendered from server metadata                                                         |
 
 All URLs use base `https://data-table.openstatus.dev`.
 

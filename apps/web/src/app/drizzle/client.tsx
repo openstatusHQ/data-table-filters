@@ -8,7 +8,14 @@ import { TimelineChart } from "@/components/data-table/data-table-infinite/timel
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
 import { getLevelRowClassName } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
+import {
+  createActionsColumn,
+  DataTableActionsBar,
+  DataTableActionsFilterMenu,
+  DataTableActionsProvider,
+} from "@dtf/registry/components/data-table/data-table-actions";
 import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
+import { DataTableFloatingBar } from "@dtf/registry/components/data-table/data-table-floating-bar";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
@@ -40,6 +47,9 @@ import { tableSchema } from "./table-schema";
 const columns = [
   ...generateColumns<ColumnSchema>(tableSchema.definition),
   timingPhasesColumn,
+  // Renders from `meta.actions` + each row's `_actions`; empty when the server
+  // advertises none.
+  createActionsColumn<ColumnSchema>(),
 ];
 
 const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
@@ -89,6 +99,7 @@ function ClientInner() {
   const metadata = lastPage?.meta?.metadata;
   const chartData = lastPage?.meta?.chartData;
   const facets = lastPage?.meta?.facets;
+  const actions = lastPage?.meta?.actions;
   const totalFetched = flatData?.length;
 
   const { sort, size, uuid, cursor, direction, live, ...filter } = search;
@@ -131,76 +142,88 @@ function ClientInner() {
   }, [filter]);
 
   return (
-    <DataTableInfinite
-      columns={columns}
-      data={flatData}
-      totalRows={totalDBRowCount}
-      filterRows={filterDBRowCount}
-      totalRowsFetched={totalFetched}
-      defaultColumnFilters={defaultColumnFilters}
-      defaultColumnSorting={sort ? [sort] : undefined}
-      defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
-      defaultColumnVisibility={defaultColumnVisibility}
-      filterFields={dynamicFilterFields}
-      isFetching={isFetching}
-      isLoading={isLoading}
-      fetchNextPage={fetchNextPage}
-      hasNextPage={hasNextPage}
-      fetchPreviousPage={fetchPreviousPage}
-      refetch={refetch}
-      getRowClassName={(row) => {
-        const rowTimestamp = row.original.date.getTime();
-        const isPast = rowTimestamp <= (liveMode.timestamp || -1);
-        const levelClassName = getLevelRowClassName(row.original.level);
-        return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
-      }}
+    <DataTableActionsProvider<ColumnSchema>
+      actions={actions}
       getRowId={(row) => row.uuid}
-      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
-      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
-      renderLiveRow={(props) => {
-        if (!liveMode.timestamp) return null;
-        if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
-        return <LiveRow colSpan={columns.length - 1} />;
-      }}
-      commandSlot={
-        <DataTableFilterAICommand
-          schema={filterSchema.definition}
-          tableSchema={tableSchema.definition}
-          api="/drizzle/api/ai"
-          tableId="drizzle"
-        />
-      }
-      toolbarActions={[
-        <RefreshButton key="refresh" onClick={refetch} />,
-        fetchPreviousPage ? (
-          <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />
-        ) : null,
-      ]}
-      chartSlot={
-        <TimelineChart
-          data={chartData ?? []}
-          className="-mb-2"
-          columnId="date"
-        />
-      }
-      footerSlot={
-        <SocialsFooter
-          showConfigurationDropdown={false}
-          prefetchEnabled={false}
-          adapterType="nuqs"
-        />
-      }
-      sheetSlot={
-        <DrizzleSheetSlot
-          sheetFields={sheetFields}
-          totalRows={totalDBRowCount ?? 0}
-          filterRows={filterDBRowCount ?? 0}
-          totalRowsFetched={totalFetched}
-          metadata={metadata ?? {}}
-        />
-      }
-      tableId="drizzle"
-    />
+      queryKeyPrefix="drizzle"
+    >
+      <DataTableInfinite
+        columns={columns}
+        data={flatData}
+        totalRows={totalDBRowCount}
+        filterRows={filterDBRowCount}
+        totalRowsFetched={totalFetched}
+        defaultColumnFilters={defaultColumnFilters}
+        defaultColumnSorting={sort ? [sort] : undefined}
+        defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
+        defaultColumnVisibility={defaultColumnVisibility}
+        filterFields={dynamicFilterFields}
+        isFetching={isFetching}
+        isLoading={isLoading}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        fetchPreviousPage={fetchPreviousPage}
+        refetch={refetch}
+        getRowClassName={(row) => {
+          const rowTimestamp = row.original.date.getTime();
+          const isPast = rowTimestamp <= (liveMode.timestamp || -1);
+          const levelClassName = getLevelRowClassName(row.original.level);
+          return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
+        }}
+        getRowId={(row) => row.uuid}
+        getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+        getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+        renderLiveRow={(props) => {
+          if (!liveMode.timestamp) return null;
+          if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
+          return <LiveRow colSpan={columns.length - 1} />;
+        }}
+        commandSlot={
+          <DataTableFilterAICommand
+            schema={filterSchema.definition}
+            tableSchema={tableSchema.definition}
+            api="/drizzle/api/ai"
+            tableId="drizzle"
+          />
+        }
+        toolbarActions={[
+          <DataTableActionsFilterMenu key="actions" />,
+          <RefreshButton key="refresh" onClick={refetch} />,
+          fetchPreviousPage ? (
+            <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />
+          ) : null,
+        ]}
+        floatingBarSlot={
+          <DataTableFloatingBar<ColumnSchema>>
+            {({ rows }) => <DataTableActionsBar rows={rows} />}
+          </DataTableFloatingBar>
+        }
+        chartSlot={
+          <TimelineChart
+            data={chartData ?? []}
+            className="-mb-2"
+            columnId="date"
+          />
+        }
+        footerSlot={
+          <SocialsFooter
+            showConfigurationDropdown={false}
+            prefetchEnabled={false}
+            adapterType="nuqs"
+          />
+        }
+        sheetSlot={
+          <DrizzleSheetSlot
+            sheetFields={sheetFields}
+            totalRows={totalDBRowCount ?? 0}
+            filterRows={filterDBRowCount ?? 0}
+            totalRowsFetched={totalFetched}
+            metadata={metadata ?? {}}
+          />
+        }
+        tableId="drizzle"
+      />
+    </DataTableActionsProvider>
   );
 }
 

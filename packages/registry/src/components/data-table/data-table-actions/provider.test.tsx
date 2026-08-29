@@ -1,0 +1,367 @@
+// @vitest-environment jsdom
+
+import { DataTableContext } from "@dtf/registry/components/data-table/data-table-provider";
+import type { ActionDescriptor } from "@dtf/registry/lib/actions/types";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DataTableActionsBar } from "./bar";
+import { DataTableActionsCell } from "./column";
+// ── helpers ─────────────────────────────────────────────────────────────────
+import { DataTableActionsProvider, useDataTableActions } from "./provider";
+
+/**
+ * The client half of the contract, end to end through the provider: a click
+ * becomes one POST with a `cmd_id`, only eligible ids travel, confirmation is
+ * driven by the descriptor, and a `count_mismatch` offers "apply anyway"
+ * without the optimistic check.
+ */
+
+// React's act() warning is noise here: this is a jsdom test, not a renderer.
+(
+  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
+
+const toast = vi.hoisted(() => ({
+  success: vi.fn(),
+  warning: vi.fn(),
+  error: vi.fn(),
+}));
+vi.mock("sonner", () => ({ toast }));
+
+const replay: ActionDescriptor = {
+  id: "replay",
+  label: "Replay",
+  scope: ["row", "bulk", "filter"],
+  href: "/api/actions/replay",
+};
+const discard: ActionDescriptor = {
+  id: "discard",
+  label: "Discard",
+  scope: ["row", "bulk"],
+  variant: "destructive",
+  confirm: "Discard {count} messages?",
+  href: "/api/actions/discard",
+};
+
+type Item = { id: string; _actions: string[] };
+const rows: { original: Item }[] = [
+  { original: { id: "a", _actions: ["replay", "discard"] } },
+  { original: { id: "b", _actions: [] } },
+  { original: { id: "c", _actions: ["replay"] } },
+];
+
+let container: HTMLDivElement;
+let root: Root;
+let queryClient: QueryClient;
+let calls: Array<{ href: string; body: Record<string, unknown> }>;
+let respond: (href: string) => Response;
+
+function fetcher(href: string, init?: RequestInit): Promise<Response> {
+  calls.push({ href, body: JSON.parse(String(init?.body)) });
+  return Promise.resolve(respond(href));
+}
+
+function json(status: number, body: unknown) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+function mount(
+  ui: React.ReactNode,
+  options: { actions?: ActionDescriptor[]; queryKeyPrefix?: string } = {},
+) {
+  act(() =>
+    root.render(
+      <QueryClientProvider client={queryClient}>
+        <DataTableActionsProvider<Item>
+          actions={options.actions ?? [replay, discard]}
+          getRowId={(row) => row.id}
+          queryKeyPrefix={options.queryKeyPrefix ?? "demo"}
+          fetcher={fetcher as typeof fetch}
+        >
+          {ui}
+        </DataTableActionsProvider>
+      </QueryClientProvider>,
+    ),
+  );
+}
+
+async function flush() {
+  // Let the mutation promise chain settle.
+  for (let i = 0; i < 5; i++) {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+  }
+}
+
+function button(actionId: string) {
+  const el = container.querySelector<HTMLButtonElement>(
+    `button[data-action="${actionId}"]`,
+  );
+  if (!el) throw new Error(`no button for ${actionId}`);
+  return el;
+}
+
+function dialog() {
+  return document.querySelector<HTMLElement>('[role="alertdialog"]');
+}
+
+function dialogButton(text: string) {
+  const buttons = Array.from(
+    dialog()?.querySelectorAll<HTMLButtonElement>("button") ?? [],
+  );
+  const el = buttons.find((b) => b.textContent?.trim() === text);
+  if (!el) {
+    throw new Error(
+      `no dialog button "${text}" among ${buttons.map((b) => b.textContent).join(", ")}`,
+    );
+  }
+  return el;
+}
+
+beforeEach(() => {
+  calls = [];
+  respond = () => json(200, { applied: 1 });
+  toast.success.mockClear();
+  toast.warning.mockClear();
+  toast.error.mockClear();
+  queryClient = new QueryClient();
+  container = document.createElement("div");
+  document.body.appendChild(container);
+  root = createRoot(container);
+});
+
+afterEach(() => {
+  act(() => root.unmount());
+  container.remove();
+  queryClient.clear();
+});
+
+describe("DataTableActionsBar", () => {
+  it("renders one button per bulk action with eligible and skipped counts", () => {
+    mount(<DataTableActionsBar rows={rows} />);
+    expect(button("replay").dataset).toMatchObject({
+      eligible: "2",
+      skipped: "1",
+    });
+    expect(button("replay").disabled).toBe(false);
+    expect(button("discard").dataset).toMatchObject({
+      eligible: "1",
+      skipped: "2",
+    });
+    expect(container.querySelector('button[data-action="purge"]')).toBeNull();
+  });
+
+  it("disables a button when no selected row qualifies", () => {
+    mount(<DataTableActionsBar rows={[rows[1]!]} />);
+    expect(button("replay").disabled).toBe(true);
+  });
+
+  it("renders nothing when no action is bulk-scoped", () => {
+    mount(<DataTableActionsBar rows={rows} />, {
+      actions: [{ ...replay, scope: ["filter"] }],
+    });
+    expect(container.querySelector("button")).toBeNull();
+  });
+
+  it("sends only the eligible ids with a fresh cmd_id, then invalidates the prefix", async () => {
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    respond = () => json(200, { applied: 2 });
+    mount(<DataTableActionsBar rows={rows} />);
+
+    act(() => button("replay").click());
+    await flush();
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.href).toBe("/api/actions/replay");
+    expect(calls[0]!.body).toMatchObject({ scope: "ids", ids: ["a", "c"] });
+    expect(calls[0]!.body.cmd_id).toMatch(/^cmd_/);
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["demo"] });
+    expect(toast.success).toHaveBeenCalledWith("Replay: applied to 2");
+    expect(dialog()).toBeNull();
+  });
+
+  it("warns when the server applied to fewer rows than were sent", async () => {
+    respond = () => json(200, { applied: 1 });
+    mount(<DataTableActionsBar rows={rows} />);
+    act(() => button("replay").click());
+    await flush();
+    expect(toast.warning).toHaveBeenCalledWith("Replay: applied to 1 of 2");
+  });
+
+  it("asks for confirmation when the descriptor carries `confirm`, with the skipped note", async () => {
+    mount(<DataTableActionsBar rows={rows} />);
+
+    act(() => button("discard").click());
+    await flush();
+
+    expect(calls).toHaveLength(0);
+    expect(dialog()?.textContent).toContain("Discard 1 messages?");
+    expect(dialog()?.textContent).toContain(
+      "2 selected rows do not qualify and will be skipped.",
+    );
+
+    act(() => dialogButton("Discard").click());
+    await flush();
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.body).toMatchObject({ scope: "ids", ids: ["a"] });
+    expect(dialog()).toBeNull();
+  });
+
+  it("cancelling the confirmation sends nothing", async () => {
+    mount(<DataTableActionsBar rows={rows} />);
+    act(() => button("discard").click());
+    await flush();
+    act(() => dialogButton("Cancel").click());
+    await flush();
+    expect(calls).toHaveLength(0);
+    expect(dialog()).toBeNull();
+  });
+
+  it("clears the table selection once the action landed — not before, not on failure", async () => {
+    const resetRowSelection = vi.fn();
+    const tableContext = {
+      table: { resetRowSelection },
+    } as unknown as React.ContextType<typeof DataTableContext>;
+    const withTable = (ui: React.ReactNode) => (
+      <DataTableContext.Provider value={tableContext}>
+        {ui}
+      </DataTableContext.Provider>
+    );
+
+    respond = () => json(500, { error: "failed" });
+    mount(withTable(<DataTableActionsBar rows={rows} />));
+    act(() => button("replay").click());
+    await flush();
+    expect(resetRowSelection).not.toHaveBeenCalled();
+
+    respond = () => json(200, { applied: 2 });
+    act(() => button("replay").click());
+    await flush();
+    expect(resetRowSelection).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports the guard's shortfall on a filter-scoped action as success, not as a warning", async () => {
+    respond = () => json(200, { applied: 12 });
+    mount(
+      <DataTableActionsBarLikeFilter action={replay} filter={{}} count={40} />,
+    );
+    act(() => button("replay").click());
+    await flush();
+    expect(toast.warning).not.toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith(
+      "Replay: applied to 12 of 40 matching",
+    );
+  });
+
+  it("surfaces a server failure as a toast", async () => {
+    respond = () => json(500, { error: "failed" });
+    mount(<DataTableActionsBar rows={rows} />);
+    act(() => button("replay").click());
+    await flush();
+    expect(toast.error).toHaveBeenCalledWith("Replay failed: failed");
+  });
+});
+
+describe("count_mismatch", () => {
+  /** A filter-scoped trigger, without pulling the table store into the test. */
+  function FilterTrigger({ count }: { count: number }) {
+    return (
+      <DataTableActionsBarLikeFilter
+        action={replay}
+        filter={{ level: ["error"] }}
+        count={count}
+      />
+    );
+  }
+
+  it("reopens the dialog with the server's number and resends without expected_count", async () => {
+    let attempts = 0;
+    respond = () => {
+      attempts += 1;
+      return attempts === 1
+        ? json(409, { error: "count_mismatch", actual: 38 })
+        : json(200, { applied: 38 });
+    };
+    mount(<FilterTrigger count={40} />);
+
+    act(() => button("replay").click());
+    await flush();
+
+    expect(calls[0]!.body).toMatchObject({
+      scope: "filter",
+      filter: { level: ["error"] },
+      expected_count: 40,
+    });
+    expect(dialog()?.textContent).toContain("the matching set changed");
+    expect(dialog()?.textContent).toContain("now counts 38");
+    expect(toast.error).not.toHaveBeenCalled();
+
+    act(() => dialogButton("Apply anyway").click());
+    await flush();
+
+    expect(calls).toHaveLength(2);
+    expect(calls[1]!.body).not.toHaveProperty("expected_count");
+    expect(calls[1]!.body).toMatchObject({
+      scope: "filter",
+      filter: { level: ["error"] },
+    });
+    expect(calls[1]!.body.cmd_id).not.toBe(calls[0]!.body.cmd_id);
+    expect(toast.success).toHaveBeenCalledWith(
+      "Replay: applied to 38 of 38 matching",
+    );
+  });
+});
+
+describe("DataTableActionsCell", () => {
+  it("renders a menu trigger only when the row has row-scoped actions", () => {
+    mount(
+      <>
+        <div data-row="a">
+          <DataTableActionsCell row={rows[0]!} />
+        </div>
+        <div data-row="b">
+          <DataTableActionsCell row={rows[1]!} />
+        </div>
+      </>,
+    );
+    expect(
+      container.querySelector(
+        '[data-row="a"] button[aria-label="Row actions"]',
+      ),
+    ).not.toBeNull();
+    expect(container.querySelector('[data-row="b"] button')).toBeNull();
+  });
+});
+
+function DataTableActionsBarLikeFilter({
+  action,
+  filter,
+  count,
+}: {
+  action: ActionDescriptor;
+  filter: Record<string, unknown>;
+  count: number;
+}) {
+  const { trigger } = useDataTableActions();
+  return (
+    <button
+      data-action={action.id}
+      onClick={() =>
+        trigger(
+          action,
+          { scope: "filter", filter, expected_count: count },
+          { count },
+        )
+      }
+    >
+      {action.label}
+    </button>
+  );
+}
