@@ -38,10 +38,16 @@ export function pickFilterValues(
  * "Apply to every row matching the current filters" — the filter scope.
  * Sits in the toolbar's `toolbarActions` slot. Sends `expected_count` from
  * the server's own `filterRowCount`, so a drifted set is caught server-side.
+ *
+ * That count is the table's `filterRows` prop, verbatim: without it there is
+ * no number to promise and the menu stays disabled. It also stays disabled
+ * while the table is fetching — `filterRows` still describes the previous
+ * query then, and sending it with the new filters would only earn a
+ * `count_mismatch`.
  */
 export function DataTableActionsFilterMenu() {
   const { actions, trigger, isPending } = useDataTableActions();
-  const { filterRows, filterFields } = useDataTable();
+  const { filterRows, filterFields, isLoading } = useDataTable();
   const state = useFilterState<Record<string, unknown>>();
 
   const filterActions = actionsForScope(actions, "filter");
@@ -56,7 +62,7 @@ export function DataTableActionsFilterMenu() {
         <Button
           variant="outline"
           size="sm"
-          disabled={isPending || count === 0}
+          disabled={isPending || isLoading || count === 0}
           data-matching={count}
         >
           Actions

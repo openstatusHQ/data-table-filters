@@ -29,6 +29,12 @@ export type ActionDescriptor = {
   confirm?: string;
   /** Where to POST. Composed by the server from its `basePath`. */
   href: string;
+  /**
+   * Upper bound on `ids.length` the server accepts. Set on `bulk` actions by
+   * the transport (`createActionHandler`'s `maxIds`) so the client can refuse
+   * an oversized selection before the request instead of after it.
+   */
+  maxIds?: number;
 };
 
 /**

@@ -158,6 +158,42 @@ describe("descriptors — the pick-list projection", () => {
     expect(descriptors.map((d) => d.id)).toEqual(["zeta", "alpha"]);
   });
 
+  it("publishes `maxIds` on bulk descriptors only", () => {
+    const { descriptors } = defineActions<ServerDefinition>(
+      filters,
+      {
+        replay: { label: "R", scope: ["row", "bulk"], handler },
+        open: { label: "O", scope: ["row"], handler },
+        purge: { label: "P", scope: ["filter"], handler },
+      },
+      { basePath: "/x", maxIds: 250 },
+    );
+    expect(descriptors.map((d) => d.maxIds)).toEqual([
+      250,
+      undefined,
+      undefined,
+    ]);
+    expect(Object.hasOwn(descriptors[1]!, "maxIds")).toBe(false);
+  });
+
+  it("omits `maxIds` when the transport publishes none, and rejects a bad one", () => {
+    const { descriptors } = defineActions<ServerDefinition>(
+      filters,
+      { replay: { label: "R", handler } },
+      { basePath: "/x" },
+    );
+    expect(Object.hasOwn(descriptors[0]!, "maxIds")).toBe(false);
+    for (const maxIds of [0, -1, 1.5, Number.NaN]) {
+      expect(() =>
+        defineActions<ServerDefinition>(
+          filters,
+          { replay: { label: "R", handler } },
+          { basePath: "/x", maxIds },
+        ),
+      ).toThrow(/maxIds must be a positive integer/);
+    }
+  });
+
   it("survives JSON round-tripping unchanged", () => {
     const { descriptors } = defineActions<ServerDefinition>(
       filters,
@@ -171,6 +207,18 @@ describe("descriptors — the pick-list projection", () => {
 describe("construction-time validation", () => {
   it("rejects ids that cannot be URL segments", () => {
     for (const id of ["Replay", "re play", "re/play", "", "-x", "ré"]) {
+      expect(() =>
+        defineActions<ServerDefinition>(
+          filters,
+          { [id]: { label: "x", handler } },
+          { basePath: "/x" },
+        ),
+      ).toThrow(/must match/);
+    }
+  });
+
+  it("rejects integer-like ids — `Object.entries` would reorder them", () => {
+    for (const id of ["1", "42", "0"]) {
       expect(() =>
         defineActions<ServerDefinition>(
           filters,

@@ -41,6 +41,8 @@ export type ActionDefinitionBase<TRow = Record<string, unknown>> = {
 export type DefineActionsOptions = {
   /** `href` is `${basePath}/${id}`. */
   basePath: string;
+  /** Published on `bulk` descriptors as `maxIds`. */
+  maxIds?: number;
 };
 
 export type DefinedActions<TDef extends ActionDefinitionBase<never>> = {
@@ -56,8 +58,13 @@ export type DefinedActions<TDef extends ActionDefinitionBase<never>> = {
 
 const DEFAULT_SCOPE: ActionScope[] = ["row", "bulk"];
 
-/** An id is a URL segment and an audit-log key. Keep it boring. */
-const ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+/**
+ * An id is a URL segment and an audit-log key. Keep it boring. The leading
+ * letter is not taste: `Object.entries` hoists integer-like keys (`"1"`,
+ * `"42"`) to the front in numeric order, which would silently reorder
+ * `descriptors` and the menus built from them.
+ */
+const ID_PATTERN = /^[a-z][a-z0-9_-]*$/;
 
 /**
  * The pick-list. Adding a field to `ActionDescriptor` fails to compile here
@@ -72,6 +79,7 @@ const PUBLIC_KEYS = {
   variant: true,
   confirm: true,
   href: true,
+  maxIds: true,
 } as const satisfies Record<keyof ActionDescriptor, true>;
 
 type _PublicKeysExhaustive = [
@@ -85,17 +93,22 @@ void _publicKeysExhaustive;
 function toDescriptor(
   id: string,
   definition: ActionDefinitionBase<never> & { scope: ActionScope[] },
-  basePath: string,
+  options: DefineActionsOptions,
 ): ActionDescriptor {
   const descriptor: ActionDescriptor = {
     id,
     label: definition.label,
     scope: [...definition.scope],
-    href: `${basePath}/${id}`,
+    href: `${options.basePath}/${id}`,
   };
   // Optional keys are only present when set, so the JSON stays canonical.
   if (definition.variant !== undefined) descriptor.variant = definition.variant;
   if (definition.confirm !== undefined) descriptor.confirm = definition.confirm;
+  // Only a bulk request can carry more than one id, so only there does the
+  // limit mean anything to the client.
+  if (options.maxIds !== undefined && definition.scope.includes("bulk")) {
+    descriptor.maxIds = options.maxIds;
+  }
   return descriptor;
 }
 
@@ -145,6 +158,15 @@ export function defineActions<TDef extends ActionDefinitionBase<never>>(
   if (basePath.length === 0) {
     throw new Error(`[defineActions] basePath must be a non-empty path`);
   }
+  if (
+    options.maxIds !== undefined &&
+    (!Number.isInteger(options.maxIds) || options.maxIds < 1)
+  ) {
+    throw new Error(
+      `[defineActions] maxIds must be a positive integer, got ${String(options.maxIds)}`,
+    );
+  }
+  const resolved: DefineActionsOptions = { ...options, basePath };
 
   const definitions = new Map<string, TDef & { scope: ActionScope[] }>();
   const descriptors: ActionDescriptor[] = [];
@@ -168,7 +190,7 @@ export function defineActions<TDef extends ActionDefinitionBase<never>>(
 
     const withDefaults = { ...definition, scope };
     definitions.set(id, withDefaults);
-    descriptors.push(toDescriptor(id, withDefaults, basePath));
+    descriptors.push(toDescriptor(id, withDefaults, resolved));
   }
 
   const actionsFor = (row: unknown): string[] => {

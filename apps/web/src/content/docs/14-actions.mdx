@@ -226,14 +226,18 @@ import {
 } from "@/components/data-table/data-table-actions";
 import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
 
-const columns = [
-  ...generateColumns<ColumnSchema>(tableSchema.definition),
+const baseColumns = generateColumns<ColumnSchema>(tableSchema.definition);
+// The actions column cannot be hidden, so append it only once the server
+// advertises actions. Module constants keep the table's options stable.
+const columnsWithActions = [
+  ...baseColumns,
   createActionsColumn<ColumnSchema>(),
 ];
 
 function ClientInner() {
   const { data } = useInfiniteQuery(dataOptions(search));
   const actions = data?.pages.at(-1)?.meta.actions;
+  const columns = actions?.length ? columnsWithActions : baseColumns;
 
   return (
     <DataTableActionsProvider<ColumnSchema>
@@ -270,15 +274,26 @@ without it a failed or partial action gives no visible feedback.
 
 A bulk button stays enabled while _any_ selected row qualifies; the request
 carries only the eligible ids and the confirmation says how many were skipped.
-`confirm` on a descriptor opens an alert dialog with `{count}` interpolated;
+The handler's `maxIds` (default 1000) is published on every bulk descriptor,
+and a selection past it disables the button with the limit as its tooltip
+rather than earning an `invalid_request` — that many rows is what the filter
+scope is for. `confirm` on a descriptor opens an alert dialog with `{count}` interpolated;
 `variant: "destructive"` styles both the button and the dialog's action. After
 a success the provider toasts the result, clears the selection, and invalidates
 `[queryKeyPrefix]`, so rows that no longer match leave the view.
 
 For the filter scope the client sends `expected_count` from the server's own
-`filterRowCount` — the rows matching the filters alone. The server measures
-drift on that same set, then applies within the action's `when` guard, so
-"applied to 12 of 40 matching" is the guard at work, not a partial failure.
+`filterRowCount` — the rows matching the filters alone, handed to the table as
+its `filterRows` prop. The menu stays disabled without that prop (there is no
+number to promise) and while the table is fetching (the number describes the
+previous query). The server counts and mutates under `REPEATABLE READ`, so the
+set it counted is the set it applies to; it then applies within the action's
+`when` guard, so "applied to 12 of 40 matching" is the guard at work, not a
+partial failure.
+
+Ids are validated as non-empty strings by default. When the id column is
+stricter, say so with `idSchema` — `z.uuid()` for a `uuid` column — so a
+malformed id is a 400 `invalid_request`, not a cast error surfacing as a 500.
 
 Multi-row selection needs `col.select()` in the schema, as for any floating
 bar.
@@ -286,7 +301,8 @@ bar.
 ## Demo
 
 The [/drizzle](/drizzle) demo declares `acknowledge` (error → warning) and
-`delete`. Because it runs against a shared database, writes are opt-in: set
-`ALLOW_DEMO_ACTIONS=1` and the list endpoint starts advertising actions;
-without it, `POST /drizzle/api/actions/*` answers 403 and the UI renders no
-buttons.
+`delete`. In development they are on by default against your own database.
+The public site runs against a shared database, so there writes are opt-in:
+set `ALLOW_DEMO_ACTIONS=1` and the list endpoint starts advertising actions;
+otherwise `POST /drizzle/api/actions/*` answers 403 and the UI renders no
+buttons (`ALLOW_DEMO_ACTIONS=0` forces that locally too).

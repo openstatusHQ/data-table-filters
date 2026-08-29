@@ -99,10 +99,13 @@ describe("POST /drizzle/api/actions/[id]", () => {
 
   it("maps anything else to a 500 without leaking the message", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
-    mocked.execute.mockRejectedValue(new Error("connection refused"));
-    const response = await post("acknowledge", request);
-    expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: "failed" });
-    error.mockRestore();
+    try {
+      mocked.execute.mockRejectedValue(new Error("connection refused"));
+      const response = await post("acknowledge", request);
+      expect(response.status).toBe(500);
+      expect(await response.json()).toEqual({ error: "failed" });
+    } finally {
+      error.mockRestore();
+    }
   });
 });

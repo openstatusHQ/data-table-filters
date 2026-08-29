@@ -357,7 +357,11 @@ export function DataTableInfinite<TData extends RowData>({
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
       totalRows={totalRows}
-      filterRows={filterRows ?? table.getFilteredRowModel().rows.length}
+      // Verbatim, no client-side stand-in: consumers that only display a
+      // number fall back themselves (`DataTableToolbar`), and the one that
+      // promises it to the server (`DataTableActionsFilterMenu`) must not be
+      // handed the loaded-row count as if it were the match count.
+      filterRows={filterRows}
       getFacetedUniqueValues={getFacetedUniqueValues}
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >

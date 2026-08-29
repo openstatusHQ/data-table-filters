@@ -2,9 +2,11 @@ import { defineFilters, type FilterSpec } from "@dtf/registry/lib/filters";
 import { count, eq, sql } from "drizzle-orm";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import {
   ActionHandlerError,
   createActionHandler,
+  isSerializationFailure,
   type ActionAuditEvent,
   type ActionContext,
   type ActionHandlerConfig,
@@ -200,15 +202,17 @@ describe("createActionHandler", () => {
       );
     });
 
-    it("exposes the public descriptors with the composed href", () => {
+    it("exposes the public descriptors with the composed href and the id limit", () => {
       expect(createHandler(db).descriptors).toEqual([
         {
           id: "replay",
           label: "Replay",
           scope: ["row", "bulk", "filter"],
           href: "/api/actions/replay",
+          maxIds: 1000,
         },
       ]);
+      expect(createHandler(db, { maxIds: 25 }).descriptors[0]!.maxIds).toBe(25);
     });
   });
 
@@ -286,6 +290,32 @@ describe("createActionHandler", () => {
         "invalid_request",
       );
       expect(await statusOf(db, "m1")).toBe("dead");
+    });
+
+    it("rejects ids that fail `idSchema` before they reach the database", async () => {
+      // The demo's shape: a `uuid` column. "m1" would be a cast error — a 500.
+      const strict = createHandler(db, { idSchema: z.uuid() });
+      const error = await expectError(
+        strict.execute("replay", { scope: "ids", ids: ["m1"], cmd_id: "c" }),
+        "invalid_request",
+      );
+      expect(error.status).toBe(400);
+      expect(await statusOf(db, "m1")).toBe("dead");
+
+      const lenient = createHandler(db, {
+        idSchema: z.string().regex(/^m\d$/),
+      });
+      await expectError(
+        lenient.execute("replay", {
+          scope: "ids",
+          ids: ["m1", "m1; drop table"],
+          cmd_id: "c",
+        }),
+        "invalid_request",
+      );
+      await expect(
+        lenient.execute("replay", { scope: "ids", ids: ["m1"], cmd_id: "c" }),
+      ).resolves.toEqual({ applied: 1 });
     });
 
     it("accepts exactly one id for a row-only action", async () => {
@@ -374,6 +404,85 @@ describe("createActionHandler", () => {
       });
       // Two of the three invoices are dead: the guard, not drift.
       expect(ok).toEqual({ applied: 2 });
+    });
+
+    it("pins one snapshot for the count and the mutation when a count is promised", async () => {
+      const levels: string[] = [];
+      const handler = createHandler(db, {
+        actions: {
+          replay: {
+            ...replay,
+            handler: async (ctx, tx) => {
+              const result = await tx.execute<{ level: string }>(
+                sql`select current_setting('transaction_isolation') as level`,
+              );
+              levels.push(result.rows[0]!.level);
+              return replay.handler(ctx, tx);
+            },
+          },
+        },
+      });
+      await handler.execute("replay", {
+        scope: "filter",
+        filter: {},
+        expected_count: seed.length,
+        cmd_id: "c",
+      });
+      // Without a count there is nothing to keep consistent — the default.
+      await handler.execute("replay", {
+        scope: "ids",
+        ids: ["m1"],
+        cmd_id: "c",
+      });
+      expect(levels).toEqual(["repeatable read", "read committed"]);
+    });
+
+    it("retries a serialization failure against a fresh snapshot, then gives up", async () => {
+      const serialization = () =>
+        Object.assign(new Error("could not serialize access"), {
+          code: "40001",
+        });
+      let calls = 0;
+      const flaky = createHandler(db, {
+        actions: {
+          replay: {
+            ...replay,
+            handler: async (ctx, tx) => {
+              calls += 1;
+              if (calls === 1) throw serialization();
+              return replay.handler(ctx, tx);
+            },
+          },
+        },
+      });
+      await expect(
+        flaky.execute("replay", {
+          scope: "filter",
+          filter: {},
+          expected_count: seed.length,
+          cmd_id: "c",
+        }),
+      ).resolves.toEqual({ applied: 3 });
+      expect(calls).toBe(2);
+
+      calls = 0;
+      const hopeless = createHandler(db, {
+        actions: {
+          replay: {
+            ...replay,
+            handler: async () => {
+              calls += 1;
+              // Wrapped the way Drizzle reports a driver error.
+              throw new Error("query failed", { cause: serialization() });
+            },
+          },
+        },
+      });
+      await expect(
+        hopeless.execute("replay", { scope: "ids", ids: ["m4"], cmd_id: "c" }),
+      ).rejects.toThrow("query failed");
+      expect(calls).toBe(3);
+      expect(await statusOf(db, "m4")).toBe("pending");
     });
 
     it("measures drift on the set the client saw, before the `when` guard", async () => {
@@ -550,22 +659,51 @@ describe("createActionHandler", () => {
       expect(await total(db)).toBe(seed.length);
     });
 
-    it("rolls back when the handler returns something other than a count", async () => {
-      const handler = createHandler(db, {
-        actions: {
-          replay: {
-            ...replay,
-            handler: async (ctx, tx) => {
-              await replay.handler(ctx, tx);
-              return undefined as unknown as number;
+    it.each([
+      ["undefined", undefined],
+      ["a negative number", -1],
+      ["a fraction", 1.5],
+      ["NaN", Number.NaN],
+      ["a string", "2"],
+    ])(
+      "rolls back when the handler returns %s instead of a count",
+      async (_, returned) => {
+        const handler = createHandler(db, {
+          actions: {
+            replay: {
+              ...replay,
+              handler: async (ctx, tx) => {
+                await replay.handler(ctx, tx);
+                return returned as unknown as number;
+              },
             },
           },
-        },
-      });
-      await expect(
-        handler.execute("replay", { scope: "ids", ids: ["m1"], cmd_id: "c" }),
-      ).rejects.toThrow(/must return the applied row count/);
-      expect(await statusOf(db, "m1")).toBe("dead");
+        });
+        await expect(
+          handler.execute("replay", {
+            scope: "ids",
+            ids: ["m1"],
+            cmd_id: "c",
+          }),
+        ).rejects.toThrow(/must return the applied row count/);
+        expect(await statusOf(db, "m1")).toBe("dead");
+      },
+    );
+
+    it("recognises SQLSTATE 40001 anywhere in the cause chain, and nothing else", () => {
+      const failure = Object.assign(new Error("x"), { code: "40001" });
+      expect(isSerializationFailure(failure)).toBe(true);
+      expect(
+        isSerializationFailure(new Error("wrapped", { cause: failure })),
+      ).toBe(true);
+      expect(isSerializationFailure(new Error("plain"))).toBe(false);
+      expect(
+        isSerializationFailure(
+          Object.assign(new Error("x"), { code: "23505" }),
+        ),
+      ).toBe(false);
+      expect(isSerializationFailure(null)).toBe(false);
+      expect(isSerializationFailure("40001")).toBe(false);
     });
   });
 

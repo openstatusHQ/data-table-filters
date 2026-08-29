@@ -25,7 +25,11 @@ export type ActionContext = {
   where: SQL;
   /** Present for `scope: "ids"`. */
   ids?: string[];
-  /** Present for `scope: "filter"` — already passed through `filters.coerce`. */
+  /**
+   * Present for `scope: "filter"`. Pruned to keys the filter semantics know;
+   * the values are exactly what the client sent — never `filters.coerce`d, so
+   * a slider range is not clamped to its declared bounds. See `execute`.
+   */
   filter?: Record<string, unknown>;
   /** Whoever the route authenticated. Never read from the request body. */
   actor?: string;
@@ -78,8 +82,17 @@ export type ActionHandlerConfig<TRow = Record<string, unknown>> = {
   actions: Record<string, DrizzleActionDefinition<TRow>>;
   /** `href` is `${basePath}/${id}` — the route that calls `execute`. */
   basePath: string;
-  /** Upper bound on `ids.length`; larger requests are `invalid_request`. */
+  /**
+   * Upper bound on `ids.length`; larger requests are `invalid_request`. Also
+   * published on `bulk` descriptors so the client can stop short of it.
+   */
   maxIds?: number;
+  /**
+   * The shape of one id, when the column is stricter than "non-empty string"
+   * — `z.uuid()` for a `uuid` column. Without it a malformed id reaches
+   * Postgres, whose cast error surfaces as a 500 rather than a 400.
+   */
+  idSchema?: z.ZodType<string>;
   /**
    * Called once per applied command, after the transaction committed. If it
    * throws, the mutation has already happened — the error propagates so the
@@ -120,19 +133,45 @@ export class ActionHandlerError extends Error {
   }
 }
 
-const requestSchema = z.discriminatedUnion("scope", [
-  z.object({
-    scope: z.literal("ids"),
-    ids: z.array(z.string().min(1)).min(1),
-    cmd_id: z.string().min(1),
-  }),
-  z.object({
-    scope: z.literal("filter"),
-    filter: z.record(z.string(), z.unknown()),
-    expected_count: z.number().int().nonnegative().optional(),
-    cmd_id: z.string().min(1),
-  }),
-]);
+function createRequestSchema(idSchema: z.ZodType<string>) {
+  return z.discriminatedUnion("scope", [
+    z.object({
+      scope: z.literal("ids"),
+      ids: z.array(idSchema).min(1),
+      cmd_id: z.string().min(1),
+    }),
+    z.object({
+      scope: z.literal("filter"),
+      filter: z.record(z.string(), z.unknown()),
+      expected_count: z.number().int().nonnegative().optional(),
+      cmd_id: z.string().min(1),
+    }),
+  ]);
+}
+
+/** Postgres SQLSTATE for "could not serialize access". */
+const SERIALIZATION_FAILURE = "40001";
+/** How often a serialization failure is retried before it propagates. */
+const MAX_ATTEMPTS = 3;
+
+/**
+ * Drivers report SQLSTATE as `code`, and Drizzle wraps the driver error in a
+ * `DrizzleQueryError` whose `cause` is the original — so walk the chain.
+ */
+export function isSerializationFailure(error: unknown): boolean {
+  let current: unknown = error;
+  for (
+    let depth = 0;
+    depth < 5 && typeof current === "object" && current;
+    depth++
+  ) {
+    if ((current as { code?: unknown }).code === SERIALIZATION_FAILURE) {
+      return true;
+    }
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
 
 export type ActionHandler<TRow = Record<string, unknown>> = {
   /** Public metadata for `meta.actions`. */
@@ -169,8 +208,10 @@ export function createActionHandler<TRow = Record<string, unknown>>(
     idColumn,
     basePath,
     maxIds = 1000,
+    idSchema = z.string().min(1),
     audit,
   } = config;
+  const requestSchema = createRequestSchema(idSchema);
 
   const idCol = columnMapping[idColumn];
   if (!idCol) {
@@ -195,7 +236,7 @@ export function createActionHandler<TRow = Record<string, unknown>>(
   const defined = defineActions<DrizzleActionDefinition<TRow>>(
     filters,
     config.actions,
-    { basePath },
+    { basePath, maxIds },
   );
 
   // `when` guards never change after construction, so compile them once.
@@ -293,29 +334,58 @@ export function createActionHandler<TRow = Record<string, unknown>>(
     const expectedCount =
       request.scope === "filter" ? request.expected_count : undefined;
 
-    const applied = await db.transaction(async (tx) => {
-      if (expectedCount !== undefined && shown !== undefined) {
-        // Drift is measured on the set the client was shown, not on the
-        // guarded set: a guard makes `applied` smaller by design, and that is
-        // not "the set changed".
-        const [row] = await tx.select({ n: count() }).from(table).where(shown);
-        const actual = Number(row?.n ?? 0);
-        if (actual !== expectedCount) {
-          throw new ActionHandlerError(
-            "count_mismatch",
-            `Expected ${expectedCount} rows, found ${actual}`,
-            actual,
-          );
+    const run = () =>
+      db.transaction(
+        async (tx) => {
+          if (expectedCount !== undefined && shown !== undefined) {
+            // Drift is measured on the set the client was shown, not on the
+            // guarded set: a guard makes `applied` smaller by design, and that
+            // is not "the set changed".
+            const [row] = await tx
+              .select({ n: count() })
+              .from(table)
+              .where(shown);
+            const actual = Number(row?.n ?? 0);
+            if (actual !== expectedCount) {
+              throw new ActionHandlerError(
+                "count_mismatch",
+                `Expected ${expectedCount} rows, found ${actual}`,
+                actual,
+              );
+            }
+          }
+          const result = await definition.handler(ctx, tx);
+          if (!Number.isInteger(result) || result < 0) {
+            throw new Error(
+              `[createActionHandler] Action "${actionId}" handler must return the applied row count, got ${String(result)}`,
+            );
+          }
+          return result;
+        },
+        // The count is only a promise if the mutation sees the same rows.
+        // Under READ COMMITTED each statement takes its own snapshot, so a row
+        // committed in between is counted by neither and updated anyway.
+        // REPEATABLE READ pins one snapshot for the whole transaction: a
+        // concurrent insert is invisible to both statements, and a concurrent
+        // change to a counted row fails with 40001 instead of being applied
+        // over — which is retried below against a fresh snapshot, where the
+        // recount catches it as `count_mismatch`.
+        expectedCount !== undefined
+          ? { isolationLevel: "repeatable read" }
+          : undefined,
+      );
+
+    let applied: number;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        applied = await run();
+        break;
+      } catch (error) {
+        if (attempt >= MAX_ATTEMPTS || !isSerializationFailure(error)) {
+          throw error;
         }
       }
-      const result = await definition.handler(ctx, tx);
-      if (typeof result !== "number" || !Number.isFinite(result)) {
-        throw new Error(
-          `[createActionHandler] Action "${actionId}" handler must return the applied row count, got ${String(result)}`,
-        );
-      }
-      return result;
-    });
+    }
 
     if (audit) {
       await audit({

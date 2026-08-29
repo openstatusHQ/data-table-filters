@@ -23,16 +23,24 @@ export function DataTableActionsCell<TData>({
     useDataTableActions<TData>();
   const available = rowScopedActions(actions, getRowActions(row.original));
   if (available.length === 0) return null;
+  const id = getRowId(row.original);
 
   return (
     <div
       className="flex items-center justify-center"
-      // The row itself opens the sheet on click.
+      // The row itself opens the sheet on click and on Enter. Both bubble up
+      // from the trigger — and, through React's tree, from the portalled menu
+      // items — so both stop here.
       onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-xs" aria-label="Row actions">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`Actions for ${id}`}
+          >
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
@@ -44,11 +52,7 @@ export function DataTableActionsCell<TData>({
                 action.variant === "destructive" ? "destructive" : "default"
               }
               onSelect={() =>
-                trigger(
-                  action,
-                  { scope: "ids", ids: [getRowId(row.original)] },
-                  { count: 1 },
-                )
+                trigger(action, { scope: "ids", ids: [id] }, { count: 1 })
               }
             >
               {action.label}

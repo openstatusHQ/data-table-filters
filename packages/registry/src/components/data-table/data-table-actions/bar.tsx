@@ -40,6 +40,10 @@ export function DataTableActionsBar<TData>({
           action.id,
           getRowActions,
         );
+        // The server publishes its `maxIds`; past it the request is refused
+        // as `invalid_request`, so refuse it here with a reason instead.
+        const overLimit =
+          action.maxIds !== undefined && eligible.length > action.maxIds;
         return (
           <Button
             key={action.id}
@@ -47,10 +51,16 @@ export function DataTableActionsBar<TData>({
             variant={
               action.variant === "destructive" ? "destructive" : "outline"
             }
-            disabled={eligible.length === 0 || isPending}
+            disabled={eligible.length === 0 || overLimit || isPending}
+            title={
+              overLimit
+                ? `${action.label} applies to at most ${action.maxIds?.toLocaleString()} rows at a time`
+                : undefined
+            }
             data-action={action.id}
             data-eligible={eligible.length}
             data-skipped={skipped}
+            data-over-limit={overLimit ? "" : undefined}
             onClick={() =>
               trigger(
                 action,

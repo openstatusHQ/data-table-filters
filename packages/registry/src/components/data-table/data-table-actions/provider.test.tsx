@@ -162,6 +162,20 @@ describe("DataTableActionsBar", () => {
     expect(button("replay").disabled).toBe(true);
   });
 
+  it("refuses a selection past the server's `maxIds` with the limit as the reason", () => {
+    mount(<DataTableActionsBar rows={rows} />, {
+      actions: [{ ...replay, maxIds: 1 }, discard],
+    });
+    // Two eligible for replay, one for discard.
+    expect(button("replay").disabled).toBe(true);
+    expect(button("replay").dataset).toHaveProperty("overLimit");
+    expect(button("replay").title).toMatch(/at most 1 rows/);
+    expect(button("discard").disabled).toBe(false);
+    expect(button("discard").dataset).not.toHaveProperty("overLimit");
+    act(() => button("replay").click());
+    expect(calls).toEqual([]);
+  });
+
   it("renders nothing when no action is bulk-scoped", () => {
     mount(<DataTableActionsBar rows={rows} />, {
       actions: [{ ...replay, scope: ["filter"] }],
@@ -333,10 +347,31 @@ describe("DataTableActionsCell", () => {
     );
     expect(
       container.querySelector(
-        '[data-row="a"] button[aria-label="Row actions"]',
+        '[data-row="a"] button[aria-label="Actions for a"]',
       ),
     ).not.toBeNull();
     expect(container.querySelector('[data-row="b"] button')).toBeNull();
+  });
+
+  it("keeps Enter and click on the trigger away from the row's own handlers", () => {
+    const rowClick = vi.fn();
+    const rowKeyDown = vi.fn();
+    mount(
+      <div onClick={rowClick} onKeyDown={rowKeyDown}>
+        <DataTableActionsCell row={rows[0]!} />
+      </div>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Actions for a"]',
+    )!;
+    act(() => {
+      trigger.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+      );
+      trigger.click();
+    });
+    expect(rowKeyDown).not.toHaveBeenCalled();
+    expect(rowClick).not.toHaveBeenCalled();
   });
 });
 

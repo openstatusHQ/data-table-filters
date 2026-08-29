@@ -44,11 +44,16 @@ import { filterSchema } from "./schema";
 import type { SearchParamsType } from "./search-params";
 import { tableSchema } from "./table-schema";
 
-const columns = [
+const baseColumns = [
   ...generateColumns<ColumnSchema>(tableSchema.definition),
   timingPhasesColumn,
-  // Renders from `meta.actions` + each row's `_actions`; empty when the server
-  // advertises none.
+];
+// Renders from `meta.actions` + each row's `_actions`. Appended only once the
+// server advertises actions: the column cannot be hidden, and 40px of nothing
+// is what it would be until then. Both arrays are module constants so the
+// table's options stay referentially stable on either side of the switch.
+const columnsWithActions = [
+  ...baseColumns,
   createActionsColumn<ColumnSchema>(),
 ];
 
@@ -100,6 +105,7 @@ function ClientInner() {
   const chartData = lastPage?.meta?.chartData;
   const facets = lastPage?.meta?.facets;
   const actions = lastPage?.meta?.actions;
+  const columns = actions?.length ? columnsWithActions : baseColumns;
   const totalFetched = flatData?.length;
 
   const { sort, size, uuid, cursor, direction, live, ...filter } = search;
@@ -244,7 +250,15 @@ function DrizzleSheetSlot({
     ColumnSchema,
     unknown
   >();
-  const selectedRowKey = Object.keys(rowSelection)?.[0];
+  // With a select column the table is multi-select: a row click writes `uuid`
+  // to the store and `rowSelection` is the checkbox set for bulk actions. The
+  // detail row therefore comes from `uuid`, exactly as `DataTableSheetDetails`
+  // resolves it — reading `rowSelection` here showed a skeleton on every click.
+  const uuid = useFilterState((s) => s.uuid) as string | null | undefined;
+  const isMultiSelect = !!table.options.enableMultiRowSelection;
+  const selectedRowKey = isMultiSelect
+    ? (uuid ?? undefined)
+    : Object.keys(rowSelection)?.[0];
   const selectedRow = React.useMemo(() => {
     if (isLoading && !selectedRowKey) return undefined;
     return table
