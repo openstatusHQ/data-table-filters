@@ -255,14 +255,21 @@ async function countWhere(db: PgliteDb, where: SQL | undefined) {
   return result[0]?.total ?? 0;
 }
 
+/**
+ * One database for the read-only suites over `seedRows`.
+ *
+ * Each PGLite instance boots a Postgres compiled to WASM, which costs seconds
+ * on a CI runner. These suites only read, so they share one boot instead of
+ * paying for four; the suite below that seeds `tieRows` still gets its own.
+ */
+let db: PgliteDb;
+beforeAll(async () => {
+  db = await createSeededDb(seedRows);
+});
+
 // ── 1. Projection identity ──────────────────────────────────────────────────
 
 describe("projection identity — every mapped key survives the round trip", () => {
-  let db: PgliteDb;
-  beforeAll(async () => {
-    db = await createSeededDb(seedRows);
-  });
-
   /**
    * The schema key → seed field correspondence, written out by hand.
    *
@@ -382,11 +389,6 @@ describe("projection identity — every mapped key survives the round trip", () 
 // ── 2. `select` extras ──────────────────────────────────────────────────────
 
 describe("select extras", () => {
-  let db: PgliteDb;
-  beforeAll(async () => {
-    db = await createSeededDb(seedRows);
-  });
-
   it("merges extras into every row without requiring a mapping entry", async () => {
     for (const key of Object.keys(extraSelect)) {
       expect(columnMapping[key]).toBeUndefined();
@@ -557,11 +559,6 @@ describe("unmapped filter keys fail at construction", () => {
  * quietly dropping every remaining row.
  */
 describe("cursor pagination with a renamed cursor column", () => {
-  let db: PgliteDb;
-  beforeAll(async () => {
-    db = await createSeededDb(seedRows);
-  });
-
   /** Walk forward until exhausted, recording each page. */
   async function pageThrough(size: number) {
     const handler = createHandler(db);
@@ -661,13 +658,13 @@ describe("tied cursor values with a projected select", () => {
     { ...seedRows[0], id: 4, label: "D", createdAt: T3 },
   ];
 
-  let db: PgliteDb;
+  let tieDb: PgliteDb;
   beforeAll(async () => {
-    db = await createSeededDb(tieRows);
+    tieDb = await createSeededDb(tieRows);
   });
 
   async function pageThrough(size: number) {
-    const handler = createHandler(db);
+    const handler = createHandler(tieDb);
     const labels: string[] = [];
     const pageSizes: number[] = [];
     let cursor: number | null = null;
@@ -689,7 +686,7 @@ describe("tied cursor values with a projected select", () => {
   }
 
   it("ends the page before a tied group rather than splitting it", async () => {
-    const page1 = await createHandler(db).execute({
+    const page1 = await createHandler(tieDb).execute({
       size: 2,
       direction: "next",
     });
@@ -697,7 +694,7 @@ describe("tied cursor values with a projected select", () => {
     expect(page1.data.map((row) => row.label)).toEqual(["A"]);
     expect(page1.nextCursor).toBe(T1.getTime());
 
-    const page2 = await createHandler(db).execute({
+    const page2 = await createHandler(tieDb).execute({
       size: 2,
       direction: "next",
       cursor: page1.nextCursor,
@@ -727,7 +724,7 @@ describe("tied cursor values with a projected select", () => {
   it("projects the full row shape on the overflow re-query too", async () => {
     // The degenerate branch issues a SECOND select; it has to use the same
     // projection, or a page would come back keyed differently from its siblings.
-    const handler = createHandler(db);
+    const handler = createHandler(tieDb);
     const page1 = await handler.execute({ size: 1, direction: "next" });
     const page2 = await handler.execute({
       size: 1,
@@ -747,7 +744,7 @@ describe("tied cursor values with a projected select", () => {
   });
 
   it("pages backwards through tied rows without dropping any", async () => {
-    const handler = createHandler(db);
+    const handler = createHandler(tieDb);
     const first = await handler.execute({
       size: 2,
       direction: "prev",
@@ -777,11 +774,6 @@ describe("tied cursor values with a projected select", () => {
 // ── 6. Scope ────────────────────────────────────────────────────────────────
 
 describe("scope", () => {
-  let db: PgliteDb;
-  beforeAll(async () => {
-    db = await createSeededDb(seedRows);
-  });
-
   const errorRows = seedRows.filter((row) => row.level === "error");
   /** A window that keeps E (450) and G (300) but drops D (900). */
   const latencyWindow = [300, 500];
