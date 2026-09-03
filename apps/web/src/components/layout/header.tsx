@@ -33,7 +33,7 @@ export function Header({ page, sections }: HeaderProps) {
             <NextLink href="https://github.com/openstatusHQ/data-table-filters">
               <Github />
               <span className="text-muted-foreground group-hover:text-foreground font-mono">
-                2k
+                2.2k
               </span>
             </NextLink>
           </Button>

@@ -330,16 +330,16 @@
       "--color-info": "var(--info)"
     },
     "light": {
-      "success": "hsl(210 40% 96.1%)",
-      "warning": "hsl(24.6 95% 53.1%)",
-      "error": "hsl(0 84.2% 60.2%)",
-      "info": "hsl(198.63 88.66% 48.43%)"
+      "success": "oklch(0.97 0 0)",
+      "warning": "oklch(0.705 0.187 47.602)",
+      "error": "oklch(0.637 0.208 25.326)",
+      "info": "oklch(0.685 0.148 237.321)"
     },
     "dark": {
-      "success": "hsl(217.2 32.6% 17.5%)",
-      "warning": "hsl(24.6 95% 53.1%)",
-      "error": "hsl(0 84.2% 60.2%)",
-      "info": "hsl(198.63 88.66% 48.43%)"
+      "success": "oklch(0.269 0 0)",
+      "warning": "oklch(0.705 0.187 47.602)",
+      "error": "oklch(0.637 0.208 25.326)",
+      "info": "oklch(0.685 0.148 237.321)"
     }
   },
   "docs": "https://data-table.openstatus.dev/docs",
