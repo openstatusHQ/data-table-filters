@@ -85,6 +85,10 @@ export const timingPhasesColumn: ColumnDef<DataTableFeatures, ColumnSchema> = {
   enableResizing: false,
   size: 130,
   minSize: 130,
+  // Pins the width: the bars have no intrinsic size, so without an explicit
+  // fixed width the column would collapse once another column claims the
+  // table's leftover width.
+  maxSize: 130,
   meta: {
     label: "Timing Phases",
   },

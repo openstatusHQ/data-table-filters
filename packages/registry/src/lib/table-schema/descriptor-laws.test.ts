@@ -162,6 +162,7 @@ const COMMON_KEYS: Record<keyof ColumnDescriptorCommon, "always" | "optional"> =
     optional: "always",
     display: "always",
     size: "optional",
+    minSize: "optional",
     hidden: "always",
     enableHiding: "always",
     hideHeader: "always",
@@ -219,6 +220,7 @@ describe("descriptor key manifest", () => {
         .hideHeader()
         .resizable()
         .size(110)
+        .minSize(90)
         .sortable()
         .sheet({
           label: "Latency",

@@ -58,7 +58,7 @@ The list response gains two things:
         "label": "Delete",
         "scope": ["row", "bulk"],
         "variant": "destructive",
-        "confirm": "Delete {count} logs?",
+        "confirm": "Delete {count} {log|logs}?",
         "href": "/drizzle/api/actions/delete"
       }
     ]
@@ -131,7 +131,7 @@ export const actionHandler = createActionHandler({
     delete: {
       label: "Delete",
       variant: "destructive",
-      confirm: "Delete {count} logs?",
+      confirm: "Delete {count} {log|logs}?",
       handler: async (ctx, tx) =>
         (await tx.delete(logs).where(ctx.where).returning()).length,
     },
@@ -151,7 +151,14 @@ construction throws if any filterable column is missing from the mapping — a
 its search params. One declaration, two engines: `filters.matches` evaluates it
 per row to compute `_actions`, and the SQL engine compiles it into the handler's
 WHERE guard. Keys must be filterable columns — a typo throws at construction
-instead of silently matching every row. For availability the filter semantics
+instead of silently matching every row, and when `filters` was built from
+`tableSchema.definition` it does not get that far: `when` is typed as
+`FilterValues<typeof tableSchema.definition>`, so an unknown key, a
+`.notFilterable()` column, or a value the column cannot filter on
+(`{ level: ["fatal"] }` against `col.enum(LEVELS)`) is a compile error.
+`defineFilters(schemaJson)` and `defineFilters(specs)` know nothing about the
+columns at compile time, so there `when` stays untyped and only the runtime
+check applies. For availability the filter semantics
 cannot express, `available: (row) => boolean` is a JS-only escape hatch; it
 shapes `_actions` but has no SQL counterpart, so the handler must guard itself.
 
@@ -227,8 +234,9 @@ import {
 import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
 
 const baseColumns = generateColumns<ColumnSchema>(tableSchema.definition);
-// The actions column cannot be hidden, so append it only once the server
-// advertises actions. Module constants keep the table's options stable.
+// The actions column ships hidden by default (`columnVisibility: { actions:
+// false }`) and is enabled from the view options. Append it only once the
+// server advertises actions. Module constants keep the table's options stable.
 const columnsWithActions = [
   ...baseColumns,
   createActionsColumn<ColumnSchema>(),
@@ -243,6 +251,7 @@ function ClientInner() {
     <DataTableActionsProvider<ColumnSchema>
       actions={actions}
       getRowId={(row) => row.uuid}
+      getRowLabel={(row) => row.pathname} // names the row for screen readers
       queryKeyPrefix="drizzle" // invalidated after every applied action
     >
       <DataTableInfinite
@@ -277,7 +286,9 @@ carries only the eligible ids and the confirmation says how many were skipped.
 The handler's `maxIds` (default 1000) is published on every bulk descriptor,
 and a selection past it disables the button with the limit as its tooltip
 rather than earning an `invalid_request` — that many rows is what the filter
-scope is for. `confirm` on a descriptor opens an alert dialog with `{count}` interpolated;
+scope is for. `confirm` on a descriptor opens an alert dialog with `{count}` interpolated
+and `{one|other}` picking a form by it (`"Delete {count} {log|logs}?"`), and stays
+open with its buttons disabled until the request settles;
 `variant: "destructive"` styles both the button and the dialog's action. After
 a success the provider toasts the result, clears the selection, and invalidates
 `[queryKeyPrefix]`, so rows that no longer match leave the view.

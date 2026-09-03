@@ -391,10 +391,11 @@ describe("generateColumns — select column", () => {
 // ── sizing ───────────────────────────────────────────────────────────────────
 
 describe("generateColumns — sizing", () => {
-  it("locks size === minSize when the column is not resizable", () => {
+  it("locks size === minSize === maxSize when the column is not resizable", () => {
     const [def] = defs({ host: col.string().label("Host").size(125) });
     expect(def!.size).toBe(125);
     expect(def!.minSize).toBe(125);
+    expect(def!.maxSize).toBe(125);
     expect(def!.enableResizing).toBe(false);
   });
 
@@ -404,6 +405,7 @@ describe("generateColumns — sizing", () => {
     });
     expect(def!.size).toBe(125);
     expect(def!.minSize).toBeUndefined();
+    expect(def!.maxSize).toBeUndefined();
     expect(def!.enableResizing).toBe(true);
   });
 
@@ -411,6 +413,22 @@ describe("generateColumns — sizing", () => {
     const [def] = defs({ host: col.string().label("Host") });
     expect(def!.size).toBeUndefined();
     expect(def!.minSize).toBeUndefined();
+  });
+
+  it("sets only minSize (flexing floor) for a .minSize() column", () => {
+    const [def] = defs({ date: col.timestamp().label("Date").minSize(200) });
+    expect(def!.minSize).toBe(200);
+    expect(def!.size).toBeUndefined();
+    expect(def!.maxSize).toBeUndefined();
+  });
+
+  it("keeps .size() as the initial width when .minSize() is also set — no lock", () => {
+    const [def] = defs({
+      date: col.timestamp().label("Date").size(250).minSize(200),
+    });
+    expect(def!.size).toBe(250);
+    expect(def!.minSize).toBe(200);
+    expect(def!.maxSize).toBeUndefined();
   });
 
   it("forwards enableHiding: false, and omits it otherwise", () => {

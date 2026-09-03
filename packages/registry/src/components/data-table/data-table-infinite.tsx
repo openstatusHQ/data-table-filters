@@ -49,6 +49,35 @@ import { LoaderCircle } from "lucide-react";
 import * as React from "react";
 import { canLoadMore } from "./utils";
 
+/**
+ * Derive a header/cell width style from the column's sizing mode:
+ *
+ * - resizable → track the measured size var (`clamp` is `"min"` on headers so
+ *   a drag can grow past the content, `"max"` on cells so `truncate` kicks in)
+ * - locked (`maxSize` on the def) → pin the var as width, min and max
+ * - floor only (`minSize` without `maxSize`) → flex, but never below the floor
+ * - unsized → flex freely
+ */
+function columnSizeStyle(
+  column: {
+    getCanResize: () => boolean;
+    columnDef: { minSize?: number; maxSize?: number };
+  },
+  sizeVar: string,
+  clamp: "min" | "max",
+): React.CSSProperties | undefined {
+  const width = `var(${sizeVar})`;
+  if (column.getCanResize()) {
+    return clamp === "min"
+      ? { width, minWidth: width }
+      : { width, maxWidth: width };
+  }
+  if (column.columnDef.maxSize)
+    return { width, minWidth: width, maxWidth: width };
+  if (column.columnDef.minSize) return { minWidth: width };
+  return undefined;
+}
+
 // TODO: add a possible chartGroupBy
 /**
  * BREAKING (v9): the `TValue` type parameter is gone.
@@ -443,20 +472,11 @@ export function DataTableInfinite<TData extends RowData>({
                       return (
                         <TableHead
                           key={header.id}
-                          style={
-                            header.column.getCanResize()
-                              ? {
-                                  width: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                  minWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                }
-                              : header.column.columnDef.maxSize
-                                ? {
-                                    width: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                    minWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                    maxWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                  }
-                                : undefined
-                          }
+                          style={columnSizeStyle(
+                            header.column,
+                            `--header-${header.id.replaceAll(".", "-")}-size`,
+                            "min",
+                          )}
                           className={cn(
                             "border-border relative truncate border-b select-none last:[&>.cursor-col-resize]:opacity-0",
                             header.column.columnDef.meta?.headerClassName,
@@ -666,20 +686,11 @@ function Row<TData extends RowData>({
           row.getVisibleCells().map((cell) => (
             <TableCell
               key={cell.id}
-              style={
-                cell.column.getCanResize()
-                  ? {
-                      width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                      maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                    }
-                  : cell.column.columnDef.maxSize
-                    ? {
-                        width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                        minWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                        maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                      }
-                    : undefined
-              }
+              style={columnSizeStyle(
+                cell.column,
+                `--col-${cell.column.id.replaceAll(".", "-")}-size`,
+                "max",
+              )}
               className={cn(
                 "border-border truncate border-b",
                 cell.column.columnDef.meta?.cellClassName,

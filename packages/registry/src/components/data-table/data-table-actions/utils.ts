@@ -7,13 +7,25 @@ import {
   type ActionScope,
 } from "@dtf/registry/lib/actions/types";
 
-/** Replace `{name}` placeholders. Unknown names are left as-is. */
+/**
+ * Replace `{name}` placeholders. Unknown names are left as-is.
+ *
+ * `{one|other}` picks a form by `vars.count` — `"Delete {count} {log|logs}?"`
+ * reads "Delete 1 log?" and "Delete 3 logs?". Descriptors travel as JSON, so
+ * this is the only way copy can pluralise without a function.
+ */
 export function interpolate(
   template: string,
   vars: Record<string, string | number>,
 ): string {
-  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
-    Object.hasOwn(vars, name) ? String(vars[name]) : match,
+  return template.replace(
+    /\{(\w+)\}|\{([^{}|]*)\|([^{}|]*)\}/g,
+    (match, name: string | undefined, one: string, other: string) => {
+      if (name !== undefined) {
+        return Object.hasOwn(vars, name) ? String(vars[name]) : match;
+      }
+      return Number(vars.count) === 1 ? one : other;
+    },
   );
 }
 

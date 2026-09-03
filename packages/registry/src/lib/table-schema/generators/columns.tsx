@@ -166,6 +166,31 @@ function renderCell(
 }
 
 /**
+ * The one interpretation of `.size()` / `.minSize()` / `.resizable()`:
+ *
+ * - `.minSize(px)` — a flexing column with a floor: it absorbs the table's
+ *   leftover width but never compresses below `px`.
+ * - `.size(px)` without `.resizable()` — locked: min/max pin the rendered
+ *   width, so only an unsized column can flex.
+ * - `.size(px)` with `.resizable()` — `px` is the initial width only.
+ */
+function sizingFor(config: {
+  size?: number;
+  minSize?: number;
+  resizable: boolean;
+}): { size?: number; minSize?: number; maxSize?: number } {
+  if (config.minSize !== undefined) {
+    return {
+      minSize: config.minSize,
+      ...(config.size !== undefined ? { size: config.size } : {}),
+    };
+  }
+  if (config.size === undefined) return {};
+  if (config.resizable) return { size: config.size };
+  return { size: config.size, minSize: config.size, maxSize: config.size };
+}
+
+/**
  * Generate ColumnDef[] from a table schema definition.
  *
  * Rules:
@@ -232,9 +257,7 @@ export function generateColumns<TData extends RowData>(
         enableSorting: false,
         enableHiding: false,
         enableResizing: false,
-        ...(config.size !== undefined
-          ? { size: config.size, minSize: config.size, maxSize: config.size }
-          : {}),
+        ...sizingFor(config),
         meta: { label: config.label, kind: "select", hidden: config.hidden },
       } as ColumnDef<DataTableFeatures, TData>;
     }
@@ -297,12 +320,7 @@ export function generateColumns<TData extends RowData>(
       enableResizing: config.resizable,
       ...(config.enableHiding === false ? { enableHiding: false } : {}),
       ...(filterFn ? { filterFn } : {}),
-      ...(config.size !== undefined
-        ? {
-            size: config.size,
-            ...(config.resizable ? {} : { minSize: config.size }),
-          }
-        : {}),
+      ...sizingFor(config),
       meta,
     };
 

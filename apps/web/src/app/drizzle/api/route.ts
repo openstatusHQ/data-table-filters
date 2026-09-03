@@ -27,7 +27,8 @@ const handler = createDrizzleHandler({
   cursorColumn: "date",
   defaultSize: 40,
   // Part of the wire contract but never filtered or sorted, so absent from
-  // `columnMapping`. Rows come back keyed by schema keys either way.
+  // `columnMapping` — unlike `uuid`, which lives there because actions key
+  // rows by it. Rows come back keyed by schema keys either way.
   select: {
     headers: logs.headers,
     message: logs.message,

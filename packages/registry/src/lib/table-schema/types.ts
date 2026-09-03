@@ -307,6 +307,18 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
   size(px: number): ColBuilder<T, F>;
 
   /**
+   * Sets a minimum width in pixels for a flexing column.
+   *
+   * A column without `.size()` flexes to absorb the table's leftover width;
+   * `.minSize()` is its floor — without one, truncating cells let the browser
+   * compress the flexing column to nothing before anything overflows.
+   *
+   * @example
+   * col.timestamp().label("Date").minSize(200)
+   */
+  minSize(px: number): ColBuilder<T, F>;
+
+  /**
    * Enables click-to-sort on the column header.
    *
    * Renders a `DataTableColumnHeader` with ascending/descending/none sort controls.
@@ -447,6 +459,7 @@ export type ColumnDescriptorCommon = {
   optional: boolean;
   display: DisplayDescriptor;
   size?: number;
+  minSize?: number;
   hidden: boolean;
   enableHiding: boolean;
   hideHeader: boolean;

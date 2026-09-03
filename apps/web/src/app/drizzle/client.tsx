@@ -49,19 +49,21 @@ const baseColumns = [
   timingPhasesColumn,
 ];
 // Renders from `meta.actions` + each row's `_actions`. Appended only once the
-// server advertises actions: the column cannot be hidden, and 40px of nothing
-// is what it would be until then. Both arrays are module constants so the
-// table's options stay referentially stable on either side of the switch.
+// server advertises actions, and hidden by default even then — users enable it
+// from the view options. Both arrays are module constants so the table's
+// options stay referentially stable on either side of the switch.
 const columnsWithActions = [
   ...baseColumns,
-  createActionsColumn<ColumnSchema>(),
+  createActionsColumn<ColumnSchema>({ size: 37 }),
 ];
 
 const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
 const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
-const defaultColumnVisibility = getDefaultColumnVisibility(
-  tableSchema.definition,
-);
+const defaultColumnVisibility = {
+  ...getDefaultColumnVisibility(tableSchema.definition),
+  // The actions column ships hidden; users opt in via the view options.
+  actions: false,
+};
 
 export function Client({ initialState }: { initialState: SearchParamsType }) {
   useResetFocus();
@@ -151,6 +153,9 @@ function ClientInner() {
     <DataTableActionsProvider<ColumnSchema>
       actions={actions}
       getRowId={(row) => row.uuid}
+      // The uuid identifies the row on the wire; this names it for a screen
+      // reader reading the actions trigger.
+      getRowLabel={(row) => `${row.method} ${row.pathname}`}
       queryKeyPrefix="drizzle"
     >
       <DataTableInfinite

@@ -2,8 +2,8 @@ export { DataTableActionsBar } from "./bar";
 export { createActionsColumn, DataTableActionsCell } from "./column";
 export {
   DataTableActionsConfirmDialog,
-  describePending,
-  type PendingCommandView,
+  describeCommand,
+  type ConfirmingCommandView,
 } from "./confirm-dialog";
 export { DataTableActionsFilterMenu, pickFilterValues } from "./filter-menu";
 export {

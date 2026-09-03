@@ -25,7 +25,10 @@ export type ActionDescriptor = {
   label: string;
   scope: ActionScope[];
   variant?: ActionVariant;
-  /** Confirmation copy. `{count}` is replaced with the affected row count. */
+  /**
+   * Confirmation copy. `{count}` is replaced with the affected row count and
+   * `{one|other}` picks a form by it: `"Delete {count} {log|logs}?"`.
+   */
   confirm?: string;
   /** Where to POST. Composed by the server from its `basePath`. */
   href: string;

@@ -1,4 +1,12 @@
-import { defineFilters, type FilterSpec } from "@dtf/registry/lib/filters";
+import {
+  defineFilters,
+  type FilterSpec,
+  type FilterValues,
+} from "@dtf/registry/lib/filters";
+import {
+  col,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 import { describe, expect, it } from "vitest";
 import { defineActions, type ActionDefinitionBase } from "../define-actions";
 import { ROW_ACTIONS_KEY, type ActionDescriptor } from "../types";
@@ -395,5 +403,68 @@ describe("annotate — per-row availability", () => {
     expect(actionsFor({ "timing.dns": 5 })).toEqual([]);
     // Nested, as a hand-built row might carry it.
     expect(actionsFor({ timing: { dns: 75 } })).toEqual(["slow"]);
+  });
+});
+
+describe("when — typed by the schema the filters were built from", () => {
+  const LEVELS = ["error", "warn", "info"] as const;
+  const definition = {
+    level: col.enum(LEVELS).label("Level"),
+    latency: col
+      .number()
+      .label("Latency")
+      .filterable("slider", { min: 0, max: 5000 }),
+    // `.notFilterable()` drops the key from `FilterValues` entirely.
+    id: col.string().label("Id").notFilterable(),
+  } satisfies TableSchemaDefinition;
+  const typed = defineFilters(definition);
+  type Def = ActionDefinitionBase<Row, FilterValues<typeof definition>>;
+
+  it("accepts values the column can filter on, and evaluates them", () => {
+    const { actionsFor } = defineActions(
+      typed,
+      {
+        escalate: {
+          label: "Escalate",
+          when: { level: ["error"], latency: [1000, 5000] },
+        },
+      },
+      { basePath: "/api/actions" },
+    );
+    expect(actionsFor({ level: "error", latency: 2000 })).toEqual(["escalate"]);
+    expect(actionsFor({ level: "error", latency: 10 })).toEqual([]);
+    expect(actionsFor({ level: "info", latency: 2000 })).toEqual([]);
+  });
+
+  it("rejects, at compile time, what `assertWhen` would reject at runtime", () => {
+    // Each of these is also a runtime throw or a silent "every row"; the point
+    // is that the definition never gets that far.
+    // @ts-expect-error — `levl` is not a column
+    const typo: Def = { label: "A", when: { levl: ["error"] } };
+    // @ts-expect-error — `id` is `.notFilterable()`
+    const unfilterable: Def = { label: "A", when: { id: "x" } };
+    // @ts-expect-error — "fatal" is not a member of LEVELS
+    const member: Def = { label: "A", when: { level: ["fatal"] } };
+    // @ts-expect-error — a slider takes numbers, not a string
+    const shape: Def = { label: "A", when: { latency: "slow" } };
+    void [typo, unfilterable, member, shape];
+
+    // Through inference from `filters`, not just the annotated type.
+    expect(() =>
+      defineActions(
+        typed,
+        // @ts-expect-error — `levl` is not a column
+        { a: { label: "A", when: { levl: ["error"] } } },
+        { basePath: "/x" },
+      ),
+    ).toThrow(/when."levl" is not a filterable column/);
+  });
+
+  it("stays untyped when the filters came from specs or SchemaJSON", () => {
+    // `filters` above is spec-built: any key, any value, checked at runtime.
+    const loose: ActionDefinitionBase = { label: "A", when: { anything: 1 } };
+    expect(() =>
+      defineActions(filters, { a: loose }, { basePath: "/x" }),
+    ).toThrow(/not a filterable column/);
   });
 });

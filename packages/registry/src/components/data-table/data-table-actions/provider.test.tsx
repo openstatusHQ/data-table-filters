@@ -56,7 +56,7 @@ let container: HTMLDivElement;
 let root: Root;
 let queryClient: QueryClient;
 let calls: Array<{ href: string; body: Record<string, unknown> }>;
-let respond: (href: string) => Response;
+let respond: (href: string) => Response | Promise<Response>;
 
 function fetcher(href: string, init?: RequestInit): Promise<Response> {
   calls.push({ href, body: JSON.parse(String(init?.body)) });
@@ -72,7 +72,11 @@ function json(status: number, body: unknown) {
 
 function mount(
   ui: React.ReactNode,
-  options: { actions?: ActionDescriptor[]; queryKeyPrefix?: string } = {},
+  options: {
+    actions?: ActionDescriptor[];
+    queryKeyPrefix?: string;
+    getRowLabel?: (row: Item) => string;
+  } = {},
 ) {
   act(() =>
     root.render(
@@ -80,6 +84,7 @@ function mount(
         <DataTableActionsProvider<Item>
           actions={options.actions ?? [replay, discard]}
           getRowId={(row) => row.id}
+          getRowLabel={options.getRowLabel}
           queryKeyPrefix={options.queryKeyPrefix ?? "demo"}
           fetcher={fetcher as typeof fetch}
         >
@@ -105,6 +110,11 @@ function button(actionId: string) {
   );
   if (!el) throw new Error(`no button for ${actionId}`);
   return el;
+}
+
+/** The disabled reason lives on the wrapper: a disabled button shows no title. */
+function reason(actionId: string) {
+  return button(actionId).parentElement!.title;
 }
 
 function dialog() {
@@ -157,9 +167,10 @@ describe("DataTableActionsBar", () => {
     expect(container.querySelector('button[data-action="purge"]')).toBeNull();
   });
 
-  it("disables a button when no selected row qualifies", () => {
+  it("disables a button when no selected row qualifies, and says why", () => {
     mount(<DataTableActionsBar rows={[rows[1]!]} />);
     expect(button("replay").disabled).toBe(true);
+    expect(reason("replay")).toMatch(/Select a row/);
   });
 
   it("refuses a selection past the server's `maxIds` with the limit as the reason", () => {
@@ -169,8 +180,9 @@ describe("DataTableActionsBar", () => {
     // Two eligible for replay, one for discard.
     expect(button("replay").disabled).toBe(true);
     expect(button("replay").dataset).toHaveProperty("overLimit");
-    expect(button("replay").title).toMatch(/at most 1 rows/);
+    expect(reason("replay")).toMatch(/at most 1 rows/);
     expect(button("discard").disabled).toBe(false);
+    expect(reason("discard")).toBe("");
     expect(button("discard").dataset).not.toHaveProperty("overLimit");
     act(() => button("replay").click());
     expect(calls).toEqual([]);
@@ -226,6 +238,83 @@ describe("DataTableActionsBar", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]!.body).toMatchObject({ scope: "ids", ids: ["a"] });
     expect(dialog()).toBeNull();
+  });
+
+  it("keeps the confirmation open, buttons disabled, until the request settles", async () => {
+    let resolve!: (response: Response) => void;
+    respond = () => new Promise<Response>((r) => (resolve = r));
+    mount(<DataTableActionsBar rows={rows} />);
+
+    act(() => button("discard").click());
+    await flush();
+    act(() => dialogButton("Discard").click());
+    await flush();
+
+    // Sent, but not yet answered: still open and no longer interactive.
+    expect(calls).toHaveLength(1);
+    expect(dialog()).not.toBeNull();
+    expect(dialogButton("Discard").disabled).toBe(true);
+    expect(dialogButton("Cancel").disabled).toBe(true);
+    expect(toast.success).not.toHaveBeenCalled();
+
+    act(() => {
+      dialog()?.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      );
+    });
+    await flush();
+    expect(dialog()).not.toBeNull();
+
+    resolve(json(200, { applied: 1 }));
+    await flush();
+
+    expect(dialog()).toBeNull();
+    expect(toast.success).toHaveBeenCalledWith("Discard: applied to 1");
+  });
+
+  it("keeps the title while the dialog animates out", async () => {
+    // jsdom has no CSS animations, so Radix unmounts closed content at once.
+    // Report one per `data-state` — Presence only suspends the unmount when
+    // the name changes on close — and the content stays mounted until
+    // `animationend`: the window in which an emptied title flickers.
+    const getComputedStyle = window.getComputedStyle;
+    const spy = vi
+      .spyOn(window, "getComputedStyle")
+      .mockImplementation((element, pseudo) => {
+        const styles = getComputedStyle.call(window, element, pseudo);
+        return new Proxy(styles, {
+          get: (target, key) =>
+            key === "animationName"
+              ? `${element.getAttribute("data-state")}-animation`
+              : Reflect.get(target, key),
+        });
+      });
+    try {
+      mount(<DataTableActionsBar rows={rows} />);
+      act(() => button("discard").click());
+      await flush();
+      act(() => dialogButton("Cancel").click());
+      await flush();
+
+      const closing = document.querySelector<HTMLElement>(
+        '[data-slot="alert-dialog-content"]',
+      );
+      expect(closing?.getAttribute("data-state")).toBe("closed");
+      expect(closing?.textContent).toContain("Discard 1 messages?");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("closes the confirmation when the request fails", async () => {
+    respond = () => json(500, { error: "failed" });
+    mount(<DataTableActionsBar rows={rows} />);
+    act(() => button("discard").click());
+    await flush();
+    act(() => dialogButton("Discard").click());
+    await flush();
+    expect(dialog()).toBeNull();
+    expect(toast.error).toHaveBeenCalledWith("Discard failed: failed");
   });
 
   it("cancelling the confirmation sends nothing", async () => {
@@ -347,10 +436,24 @@ describe("DataTableActionsCell", () => {
     );
     expect(
       container.querySelector(
-        '[data-row="a"] button[aria-label="Actions for a"]',
+        '[data-row="a"] button[aria-label="Row actions"]',
       ),
     ).not.toBeNull();
     expect(container.querySelector('[data-row="b"] button')).toBeNull();
+  });
+
+  // The row id is the internal key the wire uses; a composite or opaque one
+  // reads as noise, so only a host-supplied label names the row.
+  it("names the row from getRowLabel, never from the row id", () => {
+    mount(<DataTableActionsCell row={rows[0]!} />, {
+      getRowLabel: (row) => `log ${row.id.toUpperCase()}`,
+    });
+    expect(
+      container.querySelector('button[aria-label="Actions for log A"]'),
+    ).not.toBeNull();
+    expect(container.querySelector('button[aria-label="Actions for a"]')).toBe(
+      null,
+    );
   });
 
   it("keeps Enter and click on the trigger away from the row's own handlers", () => {
@@ -362,7 +465,7 @@ describe("DataTableActionsCell", () => {
       </div>,
     );
     const trigger = container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Actions for a"]',
+      'button[aria-label="Row actions"]',
     )!;
     act(() => {
       trigger.dispatchEvent(
@@ -372,6 +475,28 @@ describe("DataTableActionsCell", () => {
     });
     expect(rowKeyDown).not.toHaveBeenCalled();
     expect(rowClick).not.toHaveBeenCalled();
+  });
+
+  // Only the keys that open the row are stopped: swallowing the rest would
+  // silently kill app-level shortcuts while focus sits in the cell.
+  it("lets every other key bubble past the cell", () => {
+    const rowKeyDown = vi.fn();
+    mount(
+      <div onKeyDown={rowKeyDown}>
+        <DataTableActionsCell row={rows[0]!} />
+      </div>,
+    );
+    const trigger = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Row actions"]',
+    )!;
+    act(() => {
+      for (const key of ["k", "Escape", "ArrowDown", "j"]) {
+        trigger.dispatchEvent(
+          new KeyboardEvent("keydown", { key, bubbles: true }),
+        );
+      }
+    });
+    expect(rowKeyDown).toHaveBeenCalledTimes(4);
   });
 });
 

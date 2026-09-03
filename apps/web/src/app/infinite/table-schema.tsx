@@ -69,7 +69,10 @@ export const tableSchema = createTableSchema({
     .display("timestamp")
     .defaultOpen()
     .commandDisabled()
-    .size(200)
+    // No .size(): the one unsized column — flexes to absorb the table's
+    // leftover width so every sized column keeps its exact width. The
+    // `minSize` floor keeps the timestamp from clipping.
+    .minSize(200)
     .sortable()
     .sheet({
       component: (props) =>

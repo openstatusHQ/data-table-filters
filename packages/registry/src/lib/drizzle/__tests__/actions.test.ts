@@ -1,4 +1,12 @@
-import { defineFilters, type FilterSpec } from "@dtf/registry/lib/filters";
+import {
+  defineFilters,
+  type FilterSpec,
+  type FilterValues,
+} from "@dtf/registry/lib/filters";
+import {
+  col,
+  type TableSchemaDefinition,
+} from "@dtf/registry/lib/table-schema";
 import { count, eq, sql } from "drizzle-orm";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -189,6 +197,60 @@ describe("createActionHandler", () => {
   });
 
   describe("construction", () => {
+    it("types `when` against a schema-built `filters`, and still checks it at runtime", () => {
+      const STATUSES = ["pending", "dead", "delivered"] as const;
+      const definition = {
+        event_type: col.string().label("Event"),
+        status: col.enum(STATUSES).label("Status"),
+        attempt: col
+          .number()
+          .label("Attempt")
+          .filterable("slider", { min: 0, max: 10 }),
+        date: col.timestamp().label("Date"),
+      } satisfies TableSchemaDefinition;
+      const typed = defineFilters(definition);
+
+      const handler = createActionHandler({
+        db,
+        table: outbox,
+        filters: typed,
+        columnMapping,
+        idColumn: "id",
+        basePath: "/api/actions",
+        actions: {
+          replay: { ...replay, when: { status: ["dead"], attempt: [3, 10] } },
+        },
+      });
+      expect(handler.descriptors.map((d) => d.id)).toEqual(["replay"]);
+
+      expect(() =>
+        createActionHandler({
+          db,
+          table: outbox,
+          filters: typed,
+          columnMapping,
+          idColumn: "id",
+          basePath: "/api/actions",
+          actions: {
+            replay: {
+              ...replay,
+              // @ts-expect-error — `staus` is not a column
+              when: { staus: ["dead"] },
+            },
+          },
+        }),
+      ).toThrow(/when."staus" is not a filterable column/);
+
+      const _member: ActionHandlerConfig<
+        Record<string, unknown>,
+        FilterValues<typeof definition>
+      >["actions"] = {
+        // @ts-expect-error — "lost" is not a member of STATUSES
+        replay: { ...replay, when: { status: ["lost"] } },
+      };
+      void _member;
+    });
+
     it("throws when idColumn is not mapped", () => {
       expect(() => createHandler(db, { idColumn: "uuid" })).toThrow(
         /idColumn "uuid" not found in columnMapping/,
@@ -315,6 +377,25 @@ describe("createActionHandler", () => {
       );
       await expect(
         lenient.execute("replay", { scope: "ids", ids: ["m1"], cmd_id: "c" }),
+      ).resolves.toEqual({ applied: 1 });
+    });
+
+    it("rejects ids that fail an async-refined `idSchema` as invalid_request", async () => {
+      // Zod throws on `safeParse` for an async refinement; escaping as a
+      // plain exception would surface as a 500 instead of a 400.
+      const known = new Set(["m1", "m3"]);
+      const handler = createHandler(db, {
+        idSchema: z
+          .string()
+          .refine(async (id) => known.has(id), { message: "unknown id" }),
+      });
+      const error = await expectError(
+        handler.execute("replay", { scope: "ids", ids: ["nope"], cmd_id: "c" }),
+        "invalid_request",
+      );
+      expect(error.status).toBe(400);
+      await expect(
+        handler.execute("replay", { scope: "ids", ids: ["m1"], cmd_id: "c2" }),
       ).resolves.toEqual({ applied: 1 });
     });
 

@@ -78,6 +78,12 @@ describe("col.string()", () => {
     );
   });
 
+  it(".minSize() sets the pixel floor", () => {
+    expect(
+      resolveColumn(col.timestamp().label("Date").minSize(200)).minSize,
+    ).toBe(200);
+  });
+
   it(".size() sets the pixel size", () => {
     expect(resolveColumn(col.string().label("Host").size(200)).size).toBe(200);
   });

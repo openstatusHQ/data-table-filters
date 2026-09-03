@@ -75,11 +75,10 @@ export function DataTableViewOptions() {
                 onDragCancel={() => setDrag(false)}
               >
                 {sortedColumns
-                  .filter(
-                    (column) =>
-                      typeof column.accessorFn !== "undefined" &&
-                      column.getCanHide(),
-                  )
+                  // `getCanHide()` is the single source of truth: columns that
+                  // must always render (select) declare `enableHiding: false`
+                  // instead of being special-cased here.
+                  .filter((column) => column.getCanHide())
                   .map((column) => (
                     <SortableItem key={column.id} value={column.id} asChild>
                       <CommandItem

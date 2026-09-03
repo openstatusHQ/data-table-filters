@@ -176,6 +176,7 @@ const handAuthored = createTableSchema({
     .filterable("timerange", { presets: DATE_PRESETS })
     .sortable()
     .size(200)
+    .minSize(150)
     .sheet(),
   level: col
     .enum(LEVELS)
@@ -493,6 +494,7 @@ const DESCRIPTOR_KEYS: Record<keyof ColumnDescriptorCommon, true> = {
   optional: true,
   display: true,
   size: true,
+  minSize: true,
   hidden: true,
   enableHiding: true,
   hideHeader: true,
@@ -525,8 +527,11 @@ describe("EMIT_ORDER", () => {
 
   it("matches the keys a real descriptor actually carries", () => {
     // Guards the compile-time list above against drifting from runtime shape:
-    // `description` and `size` are optional, so they need setting to appear.
-    const resolved = resolveColumn(col.string().description("d").size(1));
+    // `description`, `size`, and `minSize` are optional, so they need setting
+    // to appear.
+    const resolved = resolveColumn(
+      col.string().description("d").size(1).minSize(1),
+    );
     const runtimeKeys = Object.keys(resolved).filter(
       (k) => k !== "kind" && k !== "renderers",
     );

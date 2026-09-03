@@ -3,7 +3,7 @@ import type {
   ActionRequest,
 } from "@dtf/registry/lib/actions/types";
 import { describe, expect, it, vi } from "vitest";
-import { describePending } from "./confirm-dialog";
+import { describeCommand } from "./confirm-dialog";
 import { pickFilterValues } from "./filter-menu";
 import {
   ActionRequestError,
@@ -199,35 +199,47 @@ describe("pickFilterValues", () => {
   });
 });
 
-describe("describePending", () => {
+describe("describeCommand", () => {
   it("interpolates the descriptor's confirm copy", () => {
     expect(
-      describePending({ action: discard, count: 3, skipped: 0, scope: "ids" }),
+      describeCommand({ action: discard, count: 3, skipped: 0, scope: "ids" }),
     ).toEqual({ title: "Discard 3 messages?", description: null });
+  });
+
+  it("pluralises the descriptor's confirm copy through `{one|other}`", () => {
+    const remove = { ...discard, confirm: "Delete {count} {log|logs}?" };
+    expect(
+      describeCommand({ action: remove, count: 1, skipped: 0, scope: "ids" })
+        .title,
+    ).toBe("Delete 1 log?");
+    expect(
+      describeCommand({ action: remove, count: 2, skipped: 0, scope: "ids" })
+        .title,
+    ).toBe("Delete 2 logs?");
   });
 
   it("falls back to a generic title and pluralises", () => {
     expect(
-      describePending({ action: replay, count: 1, skipped: 0, scope: "ids" })
+      describeCommand({ action: replay, count: 1, skipped: 0, scope: "ids" })
         .title,
     ).toBe("Replay 1 row?");
     expect(
-      describePending({ action: replay, count: 2, skipped: 0, scope: "ids" })
+      describeCommand({ action: replay, count: 2, skipped: 0, scope: "ids" })
         .title,
     ).toBe("Replay 2 rows?");
   });
 
   it("mentions skipped rows and filter scope", () => {
     expect(
-      describePending({ action: discard, count: 7, skipped: 3, scope: "ids" })
+      describeCommand({ action: discard, count: 7, skipped: 3, scope: "ids" })
         .description,
     ).toBe("3 selected rows do not qualify and will be skipped.");
     expect(
-      describePending({ action: discard, count: 7, skipped: 1, scope: "ids" })
+      describeCommand({ action: discard, count: 7, skipped: 1, scope: "ids" })
         .description,
     ).toBe("1 selected row does not qualify and will be skipped.");
     expect(
-      describePending({
+      describeCommand({
         action: replay,
         count: 40,
         skipped: 0,
@@ -238,7 +250,7 @@ describe("describePending", () => {
 
   it("explains a count mismatch with the server's number", () => {
     expect(
-      describePending({
+      describeCommand({
         action: replay,
         count: 40,
         skipped: 0,

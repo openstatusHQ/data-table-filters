@@ -183,6 +183,7 @@ const EMITTERS: EmitterMap = {
   },
 
   size: (value) => (value === undefined ? [] : [`.size(${value})`]),
+  minSize: (value) => (value === undefined ? [] : [`.minSize(${value})`]),
   hidden: (value) => (value ? [".hidden()"] : []),
   hideHeader: (value) => (value ? [".hideHeader()"] : []),
   resizable: (value) => (value ? [".resizable()"] : []),
@@ -215,6 +216,7 @@ export const EMIT_ORDER: (keyof ColumnDescriptorCommon)[] = [
   "resizable",
   "optional",
   "size",
+  "minSize",
   "sheet",
 ];
 

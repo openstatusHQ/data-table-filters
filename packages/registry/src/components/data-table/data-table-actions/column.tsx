@@ -19,27 +19,37 @@ export function DataTableActionsCell<TData>({
 }: {
   row: { original: TData };
 }) {
-  const { actions, getRowId, getRowActions, trigger } =
+  const { actions, getRowId, getRowActions, getRowLabel, trigger } =
     useDataTableActions<TData>();
   const available = rowScopedActions(actions, getRowActions(row.original));
   if (available.length === 0) return null;
   const id = getRowId(row.original);
+  // Never the row id: it is the internal key the wire uses, which for a
+  // composite or opaque key reads as noise. Hosts name the row themselves.
+  const label = getRowLabel?.(row.original);
 
   return (
     <div
       className="flex items-center justify-center"
       // The row itself opens the sheet on click and on Enter. Both bubble up
       // from the trigger — and, through React's tree, from the portalled menu
-      // items — so both stop here.
+      // items — so both stop here. Only the keys that open the row are
+      // stopped; everything else keeps bubbling to the row, the table, and
+      // any app-level shortcut listening above them.
       onClick={(event) => event.stopPropagation()}
-      onKeyDown={(event) => event.stopPropagation()}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.stopPropagation();
+        }
+      }}
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon-xs"
-            aria-label={`Actions for ${id}`}
+            className="size-5"
+            aria-label={label ? `Actions for ${label}` : "Row actions"}
           >
             <MoreHorizontal />
           </Button>
@@ -66,7 +76,9 @@ export function DataTableActionsCell<TData>({
 
 /**
  * A column that renders `DataTableActionsCell`. Append it to the generated
- * columns; it needs a `DataTableActionsProvider` above the table.
+ * columns; it needs a `DataTableActionsProvider` above the table. The column
+ * is hideable — pair it with a `columnVisibility` default of `{ [id]: false }`
+ * to keep it hidden until enabled from the view options.
  */
 export function createActionsColumn<TData extends RowData>(
   options: { id?: string; size?: number } = {},
@@ -77,7 +89,7 @@ export function createActionsColumn<TData extends RowData>(
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => <DataTableActionsCell row={row} />,
     enableSorting: false,
-    enableHiding: false,
+    enableHiding: true,
     enableResizing: false,
     size,
     minSize: size,

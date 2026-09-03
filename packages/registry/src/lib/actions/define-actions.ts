@@ -13,12 +13,18 @@ import {
  * `createActionHandler` (Drizzle) adds the `handler`; this module never looks
  * at it, which is what keeps `annotate` and `descriptors` importable anywhere.
  */
-export type ActionDefinitionBase<TRow = Record<string, unknown>> = {
+export type ActionDefinitionBase<
+  TRow = Record<string, unknown>,
+  TValues = Record<string, unknown>,
+> = {
   label: string;
   /** Defaults to `["row", "bulk"]`. */
   scope?: ActionScope[];
   variant?: ActionVariant;
-  /** Confirmation copy. `{count}` is replaced with the affected row count. */
+  /**
+   * Confirmation copy. `{count}` is replaced with the affected row count and
+   * `{one|other}` picks a form by it: `"Delete {count} {log|logs}?"`.
+   */
   confirm?: string;
   /**
    * Availability, as filter values — `{ status: ["dead"] }` — in exactly the
@@ -28,8 +34,14 @@ export type ActionDefinitionBase<TRow = Record<string, unknown>> = {
    * compute `_actions`, and the SQL engine compiles it into the handler's WHERE
    * guard. Keys must be filterable columns; anything else throws at
    * construction rather than silently matching every row.
+   *
+   * Typed by the `Filters` the actions are defined against: from a table
+   * schema definition, `TValues` is `FilterValues<typeof definition>`, so a
+   * key that is not a filterable column or a value the column cannot filter
+   * on (`{ level: ["fatal"] }` against `col.enum(LEVELS)`) is a compile
+   * error before it is a runtime one.
    */
-  when?: Record<string, unknown>;
+  when?: Partial<TValues>;
   /**
    * JS-only escape hatch for availability the filter semantics cannot express
    * (a computed field, a non-filterable column). It only shapes `_actions`;
@@ -147,10 +159,14 @@ function assertWhen(
  * public descriptors for the wire, and a per-row availability stamp.
  *
  * Generic over the definition type so the Drizzle handler can carry its
- * `handler` through without this module depending on Drizzle.
+ * `handler` through without this module depending on Drizzle, and over the
+ * filter values so `when` is checked against the columns `filters` declares.
  */
-export function defineActions<TDef extends ActionDefinitionBase<never>>(
-  filters: Filters,
+export function defineActions<
+  TDef extends ActionDefinitionBase<never, TValues>,
+  TValues extends Record<string, unknown> = Record<string, unknown>,
+>(
+  filters: Filters<TValues>,
   actions: Record<string, TDef>,
   options: DefineActionsOptions,
 ): DefinedActions<TDef> {

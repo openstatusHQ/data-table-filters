@@ -11,9 +11,12 @@ import {
   AlertDialogTitle,
 } from "@dtf/registry/components/ui/alert-dialog";
 import type { ActionDescriptor } from "@dtf/registry/lib/actions/types";
+import { LoaderCircle } from "lucide-react";
+import * as React from "react";
 import { interpolate } from "./utils";
 
-export type PendingCommandView = {
+/** The command awaiting the user's answer, as the dialog sees it. */
+export type ConfirmingCommandView = {
   action: ActionDescriptor;
   /** How many rows the user was shown. */
   count: number;
@@ -25,11 +28,11 @@ export type PendingCommandView = {
   actual?: number;
 };
 
-export function describePending(pending: PendingCommandView): {
+export function describeCommand(command: ConfirmingCommandView): {
   title: string;
   description: string | null;
 } {
-  const { action, count, skipped, scope, actual } = pending;
+  const { action, count, skipped, scope, actual } = command;
 
   if (actual !== undefined) {
     return {
@@ -59,22 +62,36 @@ function plural(n: number, noun: string): string {
 }
 
 export function DataTableActionsConfirmDialog({
-  pending,
+  command,
+  inFlight = false,
   onConfirm,
   onCancel,
 }: {
-  pending: PendingCommandView | null;
+  /** Open while non-null. */
+  command: ConfirmingCommandView | null;
+  /**
+   * The confirmed request is on the wire. The dialog stays open with both
+   * buttons disabled until it settles — the owner closes it by clearing
+   * `command`, or swaps in a `count_mismatch` view.
+   */
+  inFlight?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const copy = pending ? describePending(pending) : null;
-  const destructive = pending?.action.variant === "destructive";
+  // Keep the last command on screen while the dialog animates out: `command`
+  // is cleared before the exit transition ends, and an empty title flickers.
+  const [view, setView] = React.useState(command);
+  if (command !== null && command !== view) setView(command);
+
+  const copy = view ? describeCommand(view) : null;
+  const destructive = view?.action.variant === "destructive";
 
   return (
     <AlertDialog
-      open={pending !== null}
+      open={command !== null}
       onOpenChange={(open) => {
-        if (!open) onCancel();
+        // Escape and outside clicks don't abandon a request already sent.
+        if (!open && !inFlight) onCancel();
       }}
     >
       <AlertDialogContent size="sm">
@@ -85,14 +102,23 @@ export function DataTableActionsConfirmDialog({
           ) : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={inFlight}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant={destructive ? "destructive" : "default"}
-            onClick={onConfirm}
+            disabled={inFlight}
+            aria-busy={inFlight || undefined}
+            onClick={(event) => {
+              // Radix closes on click; the owner closes once the request lands.
+              event.preventDefault();
+              onConfirm();
+            }}
           >
-            {pending?.actual !== undefined
+            {inFlight ? (
+              <LoaderCircle aria-hidden className="size-4 animate-spin" />
+            ) : null}
+            {view?.actual !== undefined
               ? "Apply anyway"
-              : (pending?.action.label ?? "Confirm")}
+              : (view?.action.label ?? "Confirm")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

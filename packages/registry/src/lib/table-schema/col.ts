@@ -266,6 +266,10 @@ export function createColBuilder<T, F extends FilterType = FilterType>(
       return next<T, F>({ size: px });
     },
 
+    minSize(px: number): ColBuilder<T, F> {
+      return next<T, F>({ minSize: px });
+    },
+
     sortable(): ColBuilder<T, F> {
       return next<T, F>({ sortable: true });
     },

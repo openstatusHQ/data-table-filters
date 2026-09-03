@@ -57,7 +57,7 @@ export const actionHandler = createActionHandler({
       label: "Delete",
       scope: ["row", "bulk"],
       variant: "destructive",
-      confirm: "Delete {count} logs?",
+      confirm: "Delete {count} {log|logs}?",
       handler: async (ctx, tx) => {
         const rows = await tx
           .delete(logs)

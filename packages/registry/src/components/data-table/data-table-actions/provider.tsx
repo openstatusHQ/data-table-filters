@@ -10,7 +10,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import {
   DataTableActionsConfirmDialog,
-  type PendingCommandView,
+  type ConfirmingCommandView,
 } from "./confirm-dialog";
 import {
   ActionRequestError,
@@ -46,6 +46,12 @@ export type DataTableActionsContextValue<TData = unknown> = {
   getRowId: (row: TData) => string;
   getRowActions: (row: TData) => string[];
   /**
+   * A human name for the row, for the actions trigger's accessible label.
+   * `undefined` when the host did not supply one — the trigger then falls
+   * back to static text rather than reading out the internal row id.
+   */
+  getRowLabel?: (row: TData) => string;
+  /**
    * Start an action. Opens the confirmation if the descriptor asks for one,
    * otherwise sends immediately. A `count_mismatch` reopens the dialog with
    * the server's number and offers to apply anyway.
@@ -71,7 +77,8 @@ export function useDataTableActions<TData = unknown>() {
   return context as unknown as DataTableActionsContextValue<TData>;
 }
 
-type PendingCommand = PendingCommandView & {
+/** What the dialog shows, plus what to send once the user says yes. */
+type ConfirmingCommand = ConfirmingCommandView & {
   request: ActionRequestInput;
   onApplied?: () => void;
 };
@@ -82,6 +89,12 @@ export type DataTableActionsProviderProps<TData> = {
   getRowId: (row: TData) => string;
   /** Defaults to the server's `_actions` stamp. */
   getRowActions?: (row: TData) => string[];
+  /**
+   * Names the row for screen readers ("Actions for <label>"). Pass something
+   * the user can recognize — a title, an email — not the id the wire uses.
+   * Omitted, every trigger reads "Row actions".
+   */
+  getRowLabel?: (row: TData) => string;
   /**
    * The first element of the table's query key. Every page under it is
    * invalidated after a successful action, so rows that no longer match
@@ -98,13 +111,17 @@ export function DataTableActionsProvider<TData>({
   actions,
   getRowId,
   getRowActions,
+  getRowLabel,
   queryKeyPrefix,
   onApplied,
   fetcher,
   children,
 }: DataTableActionsProviderProps<TData>) {
   const queryClient = useQueryClient();
-  const [pending, setPending] = React.useState<PendingCommand | null>(null);
+  // Awaiting the user's answer; distinct from `isPending` (request on the wire).
+  const [confirming, setConfirming] = React.useState<ConfirmingCommand | null>(
+    null,
+  );
 
   const mutation = useMutation({
     mutationFn: (variables: {
@@ -132,6 +149,9 @@ export function DataTableActionsProvider<TData>({
       if (queryKeyPrefix) {
         void queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
       }
+      // The confirmation stays open, with its buttons disabled, until the
+      // request settles — closing it here lets the user see the outcome land.
+      setConfirming(null);
       meta.onApplied?.();
       onApplied?.({ action, request, response });
     },
@@ -142,7 +162,7 @@ export function DataTableActionsProvider<TData>({
         request.scope === "filter"
       ) {
         const { cmd_id: _cmdId, ...input } = request;
-        setPending({
+        setConfirming({
           action,
           request: input,
           count: meta.count,
@@ -153,6 +173,7 @@ export function DataTableActionsProvider<TData>({
         });
         return;
       }
+      setConfirming(null);
       toast.error(`${action.label} failed: ${error.message}`);
     },
   });
@@ -181,7 +202,7 @@ export function DataTableActionsProvider<TData>({
   >(
     (action, request, meta) => {
       if (action.confirm) {
-        setPending({
+        setConfirming({
           action,
           request,
           count: meta.count,
@@ -197,9 +218,8 @@ export function DataTableActionsProvider<TData>({
   );
 
   const confirm = React.useCallback(() => {
-    if (!pending) return;
-    const { action, request, count, skipped, actual, onApplied } = pending;
-    setPending(null);
+    if (!confirming) return;
+    const { action, request, count, skipped, actual, onApplied } = confirming;
     if (actual !== undefined && request.scope === "filter") {
       // The user accepted the server's number: drop the optimistic check.
       const { expected_count: _expected, ...rest } = request;
@@ -207,19 +227,20 @@ export function DataTableActionsProvider<TData>({
       return;
     }
     send(action, request, { count, skipped, onApplied });
-  }, [pending, send]);
+  }, [confirming, send]);
 
-  const cancel = React.useCallback(() => setPending(null), []);
+  const cancel = React.useCallback(() => setConfirming(null), []);
 
   const value = React.useMemo<DataTableActionsContextValue<TData>>(
     () => ({
       actions: actions ?? [],
       getRowId,
       getRowActions: getRowActions ?? rowActionsOf,
+      getRowLabel,
       trigger,
       isPending,
     }),
-    [actions, getRowId, getRowActions, trigger, isPending],
+    [actions, getRowId, getRowActions, getRowLabel, trigger, isPending],
   );
 
   return (
@@ -228,7 +249,8 @@ export function DataTableActionsProvider<TData>({
     >
       {children}
       <DataTableActionsConfirmDialog
-        pending={pending}
+        command={confirming}
+        inFlight={isPending}
         onConfirm={confirm}
         onCancel={cancel}
       />

@@ -37,28 +37,30 @@ export type ActionContext = {
   cmdId: string;
 };
 
-export type DrizzleActionDefinition<TRow = Record<string, unknown>> =
-  ActionDefinitionBase<TRow> & {
-    /**
-     * Runs inside one transaction and returns how many rows it applied to.
-     *
-     * Actions enqueue; they don't execute. A replay flips `status` to
-     * `pending` and lets the worker do the work — that is why one short
-     * transaction is enough and why nothing here does I/O.
-     *
-     * ```ts
-     * handler: async (ctx, tx) => {
-     *   const rows = await tx
-     *     .update(outbox)
-     *     .set({ status: "pending", attempt: 0 })
-     *     .where(ctx.where)
-     *     .returning({ id: outbox.id });
-     *   return rows.length;
-     * }
-     * ```
-     */
-    handler: (ctx: ActionContext, tx: DrizzleDB) => Promise<number>;
-  };
+export type DrizzleActionDefinition<
+  TRow = Record<string, unknown>,
+  TValues = Record<string, unknown>,
+> = ActionDefinitionBase<TRow, TValues> & {
+  /**
+   * Runs inside one transaction and returns how many rows it applied to.
+   *
+   * Actions enqueue; they don't execute. A replay flips `status` to
+   * `pending` and lets the worker do the work — that is why one short
+   * transaction is enough and why nothing here does I/O.
+   *
+   * ```ts
+   * handler: async (ctx, tx) => {
+   *   const rows = await tx
+   *     .update(outbox)
+   *     .set({ status: "pending", attempt: 0 })
+   *     .where(ctx.where)
+   *     .returning({ id: outbox.id });
+   *   return rows.length;
+   * }
+   * ```
+   */
+  handler: (ctx: ActionContext, tx: DrizzleDB) => Promise<number>;
+};
 
 export type ActionAuditEvent = {
   action: string;
@@ -71,15 +73,21 @@ export type ActionAuditEvent = {
   at: Date;
 };
 
-export type ActionHandlerConfig<TRow = Record<string, unknown>> = {
+export type ActionHandlerConfig<
+  TRow = Record<string, unknown>,
+  TValues = Record<string, unknown>,
+> = {
   db: DrizzleDB;
   table: PgTable;
-  /** The same `defineFilters(...)` the list handler uses. */
-  filters: Filters;
+  /**
+   * The same `defineFilters(...)` the list handler uses. Built from the table
+   * schema definition, it also types every action's `when` guard.
+   */
+  filters: Filters<TValues>;
   columnMapping: ColumnMapping;
   /** The schema key that identifies a row. Must be in `columnMapping`. */
   idColumn: string;
-  actions: Record<string, DrizzleActionDefinition<TRow>>;
+  actions: Record<string, DrizzleActionDefinition<TRow, TValues>>;
   /** `href` is `${basePath}/${id}` — the route that calls `execute`. */
   basePath: string;
   /**
@@ -91,6 +99,8 @@ export type ActionHandlerConfig<TRow = Record<string, unknown>> = {
    * The shape of one id, when the column is stricter than "non-empty string"
    * — `z.uuid()` for a `uuid` column. Without it a malformed id reaches
    * Postgres, whose cast error surfaces as a 500 rather than a 400.
+   *
+   * Parsed asynchronously, so an async refinement is allowed here.
    */
   idSchema?: z.ZodType<string>;
   /**
@@ -197,9 +207,10 @@ export type ActionHandler<TRow = Record<string, unknown>> = {
  * filter-scoped request compile through the very same `buildWhereConditions`
  * the list endpoint uses — the set the user saw is the set the action hits.
  */
-export function createActionHandler<TRow = Record<string, unknown>>(
-  config: ActionHandlerConfig<TRow>,
-): ActionHandler<TRow> {
+export function createActionHandler<
+  TRow = Record<string, unknown>,
+  TValues extends Record<string, unknown> = Record<string, unknown>,
+>(config: ActionHandlerConfig<TRow, TValues>): ActionHandler<TRow> {
   const {
     db,
     table,
@@ -233,11 +244,10 @@ export function createActionHandler<TRow = Record<string, unknown>>(
     );
   }
 
-  const defined = defineActions<DrizzleActionDefinition<TRow>>(
-    filters,
-    config.actions,
-    { basePath, maxIds },
-  );
+  const defined = defineActions<
+    DrizzleActionDefinition<TRow, TValues>,
+    TValues
+  >(filters, config.actions, { basePath, maxIds });
 
   // `when` guards never change after construction, so compile them once.
   const guards = new Map<string, SQL[]>();
@@ -260,7 +270,9 @@ export function createActionHandler<TRow = Record<string, unknown>>(
       throw new ActionHandlerError("unknown_action", `No action "${actionId}"`);
     }
 
-    const parsed = requestSchema.safeParse(body);
+    // Async so a caller's `idSchema` may carry an async refinement; a sync
+    // schema parses just the same through it.
+    const parsed = await requestSchema.safeParseAsync(body);
     if (!parsed.success) {
       throw new ActionHandlerError(
         "invalid_request",

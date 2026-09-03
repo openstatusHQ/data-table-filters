@@ -6,7 +6,13 @@ import type {
 } from "../table-schema/types";
 import { evaluateOp, getValueAtKey } from "./evaluate";
 import { isActive, normalize } from "./normalize";
-import type { FilterOp, FilterSelection, FilterSpec, Scalar } from "./types";
+import type {
+  FilterOp,
+  FilterSelection,
+  FilterSpec,
+  FilterValues,
+  Scalar,
+} from "./types";
 
 export { evaluateOp, getValueAtKey } from "./evaluate";
 export { isActive, normalize } from "./normalize";
@@ -16,6 +22,8 @@ export type {
   FilterSelection,
   FilterSpec,
   FilterType,
+  FilterValueFor,
+  FilterValues,
   Scalar,
 } from "./types";
 
@@ -31,7 +39,16 @@ export type FilterSource =
   | SchemaJSON
   | readonly FilterSpec[];
 
-export interface Filters {
+/**
+ * `TValues` is the shape of the values these semantics accept, keyed by
+ * filterable column. It is `FilterValues<typeof definition>` when built from
+ * a table schema definition and the loose `Record<string, unknown>` from
+ * `SchemaJSON` or specs, where nothing about the columns is known at compile
+ * time. Search params stay untyped either way — `plan` / `matches` take what
+ * the wire delivers — but declarations written by hand (an action's `when`
+ * guard) and the output of `coerce` are checked against it.
+ */
+export interface Filters<TValues = Record<string, unknown>> {
   readonly specs: readonly FilterSpec[];
 
   /** Look up one column's declaration. */
@@ -75,7 +92,7 @@ export interface Filters {
     | undefined;
 
   /** Validate and coerce untrusted input (AI structured output, MCP args). */
-  coerce(raw: Record<string, unknown>): Record<string, unknown>;
+  coerce(raw: Record<string, unknown>): Partial<TValues>;
 }
 
 // ── Deriving specs ──────────────────────────────────────────────────────────
@@ -190,7 +207,15 @@ function coerceValue(spec: FilterSpec, raw: unknown): unknown {
  * declared `(FilterType, ColKind)` pair is honoured identically everywhere
  * instead of being re-derived from whatever the value happened to look like at
  * runtime.
+ *
+ * Built from a table schema definition, the result knows which columns are
+ * filterable and what each accepts (`FilterValues`); from `SchemaJSON` or
+ * specs it is untyped.
  */
+export function defineFilters<TSchema extends TableSchemaDefinition>(
+  source: TSchema,
+): Filters<FilterValues<TSchema>>;
+export function defineFilters(source: FilterSource): Filters;
 export function defineFilters(source: FilterSource): Filters {
   const specs = toSpecs(source);
   const byKey = new Map(specs.map((spec) => [spec.key, spec]));

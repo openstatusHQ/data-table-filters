@@ -1,11 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { col, createTableSchema } from "../../table-schema";
 import type {
   SchemaJSON,
   TableSchemaDefinition,
 } from "../../table-schema/types";
 import { defineFilters } from "../index";
-import type { FilterSpec } from "../types";
+import type { FilterSpec, FilterValues } from "../types";
 
 const LEVELS = ["error", "warn", "info"] as const;
 const REGIONS = ["ams", "fra", "iad"] as const;
@@ -648,5 +648,64 @@ describe("coerce", () => {
   it("the JSON-sourced Filters coerces identically", () => {
     const raw = { status: ["200", "418"], level: ["error", "nope"], nope: 1 };
     expect(fromJSON.coerce(raw)).toEqual(fromDefinition.coerce(raw));
+  });
+});
+
+describe("FilterValues — the compile-time shape of the values", () => {
+  type Values = FilterValues<typeof definition>;
+  type Level = (typeof LEVELS)[number];
+  type Region = (typeof REGIONS)[number];
+
+  it("keys are exactly the filterable columns", () => {
+    expectTypeOf<keyof Values>().toEqualTypeOf<
+      "host" | "latency" | "status" | "level" | "regions" | "date" | "active"
+    >();
+  });
+
+  it("values follow the declared (FilterType, ColKind) pair, like `normalize`", () => {
+    expectTypeOf<Values["host"]>().toEqualTypeOf<string>();
+    expectTypeOf<Values["latency"]>().toEqualTypeOf<
+      number | readonly [number, number]
+    >();
+    expectTypeOf<Values["status"]>().toEqualTypeOf<
+      number | readonly number[]
+    >();
+    // An enum checkbox only accepts members of the enum.
+    expectTypeOf<Values["level"]>().toEqualTypeOf<Level | readonly Level[]>();
+    // An array column compares against the *item* type.
+    expectTypeOf<Values["regions"]>().toEqualTypeOf<
+      Region | readonly Region[]
+    >();
+    expectTypeOf<Values["date"]>().toEqualTypeOf<
+      Date | readonly [Date, Date]
+    >();
+    expectTypeOf<Values["active"]>().toEqualTypeOf<
+      boolean | readonly boolean[]
+    >();
+  });
+
+  it("a column whose filter type was never narrowed accepts any of its allowed types", () => {
+    type Wide = FilterValues<{ n: ReturnType<typeof col.number> }>;
+    expectTypeOf<Wide["n"]>().toEqualTypeOf<
+      number | readonly number[] | readonly [number, number]
+    >();
+  });
+
+  it("`optional()` does not leak `undefined` into the value", () => {
+    type Opt = FilterValues<{
+      host: ReturnType<typeof col.string>;
+      maybe: ReturnType<ReturnType<typeof col.string>["optional"]>;
+    }>;
+    expectTypeOf<Opt["maybe"]>().toEqualTypeOf<string>();
+  });
+
+  it("a schema-built Filters carries it into `coerce`; JSON and specs stay untyped", () => {
+    expectTypeOf(fromDefinition.coerce({})).toEqualTypeOf<Partial<Values>>();
+    expectTypeOf(fromJSON.coerce({})).toEqualTypeOf<
+      Partial<Record<string, unknown>>
+    >();
+    expectTypeOf(defineFilters([] as FilterSpec[]).coerce({})).toEqualTypeOf<
+      Partial<Record<string, unknown>>
+    >();
   });
 });
