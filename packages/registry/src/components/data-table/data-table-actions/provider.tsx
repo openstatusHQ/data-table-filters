@@ -122,6 +122,10 @@ export function DataTableActionsProvider<TData>({
   const [confirming, setConfirming] = React.useState<ConfirmingCommand | null>(
     null,
   );
+  // The `cmd_id` the dialog last submitted. Only that request may close the
+  // dialog: an unconfirmed action settling must not tear down a confirmation
+  // the user opened while it was still in flight.
+  const submittedFromDialog = React.useRef<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: (variables: {
@@ -150,8 +154,12 @@ export function DataTableActionsProvider<TData>({
         void queryClient.invalidateQueries({ queryKey: [queryKeyPrefix] });
       }
       // The confirmation stays open, with its buttons disabled, until the
-      // request settles — closing it here lets the user see the outcome land.
-      setConfirming(null);
+      // request it submitted settles — so the user sees the outcome land. Any
+      // other action settling leaves it alone.
+      if (submittedFromDialog.current === request.cmd_id) {
+        submittedFromDialog.current = null;
+        setConfirming(null);
+      }
       meta.onApplied?.();
       onApplied?.({ action, request, response });
     },
@@ -162,6 +170,8 @@ export function DataTableActionsProvider<TData>({
         request.scope === "filter"
       ) {
         const { cmd_id: _cmdId, ...input } = request;
+        // A fresh dialog, nothing submitted from it yet.
+        submittedFromDialog.current = null;
         setConfirming({
           action,
           request: input,
@@ -173,7 +183,10 @@ export function DataTableActionsProvider<TData>({
         });
         return;
       }
-      setConfirming(null);
+      if (submittedFromDialog.current === request.cmd_id) {
+        submittedFromDialog.current = null;
+        setConfirming(null);
+      }
       toast.error(`${action.label} failed: ${error.message}`);
     },
   });
@@ -187,10 +200,13 @@ export function DataTableActionsProvider<TData>({
       action: ActionDescriptor,
       request: ActionRequestInput,
       meta: TriggerMeta,
+      options?: { fromDialog?: boolean },
     ) => {
+      const cmdId = newCommandId();
+      if (options?.fromDialog) submittedFromDialog.current = cmdId;
       mutate({
         action,
-        request: { ...request, cmd_id: newCommandId() } as ActionRequest,
+        request: { ...request, cmd_id: cmdId } as ActionRequest,
         meta,
       });
     },
@@ -223,13 +239,23 @@ export function DataTableActionsProvider<TData>({
     if (actual !== undefined && request.scope === "filter") {
       // The user accepted the server's number: drop the optimistic check.
       const { expected_count: _expected, ...rest } = request;
-      send(action, rest, { count: actual, skipped, onApplied });
+      send(
+        action,
+        rest,
+        { count: actual, skipped, onApplied },
+        {
+          fromDialog: true,
+        },
+      );
       return;
     }
-    send(action, request, { count, skipped, onApplied });
+    send(action, request, { count, skipped, onApplied }, { fromDialog: true });
   }, [confirming, send]);
 
-  const cancel = React.useCallback(() => setConfirming(null), []);
+  const cancel = React.useCallback(() => {
+    submittedFromDialog.current = null;
+    setConfirming(null);
+  }, []);
 
   const value = React.useMemo<DataTableActionsContextValue<TData>>(
     () => ({

@@ -49,6 +49,24 @@ describe("interpolate", () => {
       "{constructor} {toString}",
     );
   });
+
+  it("picks a plural form by count", () => {
+    expect(interpolate("Delete {count} {log|logs}?", { count: 1 })).toBe(
+      "Delete 1 log?",
+    );
+    expect(interpolate("Delete {count} {log|logs}?", { count: 3 })).toBe(
+      "Delete 3 logs?",
+    );
+  });
+
+  it("does not leak whitespace written around a plural marker", () => {
+    expect(interpolate("Delete {count} {log | logs}?", { count: 1 })).toBe(
+      "Delete 1 log?",
+    );
+    expect(interpolate("Delete {count} { log | logs }?", { count: 3 })).toBe(
+      "Delete 3 logs?",
+    );
+  });
 });
 
 describe("rowActionsOf", () => {

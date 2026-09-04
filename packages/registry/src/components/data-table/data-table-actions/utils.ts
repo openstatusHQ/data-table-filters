@@ -13,6 +13,10 @@ import {
  * `{one|other}` picks a form by `vars.count` — `"Delete {count} {log|logs}?"`
  * reads "Delete 1 log?" and "Delete 3 logs?". Descriptors travel as JSON, so
  * this is the only way copy can pluralise without a function.
+ *
+ * Whitespace around the forms is formatting, not copy: `{log | logs}` is the
+ * same marker written with room to breathe, so the picked form is trimmed
+ * rather than leaking a stray space into the sentence.
  */
 export function interpolate(
   template: string,
@@ -24,7 +28,7 @@ export function interpolate(
       if (name !== undefined) {
         return Object.hasOwn(vars, name) ? String(vars[name]) : match;
       }
-      return Number(vars.count) === 1 ? one : other;
+      return Number(vars.count) === 1 ? one.trim() : other.trim();
     },
   );
 }

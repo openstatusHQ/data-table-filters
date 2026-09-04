@@ -500,6 +500,81 @@ describe("DataTableActionsCell", () => {
   });
 });
 
+describe("concurrent triggers", () => {
+  /** A surface that ignores `isPending`, as a custom one might. */
+  function RawTrigger({ action }: { action: ActionDescriptor }) {
+    const { trigger } = useDataTableActions();
+    return (
+      <button
+        data-action={action.id}
+        onClick={() =>
+          trigger(action, { scope: "ids", ids: ["a"] }, { count: 1 })
+        }
+      >
+        {action.label}
+      </button>
+    );
+  }
+
+  // The dialog is shared state; only the request it submitted may close it.
+  it("keeps a confirmation opened mid-flight when an earlier action settles", async () => {
+    let release!: (response: Response) => void;
+    const inFlight = new Promise<Response>((resolve) => {
+      release = resolve;
+    });
+    respond = () => inFlight;
+
+    mount(
+      <>
+        <RawTrigger action={replay} />
+        <RawTrigger action={discard} />
+      </>,
+    );
+
+    // An unconfirmed action goes straight to the wire and stays there.
+    act(() => button("replay").click());
+    await flush();
+    expect(calls).toHaveLength(1);
+
+    // While it hangs, a confirmed action opens the dialog.
+    act(() => button("discard").click());
+    await flush();
+    expect(dialog()?.textContent).toContain("Discard 1 messages?");
+
+    act(() => release(json(200, { applied: 1 })));
+    await flush();
+
+    expect(toast.success).toHaveBeenCalledWith("Replay: applied to 1");
+    expect(dialog()?.textContent).toContain("Discard 1 messages?");
+    expect(calls).toHaveLength(1);
+  });
+
+  it("still closes the dialog when its own request settles", async () => {
+    mount(<RawTrigger action={discard} />);
+    act(() => button("discard").click());
+    await flush();
+    expect(dialog()).not.toBeNull();
+
+    act(() => dialogButton("Discard").click());
+    await flush();
+
+    expect(calls).toHaveLength(1);
+    expect(dialog()).toBeNull();
+  });
+
+  it("closes the dialog when its own request fails", async () => {
+    respond = () => json(500, { error: "failed" });
+    mount(<RawTrigger action={discard} />);
+    act(() => button("discard").click());
+    await flush();
+    act(() => dialogButton("Discard").click());
+    await flush();
+
+    expect(toast.error).toHaveBeenCalledWith("Discard failed: failed");
+    expect(dialog()).toBeNull();
+  });
+});
+
 function DataTableActionsBarLikeFilter({
   action,
   filter,

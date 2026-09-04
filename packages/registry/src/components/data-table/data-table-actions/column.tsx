@@ -19,7 +19,7 @@ export function DataTableActionsCell<TData>({
 }: {
   row: { original: TData };
 }) {
-  const { actions, getRowId, getRowActions, getRowLabel, trigger } =
+  const { actions, getRowId, getRowActions, getRowLabel, trigger, isPending } =
     useDataTableActions<TData>();
   const available = rowScopedActions(actions, getRowActions(row.original));
   if (available.length === 0) return null;
@@ -58,6 +58,10 @@ export function DataTableActionsCell<TData>({
           {available.map((action) => (
             <DropdownMenuItem
               key={action.id}
+              // One action at a time, as in the bulk bar: a second trigger
+              // while one is on the wire races the first for the shared
+              // confirmation dialog.
+              disabled={isPending}
               variant={
                 action.variant === "destructive" ? "destructive" : "default"
               }

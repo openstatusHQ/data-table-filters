@@ -19,13 +19,20 @@ type FilterItem<T> =
  * `col.enum(LEVELS)` only accepts members of `LEVELS`. Distributes over `F`,
  * so a column whose filter type was never narrowed (`col.number()` allows
  * three) accepts any of them.
+ *
+ * A checkbox on a non-scalar member type is `never`: `col.array()` takes any
+ * item builder, so `col.array(col.record())` type-checks, but `normalize` has
+ * nothing to compare a record against. Advertising the member type there
+ * would promise a filter the engine cannot plan.
  */
 export type FilterValueFor<T, F extends FilterType> = F extends "input"
   ? NonNullable<T> extends number
     ? number
     : string
   : F extends "checkbox"
-    ? FilterItem<T> | readonly FilterItem<T>[]
+    ? [FilterItem<T>] extends [Scalar]
+      ? FilterItem<T> | readonly FilterItem<T>[]
+      : never
     : F extends "slider"
       ? number | readonly [number, number]
       : F extends "timerange"

@@ -38,7 +38,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 | **data-table-query**             | `.../r/data-table-query.json`                         | React Query infinite query integration                                                                                     |
 | **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                                                         |
 | **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                                                       |
-| **data-table-actions**           | `.../r/data-table-actions.json`                       | Row, bulk, and filter-scoped actions rendered from server metadata (requires drizzle)                                      |
+| **data-table-actions**           | `.../r/data-table-actions.json`                       | Row and bulk actions rendered from server metadata (requires drizzle)                                                      |
 
 All URLs use base `https://data-table.openstatus.dev`.
 
@@ -178,7 +178,6 @@ export const actionHandler = createActionHandler({
 >
   <DataTableInfinite
     columns={[...generateColumns(schema), createActionsColumn()]}
-    toolbarActions={[<DataTableActionsFilterMenu key="actions" />]}
     floatingBarSlot={
       <DataTableFloatingBar>
         {({ rows }) => <DataTableActionsBar rows={rows} />}

@@ -72,9 +72,10 @@ function columnSizeStyle(
       ? { width, minWidth: width }
       : { width, maxWidth: width };
   }
-  if (column.columnDef.maxSize)
+  // Presence, not truthiness: a bound of 0 is a bound.
+  if (column.columnDef.maxSize !== undefined)
     return { width, minWidth: width, maxWidth: width };
-  if (column.columnDef.minSize) return { minWidth: width };
+  if (column.columnDef.minSize !== undefined) return { minWidth: width };
   return undefined;
 }
 

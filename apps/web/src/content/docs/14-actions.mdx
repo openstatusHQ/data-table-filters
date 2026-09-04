@@ -1,6 +1,6 @@
 ---
 title: "Row Actions"
-description: "Declare actions next to their Drizzle handlers; the table renders row menus, a bulk bar, and apply-to-all-matching from server metadata"
+description: "Declare actions next to their Drizzle handlers; the table renders row menus and a bulk bar from server metadata"
 author: "openstatus"
 publishedAt: "2026-08-28"
 faq:
@@ -12,16 +12,16 @@ faq:
     answer: "No — at-least-once. The server keeps no command ledger; cmd_id flows through to the handler and the audit hook so you can dedupe if an action is not idempotent. Most actions should be: flip a status, let a worker do the work."
   - question: "Who sets the actor?"
     answer: "The route, from whatever it authenticated. execute() takes it as an option and the handler never reads it from the request body, so a client cannot claim to be someone else."
-  - question: "How does 'apply to all matching' stay safe?"
-    answer: "The client sends the filter values it is showing plus expected_count (the server's own filterRowCount). Inside the transaction the handler counts the set first and answers 409 count_mismatch with the actual number if it drifted. The UI shows the new count and offers to apply anyway, which resends without expected_count."
+  - question: "Can an action apply to every row matching the filters?"
+    answer: "On the wire, yes: scope 'filter' sends the filter values plus expected_count, and inside the transaction the handler counts the set first under REPEATABLE READ and answers 409 count_mismatch with the actual number if it drifted. The block ships no UI for it — build your own trigger on useDataTableActions if you want one."
 ---
 
 # Row Actions
 
 The `data-table-actions` block adds a write path to a server-side table: row
-menus, a bulk bar for selections, and an "apply to every matching row" menu —
-all rendered from metadata the list endpoint publishes. Actions are declared
-once, next to their Drizzle handler, and the UI never learns what a "replay" is.
+menus and a bulk bar for selections, both rendered from metadata the list
+endpoint publishes. Actions are declared once, next to their Drizzle handler,
+and the UI never learns what a "replay" is.
 
 ## Installation
 
@@ -282,22 +282,26 @@ A bulk button stays enabled while _any_ selected row qualifies; the request
 carries only the eligible ids and the confirmation says how many were skipped.
 The handler's `maxIds` (default 1000) is published on every bulk descriptor,
 and a selection past it disables the button with the limit as its tooltip
-rather than earning an `invalid_request` — that many rows is what the filter
-scope is for. `confirm` on a descriptor opens an alert dialog with `{count}` interpolated
+rather than earning an `invalid_request` — past that many rows, reach for the
+filter scope below. `confirm` on a descriptor opens an alert dialog with `{count}` interpolated
 and `{one|other}` picking a form by it (`"Delete {count} {log|logs}?"`), and stays
 open with its buttons disabled until the request settles;
 `variant: "destructive"` styles both the button and the dialog's action. After
 a success the provider toasts the result, clears the selection, and invalidates
 `[queryKeyPrefix]`, so rows that no longer match leave the view.
 
-For the filter scope the client sends `expected_count` from the server's own
-`filterRowCount` — the rows matching the filters alone, handed to the table as
-its `filterRows` prop. The menu stays disabled without that prop (there is no
-number to promise) and while the table is fetching (the number describes the
-previous query). The server counts and mutates under `REPEATABLE READ`, so the
-set it counted is the set it applies to; it then applies within the action's
-`when` guard, so "applied to 12 of 40 matching" is the guard at work, not a
-partial failure.
+The filter scope has no shipped surface. It is part of the wire contract and
+the handler implements it, but a trigger that promises "all 40 matching" is
+only honest when the host can name that number, so the block leaves it to you:
+call `trigger` from `useDataTableActions` with `{ scope: "filter", filter,
+expected_count }`, taking `expected_count` from the server's own
+`filterRowCount` and only while the table is not fetching — a stale count
+describes the previous query. The server counts and mutates under `REPEATABLE
+READ`, so the set it counted is the set it applies to, and answers 409
+`count_mismatch` with the actual number if it drifted; the provider reopens the
+confirmation with that number and offers to apply anyway, which resends without
+`expected_count`. It then applies within the action's `when` guard, so "applied
+to 12 of 40 matching" is the guard at work, not a partial failure.
 
 Ids are validated as non-empty strings by default. When the id column is
 stricter, say so with `idSchema` — `z.uuid()` for a `uuid` column — so a
