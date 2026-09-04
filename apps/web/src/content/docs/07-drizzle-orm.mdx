@@ -242,7 +242,7 @@ Rows are ordered by `cursorColumn`, then by the user's sort, then by a unique ti
 const handler = createDrizzleHandler({
   // ...
   cursorColumn: "date",
-  tiebreakColumn: "id", // must be unique
+  tiebreakColumn: "uuid", // must be unique
 });
 ```
 
