@@ -4,7 +4,6 @@ import type {
 } from "@dtf/registry/lib/actions/types";
 import { describe, expect, it, vi } from "vitest";
 import { describeCommand } from "./confirm-dialog";
-import { pickFilterValues } from "./filter-menu";
 import {
   ActionRequestError,
   actionsForScope,
@@ -178,24 +177,6 @@ describe("postAction", () => {
       fetcher(502, { error: "gateway" }),
     ).catch((e: unknown) => e);
     expect(e2).toMatchObject({ code: "failed", status: 502 });
-  });
-});
-
-describe("pickFilterValues", () => {
-  it("keeps only active filter keys", () => {
-    expect(
-      pickFilterValues(
-        {
-          level: ["error"],
-          host: null,
-          regions: [],
-          latency: [0, 100],
-          sort: { id: "date", desc: true },
-          cursor: new Date(0),
-        },
-        ["level", "host", "regions", "latency"],
-      ),
-    ).toEqual({ level: ["error"], latency: [0, 100] });
   });
 });
 

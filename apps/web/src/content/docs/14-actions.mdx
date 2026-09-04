@@ -228,7 +228,6 @@ calling `execute`. Hiding a button is not authorization.
 import {
   createActionsColumn,
   DataTableActionsBar,
-  DataTableActionsFilterMenu,
   DataTableActionsProvider,
 } from "@/components/data-table/data-table-actions";
 import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
@@ -256,7 +255,6 @@ function ClientInner() {
     >
       <DataTableInfinite
         columns={columns}
-        toolbarActions={[<DataTableActionsFilterMenu key="actions" />]}
         floatingBarSlot={
           <DataTableFloatingBar<ColumnSchema>>
             {({ rows }) => <DataTableActionsBar rows={rows} />}
@@ -269,13 +267,12 @@ function ClientInner() {
 }
 ```
 
-Three surfaces, all reading the same provider:
+Two surfaces, both reading the same provider:
 
-| Component                    | Scope    | Where                               | Sends                                    |
-| ---------------------------- | -------- | ----------------------------------- | ---------------------------------------- |
-| `createActionsColumn()`      | `row`    | a `⋯` menu cell, per row            | `{ scope: "ids", ids: [rowId] }`         |
-| `DataTableActionsBar`        | `bulk`   | inside `DataTableFloatingBar`       | only the **eligible** selected ids       |
-| `DataTableActionsFilterMenu` | `filter` | the toolbar's `toolbarActions` slot | current filter values + `expected_count` |
+| Component               | Scope  | Where                         | Sends                              |
+| ----------------------- | ------ | ----------------------------- | ---------------------------------- |
+| `createActionsColumn()` | `row`  | a `⋯` menu cell, per row      | `{ scope: "ids", ids: [rowId] }`   |
+| `DataTableActionsBar`   | `bulk` | inside `DataTableFloatingBar` | only the **eligible** selected ids |
 
 Outcomes are reported with [sonner](https://sonner.emilkowal.ski) toasts, so
 mount a `<Toaster />` once in your layout (`npx shadcn@latest add sonner`) —

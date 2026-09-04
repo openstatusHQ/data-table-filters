@@ -5,7 +5,6 @@ export {
   describeCommand,
   type ConfirmingCommandView,
 } from "./confirm-dialog";
-export { DataTableActionsFilterMenu, pickFilterValues } from "./filter-menu";
 export {
   DataTableActionsProvider,
   useDataTableActions,

@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import {
   createActionsColumn,
   DataTableActionsBar,
-  DataTableActionsFilterMenu,
   DataTableActionsProvider,
 } from "@dtf/registry/components/data-table/data-table-actions";
 import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
@@ -198,7 +197,6 @@ function ClientInner() {
           />
         }
         toolbarActions={[
-          <DataTableActionsFilterMenu key="actions" />,
           <RefreshButton key="refresh" onClick={refetch} />,
           fetchPreviousPage ? (
             <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />

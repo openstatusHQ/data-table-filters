@@ -113,7 +113,7 @@ export const RECIPES: Recipe[] = [
       "data-table-actions",
     ],
     notes:
-      "Declare actions with createActionHandler next to createDrizzleHandler, sharing its filters and columnMapping. The list route adds meta.actions and per-row _actions; a POST route calls actionHandler.execute. On the client, wrap the table in DataTableActionsProvider and drop in createActionsColumn, DataTableActionsBar, and DataTableActionsFilterMenu.",
+      "Declare actions with createActionHandler next to createDrizzleHandler, sharing its filters and columnMapping. The list route adds meta.actions and per-row _actions; a POST route calls actionHandler.execute. On the client, wrap the table in DataTableActionsProvider and drop in createActionsColumn and DataTableActionsBar.",
   },
   {
     id: "ai-queryable-table",

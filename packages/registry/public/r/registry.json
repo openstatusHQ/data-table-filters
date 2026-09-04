@@ -811,10 +811,6 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/data-table/data-table-actions/filter-menu.tsx",
-          "type": "registry:component"
-        },
-        {
           "path": "src/components/data-table/data-table-actions/utils.ts",
           "type": "registry:component"
         }
