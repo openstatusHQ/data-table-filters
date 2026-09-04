@@ -44,6 +44,8 @@ export const BLOCK_GUIDANCE: Record<string, string> = {
     'Users should be able to filter in natural language ("errors in the last hour") on top of the command palette.',
   "data-table-mcp":
     "The table should be queryable by AI agents over MCP, using the same schema the UI uses.",
+  "data-table-actions":
+    "Users need to DO something to rows — replay, acknowledge, delete — not just read them. Actions are declared once next to their Drizzle handler; the list endpoint advertises them and stamps each row with what applies, the UI renders row menus, a bulk bar, and an apply-to-all-matching menu from that JSON, and one POST runs the handler in a transaction. Requires the drizzle block.",
 };
 
 export type Recipe = {
@@ -96,6 +98,22 @@ export const RECIPES: Recipe[] = [
     blocks: ["data-table", "data-table-schema"],
     notes:
       "Render <DataTableAuto data={json} />, or call inferSchemaFromJSON + createTableSchema.fromJSON to get columns, filters, and sheet fields inferred from the data itself.",
+  },
+  {
+    id: "actionable-table",
+    docs: ["table-schema", "drizzle-orm", "actions"],
+    title: "Table with row actions (server-side)",
+    when: "Rows live in Postgres and users need to act on them — replay, acknowledge, discard — from the table.",
+    blocks: [
+      "data-table",
+      "data-table-schema",
+      "data-table-drizzle",
+      "data-table-query",
+      "data-table-nuqs",
+      "data-table-actions",
+    ],
+    notes:
+      "Declare actions with createActionHandler next to createDrizzleHandler, sharing its filters and columnMapping. The list route adds meta.actions and per-row _actions; a POST route calls actionHandler.execute. On the client, wrap the table in DataTableActionsProvider and drop in createActionsColumn and DataTableActionsBar.",
   },
   {
     id: "ai-queryable-table",

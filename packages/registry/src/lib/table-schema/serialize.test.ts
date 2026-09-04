@@ -515,6 +515,12 @@ describe("serialization completeness", () => {
     });
   });
 
+  it("keeps minSize", () => {
+    const def = { date: col.timestamp().label("Date").minSize(200) };
+    expect(column(def, "date").minSize).toBe(200);
+    expect(column(roundTrip(def), "date").minSize).toBe(200);
+  });
+
   it("keeps the sheet descriptor while dropping its closures", () => {
     const sheet = column(logsSchema, "timing.dns").sheet;
     expect(sheet).toEqual({

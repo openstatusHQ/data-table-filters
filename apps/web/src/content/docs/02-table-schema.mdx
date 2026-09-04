@@ -191,7 +191,10 @@ col.string().hidden(); // Hidden by default (toggleable in column menu)
 col.enum(v).hideHeader(); // Hide header label, keep column visible
 col.string().resizable(); // Enable drag-to-resize
 col.string().size(125); // Fixed width in pixels (initial width if resizable)
+col.timestamp().minSize(200); // Floor for a flexing (unsized) column
 ```
+
+A column without `.size()` flexes to absorb the table's leftover width. Give it a `.minSize()` floor so it never gets compressed below a usable width.
 
 ### Sorting & Optionality
 

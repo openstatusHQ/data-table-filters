@@ -51,11 +51,9 @@ describe.skipIf(!hasDatabase)("createDrizzleHandler", () => {
       cursorColumn: "date",
       defaultSize: 40,
       filters: testFilters,
-      // The projection IS the mapping, and `uuid` is not in it — it is never
-      // filtered or sorted, so the production routes add it through `select`
-      // exactly like this. Without it, rows come back with no row identity and
-      // the pagination assertions below compare `undefined` to `undefined`.
-      select: { uuid: getTable().uuid },
+      // The projection IS the mapping. `uuid` is in it — never filtered or
+      // sorted, but the row identity every action is keyed by — so the
+      // pagination assertions below get a real id without a `select`.
       ...overrides,
     });
   }
@@ -232,15 +230,18 @@ describe.skipIf(!hasDatabase)("createDrizzleHandler", () => {
     });
 
     it("projects the mapping only — an unmapped column needs `select`", async () => {
-      // The contract the test helper above has to opt out of: rows carry the
-      // mapped keys and nothing else, so a column the wire contract needs but
-      // the filters do not has to be named in `select`.
-      const result = await createHandler({ select: undefined }).execute({
-        size: 1,
-      });
-
+      // Rows carry the mapped keys and nothing else, so a column the wire
+      // contract needs but the filters do not — `message`, in production —
+      // has to be named in `select`.
+      const result = await createHandler().execute({ size: 1 });
       expect(result.data[0]).toHaveProperty("date");
-      expect(result.data[0]).not.toHaveProperty("uuid");
+      expect(result.data[0]).toHaveProperty("uuid");
+      expect(result.data[0]).not.toHaveProperty("message");
+
+      const selected = await createHandler({
+        select: { message: getTable().message },
+      }).execute({ size: 1 });
+      expect(selected.data[0]).toHaveProperty("message");
     });
 
     it("direction prev returns newer rows, still ordered newest-first", async () => {

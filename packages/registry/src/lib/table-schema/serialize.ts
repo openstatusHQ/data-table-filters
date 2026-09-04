@@ -149,6 +149,7 @@ function normalizeColumn(raw: unknown): ColumnDescriptor & { key: string } {
     optional: c.optional === true,
     display,
     ...(typeof c.size === "number" ? { size: c.size } : {}),
+    ...(typeof c.minSize === "number" ? { minSize: c.minSize } : {}),
     hidden: c.hidden === true,
     enableHiding: c.enableHiding !== false,
     hideHeader: c.hideHeader === true,

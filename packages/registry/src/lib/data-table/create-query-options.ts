@@ -1,3 +1,4 @@
+import type { ActionDescriptor } from "@dtf/registry/lib/actions/types";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
 import SuperJSON from "superjson";
 import type { BaseChartSchema, FacetMetadataSchema } from "./types";
@@ -7,6 +8,11 @@ export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
   filterRowCount: number;
   chartData: BaseChartSchema[];
   facets: Record<string, FacetMetadataSchema>;
+  /**
+   * What can be done to these rows. Rendered as-is by the `data-table-actions`
+   * block; the server owns the list (see `createActionHandler`).
+   */
+  actions?: ActionDescriptor[];
   metadata?: TMeta;
 };
 

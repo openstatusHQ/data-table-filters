@@ -20,7 +20,6 @@ const drizzleHandler = createDrizzleHandler({
   cursorColumn: "date",
   defaultSize: 40,
   select: {
-    uuid: logs.uuid,
     headers: logs.headers,
     message: logs.message,
   },

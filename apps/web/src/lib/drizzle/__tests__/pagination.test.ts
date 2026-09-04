@@ -43,6 +43,43 @@ describe("buildCursorPagination (pure)", () => {
     expect(toQuery(orderBy).sql).toBe('"logs"."date" desc');
   });
 
+  it("no tiebreak column → no tiebreak clause", () => {
+    const { tiebreakOrderBy } = buildCursorPagination({
+      cursor: new Date("2025-01-15T10:00:00Z"),
+      direction: "next",
+      size: 10,
+      cursorColumn: logs.date,
+    });
+
+    expect(tiebreakOrderBy).toBeUndefined();
+  });
+
+  /**
+   * The tiebreak follows the cursor's direction rather than being pinned to
+   * `desc`: a prev page is fetched ascending and reversed by the handler, so a
+   * fixed direction would order tied rows one way going down and the other way
+   * going up.
+   */
+  it("tiebreak column → ordered the same way as the cursor", () => {
+    const next = buildCursorPagination({
+      cursor: new Date("2025-01-15T10:00:00Z"),
+      direction: "next",
+      size: 10,
+      cursorColumn: logs.date,
+      tiebreakColumn: logs.uuid,
+    });
+    const prev = buildCursorPagination({
+      cursor: new Date("2025-01-15T10:00:00Z"),
+      direction: "prev",
+      size: 10,
+      cursorColumn: logs.date,
+      tiebreakColumn: logs.uuid,
+    });
+
+    expect(toQuery(next.tiebreakOrderBy!).sql).toBe('"logs"."uuid" desc');
+    expect(toQuery(prev.tiebreakOrderBy!).sql).toBe('"logs"."uuid" asc');
+  });
+
   it("direction prev → gt condition, asc order, reverse", () => {
     const cursor = new Date("2025-01-15T10:00:00Z");
     const { cursorCondition, orderBy, needsReverse } = buildCursorPagination({

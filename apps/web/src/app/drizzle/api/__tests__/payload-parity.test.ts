@@ -6,7 +6,7 @@ import type {
 import type { ColumnSchema } from "@/app/drizzle/schema";
 import { NextRequest } from "next/server";
 import SuperJSON from "superjson";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * The REST route and the MCP route must serialize the same row the same way.
@@ -35,7 +35,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 /** Fields the routes project outside `columnMapping`, via `select:`. */
-const SELECT_EXTRAS = ["uuid", "headers", "message"] as const;
+const SELECT_EXTRAS = ["headers", "message"] as const;
 
 const mocked = vi.hoisted(() => {
   /**
@@ -175,11 +175,14 @@ async function fetchMcp(): Promise<{
 
 beforeEach(() => {
   mocked.execute.mockClear();
+  // The parity suites describe the payload with demo actions OFF. Whatever
+  // the ambient shell has set, tests decide per case.
+  delete process.env.ALLOW_DEMO_ACTIONS;
 });
 
 describe("the fixture matches what the routes actually receive", () => {
   it("carries every key the handler projects, and no others", () => {
-    // Both routes build their handler with `columnMapping` plus three extras,
+    // Both routes build their handler with `columnMapping` plus two extras,
     // so the projected row shape is exactly this union. If a column is added to
     // the mapping, this fails until the fixture grows with it.
     const projected = [...Object.keys(columnMapping), ...SELECT_EXTRAS].sort();
@@ -333,5 +336,56 @@ describe("percentile is REST-only", () => {
 
     const mcp = await fetchMcp();
     expect(mcp.rows[0].percentile).toBeUndefined();
+  });
+});
+
+describe("row actions on the REST payload", () => {
+  /**
+   * The demo's actions are gated by `ALLOW_DEMO_ACTIONS`. Off, the payload is
+   * exactly what it was before actions existed — that is what keeps the parity
+   * suite above honest. On, every row is stamped with `_actions` and `meta`
+   * advertises the descriptors, with nothing but the public keys.
+   */
+  afterEach(() => {
+    delete process.env.ALLOW_DEMO_ACTIONS;
+  });
+
+  it("emits neither `meta.actions` nor `_actions` when demo actions are off", async () => {
+    delete process.env.ALLOW_DEMO_ACTIONS;
+    const { body } = await fetchRest();
+    expect(body.meta).not.toHaveProperty("actions");
+    for (const row of body.data) {
+      expect(Object.keys(row)).not.toContain("_actions");
+    }
+  });
+
+  it("stamps each row with the actions its `when` guard allows, and publishes the descriptors", async () => {
+    process.env.ALLOW_DEMO_ACTIONS = "1";
+    const { body } = await fetchRest();
+
+    expect(body.meta.actions?.map((action) => action.id)).toEqual([
+      "acknowledge",
+      "delete",
+    ]);
+    for (const action of body.meta.actions ?? []) {
+      expect(Object.keys(action).sort()).toEqual(
+        expect.arrayContaining(["id", "label", "scope", "href"]),
+      );
+      expect(action).not.toHaveProperty("handler");
+      expect(action).not.toHaveProperty("when");
+      expect(action.href).toBe(`/drizzle/api/actions/${action.id}`);
+    }
+
+    const byLevel = Object.fromEntries(
+      body.data.map((row) => [
+        row.level,
+        (row as unknown as { _actions: string[] })._actions,
+      ]),
+    );
+    // `acknowledge` is guarded by `when: { level: ["error"] }`.
+    expect(byLevel).toEqual({
+      success: ["delete"],
+      error: ["acknowledge", "delete"],
+    });
   });
 });

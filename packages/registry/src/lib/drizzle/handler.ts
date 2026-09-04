@@ -1,9 +1,10 @@
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
 import type { Filters } from "@dtf/registry/lib/filters";
 import { and, count, eq, sql, type Column, type SQL } from "drizzle-orm";
-import type {
-  SelectedFields as PgSelectedFields,
-  PgTable,
+import {
+  getTableConfig,
+  type SelectedFields as PgSelectedFields,
+  type PgTable,
 } from "drizzle-orm/pg-core";
 import { computeFacets } from "./facets";
 import { buildWhereConditions } from "./filters";
@@ -108,6 +109,21 @@ export type DrizzleHandlerConfig = {
    * `scope.range`.
    */
   cursorColumn: string;
+  /**
+   * The schema key rows are ordered by last, to break ties on the cursor
+   * column. Must be unique — the primary key, normally, which is what this
+   * defaults to when the table declares a single-column one.
+   *
+   * Without it `ORDER BY date DESC` leaves rows sharing a timestamp in
+   * whatever order the plan produced, and that order is not stable: updating a
+   * row moves it in the heap, and a different plan reads it back differently.
+   * The page a row lands on stays correct either way — the boundary logic
+   * below refuses to split a tied group — but the rows visibly shuffle within
+   * their group between refetches.
+   *
+   * Set explicitly for a table with a composite primary key, or none.
+   */
+  tiebreakColumn?: string;
   defaultSize?: number;
   /**
    * Extra projected fields merged into each row — columns that are never
@@ -137,6 +153,24 @@ export type DrizzleHandlerResult<TRow = Record<string, unknown>> = {
    */
   scope: DrizzleQueryScope;
 };
+
+/**
+ * The table's primary key, when it is a single column — the default tiebreak.
+ *
+ * A composite key would need every one of its columns to be a valid tiebreak,
+ * and one of them alone is not unique, so those tables get `undefined` and
+ * have to name a `tiebreakColumn` themselves.
+ */
+function singleColumnPrimaryKey(table: PgTable): Column | undefined {
+  const config = getTableConfig(table);
+  const inline = config.columns.filter((column) => column.primary);
+  if (inline.length === 1) return inline[0];
+  if (config.primaryKeys.length === 1) {
+    const columns = config.primaryKeys[0]?.columns;
+    if (columns?.length === 1) return columns[0];
+  }
+  return undefined;
+}
 
 /**
  * Create a high-level query handler that encapsulates the three-pass filtering
@@ -174,6 +208,7 @@ export function createDrizzleHandler(config: DrizzleHandlerConfig) {
     filters,
     columnMapping,
     cursorColumn,
+    tiebreakColumn,
     defaultSize = 40,
     select: extraSelect,
   } = config;
@@ -184,6 +219,18 @@ export function createDrizzleHandler(config: DrizzleHandlerConfig) {
     throw new Error(
       `cursorColumn "${cursorColumn}" not found in columnMapping`,
     );
+  }
+
+  let tiebreakCol: Column | undefined;
+  if (tiebreakColumn !== undefined) {
+    tiebreakCol = columnMapping[tiebreakColumn];
+    if (!tiebreakCol) {
+      throw new Error(
+        `tiebreakColumn "${tiebreakColumn}" not found in columnMapping`,
+      );
+    }
+  } else {
+    tiebreakCol = singleColumnPrimaryKey(table);
   }
 
   // Fail loudly at construction, not silently at query time.
@@ -317,12 +364,14 @@ export function createDrizzleHandler(config: DrizzleHandlerConfig) {
       const {
         cursorCondition,
         orderBy: cursorOrderBy,
+        tiebreakOrderBy,
         needsReverse,
       } = buildCursorPagination({
         cursor,
         direction,
         size,
         cursorColumn: cursorCol,
+        tiebreakColumn: tiebreakCol,
       });
 
       const dataConditions = cursorCondition
@@ -332,9 +381,14 @@ export function createDrizzleHandler(config: DrizzleHandlerConfig) {
       const dataWhere =
         dataConditions.length > 0 ? and(...dataConditions) : undefined;
 
-      const orderClauses = orderBy
-        ? sql`${cursorOrderBy}, ${orderBy}`
-        : cursorOrderBy;
+      // Cursor first, then the caller's sort, then the tiebreak — the last
+      // one is what makes the order total, so nothing may follow it.
+      const orderClauses = sql.join(
+        [cursorOrderBy, orderBy, tiebreakOrderBy].filter(
+          (clause): clause is SQL => clause !== undefined,
+        ),
+        sql`, `,
+      );
 
       // One extra row reveals whether the page boundary splits a group of
       // rows sharing the same cursor value.

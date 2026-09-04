@@ -49,6 +49,36 @@ import { LoaderCircle } from "lucide-react";
 import * as React from "react";
 import { canLoadMore } from "./utils";
 
+/**
+ * Derive a header/cell width style from the column's sizing mode:
+ *
+ * - resizable → track the measured size var (`clamp` is `"min"` on headers so
+ *   a drag can grow past the content, `"max"` on cells so `truncate` kicks in)
+ * - locked (`maxSize` on the def) → pin the var as width, min and max
+ * - floor only (`minSize` without `maxSize`) → flex, but never below the floor
+ * - unsized → flex freely
+ */
+function columnSizeStyle(
+  column: {
+    getCanResize: () => boolean;
+    columnDef: { minSize?: number; maxSize?: number };
+  },
+  sizeVar: string,
+  clamp: "min" | "max",
+): React.CSSProperties | undefined {
+  const width = `var(${sizeVar})`;
+  if (column.getCanResize()) {
+    return clamp === "min"
+      ? { width, minWidth: width }
+      : { width, maxWidth: width };
+  }
+  // Presence, not truthiness: a bound of 0 is a bound.
+  if (column.columnDef.maxSize !== undefined)
+    return { width, minWidth: width, maxWidth: width };
+  if (column.columnDef.minSize !== undefined) return { minWidth: width };
+  return undefined;
+}
+
 // TODO: add a possible chartGroupBy
 /**
  * BREAKING (v9): the `TValue` type parameter is gone.
@@ -357,7 +387,11 @@ export function DataTableInfinite<TData extends RowData>({
       enableColumnOrdering={true}
       isLoading={isFetching || isLoading}
       totalRows={totalRows}
-      filterRows={filterRows ?? table.getFilteredRowModel().rows.length}
+      // Verbatim, no client-side stand-in: consumers that only display a
+      // number fall back themselves (`DataTableToolbar`), and anything that
+      // promises it to the server must not be handed the loaded-row count as
+      // if it were the match count.
+      filterRows={filterRows}
       getFacetedUniqueValues={getFacetedUniqueValues}
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >
@@ -439,20 +473,11 @@ export function DataTableInfinite<TData extends RowData>({
                       return (
                         <TableHead
                           key={header.id}
-                          style={
-                            header.column.getCanResize()
-                              ? {
-                                  width: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                  minWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                }
-                              : header.column.columnDef.maxSize
-                                ? {
-                                    width: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                    minWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                    maxWidth: `var(--header-${header.id.replaceAll(".", "-")}-size)`,
-                                  }
-                                : undefined
-                          }
+                          style={columnSizeStyle(
+                            header.column,
+                            `--header-${header.id.replaceAll(".", "-")}-size`,
+                            "min",
+                          )}
                           className={cn(
                             "border-border relative truncate border-b select-none last:[&>.cursor-col-resize]:opacity-0",
                             header.column.columnDef.meta?.headerClassName,
@@ -662,20 +687,11 @@ function Row<TData extends RowData>({
           row.getVisibleCells().map((cell) => (
             <TableCell
               key={cell.id}
-              style={
-                cell.column.getCanResize()
-                  ? {
-                      width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                      maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                    }
-                  : cell.column.columnDef.maxSize
-                    ? {
-                        width: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                        minWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                        maxWidth: `var(--col-${cell.column.id.replaceAll(".", "-")}-size)`,
-                      }
-                    : undefined
-              }
+              style={columnSizeStyle(
+                cell.column,
+                `--col-${cell.column.id.replaceAll(".", "-")}-size`,
+                "max",
+              )}
               className={cn(
                 "border-border truncate border-b",
                 cell.column.columnDef.meta?.cellClassName,
@@ -699,11 +715,28 @@ function Row<TData extends RowData>({
  * it can only ever key on the identity it is given. Without it, each page fetch
  * re-runs `cn()` (tailwind-merge), `getVisibleCells()` and a full reconcile for
  * every row on screen, and that count only grows as you scroll.
+ *
+ * REMINDER: the id alone is not enough. A row action edits a row in place —
+ * same id, new contents — and comparing ids only holds the old cells on screen
+ * until a filter change or a reload rebuilds the table (a delete looks like it
+ * works, because the row leaves the list entirely). `row.original` is the
+ * identity of the underlying record, so a row the server changed always
+ * re-renders.
+ *
+ * It costs the memo nothing on the path it was written for: `fetchNextPage`
+ * appends a page and leaves the earlier ones referentially untouched, so
+ * `original` is identical for every row already on screen. A full refetch is
+ * the other story — react-query's `replaceEqualDeep` bails out of non-plain
+ * values, and one `Date` on the row (`date`, here) is enough to make it hand
+ * back a fresh object for every row, changed or not. So an action's
+ * invalidation re-renders the mounted rows once. That is the price of never
+ * showing a stale row, and it is paid per action, not per scroll.
  */
 const MemoizedRow = React.memo(
   Row,
   (prev, next) =>
     prev.row.id === next.row.id &&
+    prev.row.original === next.row.original &&
     prev.selected === next.selected &&
     prev.isMultiSelect === next.isMultiSelect &&
     prev.onRowClick === next.onRowClick &&

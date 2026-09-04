@@ -8,7 +8,13 @@ import { TimelineChart } from "@/components/data-table/data-table-infinite/timel
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
 import { getLevelRowClassName } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
+import {
+  createActionsColumn,
+  DataTableActionsBar,
+  DataTableActionsProvider,
+} from "@dtf/registry/components/data-table/data-table-actions";
 import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
+import { DataTableFloatingBar } from "@dtf/registry/components/data-table/data-table-floating-bar";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
@@ -37,16 +43,26 @@ import { filterSchema } from "./schema";
 import type { SearchParamsType } from "./search-params";
 import { tableSchema } from "./table-schema";
 
-const columns = [
+const baseColumns = [
   ...generateColumns<ColumnSchema>(tableSchema.definition),
   timingPhasesColumn,
+];
+// Renders from `meta.actions` + each row's `_actions`. Appended only once the
+// server advertises actions, and hidden by default even then — users enable it
+// from the view options. Both arrays are module constants so the table's
+// options stay referentially stable on either side of the switch.
+const columnsWithActions = [
+  ...baseColumns,
+  createActionsColumn<ColumnSchema>({ size: 37 }),
 ];
 
 const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
 const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
-const defaultColumnVisibility = getDefaultColumnVisibility(
-  tableSchema.definition,
-);
+const defaultColumnVisibility = {
+  ...getDefaultColumnVisibility(tableSchema.definition),
+  // The actions column ships hidden; users opt in via the view options.
+  actions: false,
+};
 
 export function Client({ initialState }: { initialState: SearchParamsType }) {
   useResetFocus();
@@ -89,6 +105,8 @@ function ClientInner() {
   const metadata = lastPage?.meta?.metadata;
   const chartData = lastPage?.meta?.chartData;
   const facets = lastPage?.meta?.facets;
+  const actions = lastPage?.meta?.actions;
+  const columns = actions?.length ? columnsWithActions : baseColumns;
   const totalFetched = flatData?.length;
 
   const { sort, size, uuid, cursor, direction, live, ...filter } = search;
@@ -131,76 +149,90 @@ function ClientInner() {
   }, [filter]);
 
   return (
-    <DataTableInfinite
-      columns={columns}
-      data={flatData}
-      totalRows={totalDBRowCount}
-      filterRows={filterDBRowCount}
-      totalRowsFetched={totalFetched}
-      defaultColumnFilters={defaultColumnFilters}
-      defaultColumnSorting={sort ? [sort] : undefined}
-      defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
-      defaultColumnVisibility={defaultColumnVisibility}
-      filterFields={dynamicFilterFields}
-      isFetching={isFetching}
-      isLoading={isLoading}
-      fetchNextPage={fetchNextPage}
-      hasNextPage={hasNextPage}
-      fetchPreviousPage={fetchPreviousPage}
-      refetch={refetch}
-      getRowClassName={(row) => {
-        const rowTimestamp = row.original.date.getTime();
-        const isPast = rowTimestamp <= (liveMode.timestamp || -1);
-        const levelClassName = getLevelRowClassName(row.original.level);
-        return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
-      }}
+    <DataTableActionsProvider<ColumnSchema>
+      actions={actions}
       getRowId={(row) => row.uuid}
-      getFacetedUniqueValues={getFacetedUniqueValues(facets)}
-      getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
-      renderLiveRow={(props) => {
-        if (!liveMode.timestamp) return null;
-        if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
-        return <LiveRow colSpan={columns.length - 1} />;
-      }}
-      commandSlot={
-        <DataTableFilterAICommand
-          schema={filterSchema.definition}
-          tableSchema={tableSchema.definition}
-          api="/drizzle/api/ai"
-          tableId="drizzle"
-        />
-      }
-      toolbarActions={[
-        <RefreshButton key="refresh" onClick={refetch} />,
-        fetchPreviousPage ? (
-          <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />
-        ) : null,
-      ]}
-      chartSlot={
-        <TimelineChart
-          data={chartData ?? []}
-          className="-mb-2"
-          columnId="date"
-        />
-      }
-      footerSlot={
-        <SocialsFooter
-          showConfigurationDropdown={false}
-          prefetchEnabled={false}
-          adapterType="nuqs"
-        />
-      }
-      sheetSlot={
-        <DrizzleSheetSlot
-          sheetFields={sheetFields}
-          totalRows={totalDBRowCount ?? 0}
-          filterRows={filterDBRowCount ?? 0}
-          totalRowsFetched={totalFetched}
-          metadata={metadata ?? {}}
-        />
-      }
-      tableId="drizzle"
-    />
+      // The uuid identifies the row on the wire; this names it for a screen
+      // reader reading the actions trigger.
+      getRowLabel={(row) => `${row.method} ${row.pathname}`}
+      queryKeyPrefix="drizzle"
+    >
+      <DataTableInfinite
+        columns={columns}
+        data={flatData}
+        totalRows={totalDBRowCount}
+        filterRows={filterDBRowCount}
+        totalRowsFetched={totalFetched}
+        defaultColumnFilters={defaultColumnFilters}
+        defaultColumnSorting={sort ? [sort] : undefined}
+        defaultRowSelection={search.uuid ? { [search.uuid]: true } : undefined}
+        defaultColumnVisibility={defaultColumnVisibility}
+        filterFields={dynamicFilterFields}
+        isFetching={isFetching}
+        isLoading={isLoading}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        fetchPreviousPage={fetchPreviousPage}
+        refetch={refetch}
+        getRowClassName={(row) => {
+          const rowTimestamp = row.original.date.getTime();
+          const isPast = rowTimestamp <= (liveMode.timestamp || -1);
+          const levelClassName = getLevelRowClassName(row.original.level);
+          return cn(levelClassName, isPast ? "opacity-50" : "opacity-100");
+        }}
+        getRowId={(row) => row.uuid}
+        getFacetedUniqueValues={getFacetedUniqueValues(facets)}
+        getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+        renderLiveRow={(props) => {
+          if (!liveMode.timestamp) return null;
+          if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
+          return <LiveRow colSpan={columns.length - 1} />;
+        }}
+        commandSlot={
+          <DataTableFilterAICommand
+            schema={filterSchema.definition}
+            tableSchema={tableSchema.definition}
+            api="/drizzle/api/ai"
+            tableId="drizzle"
+          />
+        }
+        toolbarActions={[
+          <RefreshButton key="refresh" onClick={refetch} />,
+          fetchPreviousPage ? (
+            <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />
+          ) : null,
+        ]}
+        floatingBarSlot={
+          <DataTableFloatingBar<ColumnSchema>>
+            {({ rows }) => <DataTableActionsBar rows={rows} />}
+          </DataTableFloatingBar>
+        }
+        chartSlot={
+          <TimelineChart
+            data={chartData ?? []}
+            className="-mb-2"
+            columnId="date"
+          />
+        }
+        footerSlot={
+          <SocialsFooter
+            showConfigurationDropdown={false}
+            prefetchEnabled={false}
+            adapterType="nuqs"
+          />
+        }
+        sheetSlot={
+          <DrizzleSheetSlot
+            sheetFields={sheetFields}
+            totalRows={totalDBRowCount ?? 0}
+            filterRows={filterDBRowCount ?? 0}
+            totalRowsFetched={totalFetched}
+            metadata={metadata ?? {}}
+          />
+        }
+        tableId="drizzle"
+      />
+    </DataTableActionsProvider>
   );
 }
 
@@ -221,7 +253,15 @@ function DrizzleSheetSlot({
     ColumnSchema,
     unknown
   >();
-  const selectedRowKey = Object.keys(rowSelection)?.[0];
+  // With a select column the table is multi-select: a row click writes `uuid`
+  // to the store and `rowSelection` is the checkbox set for bulk actions. The
+  // detail row therefore comes from `uuid`, exactly as `DataTableSheetDetails`
+  // resolves it — reading `rowSelection` here showed a skeleton on every click.
+  const uuid = useFilterState((s) => s.uuid) as string | null | undefined;
+  const isMultiSelect = !!table.options.enableMultiRowSelection;
+  const selectedRowKey = isMultiSelect
+    ? (uuid ?? undefined)
+    : Object.keys(rowSelection)?.[0];
   const selectedRow = React.useMemo(() => {
     if (isLoading && !selectedRowKey) return undefined;
     return table

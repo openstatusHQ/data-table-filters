@@ -6,6 +6,8 @@ import type { ColumnMapping } from "@dtf/registry/lib/drizzle";
  * This is the only file you need to write per table.
  */
 export const columnMapping = {
+  // Never filtered or sorted, but the row identity every action is keyed by.
+  uuid: logs.uuid,
   level: logs.level,
   date: logs.date,
   status: logs.status,

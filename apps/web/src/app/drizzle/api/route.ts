@@ -8,7 +8,6 @@ import {
   createDrizzleHandler,
   type DrizzleQueryScope,
 } from "@dtf/registry/lib/drizzle";
-import { defineFilters } from "@dtf/registry/lib/filters";
 import { sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import SuperJSON from "superjson";
@@ -16,21 +15,21 @@ import { columnMapping } from "../column-mapping";
 import type { InfiniteQueryResponse, LogsMeta } from "../query-options";
 import type { ColumnSchema } from "../schema";
 import { searchParamsCache } from "../search-params";
-import { tableSchema } from "../table-schema";
+import { actionHandler, demoActionsEnabled, filters } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 const handler = createDrizzleHandler({
   db,
   table: logs,
-  filters: defineFilters(tableSchema.definition),
+  filters,
   columnMapping,
   cursorColumn: "date",
   defaultSize: 40,
   // Part of the wire contract but never filtered or sorted, so absent from
-  // `columnMapping`. Rows come back keyed by schema keys either way.
+  // `columnMapping` — unlike `uuid`, which lives there because actions key
+  // rows by it. Rows come back keyed by schema keys either way.
   select: {
-    uuid: logs.uuid,
     headers: logs.headers,
     message: logs.message,
   },
@@ -46,7 +45,11 @@ export async function GET(req: NextRequest): Promise<Response> {
 
     // No remap: the handler projects with `columnMapping`, so rows already
     // arrive keyed by schema keys ("timing.dns", not timingDns).
-    const data = result.data as unknown as ColumnSchema[];
+    const actionsEnabled = demoActionsEnabled();
+    // --- Row actions: stamp each row with what can be done to it ---
+    const data = (actionsEnabled
+      ? actionHandler.annotate(result.data)
+      : result.data) as unknown as ColumnSchema[];
 
     // --- Per-row percentile ---
     const latencies = data.map((d) => d.latency);
@@ -74,6 +77,7 @@ export async function GET(req: NextRequest): Promise<Response> {
           filterRowCount: result.filterRowCount,
           chartData,
           facets: result.facets,
+          ...(actionsEnabled ? { actions: actionHandler.descriptors } : {}),
           metadata: { currentPercentiles },
         },
         prevCursor: result.prevCursor,
