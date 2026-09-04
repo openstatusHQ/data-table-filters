@@ -26,6 +26,11 @@ export type CursorPaginationParams = {
   direction: "prev" | "next";
   size: number;
   cursorColumn: Column;
+  /**
+   * Unique column ordered last, so rows sharing a cursor value have one
+   * defined order instead of whatever the plan happens to produce.
+   */
+  tiebreakColumn?: Column;
 };
 
 /**

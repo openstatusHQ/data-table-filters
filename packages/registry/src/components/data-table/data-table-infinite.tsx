@@ -715,11 +715,28 @@ function Row<TData extends RowData>({
  * it can only ever key on the identity it is given. Without it, each page fetch
  * re-runs `cn()` (tailwind-merge), `getVisibleCells()` and a full reconcile for
  * every row on screen, and that count only grows as you scroll.
+ *
+ * REMINDER: the id alone is not enough. A row action edits a row in place —
+ * same id, new contents — and comparing ids only holds the old cells on screen
+ * until a filter change or a reload rebuilds the table (a delete looks like it
+ * works, because the row leaves the list entirely). `row.original` is the
+ * identity of the underlying record, so a row the server changed always
+ * re-renders.
+ *
+ * It costs the memo nothing on the path it was written for: `fetchNextPage`
+ * appends a page and leaves the earlier ones referentially untouched, so
+ * `original` is identical for every row already on screen. A full refetch is
+ * the other story — react-query's `replaceEqualDeep` bails out of non-plain
+ * values, and one `Date` on the row (`date`, here) is enough to make it hand
+ * back a fresh object for every row, changed or not. So an action's
+ * invalidation re-renders the mounted rows once. That is the price of never
+ * showing a stale row, and it is paid per action, not per scroll.
  */
 const MemoizedRow = React.memo(
   Row,
   (prev, next) =>
     prev.row.id === next.row.id &&
+    prev.row.original === next.row.original &&
     prev.selected === next.selected &&
     prev.isMultiSelect === next.isMultiSelect &&
     prev.onRowClick === next.onRowClick &&
