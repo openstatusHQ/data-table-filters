@@ -155,12 +155,18 @@ function ClientInner({
   const liveMode = useLiveMode(flatData);
 
   // REMINDER: meta data is always the same for all pages as filters do not change(!)
-  const lastPage = data?.pages?.[data?.pages.length - 1];
-  const totalDBRowCount = lastPage?.meta?.totalRowCount;
-  const filterDBRowCount = lastPage?.meta?.filterRowCount;
-  const metadata = lastPage?.meta?.metadata;
-  const chartData = lastPage?.meta?.chartData;
-  const facets = lastPage?.meta?.facets;
+  // Only the initial page carries full metadata; later pages request `_meta=false`
+  // so they skip the expensive aggregation (chartData/facets/percentiles come back
+  // empty). fetchPreviousPage prepends pages, so the initial page is not always at
+  // index 0 — read meta from the first page that actually has it.
+  const metaPage =
+    data?.pages?.find((page) => page.meta?.chartData?.length) ??
+    data?.pages?.[data.pages.length - 1];
+  const totalDBRowCount = metaPage?.meta?.totalRowCount;
+  const filterDBRowCount = metaPage?.meta?.filterRowCount;
+  const metadata = metaPage?.meta?.metadata;
+  const chartData = metaPage?.meta?.chartData;
+  const facets = metaPage?.meta?.facets;
   const totalFetched = flatData?.length;
 
   const { sort, size, uuid, cursor, direction, live, ...filter } = search;

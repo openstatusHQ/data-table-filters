@@ -48,21 +48,28 @@ export async function GET(req: NextRequest): Promise<Response> {
   const filteredData = filters.apply(withoutSliderData, values, {
     only: sliderKeys,
   });
-  const chartData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
+  const skipMeta = req.nextUrl.searchParams.get("_meta") === "false";
+
+  const chartData = skipMeta ? [] : groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
   const sortedData = sortData(filteredData, search.sort);
-  const withoutSliderFacets = getFacetsFromData(withoutSliderData);
-  const facets = getFacetsFromData(filteredData);
-  const withPercentileData = percentileData(sortedData);
+  const withoutSliderFacets = skipMeta
+    ? {}
+    : getFacetsFromData(withoutSliderData);
+  const facets = skipMeta ? {} : getFacetsFromData(filteredData);
+  const withPercentileData = skipMeta ? sortedData : percentileData(sortedData);
   const data = splitData(withPercentileData, search);
 
-  const latencies = withPercentileData.map(({ latency }) => latency);
-  const currentPercentiles = {
-    50: calculateSpecificPercentile(latencies, 50),
-    75: calculateSpecificPercentile(latencies, 75),
-    90: calculateSpecificPercentile(latencies, 90),
-    95: calculateSpecificPercentile(latencies, 95),
-    99: calculateSpecificPercentile(latencies, 99),
-  };
+  let currentPercentiles = {} as Record<any, number>;
+  if (!skipMeta) {
+    const latencies = withPercentileData.map(({ latency }) => latency);
+    currentPercentiles = {
+      50: calculateSpecificPercentile(latencies, 50),
+      75: calculateSpecificPercentile(latencies, 75),
+      90: calculateSpecificPercentile(latencies, 90),
+      95: calculateSpecificPercentile(latencies, 95),
+      99: calculateSpecificPercentile(latencies, 99),
+    };
+  }
 
   const nextCursor =
     data.length > 0 ? data[data.length - 1].date.getTime() : null;

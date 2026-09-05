@@ -54,6 +54,7 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
       live: null,
       cursor: null,
       direction: null,
+      _meta: null,
     });
 
     return infiniteQueryOptions({
@@ -67,21 +68,35 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
           direction,
           uuid: null,
           live: null,
+          _meta: pageParam._meta ? null : false,
         });
+
         const response = await fetch(
           `${getBaseUrl()}${config.apiEndpoint}${serialize}`,
         );
         const json = await response.json();
         return SuperJSON.parse<InfiniteQueryResponse<TData, TMeta>>(json);
       },
-      initialPageParam: { cursor: initialCursor, direction: "next" },
+      initialPageParam: {
+        cursor: initialCursor,
+        direction: "next",
+        _meta: true,
+      },
       getPreviousPageParam: (firstPage) => {
         if (!firstPage.prevCursor) return null;
-        return { cursor: firstPage.prevCursor, direction: "prev" };
+        return {
+          cursor: firstPage.prevCursor,
+          direction: "prev",
+          _meta: false,
+        };
       },
       getNextPageParam: (lastPage) => {
         if (!lastPage.nextCursor) return null;
-        return { cursor: lastPage.nextCursor, direction: "next" };
+        return {
+          cursor: lastPage.nextCursor,
+          direction: "next",
+          _meta: false,
+        };
       },
       refetchOnWindowFocus: false,
       placeholderData: keepPreviousData,
