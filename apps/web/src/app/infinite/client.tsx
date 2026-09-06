@@ -20,6 +20,7 @@ import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
 import {
+  applyFacets,
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
 } from "@dtf/registry/lib/data-table/faceted";
@@ -167,32 +168,10 @@ function ClientInner({
 
   // REMINDER: this is currently needed for the cmdk search
   // TODO: auto search via API when the user changes the filter instead of hardcoded
-  const dynamicFilterFields = React.useMemo(() => {
-    return filterFields.map((field) => {
-      const facetsField = facets?.[field.value as string];
-      if (!facetsField) return field;
-      if (field.options && field.options.length > 0) return field;
-
-      // REMINDER: if no options are set, we need to set them via the API
-      const options = facetsField.rows.map(({ value }) => {
-        return {
-          label: `${value}`,
-          value,
-        };
-      });
-
-      if (field.type === "slider") {
-        return {
-          ...field,
-          min: facetsField.min ?? field.min,
-          max: facetsField.max ?? field.max,
-          options,
-        };
-      }
-
-      return { ...field, options };
-    });
-  }, [facets]);
+  const dynamicFilterFields = React.useMemo(
+    () => applyFacets(filterFields, facets),
+    [facets],
+  );
 
   const defaultColumnFilters = React.useMemo(() => {
     return Object.entries(filter)

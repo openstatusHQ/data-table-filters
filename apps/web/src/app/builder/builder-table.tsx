@@ -10,6 +10,7 @@ import type {
   SheetField,
 } from "@dtf/registry/components/data-table/types";
 import {
+  applyFacets,
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
 } from "@dtf/registry/lib/data-table/faceted";
@@ -136,31 +137,10 @@ function BuilderTableQuery({
   const totalFetched = flatData.length;
 
   // Build dynamic filter fields from facets (same pattern as infinite client)
-  const dynamicFilterFields = React.useMemo(() => {
-    return filterFields.map((field) => {
-      const facetsField = facets?.[field.value as string];
-      if (!facetsField) return field;
-      if (field.options && field.options.length > 0) return field;
-
-      const options = facetsField.rows.map(
-        ({ value }: { value: string | number | boolean }) => ({
-          label: `${value}`,
-          value,
-        }),
-      );
-
-      if (field.type === "slider") {
-        return {
-          ...field,
-          min: facetsField.min ?? field.min,
-          max: facetsField.max ?? field.max,
-          options,
-        };
-      }
-
-      return { ...field, options };
-    });
-  }, [filterFields, facets]);
+  const dynamicFilterFields = React.useMemo(
+    () => applyFacets(filterFields, facets),
+    [filterFields, facets],
+  );
 
   return (
     <DataTableInfinite

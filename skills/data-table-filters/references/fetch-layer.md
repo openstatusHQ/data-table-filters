@@ -8,6 +8,8 @@ Auto-installs `@tanstack/react-query` and `superjson`.
 
 - [createDataTableQueryOptions](#createdatatablequeryoptions)
 - [Response Shape](#response-shape)
+- [Transport](#transport)
+- [Pagination](#pagination)
 - [Faceted Helpers](#faceted-helpers)
 - [Full Example](#full-example)
 
@@ -70,6 +72,40 @@ interface InfiniteQueryResponse<TData, TMeta> {
 The `createDrizzleHandler.execute()` result matches this shape directly.
 
 ---
+
+## Transport
+
+Defaults to a same-origin `fetch` and a SuperJSON body — right for an endpoint shipped alongside the app, wrong for anyone else's. `transport` covers the rest:
+
+```ts
+createDataTableQueryOptions({
+  queryKeyPrefix: "logs",
+  apiEndpoint: "/logs",
+  searchParamsSerializer,
+  transport: {
+    baseUrl: "https://api.example.com", // string, or a function called per request
+    headers: async () => ({ authorization: `Bearer ${await getToken()}` }),
+    credentials: "include",
+    parseResponse: schemaJsonParser(schema), // plain JSON, timestamps revived
+  },
+});
+```
+
+Parsers: `superjsonParser()` (default), `jsonParser()` (verbatim), `schemaJsonParser(schema)` — reads the schema to find `timestamp` columns and revives them from ISO strings, so a third-party endpoint need not adopt SuperJSON.
+
+A cross-origin `baseUrl` needs CORS. A non-2xx response or an unparseable body throws `DataTableFetchError` (`status`, `url`, body snippet) rather than feeding a 500's HTML to the parser. React Query's `AbortSignal` is forwarded, so superseded requests are cancelled.
+
+## Pagination
+
+The default addresses pages by a millisecond timestamp and pages both ways — right for an append-only log, wrong for anything else.
+
+| Strategy                      | Wire format                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `timestampCursorPagination()` | `?cursor=<epoch ms>&direction=next\|prev` — default, bidirectional                                            |
+| `opaqueCursorPagination()`    | `?cursor=<token>` — server's `nextCursor` echoed back, forward-only                                           |
+| `offsetPagination({ size })`  | `?offset=<n>&size=<n>` — honours `nextCursor` as the next offset, else advances until a page comes back short |
+
+Each owns its parameter names (`cursorKey`, `offsetKey`, …) and clears them from the cache key, so every page of one filter state shares a query key.
 
 ## Faceted Helpers
 

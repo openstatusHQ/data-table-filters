@@ -310,6 +310,35 @@ malformed id is a 400 `invalid_request`, not a cast error surfacing as a 500.
 Multi-row selection needs `col.select()` in the schema, as for any floating
 bar.
 
+### Descriptor validation
+
+Descriptors are server-authored and choose the URL the provider POSTs row ids
+to, so they are validated once on arrival and anything that fails is dropped
+rather than rendered — a button that cannot be sent safely is worse than no
+button. Rejections are reported to the console, not the UI.
+
+An `href` is accepted when it is a root-relative path (`/api/actions/replay`),
+or an absolute `http(s)` URL on the page's own origin. Everything else is
+rejected: protocol-relative URLs that read like a path
+(`//evil.example.com/steal`), `javascript:`, `data:`, `blob:`,
+directory-relative paths, control characters, and anything over 2048 chars.
+The rest of the descriptor is bounded too — `id`, `label`, `scope`, `variant`,
+`confirm` and `maxIds` are all range- and type-checked, and a duplicate `id` is
+dropped.
+
+When the actions endpoint lives on another origin, name it:
+
+```tsx
+<DataTableActionsProvider<ColumnSchema>
+  actions={actions}
+  getRowId={(row) => row.uuid}
+  allowedActionOrigins={["https://api.example.com"]}
+>
+```
+
+This matters most when the table renders a schema from a server you do not
+control — see [Headless Tables](/docs/headless#trust-boundary).
+
 ## Demo
 
 The [/drizzle](/drizzle) demo declares `acknowledge` (error → warning) and

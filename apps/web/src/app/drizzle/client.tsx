@@ -23,6 +23,7 @@ import type { SheetField } from "@dtf/registry/components/data-table/types";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
 import {
+  applyFacets,
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
 } from "@dtf/registry/lib/data-table/faceted";
@@ -111,29 +112,10 @@ function ClientInner() {
 
   const { sort, size, uuid, cursor, direction, live, ...filter } = search;
 
-  const dynamicFilterFields = React.useMemo(() => {
-    return filterFields.map((field) => {
-      const facetsField = facets?.[field.value as string];
-      if (!facetsField) return field;
-      if (field.options && field.options.length > 0) return field;
-
-      const options = facetsField.rows.map(({ value }) => ({
-        label: `${value}`,
-        value,
-      }));
-
-      if (field.type === "slider") {
-        return {
-          ...field,
-          min: facetsField.min ?? field.min,
-          max: facetsField.max ?? field.max,
-          options,
-        };
-      }
-
-      return { ...field, options };
-    });
-  }, [facets]);
+  const dynamicFilterFields = React.useMemo(
+    () => applyFacets(filterFields, facets),
+    [facets],
+  );
 
   const defaultColumnFilters = React.useMemo(() => {
     return Object.entries(filter)

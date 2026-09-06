@@ -5,6 +5,7 @@ import type {
   ActionRequest,
   ActionResponse,
 } from "@dtf/registry/lib/actions/types";
+import { sanitizeActionDescriptors } from "@dtf/registry/lib/actions/validate";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { toast } from "sonner";
@@ -96,6 +97,15 @@ export type DataTableActionsProviderProps<TData> = {
    */
   getRowLabel?: (row: TData) => string;
   /**
+   * Origins the actions endpoint may live on, beyond the page's own.
+   *
+   * Descriptors are server-authored and choose the URL this provider POSTs row
+   * ids to. Relative hrefs need nothing here; an absolute one is only sent if
+   * its origin is the page's own or listed here. Anything else is dropped
+   * before it can be rendered — see `sanitizeActionDescriptors`.
+   */
+  allowedActionOrigins?: readonly string[];
+  /**
    * The first element of the table's query key. Every page under it is
    * invalidated after a successful action, so rows that no longer match
    * leave the view.
@@ -112,12 +122,28 @@ export function DataTableActionsProvider<TData>({
   getRowId,
   getRowActions,
   getRowLabel,
+  allowedActionOrigins,
   queryKeyPrefix,
   onApplied,
   fetcher,
   children,
 }: DataTableActionsProviderProps<TData>) {
   const queryClient = useQueryClient();
+
+  // The descriptors are validated once, here, rather than at click time: a
+  // button whose `href` we would refuse to POST to should never be drawn.
+  const safeActions = React.useMemo(() => {
+    const { actions: kept, rejected } = sanitizeActionDescriptors(actions, {
+      allowedOrigins: allowedActionOrigins,
+    });
+    if (rejected.length > 0) {
+      console.warn(
+        "[data-table-actions] dropped unsafe or malformed descriptors:",
+        rejected.map(({ id, reason }) => `${id} (${reason})`).join(", "),
+      );
+    }
+    return kept;
+  }, [actions, allowedActionOrigins]);
   // Awaiting the user's answer; distinct from `isPending` (request on the wire).
   const [confirming, setConfirming] = React.useState<ConfirmingCommand | null>(
     null,
@@ -259,14 +285,14 @@ export function DataTableActionsProvider<TData>({
 
   const value = React.useMemo<DataTableActionsContextValue<TData>>(
     () => ({
-      actions: actions ?? [],
+      actions: safeActions,
       getRowId,
       getRowActions: getRowActions ?? rowActionsOf,
       getRowLabel,
       trigger,
       isPending,
     }),
-    [actions, getRowId, getRowActions, getRowLabel, trigger, isPending],
+    [safeActions, getRowId, getRowActions, getRowLabel, trigger, isPending],
   );
 
   return (

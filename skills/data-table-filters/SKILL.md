@@ -3,7 +3,7 @@ name: data-table-filters
 description: >
   Install and extend data-table-filters — a React data table system with faceted filters
   (checkbox, input, slider, timerange), sorting, infinite scroll, virtualization, and BYOS
-  state management. Delivered as 12 shadcn registry blocks installable via
+  state management. Delivered as 13 shadcn registry blocks installable via
   `npx shadcn@latest add`. Use when: (1) installing data-table-filters from the shadcn
   registry, (2) adding extension blocks (command palette, AI filters, cell renderers, sheet panel,
   store adapters, schema system, Drizzle helpers, query layer), (3) configuring store
@@ -27,7 +27,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 
 | Block                            | Install URL                                           | What it adds                                                                                                               |
 | -------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (57 files)                                                       |
+| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (58 files)                                                       |
 | **data-table-filter-command**    | `.../r/data-table-filter-command.json`                | Command palette with history + keyboard shortcuts                                                                          |
 | **data-table-cell**              | `.../r/data-table-cell.json`                          | 12 cell renderers (text, code, number, bar, heatmap, gauge, badge, boolean, star, status-code, level-indicator, timestamp) |
 | **data-table-sheet**             | `.../r/data-table-sheet.json`                         | Row detail side panel (auto-installs cells)                                                                                |
@@ -39,6 +39,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 | **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                                                         |
 | **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                                                       |
 | **data-table-actions**           | `.../r/data-table-actions.json`                       | Row and bulk actions rendered from server metadata (requires drizzle)                                                      |
+| **data-table-remote**            | `.../r/data-table-remote.json`                        | Headless table driven by an endpoint's manifest — schema, capabilities, row identity                                       |
 
 All URLs use base `https://data-table.openstatus.dev`.
 
@@ -301,7 +302,53 @@ Install: `npx shadcn@latest add .../r/data-table-query.json`
 
 Wire `createDataTableQueryOptions({ queryKeyPrefix, apiEndpoint, searchParamsSerializer })`.
 
+Defaults to a same-origin `fetch` and a SuperJSON body. For anyone else's API, pass `transport` (`baseUrl`, `headers` as a sync/async function, `credentials`, `parseResponse`) and a `pagination` strategy — `timestampCursorPagination()` (default, bidirectional), `opaqueCursorPagination()`, or `offsetPagination({ size })`. `schemaJsonParser(schema)` revives timestamp columns from plain ISO strings, so the endpoint need not adopt SuperJSON. A non-2xx or unparseable body throws `DataTableFetchError` with `status`, `url` and a body snippet.
+
 See [references/fetch-layer.md](references/fetch-layer.md).
+
+## Headless Table (Point at an Endpoint)
+
+Install: `npx shadcn@latest add .../r/data-table-remote.json`
+
+For a table whose data and endpoint are owned elsewhere, with no per-column code in the app.
+
+**Server** — publish a manifest describing the table:
+
+```ts
+// app/<table>/api/schema/route.ts
+const handler = createTableManifestHandler(
+  createTableManifest({
+    schema: tableSchema,
+    primaryKey: "uuid", // the column that identifies a row on the wire
+    rowLabel: "{method} {pathname}", // template over column keys, for a11y
+    capabilities: { facets: true, totalRowCount: true, chart: true },
+    defaults: { sort: { id: "date", desc: true }, size: 40 },
+  }),
+);
+export const GET = (request: Request) => handler(request);
+```
+
+Pass a function instead of a value when the manifest depends on the request (per-tenant columns, permission-dependent actions). Served with an ETag, so a revalidation is a 304.
+
+**Client**:
+
+```tsx
+<DataTableRemote
+  manifestEndpoint="/logs/api/schema" // data endpoint defaults to this minus /schema
+  searchParamsSerializer={searchParamsSerializer}
+  initialManifest={snapshot} // optional — skips the round trip before first paint
+  transport={{ headers: async () => ({ authorization: await token() }) }}
+  renderers={{ pathname: { cell: (v) => <PathnameCell value={String(v)} /> } }}
+/>
+```
+
+Key points:
+
+- **Capabilities default to off.** Declare only what the endpoint implements; the table degrades (client-side faceting, blank counts, no live button, no chart) rather than rendering empty.
+- **Renderers do not serialize.** Named displays (`badge`, `bar`, `status-code`, …) travel as data; use `applyRenderers` / the `renderers` prop for the rest. The descriptor is untouched, so the schema still round-trips.
+- **The manifest is untrusted.** Bounded columns and actions; action `href`s restricted to the page's origin unless allow-listed via `allowedActionOrigins`.
+- **Snapshot to avoid the round trip.** `pullManifestModule(url)` writes a typed module; pass it as `initialManifest`. It still revalidates at runtime.
+- **Verify an endpoint** with `runEndpointConformance({ url, manifest })` and `formatConformanceReport`.
 
 ## Troubleshooting
 
