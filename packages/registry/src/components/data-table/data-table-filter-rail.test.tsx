@@ -94,15 +94,19 @@ describe("DataTableFilterRail", () => {
 
   it("is positioned against the table column, not the page", () => {
     // `absolute inset-y-0` only lands on the sidebar border if the column that
-    // renders the rail establishes the containing block.
+    // renders the rail establishes the containing block. jsdom has no layout
+    // engine, so the source is the only place this contract is observable.
     const source = readFileSync(
       join(__dirname, "data-table-infinite.tsx"),
       "utf8",
     );
 
-    expect(source).toMatch(
-      /"border-border relative flex max-w-full flex-1 flex-col sm:border-l"/,
-    );
+    // Class-order-tolerant: `cn` is a `tailwindFunctions` entry, so prettier
+    // re-sorts this list whenever a class is added. Pin `relative` on the
+    // element that owns `sm:border-l`, not the string prettier happens to emit.
+    const column = source.match(/className=\{cn\(\s*"[^"]*sm:border-l[^"]*"/);
+    expect(column).not.toBeNull();
+    expect(column?.[0]).toMatch(/\brelative\b/);
     expect(source).toMatch(/<DataTableFilterRail \/>/);
   });
 });
