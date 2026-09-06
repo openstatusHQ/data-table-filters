@@ -38,6 +38,30 @@ const dataOptions = createDataTableQueryOptions<LogEntry, ChartMeta>({
 const query = useInfiniteQuery(dataOptions(filterState));
 ```
 
+### skipMetaOnPagination
+
+`meta` is computed over the whole filtered set and is the same on every page. Pass `skipMetaOnPagination: true` to append `_meta=false` to pagination requests so the route can skip recomputing it. Opt-in — it requires both:
+
+1. the route honors `_meta=false` (skip chart data and facets only; per-row fields must still be returned on every page), and
+2. the client reads meta via `getMetaPage(data)` rather than the last page.
+
+```tsx
+import { createDataTableQueryOptions, getMetaPage } from "@/lib/data-table";
+
+const dataOptions = createDataTableQueryOptions<LogEntry, ChartMeta>({
+  queryKeyPrefix: "logs",
+  apiEndpoint: "/api/logs",
+  searchParamsSerializer,
+  skipMetaOnPagination: true,
+});
+
+// In the component:
+const metaPage = getMetaPage(data);
+const facets = metaPage?.meta?.facets;
+```
+
+`getMetaPage` finds the page fetched with meta using React Query's `pageParams` (live mode prepends pages, so it is not always index `0`) and falls back to the last page, so it is safe with or without meta skipping.
+
 ---
 
 ## Response Shape

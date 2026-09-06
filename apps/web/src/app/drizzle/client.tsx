@@ -22,6 +22,7 @@ import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-
 import type { SheetField } from "@dtf/registry/components/data-table/types";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
+import { getMetaPage } from "@dtf/registry/lib/data-table";
 import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
@@ -99,13 +100,16 @@ function ClientInner() {
 
   const liveMode = useLiveMode(flatData);
 
-  const lastPage = data?.pages?.[data?.pages.length - 1];
-  const totalDBRowCount = lastPage?.meta?.totalRowCount;
-  const filterDBRowCount = lastPage?.meta?.filterRowCount;
-  const metadata = lastPage?.meta?.metadata;
-  const chartData = lastPage?.meta?.chartData;
-  const facets = lastPage?.meta?.facets;
-  const actions = lastPage?.meta?.actions;
+  // Reads the page that carries meta. Identical to the last page today, since
+  // this table does not set `skipMetaOnPagination` — but it stays correct if it
+  // ever does, instead of silently reading a page with an empty meta payload.
+  const metaPage = getMetaPage(data);
+  const totalDBRowCount = metaPage?.meta?.totalRowCount;
+  const filterDBRowCount = metaPage?.meta?.filterRowCount;
+  const metadata = metaPage?.meta?.metadata;
+  const chartData = metaPage?.meta?.chartData;
+  const facets = metaPage?.meta?.facets;
+  const actions = metaPage?.meta?.actions;
   const columns = actions?.length ? columnsWithActions : baseColumns;
   const totalFetched = flatData?.length;
 

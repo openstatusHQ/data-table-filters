@@ -38,6 +38,47 @@ The factory configures:
 - **Page params** — `getNextPageParam` / `getPreviousPageParam` from `nextCursor` / `prevCursor`
 - **Caching** — `keepPreviousData` for smooth filter transitions, 5-minute stale time, no refetch on window focus
 
+### Skipping Metadata on Pagination
+
+`meta` (chart data, facets, your own `metadata`) is computed over the whole filtered set, so it is identical on every page — yet a naive setup recomputes and re-sends it on every infinite-scroll fetch.
+
+Set `skipMetaOnPagination` to append `_meta=false` to pagination requests so your route can skip that work:
+
+```ts
+const _dataOptions = createDataTableQueryOptions<ColumnSchema[], MyMeta>({
+  queryKeyPrefix: "my-table",
+  apiEndpoint: "/my-table/api",
+  searchParamsSerializer: searchParamsSerializer,
+  skipMetaOnPagination: true,
+});
+```
+
+It is opt-in because it only works if **both** halves are in place:
+
+1. **Your route honors it.** Read the raw param and skip the aggregation:
+
+   ```ts
+   const skipMeta = req.nextUrl.searchParams.get("_meta") === "false";
+   const chartData = skipMeta ? [] : groupChartData(filteredData, date);
+   const facets = skipMeta ? {} : getFacetsFromData(filteredData);
+   ```
+
+   Only `meta` is skippable. Per-row fields still have to be returned on every page — skipping one leaves the rows fetched by scrolling missing a value the table renders.
+
+2. **Your client reads meta from the right page.** Use `getMetaPage`, not the last page — live mode prepends pages with `fetchPreviousPage`, so the page carrying meta is not always at index `0`:
+
+   ```tsx
+   import { getMetaPage } from "@/lib/data-table";
+
+   const metaPage = getMetaPage(data);
+   const chartData = metaPage?.meta?.chartData;
+   const facets = metaPage?.meta?.facets;
+   ```
+
+`getMetaPage` identifies that page from React Query's `pageParams`, and falls back to the last page — so it is safe to use whether or not meta skipping is on.
+
+> `_meta` is appended to the URL after your serializer runs, so it works even with an allow-list serializer that drops unknown keys. It never enters the query key.
+
 ### useInfiniteQuery Pattern
 
 ```tsx
