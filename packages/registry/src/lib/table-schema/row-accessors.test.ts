@@ -32,6 +32,20 @@ describe("createRowAccessors", () => {
       expect(getRowId({ a: 1 })).toBe("");
     });
 
+    it("refuses an inherited property reached through a nested key", () => {
+      // `meta.toString` passes a reserved-name check but resolves
+      // Object.prototype.toString — the same value for every row, which
+      // collapses selection and bulk actions onto a single id.
+      const { getRowId } = createRowAccessors({ primaryKey: "meta.toString" });
+      expect(getRowId({ meta: {} })).toBe("");
+      expect(getRowId({ meta: {} })).toBe(getRowId({ meta: { other: 1 } }));
+    });
+
+    it("still reads an own nested value", () => {
+      const { getRowId } = createRowAccessors({ primaryKey: "meta.id" });
+      expect(getRowId({ meta: { id: "nested" } })).toBe("nested");
+    });
+
     it("prefers a literal dotted key over walking the path", () => {
       const { getRowId } = createRowAccessors({ primaryKey: "meta.id" });
       expect(getRowId({ "meta.id": "flat" })).toBe("flat");

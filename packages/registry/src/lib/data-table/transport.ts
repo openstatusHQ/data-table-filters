@@ -93,8 +93,15 @@ export function jsonParser<TData, TMeta>(): ResponseParser<TData, TMeta> {
  * Walking `"__proto__.x"` with a naive object guard writes to
  * `Object.prototype` — `row["__proto__"]` *is* an object, so a `typeof`
  * check passes it — polluting every object in the tab from the first parsed
- * response. Filtered at the source and re-checked at both accessors, because
- * this is the kind of guard that must not depend on a single caller.
+ * response.
+ *
+ * This name list is the *secondary* guard. It cannot be the primary one: it
+ * enumerates bad names, and `"meta.toString"` is not on it while still
+ * resolving an inherited method. The primary guard is `Object.hasOwn` on every
+ * traversed segment (see `getPath`/`setPath`), which states the real invariant
+ * — this segment is the row's own data — and subsumes these names, because
+ * they are inherited rather than own. The list is kept for the one place
+ * `hasOwn` cannot help: the final segment of a write, which may not exist yet.
  */
 const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
   "__proto__",
@@ -134,6 +141,9 @@ function getPath(row: Record<string, unknown>, path: string): unknown {
   let current: unknown = row;
   for (const segment of path.split(".")) {
     if (current === null || typeof current !== "object") return undefined;
+    // Own data only. Without this, `"meta.toString"` resolves an inherited
+    // method that is identical on every row.
+    if (!Object.hasOwn(current, segment)) return undefined;
     current = (current as Record<string, unknown>)[segment];
   }
   return current;
@@ -155,10 +165,15 @@ function setPath(
   const last = segments.pop()!;
   let current: Record<string, unknown> = row;
   for (const segment of segments) {
+    // Own data only. An inherited intermediate object is shared with every
+    // other row on that prototype, so writing through it corrupts siblings.
+    if (!Object.hasOwn(current, segment)) return;
     const next = current[segment];
     if (next === null || typeof next !== "object") return;
     current = next as Record<string, unknown>;
   }
+  // `last` may legitimately not exist yet, so `hasOwn` cannot gate it —
+  // `isSafeKeyPath` above is what keeps it from being `__proto__`.
   current[last] = value;
 }
 

@@ -296,6 +296,42 @@ describe("coerceRowTimestamps", () => {
     expect(coerceRowTimestamps(row, ["__proto__.x"])).toEqual(row);
   });
 
+  // The inherited object has to hold a *coercible* value, or the write never
+  // happens and the test passes with or without the guard.
+  it("refuses to write through an inherited intermediate object", () => {
+    const shared = { nested: { when: "2024-01-01T00:00:00.000Z" } };
+    const rowA = Object.create(shared) as Record<string, unknown>;
+    const rowB = Object.create(shared) as Record<string, unknown>;
+
+    coerceRowTimestamps(rowA, ["nested.when"]);
+
+    // Writing through the inherited `nested` would convert it in place, and
+    // every row sharing that prototype would see the change.
+    expect(shared.nested.when).toBe("2024-01-01T00:00:00.000Z");
+    expect((rowB.nested as Record<string, unknown>).when).toBe(
+      "2024-01-01T00:00:00.000Z",
+    );
+  });
+
+  // A name list cannot catch this: neither segment is reserved, but the second
+  // resolves an inherited method rather than the row's own data.
+  it("refuses to read an inherited property through a nested path", () => {
+    const shared = { meta: { toString: "2024-01-01T00:00:00.000Z" } };
+    const row = Object.create(shared) as Record<string, unknown>;
+
+    coerceRowTimestamps(row, ["meta.toString"]);
+
+    expect(shared.meta.toString).toBe("2024-01-01T00:00:00.000Z");
+  });
+
+  it("still writes through an own intermediate object", () => {
+    const row = coerceRowTimestamps(
+      { timing: { dns: "2024-01-01T00:00:00.000Z" } },
+      ["timing.dns"],
+    );
+    expect(row.timing.dns).toBeInstanceOf(Date);
+  });
+
   it("prefers a literal dotted key over walking the path", () => {
     // `createDrizzleHandler` projects nested columns as flat dotted keys.
     const row = coerceRowTimestamps(

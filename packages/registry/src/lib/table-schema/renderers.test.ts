@@ -95,6 +95,34 @@ describe("applyRenderers", () => {
     expect(onUnknownKey).toHaveBeenCalledWith("toString");
   });
 
+  it("drops a prototype-reaching column key instead of assigning it", () => {
+    // `result["__proto__"] = builder` invokes the setter and reassigns the
+    // result's prototype, so the column disappears from `Object.keys` with no
+    // diagnostic. It must be skipped before the assignment, not just excluded
+    // from override lookup.
+    const definition = schema();
+    Object.defineProperty(definition, "__proto__", {
+      value: definition.uuid,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+
+    const onUnknownKey = vi.fn();
+    const result = applyRenderers(
+      definition,
+      { uuid: { cell } },
+      {
+        onUnknownKey,
+      },
+    );
+
+    expect(onUnknownKey).toHaveBeenCalledWith("__proto__");
+    expect(Object.keys(result)).toEqual(["uuid", "level", "latency"]);
+    // The prototype must be untouched — a reassigned one is the actual damage.
+    expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+  });
+
   it("attaches every renderer kind", () => {
     const filterComponent = () => null;
     const sheetCondition = () => true;

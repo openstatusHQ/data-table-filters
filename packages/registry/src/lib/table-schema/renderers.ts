@@ -36,7 +36,8 @@ export type RendererOverrides = Record<string, ColRenderers>;
 
 export type ApplyRenderersOptions = {
   /**
-   * Called for an override whose key is not in the schema.
+   * Called for an override whose key is not in the schema, and for a schema
+   * column whose key is unusable (a prototype-reaching name).
    *
    * Worth listening to: a remote schema can drop a column between deploys, and
    * an override left behind for it is silently dead. The default warns to the
@@ -79,13 +80,16 @@ export function applyRenderers(
 
   const result: TableSchemaDefinition = {};
   for (const [key, builder] of Object.entries(definition)) {
-    // A reserved key would reassign the result's prototype instead of adding a
-    // column, silently dropping it from every `Object.keys` consumer.
-    const override = isSafeColumnKey(key)
-      ? Object.hasOwn(overrides, key)
-        ? overrides[key]
-        : undefined
-      : undefined;
+    // Skipped before any assignment, not merely excluded from overrides:
+    // `result["__proto__"] = builder` invokes the setter and reassigns the
+    // result's prototype rather than adding a column, so the column vanishes
+    // from every `Object.keys` consumer with no diagnostic. Guarding only the
+    // override lookup still ran that assignment on the pass-through path.
+    if (!isSafeColumnKey(key)) {
+      onUnknownKey(key);
+      continue;
+    }
+    const override = Object.hasOwn(overrides, key) ? overrides[key] : undefined;
     if (!override) {
       result[key] = builder;
       continue;

@@ -562,6 +562,10 @@ function readPath(row: unknown, path: string): unknown {
   let current: unknown = row;
   for (const segment of path.split(".")) {
     if (current === null || typeof current !== "object") return undefined;
+    // Own data only. `isSafeColumnKey` is a name list and cannot catch
+    // `"meta.toString"`, which otherwise resolves an inherited method — the
+    // same value on every row, collapsing every row id onto one.
+    if (!Object.hasOwn(current, segment)) return undefined;
     current = (current as Record<string, unknown>)[segment];
   }
   return current;
