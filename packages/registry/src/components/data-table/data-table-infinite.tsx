@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@dtf/registry/components/custom/table";
 import { DataTableFilterControls } from "@dtf/registry/components/data-table/data-table-filter-controls";
+import { DataTableFilterRail } from "@dtf/registry/components/data-table/data-table-filter-rail";
 import { DataTableProvider } from "@dtf/registry/components/data-table/data-table-provider";
 import { DataTableResetButton } from "@dtf/registry/components/data-table/data-table-reset-button";
 import { DataTableToolbar } from "@dtf/registry/components/data-table/data-table-toolbar"; // TODO: check where to put this
@@ -433,11 +434,12 @@ export function DataTableInfinite<TData extends RowData>({
         </div>
         <div
           className={cn(
-            "border-border flex max-w-full flex-1 flex-col sm:border-l",
+            "border-border relative flex max-w-full flex-1 flex-col sm:border-l",
             // Chrome issue
             "sm:group-data-[expanded=true]/controls:max-w-[calc(100%-208px)] md:group-data-[expanded=true]/controls:max-w-[calc(100%-288px)]",
           )}
         >
+          <DataTableFilterRail />
           <div
             ref={topBarRef}
             className={cn(

@@ -78,6 +78,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/data-table/data-table-filter-rail.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/custom/table.tsx",
           "type": "registry:component"
         },
