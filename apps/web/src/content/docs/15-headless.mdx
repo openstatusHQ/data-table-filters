@@ -1,0 +1,368 @@
+---
+title: "Headless Tables"
+description: "Point the table at an API endpoint and let it render whatever that endpoint describes — schema, capabilities, row identity, and actions"
+author: "openstatus"
+publishedAt: "2026-09-06"
+faq:
+  - question: "What does the client need to know about the table ahead of time?"
+    answer: "Nothing. It fetches a manifest from your endpoint — the schema, which column identifies a row, what the server can compute, and what may be done to a row — and derives columns, filters, sheet fields and URL state from it. There is no per-column code in the app."
+  - question: "Does the endpoint have to use SuperJSON or a timestamp cursor?"
+    answer: "No. The transport option covers base URL, headers, credentials and response parsing, and pagination is pluggable — timestamp cursor, opaque cursor, or offset. schemaJsonParser revives timestamp columns from plain ISO strings using the schema, so an endpoint that returns ordinary JSON works unchanged."
+  - question: "What happens if my endpoint cannot compute facets or row counts?"
+    answer: "Say so in the manifest's capabilities and the table degrades instead of rendering empty. Without facets it falls back to faceting the rows it has loaded; a count it cannot compute is left blank rather than shown as zero; without backwardPagination the live button is not rendered at all."
+  - question: "Is it safe to render a schema from a server I do not control?"
+    answer: "The manifest is treated as untrusted input: bounded column and action counts, dropped columns that are unusable, and action hrefs restricted to the page's own origin unless you allow-list another. Anything that fails validation is dropped rather than rendered."
+---
+
+# Headless Tables
+
+The `data-table-remote` block renders a table from an API endpoint. You publish
+a **manifest** describing your data; the table derives columns, filters, sheet
+fields, row identity and URL state from it. You keep full control of the data —
+the only thing you hand over is the shape of it.
+
+This is the same engine as every other page in these docs. The difference is
+where the schema lives: in a TypeScript file you import, or in a response from
+an endpoint you own.
+
+## Installation
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-schema.json \
+  https://data-table.openstatus.dev/r/data-table-query.json \
+  https://data-table.openstatus.dev/r/data-table-nuqs.json \
+  https://data-table.openstatus.dev/r/data-table-remote.json
+```
+
+## The manifest
+
+A manifest is what an endpoint says about itself. It is JSON, so it crosses the
+network intact:
+
+```ts
+type TableManifest = {
+  version: number;
+  schema: SchemaJSON;
+  /** The column that identifies a row on the wire. */
+  primaryKey: string;
+  /** A template over column keys: "{method} {pathname}". */
+  rowLabel?: string;
+  capabilities: TableCapabilities;
+  chart?: TableChartConfig;
+  actions?: ActionDescriptor[];
+  defaults?: { sort?; size?; columnVisibility? };
+};
+```
+
+`primaryKey` and `rowLabel` replace the closures every client used to write by
+hand (`getRowId={(row) => row.uuid}`) — exactly the kind of thing a table
+pointed at an endpoint cannot supply for itself.
+
+### Serving it
+
+`createTableManifest` builds one from a schema you already have;
+`createTableManifestHandler` serves it with ETag revalidation.
+
+```ts
+// app/logs/api/schema/route.ts
+import {
+  createTableManifest,
+  createTableManifestHandler,
+} from "@/lib/table-schema";
+import { tableSchema } from "../table-schema";
+
+const handler = createTableManifestHandler(
+  createTableManifest({
+    schema: tableSchema,
+    primaryKey: "uuid",
+    rowLabel: "{method} {pathname}",
+    capabilities: {
+      facets: true,
+      totalRowCount: true,
+      filterRowCount: true,
+      chart: true,
+      backwardPagination: true,
+    },
+    defaults: { sort: { id: "date", desc: true }, size: 40 },
+  }),
+);
+
+export async function GET(request: Request) {
+  return handler(request);
+}
+```
+
+Pass a **function** instead of a value when the manifest depends on the request
+— per-tenant columns, or actions that depend on the caller's permissions:
+
+```ts
+const handler = createTableManifestHandler((request) =>
+  createTableManifest({
+    schema: tableSchema,
+    primaryKey: "uuid",
+    capabilities: { facets: true, actions: canWrite(request) },
+    ...(canWrite(request) ? { actions: actionHandler.descriptors } : {}),
+  }),
+);
+```
+
+`createTableManifest` throws if `primaryKey` is not a column in the schema.
+Better to fail on the server than to ship a manifest whose rows the client
+cannot identify.
+
+## Rendering it
+
+```tsx
+"use client";
+
+import { DataTableRemote } from "@/components/data-table/data-table-remote";
+import { searchParamsSerializer } from "./search-params";
+
+export function Client() {
+  return (
+    <DataTableRemote
+      manifestEndpoint="/logs/api/schema"
+      searchParamsSerializer={searchParamsSerializer}
+    />
+  );
+}
+```
+
+The data endpoint defaults to the manifest URL with a trailing `/schema`
+stripped, so `/logs/api/schema` pairs with `/logs/api`. Set `dataEndpoint`
+explicitly when they do not line up.
+
+### Why it is two components
+
+The URL-state adapter's parsers are derived from the schema, and
+`useNuqsAdapter(schema, …)` needs one at first render. A hook cannot be called
+conditionally, so the manifest has to resolve one level **above** everything
+built from it. `DataTableRemote` resolves it; the inner table is mounted only
+once it has, and therefore has a stable hook order for its whole life.
+
+The inner table is keyed on the column set, so a schema change resets table
+state. That is deliberate: sorting, visibility and filters are keyed by column,
+and carrying them across a schema swap resurrects state for columns that no
+longer exist. A capability or action change does **not** remount — it should not
+throw away the user's sorting.
+
+## Capabilities
+
+The client used to assume the server did everything. An endpoint that cannot
+group facets or count matching rows had no way to say so, and the UI had no way
+to degrade — it rendered empty filters and a blank count.
+
+| Flag                 | When false                                                      |
+| -------------------- | --------------------------------------------------------------- |
+| `facets`             | The table facets the rows it has loaded, client-side            |
+| `totalRowCount`      | The total is left blank, not shown as `0`                       |
+| `filterRowCount`     | The filtered count is left blank                                |
+| `chart`              | The chart slot is not rendered at all                           |
+| `backwardPagination` | The live button is not rendered, rather than rendered and inert |
+| `actions`            | No action column, no bulk bar                                   |
+
+Every capability defaults to **off**. A table that renders no chart against a
+server that has one is a missing feature; a table that renders a chart against a
+server that has none is a broken screen.
+
+Use `facetedColumns` when the server can only facet some columns:
+
+```ts
+capabilities: {
+  facets: true,
+  facetedColumns: ["level", "status", "latency"],
+}
+```
+
+## Transport
+
+Everything about _how_ the table talks to an endpoint is one option — base URL,
+headers, credentials, and how the body is parsed. See
+[Data Fetching](/docs/data-fetching#transport) for the full surface.
+
+```tsx
+<DataTableRemote
+  manifestEndpoint="https://api.example.com/logs/schema"
+  dataEndpoint="/logs"
+  searchParamsSerializer={searchParamsSerializer}
+  transport={{
+    baseUrl: "https://api.example.com",
+    // A function, so a token is read fresh per request rather than captured
+    // once at module scope.
+    headers: async () => ({ authorization: `Bearer ${await getToken()}` }),
+    credentials: "include",
+    // The endpoint returns ordinary JSON rather than SuperJSON.
+    parseResponse: jsonParser(),
+  }}
+  pagination={offsetPagination({ size: 50 })}
+/>
+```
+
+To revive timestamp columns from ISO strings you need the schema, which means
+the manifest — so reach for `schemaJsonParser` where you already have one. With
+a snapshot that is straightforward:
+
+```tsx
+import { manifest } from "./manifest"; // a build-time snapshot
+
+<DataTableRemote
+  manifestEndpoint="/logs/api/schema"
+  searchParamsSerializer={searchParamsSerializer}
+  initialManifest={manifest}
+  transport={{ parseResponse: schemaJsonParser(manifest.schema) }}
+/>;
+```
+
+A cross-origin endpoint needs CORS, and its action `href`s need to be
+allow-listed — see [Trust boundary](#trust-boundary).
+
+## Avoiding the round trip
+
+Fetching the manifest before the first row request costs a round trip. Two ways
+out, both through `initialManifest`.
+
+### Prefetch on the server
+
+```tsx
+// page.tsx
+import { fetchTableManifest } from "@/lib/table-schema";
+
+export default async function Page() {
+  const manifest = await fetchTableManifest(
+    "http://localhost:3000/logs/api/schema",
+  );
+  return <Client manifest={manifest} />;
+}
+```
+
+Or seed the React Query cache under the exported `tableManifestKey(endpoint)`
+and let the hook read it.
+
+### Snapshot at build time
+
+Check the endpoint's answer into the repo:
+
+```ts
+// scripts/pull-manifest.ts
+import { writeFileSync } from "node:fs";
+import { pullManifestModule } from "@/lib/table-schema";
+
+writeFileSync(
+  "src/app/logs/manifest.ts",
+  await pullManifestModule("https://api.example.com/logs/schema"),
+);
+```
+
+That writes a typed module with a header recording where and when it came from.
+Pass it as `initialManifest` and the first paint has a schema; the query still
+revalidates behind it, so an endpoint whose schema has moved on corrects itself.
+Regenerate the file when that happens, or every first paint starts from stale
+columns.
+
+`manifestToModule` validates on the way in, so a snapshot cannot freeze an
+invalid manifest into your repo.
+
+## Custom renderers
+
+A schema carries **named** displays — `badge`, `bar`, `heatmap`, `status-code`,
+`timestamp` and the rest — and those travel as data. Renderer closures do not.
+
+`applyRenderers` is the escape hatch: supply the handful of columns you want to
+draw yourself, by key, and every other column stays declarative.
+
+```tsx
+<DataTableRemote
+  manifestEndpoint="/logs/api/schema"
+  searchParamsSerializer={searchParamsSerializer}
+  renderers={{
+    pathname: { cell: (value) => <PathnameCell value={String(value)} /> },
+    timing: { sheetComponent: (row) => <TimingPhases row={row} /> },
+  }}
+/>
+```
+
+The **descriptor is untouched**, so a column with a custom cell still declares
+`bar` on the wire and the schema still round-trips — another consumer of the same
+endpoint renders something sane rather than nothing. An override naming a column
+that is not in the schema warns instead of throwing, because a remote schema can
+drop a column between deploys and a stale override should not blank the table.
+
+## Slots
+
+Anything a manifest cannot describe is a slot:
+
+```tsx
+<DataTableRemote
+  manifestEndpoint="/logs/api/schema"
+  searchParamsSerializer={searchParamsSerializer}
+  loadingSlot={<Skeleton />}
+  errorSlot={(error) => <TableError error={error} />}
+  chartSlot={(data, config) => <TimelineChart data={data} config={config} />}
+  sheetSlot={(fields) => <SheetDetails fields={fields} />}
+  getRowClassName={(row) => getLevelRowClassName(row.original.level)}
+/>
+```
+
+Row styling is a slot on purpose. It is presentation policy that varies per app
+against the same data, and encoding conditional CSS in a JSON manifest would
+mean inventing a rules language for one caller. The manifest says what a row
+_is_; the app decides what it looks like.
+
+## Trust boundary
+
+A remote manifest is untrusted input that drives both rendering and network
+calls. It is validated once, on the way in:
+
+- **Bounds** — at most 200 columns and 50 actions, with key and label length
+  caps. Columns that are unusable are dropped with a warning rather than
+  blanking the table; the parser throws only when nothing is renderable.
+- **Action hrefs** — a root-relative path is always allowed; an absolute URL only
+  on the page's own origin or one you allow-list. Protocol-relative
+  (`//evil.example.com`), `javascript:`, `data:`, `blob:` and directory-relative
+  paths are rejected, and a descriptor that fails is never rendered — a button
+  that cannot be sent safely is worse than no button.
+
+```tsx
+<DataTableActionsProvider
+  actions={actions}
+  getRowId={(row) => row.uuid}
+  allowedActionOrigins={["https://api.example.com"]}
+>
+```
+
+## Proving an endpoint conforms
+
+`runEndpointConformance` probes a live endpoint against the contract:
+
+```ts
+import {
+  formatConformanceReport,
+  runEndpointConformance,
+} from "@/lib/data-table";
+
+const report = await runEndpointConformance({
+  url: "https://api.example.com/logs",
+  manifest,
+});
+
+console.log(formatConformanceReport(report));
+if (!report.ok) process.exit(1);
+```
+
+It checks that the endpoint answers, that the shape matches, that `size` is
+honoured, that every row carries the `primaryKey` and those keys are unique,
+that it computes the facets it claims, that a second page differs from the first
+— the check that catches an endpoint silently ignoring `cursor`, which is an
+infinite scroll that never advances — that `direction=prev` works when declared,
+and that an unknown query parameter is ignored.
+
+It does not check filter _semantics_; that needs known data and belongs to the
+filter corpus. See [Data Layer](/docs/data-layer) for the request and response
+contract itself.
+
+## Demo
+
+The [/drizzle](/drizzle) route serves a real manifest at
+`/drizzle/api/schema`, describing its own capabilities, chart and actions.

@@ -28,6 +28,7 @@ npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
 | `data-table-filter-command-ai` | `.../r/data-table-filter-command-ai.json` | AI-powered natural language → filter inference                                                                             |
 | `data-table-mcp`               | `.../r/data-table-mcp.json`               | MCP server endpoint for AI agents                                                                                          |
 | `data-table-actions`           | `.../r/data-table-actions.json`           | Row and bulk actions rendered from server metadata                                                                         |
+| `data-table-remote`            | `.../r/data-table-remote.json`            | Headless table that renders from an API endpoint's manifest                                                                |
 
 All URLs use base `https://data-table.openstatus.dev`.
 

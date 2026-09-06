@@ -69,6 +69,14 @@ export type {
   TableSchemaDefinition,
 } from "./types";
 export { resolveColumn, resolveColumns } from "./col";
+export {
+  NAMED_DISPLAY_TYPES,
+  applyRenderers,
+  isNamedDisplayType,
+  type ApplyRenderersOptions,
+  type NamedDisplayType,
+  type RendererOverrides,
+} from "./renderers";
 export { generateColumns } from "./generators/columns";
 export { generateFilterFields } from "./generators/filter-fields";
 export { generateFilterSchema } from "./generators/filter-schema";
@@ -79,6 +87,34 @@ export {
   migrateSchemaJSON,
   serializeSchema,
 } from "./serialize";
+export {
+  DEFAULT_CAPABILITIES,
+  MANIFEST_LIMITS,
+  TABLE_MANIFEST_VERSION,
+  TableManifestError,
+  createRowAccessors,
+  createTableManifest,
+  createTableManifestHandler,
+  fetchTableManifest,
+  isSafeColumnKey,
+  manifestETag,
+  parseTableManifest,
+  type FetchManifestOptions,
+  type ManifestHandlerOptions,
+  type ParseManifestOptions,
+  type RowAccessors,
+} from "./manifest";
+export {
+  type TableCapabilities,
+  type TableChartConfig,
+  type TableManifest,
+  type TableManifestDefaults,
+} from "./manifest";
+export {
+  manifestToModule,
+  pullManifestModule,
+  type SnapshotOptions,
+} from "./snapshot";
 
 /**
  * Derive defaultColumnVisibility from the schema.

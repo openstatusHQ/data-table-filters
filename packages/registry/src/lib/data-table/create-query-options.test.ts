@@ -5,6 +5,7 @@ import {
   getMetaPage,
   type InfiniteQueryResponse,
 } from "./create-query-options";
+import { offsetPagination, type PaginationStrategy } from "./transport";
 
 type Row = { id: number };
 
@@ -40,14 +41,26 @@ const serializer = (search: Record<string, unknown>) => {
   return qs ? `?${qs}` : "";
 };
 
+/**
+ * The page param wraps the pagination strategy's own param: the strategy owns
+ * `page`, and `_meta` sits outside it because meta skipping is a transport
+ * concern that has to work whatever addresses the pages.
+ */
+function cursorParam(_meta: boolean) {
+  return { page: { cursor: 1, direction: "next" as const }, _meta };
+}
+
 async function fetchUrlFor({
   skipMetaOnPagination,
   pageParam,
   searchParamsSerializer = serializer,
+  pagination,
 }: {
   skipMetaOnPagination?: boolean;
-  pageParam: { cursor: number; direction: string; _meta: boolean };
+  pageParam: { page: unknown; _meta: boolean };
   searchParamsSerializer?: (search: Record<string, unknown>) => string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pagination?: PaginationStrategy<any>;
 }) {
   const spy = vi
     .spyOn(globalThis, "fetch")
@@ -60,6 +73,7 @@ async function fetchUrlFor({
     apiEndpoint: "/api",
     searchParamsSerializer,
     skipMetaOnPagination,
+    ...(pagination ? { pagination } : {}),
   })({ host: "example.com" });
 
   // @ts-expect-error -- queryFn is invoked directly, without the query client
@@ -73,7 +87,7 @@ describe("createDataTableQueryOptions — meta skipping", () => {
   it("appends _meta=false to pagination requests when opted in", async () => {
     const url = await fetchUrlFor({
       skipMetaOnPagination: true,
-      pageParam: { cursor: 1, direction: "next", _meta: false },
+      pageParam: cursorParam(false),
     });
     expect(url).toContain("_meta=false");
   });
@@ -81,14 +95,14 @@ describe("createDataTableQueryOptions — meta skipping", () => {
   it("does not append _meta on the initial page", async () => {
     const url = await fetchUrlFor({
       skipMetaOnPagination: true,
-      pageParam: { cursor: 1, direction: "next", _meta: true },
+      pageParam: cursorParam(true),
     });
     expect(url).not.toContain("_meta");
   });
 
   it("does not append _meta at all when not opted in (default)", async () => {
     const url = await fetchUrlFor({
-      pageParam: { cursor: 1, direction: "next", _meta: false },
+      pageParam: cursorParam(false),
     });
     expect(url).not.toContain("_meta");
   });
@@ -98,16 +112,27 @@ describe("createDataTableQueryOptions — meta skipping", () => {
   it("survives a serializer that drops unknown keys", async () => {
     const url = await fetchUrlFor({
       skipMetaOnPagination: true,
-      pageParam: { cursor: 1, direction: "next", _meta: false },
+      pageParam: cursorParam(false),
       searchParamsSerializer: () => "?host=example.com",
     });
     expect(url).toMatch(/\/api\?host=example\.com&_meta=false$/);
   });
 
+  // `_meta` sits outside the strategy's page param precisely so it survives a
+  // strategy whose param is a bare number rather than an object.
+  it("works with a pagination strategy whose page param is not an object", async () => {
+    const url = await fetchUrlFor({
+      skipMetaOnPagination: true,
+      pagination: offsetPagination({ size: 10 }),
+      pageParam: { page: 20, _meta: false },
+    });
+    expect(url).toContain("_meta=false");
+  });
+
   it("uses ? when the serializer produced no query string", async () => {
     const url = await fetchUrlFor({
       skipMetaOnPagination: true,
-      pageParam: { cursor: 1, direction: "next", _meta: false },
+      pageParam: cursorParam(false),
       searchParamsSerializer: () => "",
     });
     expect(url).toMatch(/\/api\?_meta=false$/);

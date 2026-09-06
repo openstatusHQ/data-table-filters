@@ -35,6 +35,61 @@ Your API endpoint should return this shape (serialized with [SuperJSON](https://
 }
 ```
 
+### Request Format
+
+The reserved query parameters, and how a filter value is encoded, used to exist
+only implicitly inside the client's serializer. They are now written down as
+`REQUEST_PARAMS` and `FILTER_ENCODING`:
+
+| Parameter      | Meaning                                         |
+| -------------- | ----------------------------------------------- |
+| `cursor`       | Page cursor — epoch ms for the default strategy |
+| `direction`    | `next` (older) or `prev` (newer)                |
+| `size`         | Page size                                       |
+| `sort`         | `<columnKey>.<asc\|desc>`                       |
+| `uuid`, `live` | View state — these never narrow the result set  |
+
+Every other parameter is a column key:
+
+| Filter type | Encoding                                       |
+| ----------- | ---------------------------------------------- |
+| `checkbox`  | `?level=error,warn`                            |
+| `slider`    | `?latency=100-3000` (inclusive both ends)      |
+| `timerange` | `?date=1700000000000-1700003600000` (epoch ms) |
+| `input`     | `?host=example.com`                            |
+
+Two constraints follow from the delimiters: a checkbox value may not contain a
+comma, and slider or timerange bounds may not be negative.
+
+Because `uuid` and `live` do not narrow results, an endpoint that rejects
+unrecognised query parameters will break on them. Ignore what you do not know.
+
+### Validating a Response
+
+`validateListResponse` checks a payload against the contract. It returns issues
+rather than throwing, split by severity: an `error` means the table cannot
+render the response, a `warning` means it can but the endpoint is not doing what
+it claimed:
+
+```ts
+import { isContractValid, validateListResponse } from "@/lib/data-table";
+
+const issues = validateListResponse(payload, {
+  capabilities: { facets: true, totalRowCount: true },
+});
+
+if (!isContractValid(issues)) {
+  console.error(issues.filter((issue) => issue.severity === "error"));
+}
+```
+
+Passing `capabilities` is what turns "this field is absent" into a warning: a
+response with no `meta.facets` is fine unless the endpoint said it computes
+them.
+
+To check a whole endpoint rather than one response, see
+[Headless Tables](/docs/headless#proving-an-endpoint-conforms).
+
 ### Three-Pass Filtering
 
 A strategy to keep slider bounds stable when users adjust them. Without it, dragging a slider collapses its own min/max range.

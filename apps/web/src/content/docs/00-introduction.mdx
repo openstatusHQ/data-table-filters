@@ -95,6 +95,8 @@ The data-table is built on three layers:
 
 For server-side data, the [Drizzle ORM](/docs/drizzle-orm) helpers handle `WHERE` conditions, sorting, cursor pagination, and faceted counts. The [Data Fetching](/docs/data-fetching) layer covers the API response shape and React Query integration.
 
+The schema is serializable, so it can also cross the network. [Headless Tables](/docs/headless) inverts the first layer: instead of importing a schema, the table fetches one from an endpoint you own — along with what that endpoint can compute and what may be done to a row — and derives everything from it. You keep the data; the only thing you publish is its shape.
+
 ```
 Table Schema → Generators → Components
      ↓              ↓            ↓

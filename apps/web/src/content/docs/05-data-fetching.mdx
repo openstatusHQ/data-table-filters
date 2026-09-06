@@ -147,3 +147,103 @@ export default async function Page({ searchParams }) {
 ```
 
 The query is prefetched on the server and dehydrated into the HTML. On the client, `useInfiniteQuery` picks up the cached data immediately — no extra network request.
+
+### Transport
+
+`createDataTableQueryOptions` defaults to a same-origin `fetch` and a
+[SuperJSON](https://github.com/flightcontrolhq/superjson) payload — right for an
+endpoint you ship alongside the app, and wrong for anything else. The
+`transport` option covers the rest:
+
+```ts
+import {
+  createDataTableQueryOptions,
+  schemaJsonParser,
+} from "@/lib/data-table";
+
+const _dataOptions = createDataTableQueryOptions<ColumnSchema[], MyMeta>({
+  queryKeyPrefix: "my-table",
+  apiEndpoint: "/logs",
+  searchParamsSerializer,
+  transport: {
+    baseUrl: "https://api.example.com",
+    // A function, so an auth token is read fresh on every request rather than
+    // captured once at module scope. It may be async, to await a refresh.
+    headers: async () => ({ authorization: `Bearer ${await getToken()}` }),
+    credentials: "include",
+    // The endpoint returns ordinary JSON; revive its timestamp columns from
+    // the schema instead of asking it to adopt SuperJSON.
+    parseResponse: schemaJsonParser(schema),
+  },
+});
+```
+
+| Option          | Default                                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| `baseUrl`       | Same origin (or `VERCEL_URL` on the server) — a string, or a function called per request |
+| `headers`       | None — a value, or a sync/async function                                                 |
+| `credentials`   | The `fetch` default                                                                      |
+| `fetch`         | Global `fetch`                                                                           |
+| `parseResponse` | `superjsonParser()`                                                                      |
+
+Three parsers ship: `superjsonParser()` (the default), `jsonParser()` (the body
+verbatim), and `schemaJsonParser(schema)` — which reads the schema to find the
+`timestamp` columns and revives them from ISO strings, so a third-party endpoint
+works without changing its serializer.
+
+A cross-origin `baseUrl` needs CORS on the endpoint.
+
+### Errors
+
+A non-2xx response, or a body that cannot be parsed, throws
+`DataTableFetchError` rather than letting a 500's HTML reach `SuperJSON.parse`
+and surface as an opaque syntax error:
+
+```tsx
+const { error } = useInfiniteQuery(dataOptions(search));
+
+if (error instanceof DataTableFetchError) {
+  // error.status, error.url, and the first 500 chars of the body
+}
+```
+
+React Query's `AbortSignal` is forwarded to `fetch`, so a superseded request is
+cancelled rather than left in flight.
+
+### Pagination
+
+The default addresses pages by a millisecond timestamp read from a date column,
+paging both ways — the right default for an append-only log and wrong for
+anything else. It is one strategy among three:
+
+```ts
+import {
+  offsetPagination,
+  opaqueCursorPagination,
+  timestampCursorPagination,
+} from "@/lib/data-table";
+
+createDataTableQueryOptions({
+  // …
+  pagination: offsetPagination({ size: 50 }),
+});
+```
+
+| Strategy                      | Wire format                                                                                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `timestampCursorPagination()` | `?cursor=<epoch ms>&direction=next\|prev` — the default, bidirectional                                                                       |
+| `opaqueCursorPagination()`    | `?cursor=<token>` — the server's `nextCursor` echoed back verbatim, forward-only                                                             |
+| `offsetPagination({ size })`  | `?offset=<n>&size=<n>` — honours `nextCursor` as the next offset when the server sends one, otherwise advances until a page comes back short |
+
+Each strategy owns its parameter names (`cursorKey`, `offsetKey`, …) and clears
+them from the cache key, so every page of one filter state shares a single query
+key.
+
+The page param React Query carries is `{ page, _meta }` — the strategy owns
+`page`, and the [meta-skipping](#skipping-metadata-on-pagination) flag sits
+outside it so the same flag works whether pages are addressed by cursor, opaque
+token, or offset. `getMetaPage` reads `_meta` and is unaffected by which
+strategy is in use.
+
+To point the whole table at an endpoint rather than wiring this by hand, see
+[Headless Tables](/docs/headless).
