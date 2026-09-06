@@ -259,6 +259,7 @@ Wire up `useInfiniteQuery` to `DataTableInfinite`. The key pattern is populating
 "use client";
 
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import { getMetaPage } from "@/lib/data-table";
 import { DataTableStoreProvider, useFilterState } from "@/lib/store";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import {
@@ -300,8 +301,8 @@ function ClientInner() {
     [data?.pages],
   );
 
-  const lastPage = data?.pages?.[data?.pages.length - 1];
-  const facets = lastPage?.meta?.facets;
+  const metaPage = getMetaPage(data);
+  const facets = metaPage?.meta?.facets;
 
   // Populate filter options from server-side facet data
   const dynamicFilterFields = React.useMemo(() => {
@@ -344,8 +345,8 @@ function ClientInner() {
     <DataTableInfinite
       columns={columns}
       data={flatData}
-      totalRows={lastPage?.meta?.totalRowCount}
-      filterRows={lastPage?.meta?.filterRowCount}
+      totalRows={metaPage?.meta?.totalRowCount}
+      filterRows={metaPage?.meta?.filterRowCount}
       totalRowsFetched={flatData?.length}
       defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}

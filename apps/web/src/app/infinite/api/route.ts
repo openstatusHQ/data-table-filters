@@ -48,21 +48,39 @@ export async function GET(req: NextRequest): Promise<Response> {
   const filteredData = filters.apply(withoutSliderData, values, {
     only: sliderKeys,
   });
-  const chartData = groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
+  // Pagination requests set `_meta=false`: the client already holds the meta
+  // payload from the initial page and it cannot change while filters are fixed.
+  // Only `meta` is skippable — per-row fields are still needed to render rows.
+  const skipMeta = req.nextUrl.searchParams.get("_meta") === "false";
+
+  const chartData = skipMeta ? [] : groupChartData(filteredData, _date); // TODO: rangedData or filterData // REMINDER: avoid sorting the chartData
   const sortedData = sortData(filteredData, search.sort);
-  const withoutSliderFacets = getFacetsFromData(withoutSliderData);
-  const facets = getFacetsFromData(filteredData);
+  const withoutSliderFacets = skipMeta
+    ? {}
+    : getFacetsFromData(withoutSliderData);
+  const facets = skipMeta ? {} : getFacetsFromData(filteredData);
+  // NOT skippable: `percentile` is a per-row field rendered by the row detail
+  // sheet, so dropping it makes every scrolled-in row show "N/A".
   const withPercentileData = percentileData(sortedData);
   const data = splitData(withPercentileData, search);
 
-  const latencies = withPercentileData.map(({ latency }) => latency);
-  const currentPercentiles = {
-    50: calculateSpecificPercentile(latencies, 50),
-    75: calculateSpecificPercentile(latencies, 75),
-    90: calculateSpecificPercentile(latencies, 90),
-    95: calculateSpecificPercentile(latencies, 95),
-    99: calculateSpecificPercentile(latencies, 99),
-  };
+  // Skippable: derived from the whole filtered set, so it is identical on every
+  // page. `metadata` is optional on the response, so omit it rather than sending
+  // a half-filled object.
+  const latencies = skipMeta
+    ? []
+    : withPercentileData.map(({ latency }) => latency);
+  const metadata: LogsMeta | undefined = skipMeta
+    ? undefined
+    : {
+        currentPercentiles: {
+          50: calculateSpecificPercentile(latencies, 50),
+          75: calculateSpecificPercentile(latencies, 75),
+          90: calculateSpecificPercentile(latencies, 90),
+          95: calculateSpecificPercentile(latencies, 95),
+          99: calculateSpecificPercentile(latencies, 99),
+        },
+      };
 
   const nextCursor =
     data.length > 0 ? data[data.length - 1].date.getTime() : null;
@@ -83,7 +101,7 @@ export async function GET(req: NextRequest): Promise<Response> {
             Object.entries(facets).filter(([key]) => !sliderKeys.includes(key)),
           ),
         },
-        metadata: { currentPercentiles },
+        metadata,
       },
       prevCursor,
       nextCursor,

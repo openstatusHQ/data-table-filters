@@ -20,6 +20,8 @@ const _dataOptions = createDataTableQueryOptions<ColumnSchema[], LogsMeta>({
   searchParamsSerializer: searchParamsSerializer as (
     search: Record<string, unknown>,
   ) => string,
+  // The route honors `_meta=false` and the client reads meta via `getMetaPage`.
+  skipMetaOnPagination: true,
 });
 
 // Typed wrapper so callers get SearchParamsType instead of Record<string, unknown>

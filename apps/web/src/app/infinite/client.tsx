@@ -19,6 +19,7 @@ import type { SheetField } from "@dtf/registry/components/data-table/types";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
+import { getMetaPage } from "@dtf/registry/lib/data-table";
 import {
   applyFacets,
   getFacetedMinMaxValues,
@@ -156,12 +157,14 @@ function ClientInner({
   const liveMode = useLiveMode(flatData);
 
   // REMINDER: meta data is always the same for all pages as filters do not change(!)
-  const lastPage = data?.pages?.[data?.pages.length - 1];
-  const totalDBRowCount = lastPage?.meta?.totalRowCount;
-  const filterDBRowCount = lastPage?.meta?.filterRowCount;
-  const metadata = lastPage?.meta?.metadata;
-  const chartData = lastPage?.meta?.chartData;
-  const facets = lastPage?.meta?.facets;
+  // Only the page fetched with `_meta: true` carries it — pagination requests opt
+  // out (see `skipMetaOnPagination` in query-options).
+  const metaPage = getMetaPage(data);
+  const totalDBRowCount = metaPage?.meta?.totalRowCount;
+  const filterDBRowCount = metaPage?.meta?.filterRowCount;
+  const metadata = metaPage?.meta?.metadata;
+  const chartData = metaPage?.meta?.chartData;
+  const facets = metaPage?.meta?.facets;
   const totalFetched = flatData?.length;
 
   const { sort, size, uuid, cursor, direction, live, ...filter } = search;

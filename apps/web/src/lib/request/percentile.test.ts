@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculatePercentile,
+  calculatePercentileRanks,
   calculateSpecificPercentile,
   getPercentileColor,
 } from "./percentile";
@@ -87,5 +88,44 @@ describe("getPercentileColor", () => {
 
   it("returns red for 100", () => {
     expect(getPercentileColor(100).text).toContain("red");
+  });
+});
+
+describe("calculatePercentileRanks", () => {
+  const cases: number[][] = [
+    [],
+    [42],
+    [10, 20, 30, 40, 50],
+    [5, 5, 5, 5],
+    [100, 1, 50, 1, 99],
+    [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5],
+  ];
+
+  // The batch helper replaced a per-row calculatePercentile() call (which
+  // re-sorted and re-scanned the whole array for every row). It must stay
+  // numerically identical.
+  it.each(cases.map((values) => [values]))(
+    "matches calculatePercentile for %j",
+    (input) => {
+      expect(calculatePercentileRanks(input)).toEqual(
+        input.map((value) => calculatePercentile(input, value)),
+      );
+    },
+  );
+
+  it("returns an empty array for no values", () => {
+    expect(calculatePercentileRanks([])).toEqual([]);
+  });
+
+  it("preserves input order, not sorted order", () => {
+    const [first, second, third] = calculatePercentileRanks([30, 10, 20]);
+    expect(first).toBe(100);
+    expect(second).toBeCloseTo(33.33, 2);
+    expect(third).toBeCloseTo(66.67, 2);
+  });
+
+  it("gives tied values the same rank", () => {
+    const ranks = calculatePercentileRanks([10, 20, 10, 30]);
+    expect(ranks[0]).toBe(ranks[2]);
   });
 });

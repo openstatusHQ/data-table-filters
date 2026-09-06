@@ -40,6 +40,30 @@ const dataOptions = createDataTableQueryOptions<LogEntry, ChartMeta>({
 const query = useInfiniteQuery(dataOptions(filterState));
 ```
 
+### skipMetaOnPagination
+
+`meta` is computed over the whole filtered set and is the same on every page. Pass `skipMetaOnPagination: true` to append `_meta=false` to pagination requests so the route can skip recomputing it. Opt-in — it requires both:
+
+1. the route honors `_meta=false` (skip chart data and facets only; per-row fields must still be returned on every page), and
+2. the client reads meta via `getMetaPage(data)` rather than the last page.
+
+```tsx
+import { createDataTableQueryOptions, getMetaPage } from "@/lib/data-table";
+
+const dataOptions = createDataTableQueryOptions<LogEntry, ChartMeta>({
+  queryKeyPrefix: "logs",
+  apiEndpoint: "/api/logs",
+  searchParamsSerializer,
+  skipMetaOnPagination: true,
+});
+
+// In the component:
+const metaPage = getMetaPage(data);
+const facets = metaPage?.meta?.facets;
+```
+
+`getMetaPage` finds the page fetched with meta using React Query's `pageParams` (live mode prepends pages, so it is not always index `0`) and falls back to the last page, so it is safe with or without meta skipping.
+
 ---
 
 ## Response Shape
@@ -106,6 +130,8 @@ The default addresses pages by a millisecond timestamp and pages both ways — r
 | `offsetPagination({ size })`  | `?offset=<n>&size=<n>` — honours `nextCursor` as the next offset, else advances until a page comes back short |
 
 Each owns its parameter names (`cursorKey`, `offsetKey`, …) and clears them from the cache key, so every page of one filter state shares a query key.
+
+The page param is `{ page, _meta }`: the strategy owns `page`, and the `skipMetaOnPagination` flag sits outside it so it works whatever addresses the pages. `getMetaPage` reads `_meta` and is strategy-agnostic.
 
 ## Faceted Helpers
 
