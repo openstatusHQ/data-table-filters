@@ -19,6 +19,7 @@ import type { SheetField } from "@dtf/registry/components/data-table/types";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
+import { getMetaPage } from "@dtf/registry/lib/data-table";
 import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
@@ -155,13 +156,9 @@ function ClientInner({
   const liveMode = useLiveMode(flatData);
 
   // REMINDER: meta data is always the same for all pages as filters do not change(!)
-  // Only the initial page carries full metadata; later pages request `_meta=false`
-  // so they skip the expensive aggregation (chartData/facets/percentiles come back
-  // empty). fetchPreviousPage prepends pages, so the initial page is not always at
-  // index 0 — read meta from the first page that actually has it.
-  const metaPage =
-    data?.pages?.find((page) => page.meta?.chartData?.length) ??
-    data?.pages?.[data.pages.length - 1];
+  // Only the page fetched with `_meta: true` carries it — pagination requests opt
+  // out (see `skipMetaOnPagination` in query-options).
+  const metaPage = getMetaPage(data);
   const totalDBRowCount = metaPage?.meta?.totalRowCount;
   const filterDBRowCount = metaPage?.meta?.filterRowCount;
   const metadata = metaPage?.meta?.metadata;

@@ -1,5 +1,6 @@
 export {
   createDataTableQueryOptions,
+  getMetaPage,
   type InfiniteQueryMeta,
   type InfiniteQueryResponse,
 } from "./create-query-options";

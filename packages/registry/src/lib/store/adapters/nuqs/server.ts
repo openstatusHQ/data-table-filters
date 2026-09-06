@@ -26,7 +26,6 @@
  */
 
 import {
-  createParser,
   createSearchParamsCache,
   createSerializer,
   type ParserBuilder,
@@ -49,15 +48,6 @@ export interface CreateNuqsSearchParamsOptions<
 }
 
 /**
- * Combined parser object: schema fields + extra parsers + the built-in
- * `_meta` control parser used for meta skipping on pagination.
- */
-export type NuqsParsers<
-  TSchema extends SchemaDefinition,
-  TExtra extends Record<string, ParserBuilder<any>> = {},
-> = SchemaToNuqsParsers<TSchema> & { _meta: ParserBuilder<boolean> } & TExtra;
-
-/**
  * Result of createNuqsSearchParams
  */
 export interface NuqsSearchParamsResult<
@@ -67,20 +57,20 @@ export interface NuqsSearchParamsResult<
   /**
    * Combined parser object for useQueryStates
    */
-  searchParamsParser: NuqsParsers<TSchema, TExtra>;
+  searchParamsParser: SchemaToNuqsParsers<TSchema> & TExtra;
 
   /**
    * Search params cache for server-side parsing
    */
   searchParamsCache: ReturnType<
-    typeof createSearchParamsCache<NuqsParsers<TSchema, TExtra>>
+    typeof createSearchParamsCache<SchemaToNuqsParsers<TSchema> & TExtra>
   >;
 
   /**
    * Serializer for converting state to URL string
    */
   searchParamsSerializer: ReturnType<
-    typeof createSerializer<NuqsParsers<TSchema, TExtra>>
+    typeof createSerializer<SchemaToNuqsParsers<TSchema> & TExtra>
   >;
 }
 
@@ -120,17 +110,11 @@ export function createNuqsSearchParams<
   // Generate parsers from schema
   const schemaParsers = schemaToNuqsParsers(schema);
 
-  // Combine with extra parsers, plus a built-in parser for the server-side
-  // metadata control param (`_meta=false` skips the meta payload on pagination).
-  // Registered here so `createDataTableQueryOptions` can serialize it.
+  // Combine with extra parsers
   const searchParamsParser = {
     ...schemaParsers,
-    _meta: createParser({
-      parse: (value) => value !== "false",
-      serialize: (value) => (value ? "true" : "false"),
-    }),
     ...extraParsers,
-  } as NuqsParsers<TSchema, TExtra>;
+  } as SchemaToNuqsParsers<TSchema> & TExtra;
 
   // Create cache and serializer
   const searchParamsCache = createSearchParamsCache(searchParamsParser);

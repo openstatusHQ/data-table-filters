@@ -41,6 +41,32 @@ export function calculatePercentile(values: number[], value: number) {
   return percentile;
 }
 
+/**
+ * Percentile rank of every value, in input order.
+ *
+ * Equivalent to mapping `calculatePercentile(values, v)` over `values`, but
+ * sorts once and binary-searches for the rank instead of re-sorting and
+ * re-scanning the whole array per row — O(n log n) rather than O(n² log n).
+ */
+export function calculatePercentileRanks(values: number[]): number[] {
+  const n = values.length;
+  if (n === 0) return [];
+
+  const sortedValues = values.slice().sort((a, b) => a - b);
+
+  return values.map((value) => {
+    // Upper bound: how many entries are <= value
+    let low = 0;
+    let high = n;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (sortedValues[mid] <= value) low = mid + 1;
+      else high = mid;
+    }
+    return (low / n) * 100;
+  });
+}
+
 export function getPercentileColor(value: number) {
   if (value < 50) {
     return {

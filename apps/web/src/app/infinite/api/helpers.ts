@@ -1,6 +1,6 @@
 import { LEVELS } from "@/constants/levels";
 import {
-  calculatePercentile,
+  calculatePercentileRanks,
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
 import { defineFilters } from "@dtf/registry/lib/filters";
@@ -52,10 +52,10 @@ export function sortData(data: ColumnSchema[], sort: SearchParamsType["sort"]) {
 }
 
 export function percentileData(data: ColumnSchema[]): ColumnSchema[] {
-  const latencies = data.map((row) => row.latency);
-  return data.map((row) => ({
+  const percentiles = calculatePercentileRanks(data.map((row) => row.latency));
+  return data.map((row, index) => ({
     ...row,
-    percentile: calculatePercentile(latencies, row.latency),
+    percentile: percentiles[index],
   }));
 }
 

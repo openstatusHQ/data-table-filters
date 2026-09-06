@@ -39,6 +39,18 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
   queryKeyPrefix: string;
   apiEndpoint: string;
   searchParamsSerializer: (search: Record<string, unknown>) => string;
+  /**
+   * Append `_meta=false` to pagination requests so the API can skip recomputing
+   * chart data and facets that the client already holds from the initial page.
+   *
+   * Opt-in, and only safe when both halves are in place:
+   * 1. the route honors `_meta=false` (and still returns per-row fields — only
+   *    `meta` is skippable), and
+   * 2. the client reads `meta` via `getMetaPage`, not from the last page.
+   *
+   * @default false
+   */
+  skipMetaOnPagination?: boolean;
 }) {
   return (search: Record<string, unknown>) => {
     const cursor = search.cursor as Date | undefined;
@@ -60,7 +72,6 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
       live: null,
       cursor: null,
       direction: null,
-      _meta: null,
     });
 
     return infiniteQueryOptions({
@@ -74,11 +85,16 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
           direction,
           uuid: null,
           live: null,
-          _meta: pageParam._meta ? null : false,
         });
 
+        // Appended after serialization on purpose: `_meta` is a transport-level
+        // control param, not part of any consumer's search-param schema. Routing
+        // it through the serializer would either pollute every consumer's parser
+        // contract or be silently dropped by an allow-list serializer.
+        const url = `${getBaseUrl()}${config.apiEndpoint}${serialize}`;
+        const skipMeta = config.skipMetaOnPagination && !pageParam._meta;
         const response = await fetch(
-          `${getBaseUrl()}${config.apiEndpoint}${serialize}`,
+          skipMeta ? `${url}${url.includes("?") ? "&" : "?"}_meta=false` : url,
         );
         const json = await response.json();
         return SuperJSON.parse<InfiniteQueryResponse<TData, TMeta>>(json);
@@ -109,4 +125,29 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
       staleTime: 1000 * 60 * 5,
     });
   };
+}
+
+/**
+ * The page whose `meta` is populated.
+ *
+ * With `skipMetaOnPagination`, only the page fetched with `_meta: true` carries
+ * chart data, facets and metadata — and it is not always index 0, because
+ * `fetchPreviousPage` (live mode) prepends pages. React Query keeps `pageParams`
+ * aligned with `pages`, so the flag on the page param identifies it exactly.
+ * Inferring it from the payload instead (e.g. "the page whose chartData is
+ * non-empty") misfires whenever a filter legitimately matches nothing.
+ *
+ * Falls back to the last page, which is the correct answer when meta skipping is
+ * off and every page carries the same meta.
+ */
+export function getMetaPage<TData, TMeta>(
+  data:
+    | { pages: InfiniteQueryResponse<TData, TMeta>[]; pageParams: unknown[] }
+    | undefined,
+): InfiniteQueryResponse<TData, TMeta> | undefined {
+  if (!data?.pages?.length) return undefined;
+  const index = data.pageParams.findIndex(
+    (param) => (param as { _meta?: boolean } | null)?._meta,
+  );
+  return data.pages[index] ?? data.pages[data.pages.length - 1];
 }
