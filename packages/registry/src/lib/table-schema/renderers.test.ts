@@ -87,6 +87,14 @@ describe("applyRenderers", () => {
     expect(Object.keys(result)).toEqual(["uuid", "level", "latency"]);
   });
 
+  it("does not treat an inherited property as a column", () => {
+    // `key in definition` walked the prototype chain, so `toString` read as a
+    // real column and its override was silently accepted.
+    const onUnknownKey = vi.fn();
+    applyRenderers(schema(), { toString: { cell } }, { onUnknownKey });
+    expect(onUnknownKey).toHaveBeenCalledWith("toString");
+  });
+
   it("attaches every renderer kind", () => {
     const filterComponent = () => null;
     const sheetCondition = () => true;

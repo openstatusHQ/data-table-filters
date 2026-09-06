@@ -1,4 +1,5 @@
 import { createColBuilder } from "./col";
+import { isSafeColumnKey } from "./manifest";
 import type {
   ColRenderers,
   ColumnDescriptor,
@@ -72,12 +73,19 @@ export function applyRenderers(
   if (keys.length === 0) return definition;
 
   for (const key of keys) {
-    if (!(key in definition)) onUnknownKey(key);
+    // `in` walks the prototype chain, so `toString` would read as a column.
+    if (!Object.hasOwn(definition, key)) onUnknownKey(key);
   }
 
   const result: TableSchemaDefinition = {};
   for (const [key, builder] of Object.entries(definition)) {
-    const override = overrides[key];
+    // A reserved key would reassign the result's prototype instead of adding a
+    // column, silently dropping it from every `Object.keys` consumer.
+    const override = isSafeColumnKey(key)
+      ? Object.hasOwn(overrides, key)
+        ? overrides[key]
+        : undefined
+      : undefined;
     if (!override) {
       result[key] = builder;
       continue;

@@ -96,6 +96,7 @@ export {
   createTableManifest,
   createTableManifestHandler,
   fetchTableManifest,
+  isSafeColumnKey,
   manifestETag,
   parseTableManifest,
   type FetchManifestOptions,

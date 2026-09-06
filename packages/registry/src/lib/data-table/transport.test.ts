@@ -222,6 +222,18 @@ describe("parsers", () => {
 });
 
 describe("timestampKeys", () => {
+  it("drops prototype-reaching keys at the source", () => {
+    expect(
+      timestampKeys({
+        columns: [
+          { key: "date", kind: "timestamp" },
+          { key: "__proto__.x", kind: "timestamp" },
+          { key: "constructor", kind: "timestamp" },
+        ],
+      }),
+    ).toEqual(["date"]);
+  });
+
   it("collects only timestamp columns", () => {
     expect(
       timestampKeys({
@@ -265,6 +277,32 @@ describe("coerceRowTimestamps", () => {
       ["timing.dns"],
     );
     expect(row.timing.dns).toBeInstanceOf(Date);
+  });
+
+  // The one that matters: `row["__proto__"]` IS an object, so a `typeof` guard
+  // passes it and the write lands on Object.prototype — from a column key the
+  // untrusted manifest chose.
+  it("refuses to write through a prototype-reaching path", () => {
+    const row: Record<string, unknown> = { a: 1 };
+    coerceRowTimestamps(row, ["__proto__.polluted"]);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+
+    coerceRowTimestamps(row, ["constructor.prototype.polluted"]);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
+  it("refuses to read through a prototype-reaching path", () => {
+    const row = { __proto__: { x: "2024-01-01T00:00:00.000Z" } };
+    expect(coerceRowTimestamps(row, ["__proto__.x"])).toEqual(row);
+  });
+
+  it("prefers a literal dotted key over walking the path", () => {
+    // `createDrizzleHandler` projects nested columns as flat dotted keys.
+    const row = coerceRowTimestamps(
+      { "timing.dns": "2024-01-01T00:00:00.000Z" } as Record<string, unknown>,
+      ["timing.dns"],
+    );
+    expect(row["timing.dns"]).toBeInstanceOf(Date);
   });
 
   it("ignores a dotted path whose parent is missing", () => {

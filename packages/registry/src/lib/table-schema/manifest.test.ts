@@ -169,6 +169,87 @@ describe("parseTableManifest", () => {
     expect(warnings).toHaveLength(2);
   });
 
+  it("drops a column whose key would reach the prototype", () => {
+    const warnings: string[] = [];
+    const parsed = parseTableManifest(
+      {
+        schema: {
+          version: 1,
+          columns: [
+            { key: "uuid", kind: "string", label: "ID" },
+            { key: "__proto__", kind: "string", label: "Proto" },
+            { key: "a.constructor.b", kind: "string", label: "Nested" },
+          ],
+        },
+        primaryKey: "uuid",
+      },
+      { onWarning: (message) => warnings.push(message) },
+    );
+
+    expect(parsed.schema.columns.map((c) => c.key)).toEqual(["uuid"]);
+    expect(warnings.join(" ")).toContain("reserved key");
+  });
+
+  it("refuses a primaryKey that would reach the prototype", () => {
+    // It is dropped as a column first, so the primaryKey no longer resolves —
+    // which is the failure we want, rather than every row sharing one id.
+    expect(() =>
+      parseTableManifest({
+        schema: {
+          version: 1,
+          columns: [{ key: "__proto__", kind: "string", label: "Proto" }],
+        },
+        primaryKey: "__proto__",
+      }),
+    ).toThrow(/no usable columns/);
+  });
+
+  it("drops a column with an empty label rather than blanking the table", () => {
+    // `createTableSchema.fromJSON` rejects an empty label, which throws inside
+    // the component and takes the whole table with it.
+    const warnings: string[] = [];
+    const parsed = parseTableManifest(
+      {
+        schema: {
+          version: 1,
+          columns: [
+            { key: "uuid", kind: "string", label: "ID" },
+            { key: "nameless", kind: "string" },
+          ],
+        },
+        primaryKey: "uuid",
+      },
+      { onWarning: (message) => warnings.push(message) },
+    );
+
+    expect(parsed.schema.columns.map((c) => c.key)).toEqual(["uuid"]);
+    expect(warnings.join(" ")).toContain("empty label");
+    // The survivors must actually build.
+    expect(() => createTableSchema.fromJSON(parsed.schema)).not.toThrow();
+  });
+
+  it("drops a duplicate column key instead of silently overwriting", () => {
+    const warnings: string[] = [];
+    const parsed = parseTableManifest(
+      {
+        schema: {
+          version: 1,
+          columns: [
+            { key: "uuid", kind: "string", label: "ID" },
+            { key: "status", kind: "string", label: "First" },
+            { key: "status", kind: "string", label: "Second" },
+          ],
+        },
+        primaryKey: "uuid",
+      },
+      { onWarning: (message) => warnings.push(message) },
+    );
+
+    expect(parsed.schema.columns.map((c) => c.key)).toEqual(["uuid", "status"]);
+    expect(parsed.schema.columns[1]!.label).toBe("First");
+    expect(warnings.join(" ")).toContain("duplicate key");
+  });
+
   it("throws when every column was dropped", () => {
     expect(() =>
       parseTableManifest({

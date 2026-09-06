@@ -12,6 +12,7 @@ import {
   createDataTableQueryOptions,
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
+  getMetaPage,
   type PaginationStrategy,
   type Transport,
 } from "@dtf/registry/lib/data-table";
@@ -288,9 +289,13 @@ function RemoteTableQuery({
     [data?.pages],
   );
 
-  const lastPage = data?.pages?.[data.pages.length - 1];
-  const facets = capabilities.facets ? lastPage?.meta?.facets : undefined;
-  const chartData = capabilities.chart ? lastPage?.meta?.chartData : undefined;
+  // Not the last page: with `backwardPagination`, live mode prepends via
+  // `fetchPreviousPage`, so the page carrying meta is not at a fixed index.
+  // `getMetaPage` locates it from React Query's page params and falls back to
+  // the last page when meta skipping is off.
+  const metaPage = getMetaPage(data);
+  const facets = capabilities.facets ? metaPage?.meta?.facets : undefined;
+  const chartData = capabilities.chart ? metaPage?.meta?.chartData : undefined;
 
   const accessors = React.useMemo(
     () => createRowAccessors<RemoteRow>(manifest),
@@ -329,10 +334,10 @@ function RemoteTableQuery({
       // A count the server said it does not compute is left undefined rather
       // than rendered as a confident zero.
       totalRows={
-        capabilities.totalRowCount ? lastPage?.meta?.totalRowCount : undefined
+        capabilities.totalRowCount ? metaPage?.meta?.totalRowCount : undefined
       }
       filterRows={
-        capabilities.filterRowCount ? lastPage?.meta?.filterRowCount : undefined
+        capabilities.filterRowCount ? metaPage?.meta?.filterRowCount : undefined
       }
       totalRowsFetched={flatData.length}
       isFetching={isFetching}

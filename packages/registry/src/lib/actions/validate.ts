@@ -89,7 +89,11 @@ export function isSafeActionHref(
   if (href.length > MAX_HREF_LENGTH) return false;
   if (CONTROL_CHARS.test(href)) return false;
 
-  if (href.startsWith("//")) return false;
+  // Protocol-relative, in both spellings. WHATWG treats `\` as `/` for special
+  // schemes, so `/\evil.example.com/x` reads here as a root-relative path and
+  // resolves in the browser as `https://evil.example.com/x` — which would POST
+  // row ids to an origin the allow-list exists to gate.
+  if (href.startsWith("//") || href.startsWith("/\\")) return false;
   if (href.startsWith("/")) return true;
 
   const parsed = (() => {

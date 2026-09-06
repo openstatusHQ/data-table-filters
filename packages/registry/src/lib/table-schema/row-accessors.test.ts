@@ -25,6 +25,18 @@ describe("createRowAccessors", () => {
       expect(getRowId({ meta: {} })).toBe("");
     });
 
+    it("refuses a prototype-reaching key rather than returning [object Object]", () => {
+      // Every row would otherwise share one id, collapsing selection and
+      // bulk-action targeting onto a single row.
+      const { getRowId } = createRowAccessors({ primaryKey: "__proto__" });
+      expect(getRowId({ a: 1 })).toBe("");
+    });
+
+    it("prefers a literal dotted key over walking the path", () => {
+      const { getRowId } = createRowAccessors({ primaryKey: "meta.id" });
+      expect(getRowId({ "meta.id": "flat" })).toBe("flat");
+    });
+
     it("survives a non-object row", () => {
       const { getRowId } = createRowAccessors({ primaryKey: "uuid" });
       expect(getRowId(null)).toBe("");

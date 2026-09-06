@@ -86,6 +86,27 @@ export function jsonParser<TData, TMeta>(): ResponseParser<TData, TMeta> {
     (await response.json()) as InfiniteQueryResponse<TData, TMeta>;
 }
 
+/**
+ * Path segments that reach an object's prototype rather than its own data.
+ *
+ * Column keys come from the manifest, which is server-authored and untrusted.
+ * Walking `"__proto__.x"` with a naive object guard writes to
+ * `Object.prototype` — `row["__proto__"]` *is* an object, so a `typeof`
+ * check passes it — polluting every object in the tab from the first parsed
+ * response. Filtered at the source and re-checked at both accessors, because
+ * this is the kind of guard that must not depend on a single caller.
+ */
+const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
+  "__proto__",
+  "constructor",
+  "prototype",
+]);
+
+/** True when every segment of a dotted path addresses own data. */
+export function isSafeKeyPath(path: string): boolean {
+  return path.split(".").every((segment) => !RESERVED_SEGMENTS.has(segment));
+}
+
 /** The subset of a `SchemaJSON` this module needs: which keys hold timestamps. */
 export type TimestampKeySource = {
   columns: readonly { key: string; kind?: string }[];
@@ -98,12 +119,18 @@ export type TimestampKeySource = {
 export function timestampKeys(schema: TimestampKeySource): string[] {
   return schema.columns
     .filter((column) => column.kind === "timestamp")
-    .map((column) => column.key);
+    .map((column) => column.key)
+    .filter(isSafeKeyPath);
 }
 
 /** Reads a possibly-dotted key path off a row. */
 function getPath(row: Record<string, unknown>, path: string): unknown {
-  if (!path.includes(".")) return row[path];
+  if (!isSafeKeyPath(path)) return undefined;
+  // A row may carry the dotted key literally — `createDrizzleHandler` projects
+  // `"timing.dns"` as a flat property — so the exact key wins before the path
+  // is walked.
+  if (Object.hasOwn(row, path)) return row[path];
+  if (!path.includes(".")) return undefined;
   let current: unknown = row;
   for (const segment of path.split(".")) {
     if (current === null || typeof current !== "object") return undefined;
@@ -118,7 +145,9 @@ function setPath(
   path: string,
   value: unknown,
 ): void {
-  if (!path.includes(".")) {
+  if (!isSafeKeyPath(path)) return;
+  // Mirrors `getPath`: a literal dotted key is written back where it was read.
+  if (Object.hasOwn(row, path) || !path.includes(".")) {
     row[path] = value;
     return;
   }

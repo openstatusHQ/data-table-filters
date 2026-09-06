@@ -31,6 +31,7 @@ export {
   coerceRowTimestamps,
   DataTableFetchError,
   defaultBaseUrl,
+  isSafeKeyPath,
   jsonParser,
   offsetPagination,
   opaqueCursorPagination,

@@ -166,6 +166,27 @@ export const MANIFEST_LIMITS = {
   maxActions: 50,
 } as const;
 
+/**
+ * Path segments that reach an object's prototype rather than its own data.
+ *
+ * Column keys are server-authored. `definition[key] = builder` with a
+ * `"__proto__"` key does not add an own property — it reassigns the object's
+ * prototype, so the column silently vanishes from every `Object.keys` consumer
+ * with none of the warnings every other rejected input here produces. As a
+ * `primaryKey` it is worse: `getRowId` returns `"[object Object]"` for every
+ * row, collapsing selection and bulk actions onto a single id.
+ */
+const RESERVED_SEGMENTS: ReadonlySet<string> = new Set([
+  "__proto__",
+  "constructor",
+  "prototype",
+]);
+
+/** True when every segment of a dotted key addresses own data. */
+export function isSafeColumnKey(key: string): boolean {
+  return key.split(".").every((segment) => !RESERVED_SEGMENTS.has(segment));
+}
+
 export class TableManifestError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
@@ -324,6 +345,7 @@ export function parseTableManifest(
     );
   }
 
+  const seenKeys = new Set<string>();
   const columns = schema.columns.filter((column) => {
     if (column.key.length === 0) {
       warn("Dropped a column with an empty key");
@@ -333,10 +355,27 @@ export function parseTableManifest(
       warn(`Dropped column ${JSON.stringify(column.key)}: key too long`);
       return false;
     }
+    if (!isSafeColumnKey(column.key)) {
+      warn(`Dropped column ${JSON.stringify(column.key)}: reserved key`);
+      return false;
+    }
+    // An empty label is not merely ugly: `createTableSchema.fromJSON` rejects
+    // it, which throws inside the component and blanks the whole table.
+    if (column.label.length === 0) {
+      warn(`Dropped column ${JSON.stringify(column.key)}: empty label`);
+      return false;
+    }
     if (column.label.length > MANIFEST_LIMITS.maxLabelLength) {
       warn(`Dropped column ${JSON.stringify(column.key)}: label too long`);
       return false;
     }
+    // The definition is keyed by column key, so a duplicate would silently
+    // overwrite the first with no diagnostic.
+    if (seenKeys.has(column.key)) {
+      warn(`Dropped column ${JSON.stringify(column.key)}: duplicate key`);
+      return false;
+    }
+    seenKeys.add(column.key);
     return true;
   });
 
@@ -514,7 +553,12 @@ export async function fetchTableManifest(
 /** Reads a possibly-dotted key path off a row. */
 function readPath(row: unknown, path: string): unknown {
   if (row === null || typeof row !== "object") return undefined;
-  if (!path.includes(".")) return (row as Record<string, unknown>)[path];
+  if (!isSafeColumnKey(path)) return undefined;
+  const record = row as Record<string, unknown>;
+  // Rows may carry the dotted key literally — `createDrizzleHandler` projects
+  // `"timing.dns"` as a flat property — so the exact key wins before walking.
+  if (Object.hasOwn(record, path)) return record[path];
+  if (!path.includes(".")) return undefined;
   let current: unknown = row;
   for (const segment of path.split(".")) {
     if (current === null || typeof current !== "object") return undefined;

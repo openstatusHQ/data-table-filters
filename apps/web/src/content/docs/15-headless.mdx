@@ -193,11 +193,26 @@ headers, credentials, and how the body is parsed. See
     // once at module scope.
     headers: async () => ({ authorization: `Bearer ${await getToken()}` }),
     credentials: "include",
-    // The endpoint returns ordinary JSON; revive its timestamps from the schema.
-    parseResponse: schemaJsonParser(manifest.schema),
+    // The endpoint returns ordinary JSON rather than SuperJSON.
+    parseResponse: jsonParser(),
   }}
   pagination={offsetPagination({ size: 50 })}
 />
+```
+
+To revive timestamp columns from ISO strings you need the schema, which means
+the manifest — so reach for `schemaJsonParser` where you already have one. With
+a snapshot that is straightforward:
+
+```tsx
+import { manifest } from "./manifest"; // a build-time snapshot
+
+<DataTableRemote
+  manifestEndpoint="/logs/api/schema"
+  searchParamsSerializer={searchParamsSerializer}
+  initialManifest={manifest}
+  transport={{ parseResponse: schemaJsonParser(manifest.schema) }}
+/>;
 ```
 
 A cross-origin endpoint needs CORS, and its action `href`s need to be
