@@ -1,9 +1,10 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import registry from "../registry.json";
 import {
   addedFiles,
+  build,
   cleanupProject,
   clobberedFiles,
   expectedFilesFor,
@@ -159,6 +160,16 @@ describe.skipIf(!enabled)("registry install", () => {
         installed = addedFiles(before, after);
       }, 900_000);
 
+      // Second hook on purpose: the snapshots above have to be taken before
+      // the paste, or the file-placement assertions read a rewritten
+      // `page.tsx` as the install touching a pre-existing file.
+      beforeAll(() => {
+        if (paste) writeFileSync(join(project, fixture.page), paste);
+
+        const deps = npmInstall(project);
+        expect(deps.status, `npm install failed:\n${deps.output}`).toBe(0);
+      }, 900_000);
+
       afterAll(() => {
         if (project) cleanupProject(project);
       });
@@ -201,16 +212,31 @@ describe.skipIf(!enabled)("registry install", () => {
       });
 
       it("typechecks", () => {
-        if (paste) writeFileSync(join(project, fixture.page), paste);
-
-        const install = npmInstall(project);
-        expect(install.status, `npm install failed:\n${install.output}`).toBe(
-          0,
-        );
-
         const result = typecheck(project);
         expect(result.status, `tsc reported errors:\n${result.output}`).toBe(0);
       }, 900_000);
+
+      // Only the cases that paste real usage into a route. Next bundles what
+      // the routes import, so building a project where nothing imports the
+      // blocks would compile an empty app and prove nothing.
+      it.skipIf(!paste)(
+        "builds, and prerenders the table",
+        () => {
+          const result = build(project);
+          expect(result.status, `next build failed:\n${result.output}`).toBe(0);
+
+          // Exiting 0 is not the point: the prerendered HTML is the proof that
+          // the blocks' render path ran on the server against this project's
+          // primitives. Read off the artifact rather than the build's stdout,
+          // which changes shape between Next versions. The accordion is the
+          // marker because the block ships its own — the filter sidebar is
+          // where the two libraries diverge past a prop name.
+          const page = join(project, ".next", "server", "app", "index.html");
+          expect(existsSync(page), `${page} was not prerendered`).toBe(true);
+          expect(readFileSync(page, "utf8")).toContain('data-slot="accordion"');
+        },
+        900_000,
+      );
     },
   );
 

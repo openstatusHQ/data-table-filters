@@ -221,6 +221,16 @@ export function typecheck(dir: string): CommandResult {
 }
 
 /**
+ * The check `tsc` cannot make: `next build` prerenders the routes, so it runs
+ * the blocks' render path on the server. A component that throws while
+ * rendering, a missing `"use client"`, or a module-scope import that only
+ * breaks under SSR are all green to the typechecker and red here.
+ */
+export function build(dir: string): CommandResult {
+  return run("npx", ["--yes", "next", "build"], dir, 900_000);
+}
+
+/**
  * Files a fixture legitimately hands over to the installer: dependency
  * manifests, and the stylesheet the CLI injects CSS variables into.
  */
