@@ -20,7 +20,7 @@ description: >
 
 A shadcn registry for building filterable, sortable data tables with infinite scroll and virtualization. Start with the core block, then extend with optional blocks for command palette, cell renderers, sheet panels, store adapters, schema generation, Drizzle ORM helpers, and React Query integration.
 
-> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). Both are installed and typechecked by CI on every change.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
 
 ## Registry Blocks
 

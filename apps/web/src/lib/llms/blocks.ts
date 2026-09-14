@@ -28,7 +28,7 @@ export const registryItems: RegistryItem[] = manifest.items;
 export const RADIX_INIT_COMMAND = "npx shadcn@latest init -b radix -p nova";
 export const BASE_UI_INIT_COMMAND = "npx shadcn@latest init -d";
 
-export const PREREQUISITE = `Works on either shadcn library: the CLI default, Base UI (\`${BASE_UI_INIT_COMMAND}\`), or Radix (\`${RADIX_INIT_COMMAND}\`). Both are installed and typechecked by CI on every change.`;
+export const PREREQUISITE = `Works on either shadcn library: the CLI default, Base UI (\`${BASE_UI_INIT_COMMAND}\`), or Radix (\`${RADIX_INIT_COMMAND}\`). CI installs into both and typechecks them on every registry change and nightly.`;
 
 /**
  * Agent-facing "when do I need this block?" guidance.

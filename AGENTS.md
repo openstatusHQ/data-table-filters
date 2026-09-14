@@ -14,7 +14,7 @@ to eject from; after install, the code belongs to the user.
 **Stack:** React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui. Next.js App
 Router is first-class; the blocks work in any React app.
 
-> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). Both are installed and typechecked by CI on every change.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
 > Nothing to check before installing: the blocks resolve their primitives from
 > whichever library `components.json` names.
 

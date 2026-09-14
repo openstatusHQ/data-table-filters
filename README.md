@@ -10,7 +10,7 @@ Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn mo
 
 [![Registry install](https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml/badge.svg)](https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml) — the Quick Start below is installed into a fresh Next.js app on each shadcn library, Base UI and Radix, and typechecked nightly against the latest shadcn CLI.
 
-> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). Both are installed and typechecked by CI on every change.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
 
 One command installs the core block and the schema system:
 

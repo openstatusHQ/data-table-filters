@@ -1,6 +1,6 @@
 # Component Catalog
 
-> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). Both are installed and typechecked by CI on every change.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
 
 All extension blocks install via `npx shadcn@latest add <url>` (base: `https://data-table.openstatus.dev`).
 

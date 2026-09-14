@@ -191,6 +191,27 @@ function sizingFor(config: {
 }
 
 /**
+ * The header checkbox's third state, spelled for both libraries.
+ *
+ * `ui/checkbox` resolves from whichever library the project was initialized
+ * with, and they disagree: Radix takes `checked="indeterminate"`, Base UI
+ * types `checked` as a boolean and takes a separate `indeterminate` flag.
+ * Setting both is the only form that compiles and renders on either — hence
+ * the cast, the one place this file steps around a props type. In the partial
+ * state Radix does receive the extra `indeterminate` and forwards it to its
+ * `<button>` as `indeterminate="true"`, which is inert; setting it only when
+ * it applies is what avoids `indeterminate="false"`, which React warns about
+ * on a non-boolean attribute.
+ */
+function selectionState(allSelected: boolean, someSelected: boolean) {
+  const indeterminate = !allSelected && someSelected;
+  return {
+    checked: allSelected || (someSelected && "indeterminate"),
+    ...(indeterminate ? { indeterminate: true } : {}),
+  } as ComponentProps<typeof Checkbox>;
+}
+
+/**
  * Generate ColumnDef[] from a table schema definition.
  *
  * Rules:
@@ -210,25 +231,6 @@ function sizingFor(config: {
  * ];
  * ```
  */
-/**
- * The header checkbox's third state, spelled for both libraries.
- *
- * `ui/checkbox` resolves from whichever library the project was initialized
- * with, and they disagree: Radix takes `checked="indeterminate"`, Base UI
- * types `checked` as a boolean and takes a separate `indeterminate` flag.
- * Setting both is the only form that compiles and renders on either — hence
- * the cast, the one place this file steps around a props type.
- * `indeterminate` is set only when it applies, so the library that ignores it
- * never renders a stray attribute.
- */
-function selectionState(allSelected: boolean, someSelected: boolean) {
-  const indeterminate = !allSelected && someSelected;
-  return {
-    checked: allSelected || (someSelected && "indeterminate"),
-    ...(indeterminate ? { indeterminate: true } : {}),
-  } as ComponentProps<typeof Checkbox>;
-}
-
 export function generateColumns<TData extends RowData>(
   schema: TableSchemaDefinition,
 ): ColumnDef<DataTableFeatures, TData>[] {

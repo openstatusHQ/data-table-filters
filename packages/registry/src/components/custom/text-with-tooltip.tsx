@@ -49,8 +49,8 @@ export function TextWithTooltip({
   }, []);
 
   return (
-    <TooltipProvider>
-      <Tooltip {...TOOLTIP_DELAY} {...TOOLTIP_NOT_HOVERABLE}>
+    <TooltipProvider {...TOOLTIP_DELAY}>
+      <Tooltip {...TOOLTIP_NOT_HOVERABLE}>
         <TooltipTrigger disabled={!isTruncated} asChild>
           <div
             ref={textRef}
