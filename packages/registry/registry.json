@@ -271,7 +271,7 @@
         "@tanstack/react-virtual@^3.11.2",
         "lucide-react@^0.469.0",
         "zod@^4.3.6",
-        "date-fns@^3.6.0",
+        "date-fns@^4.1.0",
         "clsx@^2.1.1",
         "tailwind-merge@^2.6.0",
         "class-variance-authority@^0.7.1",
@@ -326,7 +326,7 @@
         "kbd",
         "separator"
       ],
-      "dependencies": ["date-fns@^3.6.0", "lucide-react@^0.469.0"]
+      "dependencies": ["date-fns@^4.1.0", "lucide-react@^0.469.0"]
     },
     {
       "name": "data-table-cell",
@@ -414,7 +414,7 @@
       ],
       "dependencies": [
         "lucide-react@^0.469.0",
-        "date-fns@^3.6.0",
+        "date-fns@^4.1.0",
         "@date-fns/utc@^2.1.0",
         "sonner@^1.7.2"
       ]
@@ -459,7 +459,7 @@
       "dependencies": [
         "@radix-ui/react-dialog@^1.1.4",
         "class-variance-authority@^0.7.1",
-        "date-fns@^3.6.0",
+        "date-fns@^4.1.0",
         "lucide-react@^0.469.0"
       ]
     },
@@ -656,7 +656,7 @@
         "https://data-table.openstatus.dev/r/data-table.json",
         "https://data-table.openstatus.dev/r/data-table-schema.json"
       ],
-      "dependencies": ["drizzle-orm@^0.45.2", "date-fns@^3.6.0"]
+      "dependencies": ["drizzle-orm@^0.45.2", "date-fns@^4.1.0"]
     },
     {
       "name": "data-table-query",
@@ -757,7 +757,7 @@
         "ai@^6.0.137",
         "@ai-sdk/react@^3.0.139",
         "zod@^4.3.6",
-        "date-fns@^3.6.0",
+        "date-fns@^4.1.0",
         "lucide-react@^0.469.0",
         "sonner@^1.7.2"
       ],
