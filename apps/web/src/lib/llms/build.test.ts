@@ -152,6 +152,19 @@ describe("the radix prerequisite", () => {
     expect(buildLlmsFullTxt([])).toContain(PREREQUISITE);
     expect(buildRegistryIndexMd()).toContain(PREREQUISITE);
   });
+
+  it("comes before the first install command in every generated file", () => {
+    for (const output of [
+      buildLlmsTxt(sections),
+      buildLlmsFullTxt([]),
+      buildRegistryIndexMd(),
+    ]) {
+      expect(output.indexOf(PREREQUISITE)).toBeGreaterThan(-1);
+      expect(output.indexOf(PREREQUISITE)).toBeLessThan(
+        output.indexOf("npx shadcn@latest add"),
+      );
+    }
+  });
 });
 
 describe("buildLlmsFullTxt", () => {

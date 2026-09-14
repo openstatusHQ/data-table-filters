@@ -8,7 +8,7 @@ Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn mo
 
 ## Install
 
-> **Prerequisite:** a shadcn project on the Radix library — `npx shadcn@latest init -b radix -p nova`. The shadcn CLI default (`init -d`, Base UI) is not supported yet: the blocks are written against Radix and fail to typecheck on Base UI.
+> **Prerequisite.** Requires a shadcn project on the Radix library (`npx shadcn@latest init -b radix -p nova`). The shadcn CLI default, Base UI (`init -d`, preset `base-nova`), is not supported yet — the blocks fail to typecheck on it.
 
 One command installs the core block and the schema system:
 
@@ -21,8 +21,18 @@ Then render a table from any array of objects — columns, filters, and cell ren
 ```tsx
 import { DataTableAuto } from "@/components/data-table/data-table-auto";
 
+const data = [
+  {
+    name: "Alice",
+    role: "admin",
+    rating: 5,
+    created_at: "2026-01-15T10:00:00Z",
+  },
+  { name: "Bob", role: "user", rating: 3, created_at: "2026-02-20T14:30:00Z" },
+];
+
 export default function Page() {
-  return <DataTableAuto data={rows} />;
+  return <DataTableAuto data={data} />;
 }
 ```
 

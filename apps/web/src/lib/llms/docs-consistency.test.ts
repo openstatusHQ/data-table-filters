@@ -2,7 +2,12 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { RADIX_INIT_COMMAND, RECIPES, registryItems } from "./blocks";
+import {
+  PREREQUISITE,
+  RADIX_INIT_COMMAND,
+  RECIPES,
+  registryItems,
+} from "./blocks";
 
 // The install commands, block lists, and counts an agent reads are written by
 // hand in half a dozen files — README, AGENTS.md, the Cursor rule, the skill,
@@ -121,27 +126,31 @@ describe("registry urls in agent-facing docs", () => {
 describe("the radix prerequisite", () => {
   // The blocks fail to typecheck on Base UI, which is the shadcn CLI default
   // since v4. A stranger following any install surface — human or agent —
-  // must read the prerequisite before the first command, and it must be the
-  // same command everywhere so it is searchable.
-  it.each(INSTALL_DOC_FILES)("is stated in %s", (file) => {
-    const source = read(file);
-    expect(source, `${file} names the init command`).toContain(
-      RADIX_INIT_COMMAND,
-    );
-    expect(source, `${file} says Base UI is unsupported`).toMatch(
-      /Base UI[^\n]*not supported/,
-    );
+  // must read the prerequisite before the first install command, and it is
+  // the one sentence from blocks.ts, verbatim, so that llms.txt, the MCP
+  // server, and every hand-written page say the same searchable thing.
+
+  /** The page as a reader meets it: mdx frontmatter (FAQ answers) stripped. */
+  function body(file: string): string {
+    return read(file).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "");
+  }
+
+  it.each(INSTALL_DOC_FILES)("is stated verbatim in %s", (file) => {
+    expect(body(file), `${file} carries PREREQUISITE`).toContain(PREREQUISITE);
   });
 
-  it("appears before the first install command in the Quick Start", () => {
-    const source = read("apps/web/src/content/docs/01-quick-start.mdx");
-    const body = source.slice(source.indexOf("# Quick Start"));
+  it.each(INSTALL_DOC_FILES)(
+    "comes before the first install command in %s",
+    (file) => {
+      const source = body(file);
+      const firstInstall = source.indexOf("npx shadcn@latest add");
 
-    expect(body.indexOf(RADIX_INIT_COMMAND)).toBeGreaterThan(-1);
-    expect(body.indexOf(RADIX_INIT_COMMAND)).toBeLessThan(
-      body.indexOf("npx shadcn@latest add"),
-    );
-  });
+      expect(firstInstall, `${file} has an install command`).toBeGreaterThan(
+        -1,
+      );
+      expect(source.indexOf(PREREQUISITE)).toBeLessThan(firstInstall);
+    },
+  );
 
   it("is what the skill's detect script tells the user to run", () => {
     expect(read("skills/data-table-filters/scripts/detect-stack.sh")).toContain(

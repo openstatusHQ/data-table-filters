@@ -92,6 +92,9 @@ describe("detect-stack.sh component library", () => {
     expect(status).toBe(0);
     expect(output).toContain("shadcn/ui: not initialized");
     expect(output).toContain("Component library: unknown");
+    expect(output).toContain(
+      `Initialize on Radix before installing: ${RADIX_INIT_COMMAND}`,
+    );
     expect(output).not.toContain("BLOCKING");
   });
 });

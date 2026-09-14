@@ -81,6 +81,9 @@ if [ -f "components.json" ]; then
   esac
 fi
 echo "Component library: $LIBRARY"
+if [ "$SHADCN" = "not initialized" ]; then
+  echo "  Initialize on Radix before installing: npx shadcn@latest init -b radix -p nova (not: init -d)"
+fi
 case "$STYLE" in
   base-*)
     echo ""
