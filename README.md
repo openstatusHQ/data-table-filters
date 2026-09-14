@@ -8,6 +8,8 @@ Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn mo
 
 ## Install
 
+[![Registry install](https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml/badge.svg)](https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml) — the Quick Start below is installed into a fresh Next.js app and typechecked nightly against the latest shadcn CLI.
+
 > **Prerequisite.** Requires a shadcn project on the Radix library (`npx shadcn@latest init -b radix -p nova`). The shadcn CLI default, Base UI (`init -d`, preset `base-nova`), is not supported yet — the blocks fail to typecheck on it.
 
 One command installs the core block and the schema system:
