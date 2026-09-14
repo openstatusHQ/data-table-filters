@@ -335,24 +335,32 @@ describe("registry packaging", () => {
     expect(conflicting).toEqual([]);
   });
 
-  it("keeps the shipped src/lib/utils.ts to the canonical `cn` helper", () => {
-    // We ship `src/lib/utils.ts` on purpose, so every block's `@/lib/utils`
-    // import resolves even in a project that never ran `shadcn init`. shadcn
-    // prompts before overwriting (y/N, defaulting to N), so this is the
-    // consumer's call to make — but it lands on a path they are likely to own.
-    // Keeping the file identical to what `shadcn init` writes means saying yes
-    // is a no-op. Adding an export here would start destroying their code.
+  it("leaves src/lib/utils.ts to shadcn", () => {
+    // Every block imports `cn` from `@/lib/utils`, the file `shadcn init`
+    // writes into every project. The core block used to ship its own copy so
+    // the import resolved without init — but the bare registryDependencies
+    // (button, tooltip, …) already require an initialized project, and the
+    // copy cost more than it gave: the CLI prompts before overwriting an
+    // existing file, a non-TTY agent run gets no answer, and the CLI abandons
+    // the rest of the batch while exiting 0 (a half-installed tree, see #79
+    // and the agent-style case in e2e/install.test.ts).
+    //
+    // Declaring shadcn's own `utils` item is not the answer either: it now
+    // ships `export { cn } from "cn"`, which never matches the consumer's
+    // file, so the CLI prompts (or, with --overwrite, replaces the file and
+    // deletes whatever the consumer keeps next to `cn`). Registry
+    // dependencies resolve before the block's own files, so a non-TTY run
+    // then writes nothing at all. Neither shipping nor declaring it: the
+    // file is the consumer's, and `shadcn init` has already written it.
     const shippers = items.filter((item) =>
       (item.files ?? []).some((file) => file.path === "src/lib/utils.ts"),
     );
-    expect(shippers.length).toBeGreaterThan(0);
+    expect(shippers.map((item) => item.name)).toEqual([]);
 
-    const source = readFileSync(resolve(root, "src/lib/utils.ts"), "utf8");
-    const exports = [
-      ...source.matchAll(/^export\s+(?:function|const)\s+(\w+)/gm),
-    ].map((match) => match[1]);
-
-    expect(exports).toEqual(["cn"]);
+    const declarers = items.filter((item) =>
+      (item.registryDependencies ?? []).includes("utils"),
+    );
+    expect(declarers.map((item) => item.name)).toEqual([]);
   });
 
   it("ships no test scaffolding to consumers", () => {

@@ -147,10 +147,11 @@ function SEOContent() {
           Why data-table-filters?
         </h2>
         <p className="text-muted-foreground">
-          10 filter types, 2 state management options, server-side and
-          client-side rendering — all fully open source. Built for developers
-          who want production-ready data tables without the overhead of a
-          monolithic library. <Link href="/docs/introduction">Learn more</Link>.
+          Input, checkbox, slider and time range filters, URL or client-side
+          state, and server-side or client-side data — all open source. For
+          developers who want a production data table without adopting a
+          monolithic grid library.{" "}
+          <Link href="/docs/introduction">Learn more</Link>.
         </p>
       </div>
       <div className="grid gap-2">
@@ -167,7 +168,8 @@ function SEOContent() {
           <Link href="https://zustand.docs.pmnd.rs/getting-started/introduction">
             zustand
           </Link>{" "}
-          for client-side state. Each dependency is best-in-class.
+          for client-side state. The same pieces you would pick anyway, wired up
+          once.
         </p>
       </div>
       <div className="grid gap-2">
@@ -188,7 +190,7 @@ function SEOContent() {
           Built for AI agents
         </h3>
         <p className="text-muted-foreground">
-          Ships with an <Link href="/docs/ai-filters">AI agent skill</Link> that
+          Ships with an <Link href="/docs/agents">AI agent skill</Link> that
           understands the full project structure — it can scaffold, configure,
           and extend data tables end-to-end. Because every component is
           installed via the shadcn CLI, agents know exactly how to add and
@@ -489,7 +491,12 @@ function Hero() {
         <Link href="https://zustand.docs.pmnd.rs/getting-started/introduction">
           zustand
         </Link>{" "}
-        (client-side). Open Source on{" "}
+        (client-side). With{" "}
+        <Link href="/docs/drizzle-orm" className="text-nowrap">
+          Drizzle ORM
+        </Link>
+        , filtering, faceted counts and cursor pagination run in SQL. Open
+        Source on{" "}
         <Link href="https://github.com/openstatusHQ/data-table-filters">
           GitHub
         </Link>

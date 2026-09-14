@@ -1,6 +1,8 @@
 ## About The Project
 
-A **Table Schema builder**, **BYOS (Bring Your Own Store)** state management, and a set of pre-built **components** for building powerful, filterable data-tables with React.
+Data tables for React and shadcn/ui: faceted filters, sorting, infinite scroll, and a row detail sheet. Installed as source with the shadcn CLI, so the code is yours to change.
+
+One `createTableSchema` definition drives the columns, the filter controls, the row sheet, the Drizzle route handler, and the MCP tool schema. When the rows live in Postgres, filtering, faceted counts, and cursor pagination run in SQL. Built for the openstatus dashboard and used there in production.
 
 ![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
 
