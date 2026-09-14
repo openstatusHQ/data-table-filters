@@ -19,6 +19,45 @@ const here = dirname(fileURLToPath(import.meta.url));
 export const REGISTRY_ROOT = resolve(here, "..");
 export const FIXTURES_DIR = join(here, "fixtures");
 export const PRODUCTION_BASE = "https://data-table.openstatus.dev";
+export const QUICK_START_DOC = resolve(
+  REGISTRY_ROOT,
+  "../../apps/web/src/content/docs/01-quick-start.mdx",
+);
+
+/**
+ * The first `tsx` fence on the Quick Start page — the code a stranger pastes
+ * after the one install command. Read from the docs rather than copied here so
+ * the install test fails when the page and the blocks drift apart, which is how
+ * the Quick Start came to import `DataTableAuto` from a block it never told
+ * anyone to install.
+ */
+export function quickStartSample(): string {
+  const source = readFileSync(QUICK_START_DOC, "utf8");
+  const match = source.match(/```tsx\r?\n([\s\S]*?)```/);
+  if (!match) {
+    throw new Error(`No tsx code fence in ${QUICK_START_DOC}`);
+  }
+  return match[1];
+}
+
+/**
+ * The blocks the Quick Start's one install command names, in order — the
+ * first `npx shadcn@latest add` inside a bash fence. Anchored to the fence
+ * because the frontmatter FAQ repeats the command in prose, and reading that
+ * copy would keep this test green while the real install step drifted.
+ */
+export function quickStartBlocks(): string[] {
+  const source = readFileSync(QUICK_START_DOC, "utf8");
+  const command = source.match(
+    /```bash\r?\n(?:[^`]*?\n)?(npx shadcn@latest add [^\n]+)\n[^`]*```/,
+  );
+  if (!command) {
+    throw new Error(`No fenced install command in ${QUICK_START_DOC}`);
+  }
+  return Array.from(command[1].matchAll(/\/r\/([\w-]+)\.json/g)).map(
+    (url) => url[1],
+  );
+}
 
 /**
  * Materializes this working tree's built registry as local JSON files, with the
