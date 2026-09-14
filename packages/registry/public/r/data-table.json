@@ -22,7 +22,6 @@
     "@dnd-kit/utilities@^3.2.2"
   ],
   "registryDependencies": [
-    "utils",
     "button",
     "input",
     "input-group",

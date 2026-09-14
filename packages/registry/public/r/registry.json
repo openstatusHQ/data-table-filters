@@ -243,7 +243,6 @@
         }
       ],
       "registryDependencies": [
-        "utils",
         "button",
         "input",
         "input-group",

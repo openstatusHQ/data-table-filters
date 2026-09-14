@@ -343,16 +343,24 @@ describe("registry packaging", () => {
     // copy cost more than it gave: the CLI prompts before overwriting an
     // existing file, a non-TTY agent run gets no answer, and the CLI abandons
     // the rest of the batch while exiting 0 (a half-installed tree, see #79
-    // and the agent-style case in e2e/install.test.ts). Declaring shadcn's
-    // own `utils` item instead lets the CLI create the file when it is missing
-    // and leave it alone when it exists.
+    // and the agent-style case in e2e/install.test.ts).
+    //
+    // Declaring shadcn's own `utils` item is not the answer either: it now
+    // ships `export { cn } from "cn"`, which never matches the consumer's
+    // file, so the CLI prompts (or, with --overwrite, replaces the file and
+    // deletes whatever the consumer keeps next to `cn`). Registry
+    // dependencies resolve before the block's own files, so a non-TTY run
+    // then writes nothing at all. Neither shipping nor declaring it: the
+    // file is the consumer's, and `shadcn init` has already written it.
     const shippers = items.filter((item) =>
       (item.files ?? []).some((file) => file.path === "src/lib/utils.ts"),
     );
     expect(shippers.map((item) => item.name)).toEqual([]);
 
-    const core = items.find((item) => item.name === "data-table");
-    expect(core?.registryDependencies).toContain("utils");
+    const declarers = items.filter((item) =>
+      (item.registryDependencies ?? []).includes("utils"),
+    );
+    expect(declarers.map((item) => item.name)).toEqual([]);
   });
 
   it("ships no test scaffolding to consumers", () => {
