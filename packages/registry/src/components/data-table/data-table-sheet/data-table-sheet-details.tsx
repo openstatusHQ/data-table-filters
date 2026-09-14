@@ -148,8 +148,8 @@ export function DataTableSheetDetails({
               )}
             </SheetTitle>
             <div className="flex h-7 items-center gap-1">
-              <TooltipProvider>
-                <Tooltip {...TOOLTIP_DELAY}>
+              <TooltipProvider {...TOOLTIP_DELAY}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       size="icon"
@@ -169,8 +169,8 @@ export function DataTableSheetDetails({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip {...TOOLTIP_DELAY}>
+              <TooltipProvider {...TOOLTIP_DELAY}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       size="icon"

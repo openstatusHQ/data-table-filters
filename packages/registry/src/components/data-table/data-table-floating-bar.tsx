@@ -45,8 +45,8 @@ export function DataTableFloatingBar<TData extends RowData>({
           <span className="text-muted-foreground text-sm whitespace-nowrap">
             {selectedRowCount} selected
           </span>
-          <TooltipProvider>
-            <Tooltip {...TOOLTIP_DELAY}>
+          <TooltipProvider {...TOOLTIP_DELAY}>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"

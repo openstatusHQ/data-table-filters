@@ -18,8 +18,8 @@ export function DataTableResetButton() {
   useHotKey(table.resetColumnFilters, "Escape");
 
   return (
-    <TooltipProvider>
-      <Tooltip {...TOOLTIP_DELAY}>
+    <TooltipProvider {...TOOLTIP_DELAY}>
+      <Tooltip>
         <TooltipTrigger asChild>
           <Button variant="ghost" onClick={() => table.resetColumnFilters()}>
             <X className="mr-2 h-4 w-4" />

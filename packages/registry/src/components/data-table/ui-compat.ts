@@ -13,12 +13,11 @@
  */
 
 /**
- * Radix: `delayDuration`, on the provider or the tooltip.
+ * Radix: `delayDuration`. Base UI: `delay`.
  *
- * Base UI takes `delay` on the provider only — its tooltip root has no delay
- * prop — so on a tooltip this sets the Radix duration and Base UI keeps the
- * delay its provider was given (shadcn's `base-nova` provider defaults to 0,
- * i.e. already snappier than the 100ms asked for here).
+ * Spread this on the `TooltipProvider`, never on the tooltip itself: Radix
+ * reads its spelling on either, but Base UI's tooltip root has no delay prop
+ * at all, so on the tooltip this would silently apply to Radix only.
  */
 export const TOOLTIP_DELAY = { delayDuration: 100, delay: 100 };
 

@@ -35,8 +35,8 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <TooltipProvider>
-          <Tooltip {...TOOLTIP_DELAY}>
+        <TooltipProvider {...TOOLTIP_DELAY}>
+          <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
