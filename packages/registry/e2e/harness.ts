@@ -174,12 +174,13 @@ function run(
 /**
  * `shadcn add` against the materialized registry.
  *
- * `--overwrite` is required to get a *complete* install: the blocks ship
- * `src/lib/utils.ts`, which exists in every shadcn project, and without the flag
- * the CLI stops to ask about it. On a non-TTY stdin that prompt gets no answer,
- * and the CLI abandons the rest of the write batch — exiting 0 having written 43
- * of 55 files. Pass `{ overwrite: false }` to reproduce that; the "agent-style
- * install" case in `install.test.ts` pins it.
+ * `--overwrite` by default, which is how a person re-runs an install; pass
+ * `{ overwrite: false }` for what an agent runs on a non-TTY. The two used to
+ * differ: the core block shipped `src/lib/utils.ts`, which exists in every
+ * shadcn project, so without the flag the CLI stopped to ask about it, got no
+ * answer, and abandoned the rest of the batch — exiting 0 having written 43 of
+ * 55 files. The block now leaves that file to shadcn's `utils` item; the
+ * "agent-style install" case in `install.test.ts` checks both paths agree.
  *
  * Pinned by default so CI is deterministic; set `SHADCN_VERSION=latest` in a
  * scheduled run to find out when a new CLI release breaks the blocks.

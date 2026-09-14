@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import registry from "../registry.json";
@@ -135,11 +135,11 @@ if (enabled && CASES.length === 0 && PINNED_CASES.length === 0) {
 }
 
 /**
- * `--overwrite` is the only way to get a complete install (see `installBlocks`),
- * and it necessarily rewrites the one file the blocks share with every shadcn
- * project. Anything else it touches is a defect.
+ * Files an install may legitimately rewrite. Since the core block stopped
+ * shipping `lib/utils.ts` there are none: the blocks share no path with a
+ * fresh shadcn project, so anything the install touches is a defect.
  */
-const OVERWRITTEN_BY_DESIGN = ["lib/utils.ts"];
+const OVERWRITTEN_BY_DESIGN: string[] = [];
 
 describe.skipIf(!enabled)("registry install", () => {
   let localRegistry: ReturnType<typeof materializeRegistry>;
@@ -294,13 +294,12 @@ describe.skipIf(!enabled)("registry install", () => {
 
   // What an agent actually runs: `npx shadcn add <url> --yes`, no TTY, no
   // `--overwrite` — because overwriting the user's files uninvited is not an
-  // option. The blocks ship `src/lib/utils.ts`, every shadcn project already has
-  // it, so the CLI stops to ask, gets no answer, and abandons the rest of the
-  // batch while still exiting 0. The result is a half-installed tree and a build
-  // full of "Cannot find module" errors.
-  //
-  // `it.fails` pins the defect: the day the install comes through whole, this
-  // test goes red and should be promoted into the matrix above.
+  // option. This used to be pinned as an expected failure: the core block
+  // shipped `src/lib/utils.ts`, every shadcn project already has it, so the CLI
+  // stopped to ask, got no answer, and abandoned the rest of the batch while
+  // exiting 0 — a half-installed tree and a build full of "Cannot find module".
+  // The block now leaves that file to shadcn's own `utils` item, so the
+  // non-interactive install has to come through whole and touch nothing.
   describe("agent-style install (no --overwrite, non-interactive)", () => {
     let project: string;
 
@@ -308,23 +307,27 @@ describe.skipIf(!enabled)("registry install", () => {
       if (project) cleanupProject(project);
     });
 
-    it.fails(
-      "installs every declared file",
-      () => {
-        project = prepareProject("next-src");
-        const before = snapshot(project);
+    it("installs every declared file and leaves the project's own files alone", () => {
+      project = prepareProject("next-src");
+      const before = snapshot(project);
 
-        const install = installBlocks(project, CORE, localRegistry.dir, {
-          overwrite: false,
-        });
-        expect(install.status).toBe(0);
+      const install = installBlocks(project, CORE, localRegistry.dir, {
+        overwrite: false,
+      });
+      expect(install.status, `shadcn add failed:\n${install.output}`).toBe(0);
 
-        const installed = addedFiles(before, snapshot(project));
-        expect(
-          scatteredGroups(expectedFilesFor(registry.items, CORE), installed),
-        ).toEqual([]);
-      },
-      900_000,
-    );
+      const after = snapshot(project);
+      expect(
+        scatteredGroups(
+          expectedFilesFor(registry.items, CORE),
+          addedFiles(before, after),
+        ),
+      ).toEqual([]);
+      expect(clobberedFiles(before, after)).toEqual([]);
+      expect(
+        readFileSync(join(project, "src/lib/utils.ts"), "utf8"),
+        "the consumer's utils.ts, sentinel included, survives",
+      ).toContain("FIXTURE_SENTINEL");
+    }, 900_000);
   });
 });
