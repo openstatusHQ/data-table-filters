@@ -12,11 +12,13 @@ on:
     branches: [main]
     paths:
       - "packages/registry/**"
+      - "apps/web/src/content/docs/01-quick-start.mdx"
       - ".github/workflows/registry-install.yml"
   push:
     branches: [main]
     paths:
       - "packages/registry/**"
+      - "apps/web/src/content/docs/01-quick-start.mdx"
   schedule:
     # 04:00 UTC daily, against the latest shadcn CLI rather than the pinned one.
     - cron: "0 4 * * *"
@@ -39,6 +41,12 @@ jobs:
           - next-src:large-table
           - next-no-src:core
           - next-no-src:large-table
+          # The Quick Start, verbatim: its install command and its paste, read
+          # from the docs page. The base row is the shadcn CLI default since
+          # v4; its install-and-typecheck is pinned as an expected failure
+          # until the blocks support Base UI, so it goes red when that changes.
+          - next-src:quick-start
+          - next-src-base:quick-start
     env:
       REGISTRY_E2E: "1"
       E2E_CASE: ${{ matrix.case }}
