@@ -1,7 +1,7 @@
 import type { SectionMeta } from "@/lib/mdx";
 import { getAllSections, getSection } from "@/lib/mdx";
 import { describe, expect, it } from "vitest";
-import { BLOCK_GUIDANCE, RECIPES, registryItems } from "./blocks";
+import { BLOCK_GUIDANCE, PREREQUISITE, RECIPES, registryItems } from "./blocks";
 import {
   blockUrl,
   buildDocMarkdown,
@@ -131,6 +131,39 @@ describe("buildLlmsTxt", () => {
   it("points at the full-text and registry index files", () => {
     expect(output).toContain("/llms-full.txt");
     expect(output).toContain("/r/index.md");
+  });
+
+  it("states the radix prerequisite before the first recipe", () => {
+    expect(output.indexOf(PREREQUISITE)).toBeGreaterThan(-1);
+    expect(output.indexOf(PREREQUISITE)).toBeLessThan(
+      output.indexOf("npx shadcn@latest add"),
+    );
+  });
+});
+
+describe("the radix prerequisite", () => {
+  it("names the init command and the unsupported default", () => {
+    expect(PREREQUISITE).toContain("npx shadcn@latest init -b radix -p nova");
+    expect(PREREQUISITE).toContain("Base UI");
+    expect(PREREQUISITE).toContain("not supported");
+  });
+
+  it("is repeated in the full docs and the registry index", () => {
+    expect(buildLlmsFullTxt([])).toContain(PREREQUISITE);
+    expect(buildRegistryIndexMd()).toContain(PREREQUISITE);
+  });
+
+  it("comes before the first install command in every generated file", () => {
+    for (const output of [
+      buildLlmsTxt(sections),
+      buildLlmsFullTxt([]),
+      buildRegistryIndexMd(),
+    ]) {
+      expect(output.indexOf(PREREQUISITE)).toBeGreaterThan(-1);
+      expect(output.indexOf(PREREQUISITE)).toBeLessThan(
+        output.indexOf("npx shadcn@latest add"),
+      );
+    }
   });
 });
 

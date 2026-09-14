@@ -65,6 +65,37 @@ fi
 echo "shadcn/ui: $SHADCN"
 [ -n "${SHADCN_COMPONENTS:-}" ] && echo "  Components: $SHADCN_COMPONENTS"
 
+# Component library (Radix vs Base UI). The blocks are written against Radix;
+# since shadcn v4 `init -d` defaults to Base UI (style "base-nova"), where the
+# blocks fail to typecheck. Read `style` from components.json: "radix-nova",
+# "base-nova", or the pre-v4 "new-york" / "default" (Radix).
+LIBRARY="unknown"
+STYLE=""
+if [ -f "components.json" ]; then
+  STYLE=$(grep -o '"style": *"[^"]*"' components.json 2>/dev/null | sed -E 's/.*"style": *"([^"]*)"/\1/' || true)
+  case "$STYLE" in
+    base-*) LIBRARY="base-ui ($STYLE)" ;;
+    radix-*|new-york|default) LIBRARY="radix ($STYLE)" ;;
+    "") LIBRARY="unknown (no style in components.json)" ;;
+    *) LIBRARY="unknown ($STYLE)" ;;
+  esac
+fi
+echo "Component library: $LIBRARY"
+if [ "$SHADCN" = "not initialized" ]; then
+  echo "  Initialize on Radix before installing: npx shadcn@latest init -b radix -p nova (not: init -d)"
+fi
+case "$STYLE" in
+  base-*)
+    echo ""
+    echo "!! BLOCKING: this project is on Base UI (components.json style \"$STYLE\")."
+    echo "!! data-table-filters requires the Radix library; on Base UI the blocks fail"
+    echo "!! to typecheck (TooltipProvider 'delayDuration', DialogClose 'render',"
+    echo "!! Accordion 'type'). Do not install. Fix first:"
+    echo "!!   npx shadcn@latest init -b radix -p nova --force --reinstall"
+    echo "!! Then re-run this script."
+    ;;
+esac
+
 # ORM
 ORM="none"
 if grep -q '"drizzle-orm"' package.json 2>/dev/null; then

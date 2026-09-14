@@ -12,14 +12,15 @@ description: >
   fetch layer, (7) auto-inferring schemas from raw JSON data with DataTableAuto / inferSchemaFromJSON,
   (8) adding AI-powered natural language filtering, (9) exposing tables as MCP endpoints for AI agents,
   (10) troubleshooting integration issues.
-  Triggers on mentions of "data-table-filters", "data-table.openstatus.dev",
-  "data-table-filters.com", filterable data
+  Triggers on mentions of "data-table-filters", "data-table.openstatus.dev", filterable data
   tables with shadcn, DataTableAuto, auto-infer, AI filters, MCP server, or any of the registry block names.
 ---
 
 # Data Table Filters
 
 A shadcn registry for building filterable, sortable data tables with infinite scroll and virtualization. Start with the core block, then extend with optional blocks for command palette, cell renderers, sheet panels, store adapters, schema generation, Drizzle ORM helpers, and React Query integration.
+
+> **Prerequisite.** Requires a shadcn project on the Radix library (`npx shadcn@latest init -b radix -p nova`). The shadcn CLI default, Base UI (`init -d`, preset `base-nova`), is not supported yet — the blocks fail to typecheck on it.
 
 ## Registry Blocks
 
@@ -45,9 +46,9 @@ All URLs use base `https://data-table.openstatus.dev`.
 
 ## Quick Start
 
-1. Run `scripts/detect-stack.sh` to detect the user's project setup
-2. Install core: `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json`
-3. Scaffold a minimal working table (see below)
+1. Run `scripts/detect-stack.sh` to detect the user's project setup. If it prints a `BLOCKING` line, the project is on Base UI: stop, show the user the fix it prints, and do not install. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -b radix -p nova` first (never `init -d`), then continue.
+2. Install core + schema: `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`
+3. Scaffold a minimal working table (see below), or render `<DataTableAuto data={rows} />` when the data shape is unknown
 4. Extend with additional blocks as needed
 
 > **Next.js?** Use the [data-table-filters repo](https://github.com/openstatushq/data-table-filters) as a reference — it's a full Next.js app with all blocks wired up.

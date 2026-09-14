@@ -1,6 +1,6 @@
 import type { SectionMeta } from "@/lib/mdx";
 import { describe, expect, it, vi } from "vitest";
-import { RECIPES, registryItems } from "./blocks";
+import { PREREQUISITE, RECIPES, registryItems } from "./blocks";
 import type { DocSource } from "./build";
 import {
   createDocsMcpHandler,
@@ -110,6 +110,16 @@ describe("docs mcp server", () => {
 
     expect(result.serverInfo.name).toBe("data-table-filters-docs");
     expect(result.instructions).toContain("get_install_plan");
+  });
+
+  it("states the radix prerequisite in its instructions", async () => {
+    const { result } = await rpc("initialize", {
+      protocolVersion: "2025-03-26",
+      capabilities: {},
+      clientInfo: { name: "test", version: "1.0.0" },
+    });
+
+    expect(result.instructions).toContain(PREREQUISITE);
   });
 });
 
@@ -245,6 +255,13 @@ describe("get_doc", () => {
 });
 
 describe("list_blocks", () => {
+  it("states the radix prerequisite before the catalog", async () => {
+    const catalog = parse(await callTool("list_blocks"));
+
+    expect(Object.keys(catalog)[0]).toBe("prerequisite");
+    expect(catalog.prerequisite).toBe(PREREQUISITE);
+  });
+
   it("returns every block with its url and guidance", async () => {
     const { blocks } = parse(await callTool("list_blocks"));
 
@@ -268,6 +285,16 @@ describe("list_blocks", () => {
 });
 
 describe("get_install_plan", () => {
+  it.each(RECIPES.map((recipe) => recipe.id))(
+    "puts the radix prerequisite first in the %s plan",
+    async (goal) => {
+      const plan = parse(await callTool("get_install_plan", { goal }));
+
+      expect(Object.keys(plan)[0]).toBe("prerequisite");
+      expect(plan.prerequisite).toBe(PREREQUISITE);
+    },
+  );
+
   it("returns one command for the goal", async () => {
     const plan = parse(
       await callTool("get_install_plan", { goal: "large-table" }),

@@ -7,7 +7,7 @@ import { BASE_URL } from "@/lib/metadata/shared-metadata";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";
-import { BLOCK_GUIDANCE, RECIPES, registryItems } from "./blocks";
+import { BLOCK_GUIDANCE, PREREQUISITE, RECIPES, registryItems } from "./blocks";
 import {
   blockUrl,
   buildDocMarkdown,
@@ -27,6 +27,8 @@ import {
 export type DocsSource = () => Promise<DocSource[]>;
 
 const SERVER_INSTRUCTIONS = `Docs and install recipes for data-table-filters, a React data table distributed as shadcn registry blocks (not an npm package — the code is copied into the user's repo).
+
+${PREREQUISITE}
 
 Start with \`get_install_plan\` when the goal is to add a table: it returns the exact shadcn command for that goal and the docs to read next. Use \`search_docs\` for questions about behaviour or APIs, then \`get_doc\` to read a page in full. \`list_blocks\` is the catalog when the goal doesn't match a recipe.`;
 
@@ -182,6 +184,7 @@ export function createDocsMcpServer(load: SectionLoader): McpServer {
     },
     async () =>
       json({
+        prerequisite: PREREQUISITE,
         install: `npx shadcn@latest add ${blockUrl("<block>")}`,
         note: "The shadcn CLI installs each block's registry dependencies automatically, so listing a dependency explicitly is redundant but harmless.",
         blocks: registryItems.map((item) => ({
@@ -220,6 +223,7 @@ export function createDocsMcpServer(load: SectionLoader): McpServer {
       const { docs } = await load();
 
       return json({
+        prerequisite: PREREQUISITE,
         goal: recipe.id,
         title: recipe.title,
         when: recipe.when,

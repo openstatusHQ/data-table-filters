@@ -1,5 +1,7 @@
 # Component Catalog
 
+> **Prerequisite.** Requires a shadcn project on the Radix library (`npx shadcn@latest init -b radix -p nova`). The shadcn CLI default, Base UI (`init -d`, preset `base-nova`), is not supported yet — the blocks fail to typecheck on it.
+
 All extension blocks install via `npx shadcn@latest add <url>` (base: `https://data-table.openstatus.dev`).
 
 ## Table of Contents
