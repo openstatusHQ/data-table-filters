@@ -1,3 +1,4 @@
+import { registryItems } from "@/lib/llms/blocks";
 import { installEvent, recordInstall } from "@/lib/registry/installs";
 import { Redis } from "@upstash/redis";
 import { after, NextResponse, type NextRequest } from "next/server";
@@ -10,9 +11,13 @@ import { after, NextResponse, type NextRequest } from "next/server";
  */
 export const config = { matcher: ["/r/:path*"] };
 
+const BLOCKS = new Set(registryItems.map((item) => item.name));
+
 export function proxy(request: NextRequest) {
   const event = installEvent({
+    method: request.method,
     pathname: request.nextUrl.pathname,
+    blocks: BLOCKS,
     userAgent: request.headers.get("user-agent"),
     ip:
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??

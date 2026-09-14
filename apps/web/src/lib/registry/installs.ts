@@ -26,9 +26,6 @@ import { createHash } from "node:crypto";
 
 const REGISTRY_FILE = /^\/r\/([\w-]+)\.json$/;
 
-/** Served from `/r/` alongside the blocks, but not a block. */
-const NOT_A_BLOCK = new Set(["registry"]);
-
 export type Client = "cli" | "browser";
 
 export type InstallEvent = {
@@ -46,11 +43,18 @@ export const KEYS = {
   runs: (day: string) => `installs:runs:${day}`,
 };
 
-/** `/r/data-table.json` -> `data-table`; anything else -> null. */
-export function blockFromPath(pathname: string): string | null {
+/**
+ * `/r/data-table.json` -> `data-table`; anything else -> null. `known` is the
+ * manifest's block names: `/r/registry.json` is served from the same folder
+ * but is not a block, and `/r/anything.json` is a 404 the proxy cannot see.
+ */
+export function blockFromPath(
+  pathname: string,
+  known: ReadonlySet<string>,
+): string | null {
   const match = pathname.match(REGISTRY_FILE);
   if (!match) return null;
-  return NOT_A_BLOCK.has(match[1]) ? null : match[1];
+  return known.has(match[1]) ? match[1] : null;
 }
 
 /**
@@ -79,12 +83,18 @@ export function runFingerprint(input: {
 }
 
 export function installEvent(input: {
+  method: string;
   pathname: string;
   userAgent: string | null;
   ip: string;
   at: Date;
+  /** Block names from the manifest; see `blockFromPath`. */
+  blocks: ReadonlySet<string>;
 }): InstallEvent | null {
-  const block = blockFromPath(input.pathname);
+  // A download is a GET. HEAD is a link checker or a CDN probe.
+  if (input.method !== "GET") return null;
+
+  const block = blockFromPath(input.pathname, input.blocks);
   if (!block) return null;
 
   return {
@@ -119,11 +129,14 @@ export async function recordInstall(
   await pipeline.exec();
 }
 
-/** The slice of the Upstash client `installSummary` needs. */
-export type SummaryStore = {
-  mget<T extends unknown[]>(...keys: string[]): Promise<T>;
-  pfcount(...keys: string[]): Promise<number>;
+/** The slice of the Upstash client `installSummary` needs, so tests can fake it. */
+export type SummaryPipeline = {
+  mget(...keys: string[]): unknown;
+  pfcount(...keys: string[]): unknown;
+  exec(): Promise<unknown[]>;
 };
+
+export type SummaryStore = { pipeline(): SummaryPipeline };
 
 export type InstallSummary = {
   /** UTC days covered, oldest first. */
@@ -159,6 +172,10 @@ export async function installSummary(
   input: { blocks: string[]; today: Date; days: number },
 ): Promise<InstallSummary> {
   const days = recentDays(input.today, input.days);
+  if (days.length === 0 || input.blocks.length === 0) {
+    // MGET with no keys is an error, and there is nothing to ask for.
+    return { days, runs: [], clients: { cli: [], browser: [] }, blocks: [] };
+  }
 
   const blockKeys = input.blocks.flatMap((block) =>
     days.map((day) => KEYS.block(block, day)),
@@ -168,18 +185,21 @@ export async function installSummary(
     days.map((day) => KEYS.client(client, day)),
   );
 
-  const [blockCounts, totals, clientCounts, runs] = await Promise.all([
-    store.mget<unknown[]>(...blockKeys),
-    store.mget<unknown[]>(...totalKeys),
-    store.mget<unknown[]>(...clientKeys),
-    // One PFCOUNT per day: a single call over several keys returns the
-    // cardinality of their union, which is not a per-day series.
-    Promise.all(days.map((day) => store.pfcount(KEYS.runs(day)))),
-  ]);
+  // One round trip. The runs series needs one PFCOUNT per day — a single
+  // call over several keys returns the cardinality of their union — so
+  // those go in the same pipeline rather than out as `days` requests.
+  const pipeline = store.pipeline();
+  pipeline.mget(...blockKeys);
+  pipeline.mget(...totalKeys);
+  pipeline.mget(...clientKeys);
+  for (const day of days) pipeline.pfcount(KEYS.runs(day));
+
+  const [blockCounts, totals, clientCounts, ...runCounts] =
+    (await pipeline.exec()) as [unknown[], unknown[], unknown[], ...unknown[]];
 
   return {
     days,
-    runs,
+    runs: runCounts.map(toNumber),
     clients: {
       cli: clientCounts.slice(0, days.length).map(toNumber),
       browser: clientCounts.slice(days.length).map(toNumber),
