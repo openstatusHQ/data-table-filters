@@ -1,0 +1,256 @@
+import { describe, expect, it } from "vitest";
+import type { ActionDescriptor } from "../types";
+import {
+  isSafeActionHref,
+  sanitizeActionDescriptors,
+  validateActionDescriptor,
+} from "../validate";
+
+const SELF = { selfOrigin: "https://app.example.com" };
+
+function descriptor(
+  overrides?: Partial<ActionDescriptor>,
+): Record<string, unknown> {
+  return {
+    id: "replay",
+    label: "Replay",
+    scope: ["row"],
+    href: "/api/actions/replay",
+    ...overrides,
+  };
+}
+
+describe("isSafeActionHref", () => {
+  it("allows a root-relative path", () => {
+    expect(isSafeActionHref("/api/actions/replay", SELF)).toBe(true);
+  });
+
+  it("allows a root-relative path with a query string and hyphens", () => {
+    expect(isSafeActionHref("/api/row-actions/soft-delete?v=2", SELF)).toBe(
+      true,
+    );
+  });
+
+  it("allows an absolute URL on the page's own origin", () => {
+    expect(
+      isSafeActionHref("https://app.example.com/api/actions/replay", SELF),
+    ).toBe(true);
+  });
+
+  it("allows an explicitly allow-listed origin", () => {
+    expect(
+      isSafeActionHref("https://api.example.com/actions/replay", {
+        ...SELF,
+        allowedOrigins: ["https://api.example.com"],
+      }),
+    ).toBe(true);
+  });
+
+  it("ignores a path on an allow-list entry, comparing origins only", () => {
+    expect(
+      isSafeActionHref("https://api.example.com/actions/replay", {
+        ...SELF,
+        allowedOrigins: ["https://api.example.com/some/path"],
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a cross-origin URL that is not allow-listed", () => {
+    expect(isSafeActionHref("https://evil.example.com/steal", SELF)).toBe(
+      false,
+    );
+  });
+
+  it("rejects a protocol-relative URL that looks like a path", () => {
+    expect(isSafeActionHref("//evil.example.com/steal", SELF)).toBe(false);
+  });
+
+  // WHATWG treats `\` as `/` for special schemes, so this reads as a
+  // root-relative path here but resolves as https://evil.example.com/steal in
+  // the browser — a cross-origin POST of row ids past the allow-list.
+  it("rejects a backslash protocol-relative URL", () => {
+    expect(isSafeActionHref("/\\evil.example.com/steal", SELF)).toBe(false);
+    expect(isSafeActionHref("/\\\\evil.example.com/steal", SELF)).toBe(false);
+  });
+
+  it("still allows a legitimate path, so the guard is not over-broad", () => {
+    expect(isSafeActionHref("/api/actions/re-play_2", SELF)).toBe(true);
+  });
+
+  it("rejects javascript:, data: and blob: schemes", () => {
+    expect(isSafeActionHref("javascript:alert(1)", SELF)).toBe(false);
+    expect(isSafeActionHref("data:text/html,<script>", SELF)).toBe(false);
+    expect(isSafeActionHref("blob:https://app.example.com/x", SELF)).toBe(
+      false,
+    );
+  });
+
+  it("rejects a directory-relative path", () => {
+    expect(isSafeActionHref("actions/replay", SELF)).toBe(false);
+    expect(isSafeActionHref("../actions/replay", SELF)).toBe(false);
+  });
+
+  it("rejects control characters used to smuggle past a first-line check", () => {
+    expect(isSafeActionHref("/api\nHost: evil.example.com", SELF)).toBe(false);
+    expect(isSafeActionHref("/api\x00", SELF)).toBe(false);
+  });
+
+  it("rejects an over-long href", () => {
+    expect(isSafeActionHref(`/api/${"a".repeat(2100)}`, SELF)).toBe(false);
+  });
+
+  it("rejects non-strings and empty strings", () => {
+    expect(isSafeActionHref(undefined, SELF)).toBe(false);
+    expect(isSafeActionHref(null, SELF)).toBe(false);
+    expect(isSafeActionHref(42, SELF)).toBe(false);
+    expect(isSafeActionHref("", SELF)).toBe(false);
+  });
+
+  it("rejects an absolute URL when no origin can be determined", () => {
+    // Server-side render with no window and no allow-list: relative only.
+    expect(isSafeActionHref("https://app.example.com/api")).toBe(false);
+    expect(isSafeActionHref("/api/actions/replay")).toBe(true);
+  });
+});
+
+describe("validateActionDescriptor", () => {
+  it("accepts a well-formed descriptor", () => {
+    expect(validateActionDescriptor(descriptor(), SELF)).toBeNull();
+  });
+
+  it("accepts the optional fields", () => {
+    expect(
+      validateActionDescriptor(
+        descriptor({
+          variant: "destructive",
+          confirm: "Delete {count} {log|logs}?",
+          maxIds: 100,
+          scope: ["row", "bulk", "filter"],
+        }),
+        SELF,
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    ["not an object", null],
+    ["not an object", "replay"],
+  ])("rejects %s", (reason, value) => {
+    expect(validateActionDescriptor(value, SELF)).toBe(reason);
+  });
+
+  it("rejects a missing or over-long id", () => {
+    expect(validateActionDescriptor(descriptor({ id: "" }), SELF)).toBe(
+      "invalid id",
+    );
+    expect(
+      validateActionDescriptor(descriptor({ id: "a".repeat(101) }), SELF),
+    ).toBe("invalid id");
+  });
+
+  it("rejects a missing or over-long label", () => {
+    expect(
+      validateActionDescriptor({ ...descriptor(), label: undefined }, SELF),
+    ).toBe("invalid label");
+    expect(
+      validateActionDescriptor(descriptor({ label: "x".repeat(501) }), SELF),
+    ).toBe("invalid label");
+  });
+
+  it("rejects an empty, non-array or unknown scope", () => {
+    expect(validateActionDescriptor(descriptor({ scope: [] }), SELF)).toBe(
+      "invalid scope",
+    );
+    expect(
+      validateActionDescriptor({ ...descriptor(), scope: "row" }, SELF),
+    ).toBe("invalid scope");
+    expect(
+      validateActionDescriptor(
+        { ...descriptor(), scope: ["everything"] },
+        SELF,
+      ),
+    ).toBe("unknown scope");
+  });
+
+  it("rejects an unknown variant", () => {
+    expect(
+      validateActionDescriptor({ ...descriptor(), variant: "danger" }, SELF),
+    ).toBe("unknown variant");
+  });
+
+  it("rejects a non-positive or fractional maxIds", () => {
+    expect(validateActionDescriptor(descriptor({ maxIds: 0 }), SELF)).toBe(
+      "invalid maxIds",
+    );
+    expect(validateActionDescriptor(descriptor({ maxIds: -1 }), SELF)).toBe(
+      "invalid maxIds",
+    );
+    expect(validateActionDescriptor(descriptor({ maxIds: 1.5 }), SELF)).toBe(
+      "invalid maxIds",
+    );
+  });
+
+  it("rejects an unsafe href", () => {
+    expect(
+      validateActionDescriptor(
+        descriptor({ href: "https://evil.example.com/steal" }),
+        SELF,
+      ),
+    ).toBe("unsafe href");
+  });
+});
+
+describe("sanitizeActionDescriptors", () => {
+  it("returns the input array itself when everything passes", () => {
+    const actions = [descriptor()] as unknown as ActionDescriptor[];
+    const result = sanitizeActionDescriptors(actions, SELF);
+    // Referential stability matters: the provider memoizes on this.
+    expect(result.actions).toBe(actions);
+    expect(result.rejected).toEqual([]);
+  });
+
+  it("drops the unsafe ones and keeps the rest", () => {
+    const result = sanitizeActionDescriptors(
+      [
+        descriptor({ id: "replay" }),
+        descriptor({ id: "exfiltrate", href: "https://evil.example.com/x" }),
+        descriptor({ id: "delete", href: "/api/actions/delete" }),
+      ],
+      SELF,
+    );
+
+    expect(result.actions.map((a) => a.id)).toEqual(["replay", "delete"]);
+    expect(result.rejected).toEqual([
+      { id: "exfiltrate", reason: "unsafe href" },
+    ]);
+  });
+
+  it("reports an unreadable id by index", () => {
+    const result = sanitizeActionDescriptors([null, 42], SELF);
+    expect(result.actions).toEqual([]);
+    expect(result.rejected).toEqual([
+      { id: "#0", reason: "not an object" },
+      { id: "#1", reason: "not an object" },
+    ]);
+  });
+
+  it("keeps the first of a duplicated id and reports the rest", () => {
+    const result = sanitizeActionDescriptors(
+      [
+        descriptor({ id: "replay", href: "/api/actions/replay" }),
+        descriptor({ id: "replay", href: "/api/actions/other" }),
+      ],
+      SELF,
+    );
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0]!.href).toBe("/api/actions/replay");
+    expect(result.rejected).toEqual([{ id: "replay", reason: "duplicate id" }]);
+  });
+
+  it("treats a missing or non-array actions list as empty", () => {
+    expect(sanitizeActionDescriptors(undefined, SELF)).toEqual({
+      actions: [],
+      rejected: [],
+    });
+  });
+});

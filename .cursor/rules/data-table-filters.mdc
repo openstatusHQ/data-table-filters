@@ -38,6 +38,8 @@ All URLs are `https://data-table.openstatus.dev/r/<name>.json`.
 | `data-table-query`             | The table fetches pages from an API endpoint                                                    |
 | `data-table-filter-command-ai` | Natural-language filtering                                                                      |
 | `data-table-mcp`               | Agents should query the table over MCP                                                          |
+| `data-table-actions`           | Users need to act on rows — replay, acknowledge, delete (requires drizzle)                       |
+| `data-table-remote`            | The table should render from an API endpoint's manifest, with no per-column code                |
 
 ## Large table (server-side, 100k+ rows)
 
@@ -69,6 +71,24 @@ npx shadcn@latest add \
 ```
 
 Use `useMemoryAdapter`. No API route, no schema block.
+
+## Table pointed at an API endpoint
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-schema.json \
+  https://data-table.openstatus.dev/r/data-table-query.json \
+  https://data-table.openstatus.dev/r/data-table-nuqs.json \
+  https://data-table.openstatus.dev/r/data-table-remote.json
+```
+
+Serve a manifest with `createTableManifest` + `createTableManifestHandler`, then
+render `<DataTableRemote manifestEndpoint="/api/logs/schema" />`. Declare only
+the capabilities the endpoint implements — everything defaults to off and the
+table degrades rather than rendering empty. Pass `initialManifest` (a build-time
+snapshot or a server prefetch) to skip the round trip before first paint, and
+`transport` for another origin, auth headers, or a plain-JSON API.
 
 ## Schema mapping
 

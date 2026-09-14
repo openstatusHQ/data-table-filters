@@ -79,6 +79,27 @@ npx shadcn@latest add \
 
 Use `useMemoryAdapter`. No API route, no schema block.
 
+**Table pointed at an API endpoint — the data and its endpoint are owned
+elsewhere, and there should be no per-column code in the app:**
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-schema.json \
+  https://data-table.openstatus.dev/r/data-table-query.json \
+  https://data-table.openstatus.dev/r/data-table-nuqs.json \
+  https://data-table.openstatus.dev/r/data-table-remote.json
+```
+
+Serve a manifest — schema, `primaryKey`, capabilities, actions — with
+`createTableManifest` + `createTableManifestHandler` on the endpoint that owns
+the data, then render `<DataTableRemote manifestEndpoint="/api/logs/schema" />`.
+Declare only the capabilities the endpoint actually implements: they default to
+off and the table degrades rather than rendering empty filters and blank counts.
+Pass `initialManifest` (a build-time snapshot, or a server prefetch) to skip the
+round trip before first paint, and `transport` for another origin, auth headers,
+or a plain-JSON API.
+
 **Unknown data shape:** install `data-table` + `data-table-schema`, then render
 `<DataTableAuto data={json} />` — columns, filters, and sheet fields are inferred
 from the data.
@@ -95,6 +116,10 @@ from the data.
   quietly.
 - A `SheetField.type` of `"readonly"` means no filter dropdown; match the filter
   type instead, or generate fields with `generateSheetFields()`.
+- `createDataTableQueryOptions` defaults to a same-origin `fetch` and a SuperJSON
+  body. For anyone else's API, pass `transport` (base URL, headers, credentials,
+  `parseResponse`) and a `pagination` strategy — the default cursor is a
+  millisecond timestamp, which is wrong for an offset API.
 
 ---
 

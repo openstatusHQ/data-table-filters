@@ -1,6 +1,11 @@
 import type { ActionDescriptor } from "@dtf/registry/lib/actions/types";
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
-import SuperJSON from "superjson";
+import type { PaginationStrategy, Transport } from "./transport";
+import {
+  resolveUrl,
+  timestampCursorPagination,
+  transportFetch,
+} from "./transport";
 import type { BaseChartSchema, FacetMetadataSchema } from "./types";
 
 export type InfiniteQueryMeta<TMeta = Record<string, unknown>> = {
@@ -23,19 +28,28 @@ export type InfiniteQueryResponse<TData, TMeta = unknown> = {
   nextCursor: number | null;
 };
 
-function getBaseUrl() {
-  if (typeof window !== "undefined") return "";
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-}
+/**
+ * Search keys that address a single row or a view mode rather than a filter.
+ * They are cleared from both the request and the cache key so that opening a
+ * row's sheet does not refetch the list under a new key.
+ */
+const DEFAULT_OMIT_KEYS = ["uuid", "live"] as const;
 
 /**
- * Factory for creating infinite query options for data tables.
+ * What React Query carries between pages.
  *
- * Parametrizes the query key prefix, API endpoint, and serializer —
- * everything else (pagination, caching, SuperJSON) is shared.
+ * The pagination strategy owns `page` and nothing else looks inside it — it may
+ * be an object, a number, or an opaque token. `_meta` sits *outside* it because
+ * meta skipping is a transport-level concern, not a pagination one: the same
+ * flag has to work whether pages are addressed by cursor, opaque token, or
+ * offset.
  */
-export function createDataTableQueryOptions<TData, TMeta>(config: {
+// `any` for the same reason as `pagination` below: the strategy owns this type
+// and nothing here can name it without leaking a generic through every call site.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MetaPageParam = { page: any; _meta: boolean };
+
+export type DataTableQueryOptionsConfig<TData, TMeta> = {
   queryKeyPrefix: string;
   apiEndpoint: string;
   searchParamsSerializer: (search: Record<string, unknown>) => string;
@@ -51,10 +65,58 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
    * @default false
    */
   skipMetaOnPagination?: boolean;
-}) {
+  /**
+   * How to reach the endpoint: base URL, headers, credentials, and how to parse
+   * the body. Omitted, it stays what it always was — same-origin `fetch` and a
+   * SuperJSON payload.
+   */
+  transport?: Transport<TData, TMeta>;
+  /**
+   * How pages are addressed. Defaults to a bidirectional cursor over a
+   * timestamp column, which is what a log table wants; see
+   * `offsetPagination` and `opaqueCursorPagination` for endpoints that page
+   * some other way.
+   */
+  // `any` on the page param is deliberate: the param type is existential — the
+  // strategy owns it and nothing else in this config refers to it, so surfacing
+  // it as a third generic would force every call site that names `TData` and
+  // `TMeta` to name it too, just to keep the default.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pagination?: PaginationStrategy<any>;
+  /** Extra search keys to clear from the request and the cache key. */
+  omitKeys?: readonly string[];
+  /** Overrides merged into the generated `infiniteQueryOptions`. */
+  queryOptions?: {
+    staleTime?: number;
+    gcTime?: number;
+    refetchOnWindowFocus?: boolean;
+    retry?: number | boolean;
+  };
+};
+
+/**
+ * Factory for creating infinite query options for data tables.
+ *
+ * Parametrizes the query key prefix, endpoint, serializer, transport, and
+ * pagination — everything else (caching, the stable key, page-param plumbing)
+ * is shared.
+ */
+export function createDataTableQueryOptions<TData, TMeta>(
+  config: DataTableQueryOptionsConfig<TData, TMeta>,
+) {
+  const pagination = config.pagination ?? timestampCursorPagination();
+  // Both the request and the cache key drop these. Kept as a plain object so
+  // spreading it cannot be reordered into a no-op by a later key.
+  const cleared: Record<string, null> = {};
+  for (const key of [...DEFAULT_OMIT_KEYS, ...(config.omitKeys ?? [])]) {
+    cleared[key] = null;
+  }
+
   return (search: Record<string, unknown>) => {
-    const cursor = search.cursor as Date | undefined;
-    const initialCursor = cursor?.getTime?.() ?? Date.now();
+    const initialPageParam: MetaPageParam = {
+      page: pagination.getInitialPageParam(search),
+      _meta: true,
+    };
 
     // Normalize empty arrays to null for consistent serialization
     const normalized: Record<string, unknown> = {};
@@ -68,61 +130,57 @@ export function createDataTableQueryOptions<TData, TMeta>(config: {
 
     const stableKey = config.searchParamsSerializer({
       ...normalized,
-      uuid: null,
-      live: null,
-      cursor: null,
-      direction: null,
+      ...cleared,
+      // The page param is not part of the identity of the list — every page of
+      // one filter state belongs under one key.
+      ...Object.fromEntries(pagination.pageParamKeys.map((key) => [key, null])),
     });
 
     return infiniteQueryOptions({
       queryKey: [config.queryKeyPrefix, stableKey],
-      queryFn: async ({ pageParam }) => {
-        const cursorDate = new Date(pageParam.cursor);
-        const direction = pageParam.direction as "next" | "prev" | undefined;
+      queryFn: async ({ pageParam, signal }) => {
         const serialize = config.searchParamsSerializer({
-          ...search,
-          cursor: cursorDate,
-          direction,
-          uuid: null,
-          live: null,
+          ...pagination.applyPageParam(search, pageParam.page),
+          ...cleared,
         });
 
         // Appended after serialization on purpose: `_meta` is a transport-level
         // control param, not part of any consumer's search-param schema. Routing
         // it through the serializer would either pollute every consumer's parser
         // contract or be silently dropped by an allow-list serializer.
-        const url = `${getBaseUrl()}${config.apiEndpoint}${serialize}`;
-        const skipMeta = config.skipMetaOnPagination && !pageParam._meta;
-        const response = await fetch(
-          skipMeta ? `${url}${url.includes("?") ? "&" : "?"}_meta=false` : url,
+        const url = resolveUrl(
+          config.transport,
+          `${config.apiEndpoint}${serialize}`,
         );
-        const json = await response.json();
-        return SuperJSON.parse<InfiniteQueryResponse<TData, TMeta>>(json);
+        const skipMeta = config.skipMetaOnPagination && !pageParam._meta;
+
+        return transportFetch<TData, TMeta>(
+          skipMeta ? `${url}${url.includes("?") ? "&" : "?"}_meta=false` : url,
+          config.transport,
+          { signal },
+        );
       },
-      initialPageParam: {
-        cursor: initialCursor,
-        direction: "next",
-        _meta: true,
+      initialPageParam,
+      getPreviousPageParam: (firstPage, _allPages, firstPageParam) => {
+        const page = pagination.getPreviousPageParam(
+          firstPage,
+          firstPageParam.page,
+        );
+        return page === null ? null : { page, _meta: false };
       },
-      getPreviousPageParam: (firstPage) => {
-        if (!firstPage.prevCursor) return null;
-        return {
-          cursor: firstPage.prevCursor,
-          direction: "prev",
-          _meta: false,
-        };
+      getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+        const page = pagination.getNextPageParam(lastPage, lastPageParam.page);
+        return page === null ? null : { page, _meta: false };
       },
-      getNextPageParam: (lastPage) => {
-        if (!lastPage.nextCursor) return null;
-        return {
-          cursor: lastPage.nextCursor,
-          direction: "next",
-          _meta: false,
-        };
-      },
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: config.queryOptions?.refetchOnWindowFocus ?? false,
       placeholderData: keepPreviousData,
-      staleTime: 1000 * 60 * 5,
+      staleTime: config.queryOptions?.staleTime ?? 1000 * 60 * 5,
+      ...(config.queryOptions?.gcTime !== undefined
+        ? { gcTime: config.queryOptions.gcTime }
+        : {}),
+      ...(config.queryOptions?.retry !== undefined
+        ? { retry: config.queryOptions.retry }
+        : {}),
     });
   };
 }

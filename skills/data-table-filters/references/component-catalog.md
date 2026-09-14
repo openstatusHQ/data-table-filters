@@ -11,6 +11,7 @@ All extension blocks install via `npx shadcn@latest add <url>` (base: `https://d
 - [Schema System](#schema-system)
 - [Drizzle Helpers](#drizzle-helpers)
 - [Query Layer](#query-layer)
+- [Headless Table](#headless-table)
 
 ---
 
@@ -179,6 +180,41 @@ See [drizzle-integration.md](drizzle-integration.md) for handler API.
 **Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-query.json`
 
 See [fetch-layer.md](fetch-layer.md) for setup.
+
+---
+
+## Headless Table
+
+**Block:** `data-table-remote`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-remote.json`
+
+Renders a whole table from an API endpoint's manifest — columns, filters, sheet fields, row identity and URL state — with no per-column code in the app. Requires `data-table-schema`, `data-table-query` and a store adapter.
+
+```tsx
+import { DataTableRemote } from "@/components/data-table/data-table-remote";
+
+<DataTableRemote
+  manifestEndpoint="/logs/api/schema"
+  searchParamsSerializer={searchParamsSerializer}
+/>;
+```
+
+| Prop                        | Purpose                                                                     |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `manifestEndpoint`          | `GET`s a `TableManifest` (required)                                         |
+| `dataEndpoint`              | Rows. Defaults to `manifestEndpoint` with a trailing `/schema` stripped     |
+| `transport`                 | Base URL, headers, credentials, response parsing                            |
+| `pagination`                | Cursor / opaque-cursor / offset strategy                                    |
+| `initialManifest`           | Build-time snapshot or server prefetch — skips the round trip               |
+| `renderers`                 | Renderer closures by column key, for what named displays cannot cover       |
+| `loadingSlot` / `errorSlot` | While the manifest is in flight, and when it fails                          |
+| `chartSlot`                 | `(chartData, config) => ReactNode`, only when the endpoint declares a chart |
+| `sheetSlot`                 | `(sheetFields) => ReactNode`                                                |
+| `getRowClassName`           | Per-row styling — presentation policy the manifest deliberately omits       |
+
+Server side: `createTableManifest({ schema, primaryKey, rowLabel?, capabilities, chart?, actions?, defaults? })` and `createTableManifestHandler(manifest | (request) => manifest)`.
+
+Capabilities (`facets`, `totalRowCount`, `filterRowCount`, `chart`, `backwardPagination`, `actions`) all default to **off**; the table degrades rather than rendering empty. Verify an endpoint with `runEndpointConformance({ url, manifest })`.
 
 ---
 

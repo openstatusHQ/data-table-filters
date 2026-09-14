@@ -15,3 +15,10 @@ export {
   type ActionVariant,
   type WithRowActions,
 } from "./types";
+export {
+  isSafeActionHref,
+  sanitizeActionDescriptors,
+  validateActionDescriptor,
+  type ActionRejection,
+  type ActionValidationOptions,
+} from "./validate";

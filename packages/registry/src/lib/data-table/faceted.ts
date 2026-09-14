@@ -1,3 +1,4 @@
+import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
 import type { RowData, RowModel, Table as TTable } from "@tanstack/react-table";
 import type { FacetMetadataSchema } from "./types";
 
@@ -71,4 +72,48 @@ export function getFacetedMinMaxValues(
     if (typeof max === "number") return [max, max];
     return undefined;
   };
+}
+
+/**
+ * Fold server-computed facets into the filter fields.
+ *
+ * A checkbox filter needs its options and a slider needs its bounds, and
+ * neither is knowable from the schema alone — they depend on the data. Both
+ * the `/drizzle` client and the schema builder had grown their own copy of
+ * this merge, which is exactly the sort of thing a table pointed at an
+ * endpoint has to do for itself.
+ *
+ * A field that already carries options keeps them: a schema that spelled out
+ * its enum values is stating the domain, which is a stronger claim than
+ * "these are the values present in the rows we happened to load".
+ */
+export function applyFacets<TData>(
+  filterFields: readonly DataTableFilterField<TData>[],
+  facets: Record<string, FacetMetadataSchema> | undefined,
+): DataTableFilterField<TData>[] {
+  if (!facets) return filterFields as DataTableFilterField<TData>[];
+
+  return filterFields.map((field) => {
+    const facet = facets[field.value as string];
+    if (!facet) return field;
+    if ("options" in field && field.options && field.options.length > 0) {
+      return field;
+    }
+
+    const options = (facet.rows ?? []).map(({ value }) => ({
+      label: `${value}`,
+      value: value as string | number | boolean,
+    }));
+
+    if (field.type === "slider") {
+      return {
+        ...field,
+        min: facet.min ?? field.min,
+        max: facet.max ?? field.max,
+        options,
+      };
+    }
+
+    return { ...field, options };
+  });
 }

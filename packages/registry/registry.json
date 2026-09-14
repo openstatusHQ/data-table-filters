@@ -210,6 +210,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/actions/validate.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/data-table/faceted.ts",
           "type": "registry:lib"
         },
@@ -538,6 +542,18 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/table-schema/manifest.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/table-schema/renderers.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/table-schema/snapshot.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/table-schema/infer.ts",
           "type": "registry:lib"
         },
@@ -580,6 +596,10 @@
         {
           "path": "src/components/data-table/data-table-auto.tsx",
           "type": "registry:component"
+        },
+        {
+          "path": "src/hooks/use-table-manifest.ts",
+          "type": "registry:hook"
         }
       ],
       "registryDependencies": [
@@ -588,7 +608,10 @@
         "https://data-table.openstatus.dev/r/data-table-sheet.json",
         "https://data-table.openstatus.dev/r/data-table-filter-command.json"
       ],
-      "dependencies": ["@tanstack/react-table@^9.2.3"]
+      "dependencies": [
+        "@tanstack/react-table@^9.2.3",
+        "@tanstack/react-query@^5.101.4"
+      ]
     },
     {
       "name": "data-table-drizzle",
@@ -639,7 +662,7 @@
       "name": "data-table-query",
       "type": "registry:block",
       "title": "Data Table Query Layer",
-      "description": "React Query infinite query integration with SuperJSON serialization and faceted search helpers.",
+      "description": "React Query infinite query integration with a pluggable transport (base URL, headers, credentials, response parsing), cursor and offset pagination strategies, and faceted search helpers.",
       "files": [
         {
           "path": "src/lib/data-table/index.ts",
@@ -647,6 +670,18 @@
         },
         {
           "path": "src/lib/data-table/create-query-options.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/data-table/transport.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/data-table/contract.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/data-table/conformance.ts",
           "type": "registry:lib"
         }
       ],
@@ -835,6 +870,33 @@
         "sonner@^1.7.2"
       ],
       "docs": "https://data-table.openstatus.dev/docs/actions"
+    },
+    {
+      "name": "data-table-remote",
+      "type": "registry:block",
+      "title": "Data Table Remote",
+      "description": "A headless data table that renders from an API endpoint: point it at a table manifest and a list endpoint and it derives columns, filters, sheet fields, row identity and capability-aware degradation with no per-column code.",
+      "files": [
+        {
+          "path": "src/components/data-table/data-table-remote/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-remote/data-table-remote.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "registryDependencies": [
+        "https://data-table.openstatus.dev/r/data-table.json",
+        "https://data-table.openstatus.dev/r/data-table-schema.json",
+        "https://data-table.openstatus.dev/r/data-table-query.json",
+        "https://data-table.openstatus.dev/r/data-table-nuqs.json"
+      ],
+      "dependencies": [
+        "@tanstack/react-query@^5.101.4",
+        "@tanstack/react-table@^9.2.3",
+        "nuqs@^2.3.0"
+      ]
     }
   ]
 }

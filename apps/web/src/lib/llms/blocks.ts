@@ -46,6 +46,8 @@ export const BLOCK_GUIDANCE: Record<string, string> = {
     "The table should be queryable by AI agents over MCP, using the same schema the UI uses.",
   "data-table-actions":
     "Users need to DO something to rows — replay, acknowledge, delete — not just read them. Actions are declared once next to their Drizzle handler; the list endpoint advertises them and stamps each row with what applies, the UI renders row menus, a bulk bar, and an apply-to-all-matching menu from that JSON, and one POST runs the handler in a transaction. Requires the drizzle block.",
+  "data-table-remote":
+    "The table should render from an API endpoint rather than from per-column code — you own the data and publish only a schema. Serve a table manifest (schema, primaryKey, capabilities, actions) with createTableManifestHandler, then point <DataTableRemote /> at it: columns, filters, sheet fields and row identity are all derived, and anything the endpoint says it cannot compute (facets, counts, chart, backwards paging) degrades instead of rendering empty.",
 };
 
 export type Recipe = {
@@ -98,6 +100,21 @@ export const RECIPES: Recipe[] = [
     blocks: ["data-table", "data-table-schema"],
     notes:
       "Render <DataTableAuto data={json} />, or call inferSchemaFromJSON + createTableSchema.fromJSON to get columns, filters, and sheet fields inferred from the data itself.",
+  },
+  {
+    id: "headless-table",
+    docs: ["table-schema", "data-fetching"],
+    title: "Table pointed at an API endpoint",
+    when: "The data and its endpoint are owned elsewhere, and the app should render whatever the endpoint describes without per-column code.",
+    blocks: [
+      "data-table",
+      "data-table-schema",
+      "data-table-query",
+      "data-table-nuqs",
+      "data-table-remote",
+    ],
+    notes:
+      'Serve a manifest with createTableManifest + createTableManifestHandler on the endpoint that owns the data, then render <DataTableRemote manifestEndpoint="/api/logs/schema" />. Pass initialManifest (a build-time snapshot or a server prefetch) to avoid a round trip before the first paint. Use the transport option for another origin, auth headers, or a plain-JSON API.',
   },
   {
     id: "actionable-table",
