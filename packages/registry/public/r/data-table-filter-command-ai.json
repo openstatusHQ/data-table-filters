@@ -7,7 +7,7 @@
     "ai@^6.0.137",
     "@ai-sdk/react@^3.0.139",
     "zod@^4.3.6",
-    "date-fns@^3.6.0",
+    "date-fns@^4.1.0",
     "lucide-react@^0.469.0",
     "sonner@^1.7.2"
   ],
