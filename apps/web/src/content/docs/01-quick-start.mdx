@@ -5,35 +5,35 @@ author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
   - question: "How do I install data-table-filters?"
-    answer: "In a shadcn project on the Radix library, run `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`. That installs the core table engine, the memory store adapter, all 4 filter types, and the schema system with DataTableAuto. Then render `<DataTableAuto data={rows} />`."
+    answer: "In any shadcn project, run `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`. That installs the core table engine, the memory store adapter, all 4 filter types, and the schema system with DataTableAuto. Then render `<DataTableAuto data={rows} />`."
   - question: "What are the prerequisites?"
-    answer: "A React project with Tailwind CSS v4 and shadcn/ui initialized on the Radix library: `npx shadcn@latest init -b radix -p nova`. The shadcn CLI default (`init -d`) is Base UI, which the blocks do not support yet. The CLI handles all dependency resolution automatically."
+    answer: "A React project with Tailwind CSS v4 and shadcn/ui initialized — either library. `npx shadcn@latest init -d` (Base UI, the CLI default) and `npx shadcn@latest init -b radix -p nova` (Radix) both work. The CLI handles all dependency resolution automatically."
   - question: "Does data-table-filters work with Base UI?"
-    answer: "Not yet. The blocks are written against Radix primitives. On a Base UI project (`components.json` style starting with `base-`) the install completes but the build fails with type errors such as `Property 'delayDuration' does not exist`. Initialize shadcn with `npx shadcn@latest init -b radix -p nova` instead."
+    answer: "Yes, including the shadcn CLI default (`init -d`, style `base-nova`). CI installs the Quick Start into a Base UI project and a Radix project on every change and typechecks both. If you installed before Base UI support landed and see errors such as `Property 'delayDuration' does not exist`, re-add the blocks with `--overwrite`."
 ---
 
 # Quick Start
 
-Three steps: a Radix-based shadcn project, one install command, one paste.
+Three steps: a shadcn project, one install command, one paste.
 Measured on a clean machine, the whole path from `create-next-app` to a green
 `next build` takes about 30 seconds.
 
 ## 1. Prerequisite
 
-> **Prerequisite.** Requires a shadcn project on the Radix library (`npx shadcn@latest init -b radix -p nova`). The shadcn CLI default, Base UI (`init -d`, preset `base-nova`), is not supported yet — the blocks fail to typecheck on it.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). Both are installed and typechecked by CI on every change.
 
 Starting from nothing:
 
 ```bash
 npx create-next-app@latest my-app --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --yes
 cd my-app
-npx shadcn@latest init -b radix -p nova
+npx shadcn@latest init -d
 ```
 
-Already have a shadcn project? Open `components.json`: a `"style"` of
-`radix-…` (or the pre-v4 `new-york` / `default`) works, `base-…` does not. If
-you are on Base UI, see [Type errors right after install](/docs/debugging#type-errors-right-after-install)
-for the fix.
+Already have a shadcn project? Nothing to change: any `"style"` in
+`components.json` works — `base-…` (Base UI), `radix-…`, or the pre-v4
+`new-york` / `default`. The blocks read the primitives from whichever one you
+are on.
 
 ## 2. Install
 
@@ -103,8 +103,7 @@ Let the agent handle the rest:
 
 > Add a data table with filters to my project
 
-It detects your stack (and stops if the project is on Base UI), installs the
-right blocks, and wires them up. For agents without the skill, see
+It detects your stack, installs the right blocks, and wires them up. For agents without the skill, see
 [For AI Agents](/docs/agents) — `llms.txt`, raw markdown docs, and Cursor rules.
 
 ## Blocks

@@ -14,6 +14,7 @@ import type { Row, RowData, Table as TTable } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import * as React from "react";
 import { useDataTable } from "./data-table-provider";
+import { TOOLTIP_DELAY } from "./ui-compat";
 
 interface DataTableFloatingBarProps<TData extends RowData> {
   children: (props: {
@@ -45,7 +46,7 @@ export function DataTableFloatingBar<TData extends RowData>({
             {selectedRowCount} selected
           </span>
           <TooltipProvider>
-            <Tooltip delayDuration={100}>
+            <Tooltip {...TOOLTIP_DELAY}>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"

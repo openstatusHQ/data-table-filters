@@ -11,6 +11,7 @@ import {
 } from "@dtf/registry/components/ui/tooltip";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { X } from "lucide-react";
+import { TOOLTIP_DELAY } from "./ui-compat";
 
 export function DataTableResetButton() {
   const { table } = useDataTable();
@@ -18,7 +19,7 @@ export function DataTableResetButton() {
 
   return (
     <TooltipProvider>
-      <Tooltip delayDuration={100}>
+      <Tooltip {...TOOLTIP_DELAY}>
         <TooltipTrigger asChild>
           <Button variant="ghost" onClick={() => table.resetColumnFilters()}>
             <X className="mr-2 h-4 w-4" />

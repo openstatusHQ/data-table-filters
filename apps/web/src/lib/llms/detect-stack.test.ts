@@ -6,11 +6,10 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { RADIX_INIT_COMMAND } from "./blocks";
 
-// The skill's first step is `scripts/detect-stack.sh`. Since shadcn v4 the CLI
-// default is Base UI, where the blocks fail to typecheck, so the script has to
-// read the component library out of components.json and stop an agent before
-// it installs into the wrong project. These tests run the real script against
-// minimal projects.
+// The skill's first step is `scripts/detect-stack.sh`. The blocks install on
+// either component library, so the script reports which one the project is on
+// rather than gating the install — an agent still needs to know what its `ui/`
+// holds. These tests run the real script against minimal projects.
 
 const script = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -44,16 +43,14 @@ afterEach(() => {
 });
 
 describe("detect-stack.sh component library", () => {
-  it("blocks a Base UI project and prints the fix", () => {
+  it("reports a Base UI project without blocking it", () => {
     const { status, output } = detect(
       project({ "components.json": componentsJson("base-nova") }),
     );
 
     expect(status).toBe(0);
     expect(output).toContain("Component library: base-ui (base-nova)");
-    expect(output).toContain("BLOCKING");
-    expect(output).toContain("Do not install");
-    expect(output).toContain(`${RADIX_INIT_COMMAND} --force --reinstall`);
+    expect(output).not.toContain("BLOCKING");
   });
 
   it("passes a shadcn v4 radix project without a warning", () => {
@@ -92,9 +89,9 @@ describe("detect-stack.sh component library", () => {
     expect(status).toBe(0);
     expect(output).toContain("shadcn/ui: not initialized");
     expect(output).toContain("Component library: unknown");
-    expect(output).toContain(
-      `Initialize on Radix before installing: ${RADIX_INIT_COMMAND}`,
-    );
+    expect(output).toContain("Initialize shadcn first");
+    expect(output).toContain("npx shadcn@latest init -d");
+    expect(output).toContain(RADIX_INIT_COMMAND);
     expect(output).not.toContain("BLOCKING");
   });
 });

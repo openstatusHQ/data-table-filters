@@ -48,13 +48,6 @@ type Fixture = {
   allowedRoots: string[];
   /** Where the Quick Start paste goes. */
   page: string;
-  /**
-   * Which primitives `components.json` makes the CLI resolve `tooltip`,
-   * `accordion`, `dialog` … from. The blocks are written against Radix; on
-   * Base UI (`style: "base-nova"`, the CLI default since shadcn v4) they
-   * install but do not typecheck.
-   */
-  library: "radix" | "base";
 };
 
 const FIXTURES: Fixture[] = [
@@ -62,21 +55,19 @@ const FIXTURES: Fixture[] = [
     name: "next-src",
     allowedRoots: ["src/"],
     page: "src/app/page.tsx",
-    library: "radix",
   },
   {
     name: "next-no-src",
     allowedRoots: ["components/", "lib/", "hooks/"],
     page: "app/page.tsx",
-    library: "radix",
   },
 ];
 
+/** `components.json` style `base-nova`: the shadcn CLI default since v4. */
 const BASE_UI_FIXTURE: Fixture = {
   name: "next-src-base",
   allowedRoots: ["src/"],
   page: "src/app/page.tsx",
-  library: "base",
 };
 
 type Case = {
@@ -107,12 +98,12 @@ const ALL_CASES: Case[] = [
   ]),
   { fixture: FIXTURES[0], ...QUICK_START },
   { fixture: BASE_UI_FIXTURE, ...QUICK_START },
+  // The Quick Start's two blocks already reach the sheet and the cells through
+  // registryDependencies, but the large table is where the most files land on
+  // a library the source isn't written in — the case that would catch the CLI
+  // changing how it translates `asChild` on its way into a Base UI project.
+  { fixture: BASE_UI_FIXTURE, blocks: LARGE_TABLE, label: "large-table" },
 ];
-
-/** The cases that must pass; the Base UI case is pinned separately below. */
-const PASSING_CASES = ALL_CASES.filter(
-  (entry) => entry.fixture.library === "radix",
-);
 
 /**
  * `E2E_CASE=next-src:core` runs one case, so CI can fan the matrix out across
@@ -121,12 +112,9 @@ const PASSING_CASES = ALL_CASES.filter(
 const selected = process.env.E2E_CASE;
 const matches = (entry: Case) =>
   !selected || `${entry.fixture.name}:${entry.label}` === selected;
-const CASES = PASSING_CASES.filter(matches);
-const PINNED_CASES = ALL_CASES.filter(
-  (entry) => entry.fixture.library === "base" && matches(entry),
-);
+const CASES = ALL_CASES.filter(matches);
 
-if (enabled && CASES.length === 0 && PINNED_CASES.length === 0) {
+if (enabled && CASES.length === 0) {
   throw new Error(
     `E2E_CASE="${selected}" matched no case. Available: ${ALL_CASES.map(
       (entry) => `${entry.fixture.name}:${entry.label}`,
@@ -223,72 +211,6 @@ describe.skipIf(!enabled)("registry install", () => {
         const result = typecheck(project);
         expect(result.status, `tsc reported errors:\n${result.output}`).toBe(0);
       }, 900_000);
-    },
-  );
-
-  // The shadcn CLI default since v4 (`init -d`, style `base-nova`) resolves
-  // the blocks' `tooltip`, `accordion`, `dialog` … from Base UI, and the blocks
-  // are written against Radix. This case asserts the *specific* way that
-  // fails today, so an unrelated regression on the base row still goes red,
-  // and so does the day a Base UI port (or dual-shipped ui/ primitives) makes
-  // the whole path pass — the signal to take the Radix prerequisite off every
-  // install surface (README, Quick Start, SKILL.md, llms.txt, get_install_plan).
-  //
-  // Two shapes, depending on the package manager the CLI picks:
-  //
-  // - npm (no lockfile, as create-next-app leaves it) with the blocks still on
-  //   `date-fns@^3`: `shadcn add` exits 1 at "Installing dependencies", an
-  //   ERESOLVE against `@base-ui/react`'s `date-fns@^4` peer. Goes away once
-  //   the date-fns v4 bump (#107) lands, after which only the second shape is
-  //   left;
-  // - the install lands and every file arrives, but tsc rejects Radix-only
-  //   props: `delayDuration` (TooltipProvider), `render` (DialogClose), `type`
-  //   (Accordion), `openDelay` (HoverCard).
-  const RADIX_ONLY_PROPS =
-    /delayDuration|openDelay|Property 'render'|Property 'type'/;
-
-  describe.each(PINNED_CASES)(
-    "$fixture.name / $label (shadcn default, pinned failure)",
-    ({ fixture, blocks, paste }) => {
-      let project: string;
-
-      afterAll(() => {
-        if (project) cleanupProject(project);
-      });
-
-      it("fails the documented way, and no other", () => {
-        project = prepareProject(fixture.name);
-
-        const install = installBlocks(project, blocks, localRegistry.dir);
-        if (install.status !== 0) {
-          expect(
-            install.output,
-            `shadcn add failed for a reason other than the date-fns peer conflict:\n${install.output}`,
-          ).toMatch(/ERESOLVE[\s\S]*date-fns/);
-          return;
-        }
-
-        expect(
-          scatteredGroups(expectedFilesFor(registry.items, blocks), [
-            ...snapshot(project).keys(),
-          ]),
-        ).toEqual([]);
-
-        if (paste) writeFileSync(join(project, fixture.page), paste);
-
-        const deps = npmInstall(project);
-        expect(deps.status, `npm install failed:\n${deps.output}`).toBe(0);
-
-        const result = typecheck(project);
-        expect(
-          result.status,
-          "the blocks typecheck on Base UI — remove the Radix prerequisite from every install surface and promote this case into the matrix above",
-        ).not.toBe(0);
-        expect(
-          result.output,
-          `tsc failed for a reason other than Radix-only props:\n${result.output}`,
-        ).toMatch(RADIX_ONLY_PROPS);
-      }, 1_800_000);
     },
   );
 

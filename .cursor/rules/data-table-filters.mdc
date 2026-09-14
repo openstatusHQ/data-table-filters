@@ -13,9 +13,9 @@ Claude Code skill provides.
 Blocks are installed into the repo with the shadcn CLI — this is not an npm
 dependency. Stack: React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui.
 
-> **Prerequisite.** Requires a shadcn project on the Radix library (`npx shadcn@latest init -b radix -p nova`). The shadcn CLI default, Base UI (`init -d`, preset `base-nova`), is not supported yet — the blocks fail to typecheck on it.
-Check `components.json` first: a `"style"` starting with `base-` means Base UI —
-stop and tell the user instead of installing.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). Both are installed and typechecked by CI on every change.
+No library check needed before installing: the blocks resolve their primitives
+from whichever library `components.json` names.
 
 Full docs for agents:
 

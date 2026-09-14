@@ -1,11 +1,11 @@
 ---
 title: "Debugging"
-description: "Type errors right after install (Base UI vs Radix), and performance debugging with react-scan and TanStack Query devtools"
+description: "Type errors right after install from an older copy of the blocks, and performance debugging with react-scan and TanStack Query devtools"
 author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
   - question: "Why do I get type errors like 'delayDuration does not exist' right after installing the blocks?"
-    answer: "Your shadcn project is on Base UI (the CLI default since v4, components.json style starting with base-). The blocks are written against Radix. Switch with `npx shadcn@latest init -b radix -p nova --force --reinstall`, then re-add the blocks with --overwrite."
+    answer: "You have a copy of the blocks from before they supported Base UI, installed into a Base UI project (the CLI default since v4, components.json style starting with base-). Re-add the blocks with --overwrite; the current ones install on either library."
   - question: "How do I debug performance issues in the data table?"
     answer: "Enable react-scan with NEXT_PUBLIC_REACT_SCAN=true to visualize re-renders, use TanStack Query devtools (auto-enabled in dev mode) to inspect query states, and set NEXT_PUBLIC_TABLE_DEBUG=true for table-level debug logs."
   - question: "What debugging tools are available?"
@@ -48,34 +48,31 @@ npm error Could not resolve dependency:
 npm error peerOptional date-fns@"^4.0.0" from @base-ui/react@1.8.0
 ```
 
-**Cause.** The project is on Base UI. Since shadcn v4, `npx shadcn@latest init -d`
-defaults to the `base-nova` preset, which installs Base UI primitives
-(`@base-ui/react`). Their props differ from Radix — `delay` instead of
-`delayDuration`, `render` instead of `asChild`, no `type` on `Accordion` — and the
-blocks are written against Radix. The `data-table` block ships no `ui/` files of
-its own, so the CLI resolves `tooltip`, `accordion`, `dialog`, and the rest from
-whatever library your `components.json` names. (The npm variant is the same
-mismatch one layer down: the blocks pin `date-fns` v3, and `@base-ui/react`
-asks for v4 as a peer.) Check `components.json`: a `"style"` starting with
-`base-` is Base UI.
+**Cause.** A copy of the blocks from before they supported Base UI, installed
+into a Base UI project. Since shadcn v4, `npx shadcn@latest init -d` defaults to
+the `base-nova` preset, which installs Base UI primitives (`@base-ui/react`)
+whose props differ from Radix — `delay` instead of `delayDuration`, `render`
+instead of `asChild`, no `type` on `Accordion`. The blocks ship no `ui/` files
+of their own, so the CLI resolves `tooltip`, `dialog` and the rest from whatever
+library your `components.json` names, and the older blocks assumed Radix. (The
+npm variant is the same mismatch one layer down: those blocks pinned `date-fns`
+v3, and `@base-ui/react` asks for v4 as a peer.)
 
-**Fix.** Switch the project to Radix, then reinstall the blocks so they pick up
-the Radix primitives:
+**Fix.** Re-add the blocks. The current ones install on either library:
 
 ```bash
-npx shadcn@latest init -b radix -p nova --force --reinstall
 npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --overwrite
 ```
 
-The CLI asks once whether to continue — answer `y`. `--reinstall` rewrites every
-file in `components/ui/`; if you customized any of them, re-apply your changes
-afterwards. Verified on a broken Base UI project: the switch plus the re-add
-takes about 20 seconds and leaves `tsc` and `next build` green. Starting fresh? Initialize with
-`npx shadcn@latest init -b radix -p nova` and the errors never appear — see the
-[Quick Start](/docs/quick-start#1-prerequisite).
+`--overwrite` rewrites the block files — if you edited them, re-apply your
+changes afterwards.
 
-Base UI support is tracked; until it lands, Radix is the prerequisite on every
-install surface (`README`, `llms.txt`, the skill, and the MCP `get_install_plan`).
+How the blocks manage it: the shadcn CLI rewrites `asChild` into `render` on the
+way into a Base UI project, the few props it doesn't translate are spread from
+`components/data-table/ui-compat.ts`, and `accordion` ships with the block
+rather than resolving from your `ui/` (as `sheet` and `sortable` already did),
+because the two libraries disagree there on more than a prop name. Both paths
+are installed and typechecked in CI on every change, so neither can rot.
 
 ## Performance
 

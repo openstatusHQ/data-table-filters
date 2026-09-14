@@ -16,6 +16,7 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 import { DataTableResetButton } from "./data-table-reset-button";
 import { DataTableViewOptions } from "./data-table-view-options";
+import { TOOLTIP_DELAY } from "./ui-compat";
 
 interface DataTableToolbarProps {
   renderActions?: () => React.ReactNode;
@@ -35,7 +36,7 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <TooltipProvider>
-          <Tooltip delayDuration={100}>
+          <Tooltip {...TOOLTIP_DELAY}>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"

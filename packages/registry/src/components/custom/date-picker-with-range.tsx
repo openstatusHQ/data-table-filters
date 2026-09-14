@@ -18,7 +18,6 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
 } from "@dtf/registry/components/ui/select";
 import { Separator } from "@dtf/registry/components/ui/separator";
 import { presets as defaultPresets } from "@dtf/registry/constants/date-preset";
@@ -187,8 +186,15 @@ function DatePresetsSelect({
         }
       }}
     >
-      <SelectTrigger>
-        <SelectValue placeholder="Date Presets" />
+      {/* REMINDER: the label is rendered here rather than through the select
+          value's placeholder. Base UI has no `placeholder` prop there — it
+          reads the label off the root's `items` array — and `placeholder` is a
+          valid HTML attribute, so passing it typechecks and then renders an
+          empty trigger. Picking the muted colour by hand keeps the placeholder
+          looking the same on both libraries. */}
+      <SelectTrigger className={cn(!value && "text-muted-foreground")}>
+        {presets.find((preset) => preset.shortcut === value)?.label ??
+          "Date Presets"}
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

@@ -1,4 +1,8 @@
 import {
+  TOOLTIP_DELAY,
+  TOOLTIP_NOT_HOVERABLE,
+} from "@dtf/registry/components/data-table/ui-compat";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -45,8 +49,8 @@ export function TextWithTooltip({
   }, []);
 
   return (
-    <TooltipProvider delayDuration={100} disableHoverableContent>
-      <Tooltip>
+    <TooltipProvider>
+      <Tooltip {...TOOLTIP_DELAY} {...TOOLTIP_NOT_HOVERABLE}>
         <TooltipTrigger disabled={!isTruncated} asChild>
           <div
             ref={textRef}

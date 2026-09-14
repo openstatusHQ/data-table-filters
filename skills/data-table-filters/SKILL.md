@@ -20,7 +20,7 @@ description: >
 
 A shadcn registry for building filterable, sortable data tables with infinite scroll and virtualization. Start with the core block, then extend with optional blocks for command palette, cell renderers, sheet panels, store adapters, schema generation, Drizzle ORM helpers, and React Query integration.
 
-> **Prerequisite.** Requires a shadcn project on the Radix library (`npx shadcn@latest init -b radix -p nova`). The shadcn CLI default, Base UI (`init -d`, preset `base-nova`), is not supported yet — the blocks fail to typecheck on it.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). Both are installed and typechecked by CI on every change.
 
 ## Registry Blocks
 
@@ -28,7 +28,7 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 
 | Block                            | Install URL                                           | What it adds                                                                                                               |
 | -------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (59 files)                                                       |
+| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (61 files)                                                       |
 | **data-table-filter-command**    | `.../r/data-table-filter-command.json`                | Command palette with history + keyboard shortcuts                                                                          |
 | **data-table-cell**              | `.../r/data-table-cell.json`                          | 12 cell renderers (text, code, number, bar, heatmap, gauge, badge, boolean, star, status-code, level-indicator, timestamp) |
 | **data-table-sheet**             | `.../r/data-table-sheet.json`                         | Row detail side panel (auto-installs cells)                                                                                |
@@ -46,7 +46,7 @@ All URLs use base `https://data-table.openstatus.dev`.
 
 ## Quick Start
 
-1. Run `scripts/detect-stack.sh` to detect the user's project setup. If it prints a `BLOCKING` line, the project is on Base UI: stop, show the user the fix it prints, and do not install. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -b radix -p nova` first (never `init -d`), then continue.
+1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue.
 2. Install core + schema: `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`
 3. Scaffold a minimal working table (see below), or render `<DataTableAuto data={rows} />` when the data shape is unknown
 4. Extend with additional blocks as needed

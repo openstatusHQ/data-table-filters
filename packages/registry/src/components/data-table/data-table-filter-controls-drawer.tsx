@@ -22,6 +22,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { FilterIcon } from "lucide-react";
 import React from "react";
 import { DataTableFilterControls } from "./data-table-filter-controls";
+import { TOOLTIP_DELAY } from "./ui-compat";
 
 export function DataTableFilterControlsDrawer() {
   const triggerButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -34,7 +35,7 @@ export function DataTableFilterControlsDrawer() {
   return (
     <Drawer>
       <TooltipProvider>
-        <Tooltip delayDuration={100}>
+        <Tooltip {...TOOLTIP_DELAY}>
           <TooltipTrigger asChild>
             <DrawerTrigger asChild>
               <Button
