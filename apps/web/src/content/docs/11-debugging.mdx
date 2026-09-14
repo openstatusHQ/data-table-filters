@@ -37,14 +37,27 @@ src/lib/table-schema/generators/columns.tsx
   Type 'boolean | "indeterminate"' is not assignable to type 'boolean | undefined'.
 ```
 
+With npm, it can fail one step earlier — `shadcn add` itself exits during
+"Installing dependencies":
+
+```
+npm error ERESOLVE could not resolve
+npm error While resolving: @base-ui/react@1.8.0
+npm error Found: date-fns@3.6.0
+npm error Could not resolve dependency:
+npm error peerOptional date-fns@"^4.0.0" from @base-ui/react@1.8.0
+```
+
 **Cause.** The project is on Base UI. Since shadcn v4, `npx shadcn@latest init -d`
 defaults to the `base-nova` preset, which installs Base UI primitives
 (`@base-ui/react`). Their props differ from Radix — `delay` instead of
 `delayDuration`, `render` instead of `asChild`, no `type` on `Accordion` — and the
 blocks are written against Radix. The `data-table` block ships no `ui/` files of
 its own, so the CLI resolves `tooltip`, `accordion`, `dialog`, and the rest from
-whatever library your `components.json` names. Check it: a `"style"` starting
-with `base-` is Base UI.
+whatever library your `components.json` names. (The npm variant is the same
+mismatch one layer down: the blocks pin `date-fns` v3, and `@base-ui/react`
+asks for v4 as a peer.) Check `components.json`: a `"style"` starting with
+`base-` is Base UI.
 
 **Fix.** Switch the project to Radix, then reinstall the blocks so they pick up
 the Radix primitives:
