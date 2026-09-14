@@ -2,6 +2,8 @@
 
 All extension blocks install via `npx shadcn@latest add <url>` (base: `https://data-table.openstatus.dev`).
 
+> **Prerequisite:** a shadcn project on the Radix library — `npx shadcn@latest init -b radix -p nova`. The shadcn CLI default (`init -d`, Base UI) is not supported yet: the blocks are written against Radix and fail to typecheck on Base UI.
+
 ## Table of Contents
 
 - [Command Palette](#command-palette)

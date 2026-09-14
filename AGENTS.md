@@ -14,6 +14,10 @@ to eject from; after install, the code belongs to the user.
 **Stack:** React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui. Next.js App
 Router is first-class; the blocks work in any React app.
 
+> **Prerequisite:** a shadcn project on the Radix library — `npx shadcn@latest init -b radix -p nova`. The shadcn CLI default (`init -d`, Base UI) is not supported yet: the blocks are written against Radix and fail to typecheck on Base UI.
+> Check `components.json` before installing: a `"style"` starting with `base-`
+> means Base UI. Stop and tell the user rather than installing into it.
+
 **Load the full instructions before wiring anything up:**
 
 | Resource                                                | What it gives you                                       |
@@ -48,7 +52,8 @@ npx skills add https://github.com/openstatushq/data-table-filters --skill data-t
 
 ### Install recipes
 
-Pick the goal, run the command, then wire it up per the docs.
+Pick the goal, run the command, then wire it up per the docs. Every recipe
+assumes the Radix prerequisite above.
 
 **Large table — rows live in SQL and must be filtered server-side (100k+ rows):**
 

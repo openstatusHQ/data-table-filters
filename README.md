@@ -8,11 +8,25 @@ Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn mo
 
 ## Install
 
-Install blocks via the shadcn registry:
+> **Prerequisite:** a shadcn project on the Radix library — `npx shadcn@latest init -b radix -p nova`. The shadcn CLI default (`init -d`, Base UI) is not supported yet: the blocks are written against Radix and fail to typecheck on Base UI.
+
+One command installs the core block and the schema system:
 
 ```bash
-npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json
+npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json
 ```
+
+Then render a table from any array of objects — columns, filters, and cell renderers are inferred:
+
+```tsx
+import { DataTableAuto } from "@/components/data-table/data-table-auto";
+
+export default function Page() {
+  return <DataTableAuto data={rows} />;
+}
+```
+
+From `create-next-app` to a green `next build` this takes about 30 seconds on a clean machine. See the [Quick Start](https://data-table.openstatus.dev/docs/quick-start) for the full walkthrough, and add any block below as you need it.
 
 | Block                          | Install URL                               | What it adds                                                                                                               |
 | ------------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |

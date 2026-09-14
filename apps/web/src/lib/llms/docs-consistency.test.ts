@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { RECIPES, registryItems } from "./blocks";
+import { RADIX_INIT_COMMAND, RECIPES, registryItems } from "./blocks";
 
 // The install commands, block lists, and counts an agent reads are written by
 // hand in half a dozen files — README, AGENTS.md, the Cursor rule, the skill,
@@ -103,13 +103,50 @@ describe("registry urls in agent-facing docs", () => {
     },
   );
 
-  it("documents the whole catalog in README and the skill", () => {
-    for (const file of ["README.md", "skills/data-table-filters/SKILL.md"]) {
+  it("documents the whole catalog in README, the skill, and the Quick Start", () => {
+    // The block count drifted three ways (10 / 11 / 13) before this pinned it.
+    for (const file of [
+      "README.md",
+      "skills/data-table-filters/SKILL.md",
+      "apps/web/src/content/docs/01-quick-start.mdx",
+    ]) {
       const source = read(file);
       for (const name of blockNames) {
         expect(source, `${file} lists ${name}`).toContain(`/r/${name}.json`);
       }
     }
+  });
+});
+
+describe("the radix prerequisite", () => {
+  // The blocks fail to typecheck on Base UI, which is the shadcn CLI default
+  // since v4. A stranger following any install surface — human or agent —
+  // must read the prerequisite before the first command, and it must be the
+  // same command everywhere so it is searchable.
+  it.each(INSTALL_DOC_FILES)("is stated in %s", (file) => {
+    const source = read(file);
+    expect(source, `${file} names the init command`).toContain(
+      RADIX_INIT_COMMAND,
+    );
+    expect(source, `${file} says Base UI is unsupported`).toMatch(
+      /Base UI[^\n]*not supported/,
+    );
+  });
+
+  it("appears before the first install command in the Quick Start", () => {
+    const source = read("apps/web/src/content/docs/01-quick-start.mdx");
+    const body = source.slice(source.indexOf("# Quick Start"));
+
+    expect(body.indexOf(RADIX_INIT_COMMAND)).toBeGreaterThan(-1);
+    expect(body.indexOf(RADIX_INIT_COMMAND)).toBeLessThan(
+      body.indexOf("npx shadcn@latest add"),
+    );
+  });
+
+  it("is what the skill's detect script tells the user to run", () => {
+    expect(read("skills/data-table-filters/scripts/detect-stack.sh")).toContain(
+      RADIX_INIT_COMMAND,
+    );
   });
 });
 

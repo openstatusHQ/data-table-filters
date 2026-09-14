@@ -1,9 +1,11 @@
 ---
 title: "Debugging"
-description: "Performance debugging with react-scan and TanStack Query devtools"
+description: "Type errors right after install (Base UI vs Radix), and performance debugging with react-scan and TanStack Query devtools"
 author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
+  - question: "Why do I get type errors like 'delayDuration does not exist' right after installing the blocks?"
+    answer: "Your shadcn project is on Base UI (the CLI default since v4, components.json style starting with base-). The blocks are written against Radix. Switch with `npx shadcn@latest init -b radix -p nova --force --reinstall`, then re-add the blocks with --overwrite."
   - question: "How do I debug performance issues in the data table?"
     answer: "Enable react-scan with NEXT_PUBLIC_REACT_SCAN=true to visualize re-renders, use TanStack Query devtools (auto-enabled in dev mode) to inspect query states, and set NEXT_PUBLIC_TABLE_DEBUG=true for table-level debug logs."
   - question: "What debugging tools are available?"
@@ -11,6 +13,58 @@ faq:
 ---
 
 # Debugging
+
+## Type errors right after install
+
+`shadcn add` finished, but `tsc` or `next build` fails inside the files it just
+wrote, with errors like these:
+
+```
+src/components/data-table/data-table-toolbar.tsx
+  Type '{ children: Element[]; delayDuration: number; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
+  Property 'delayDuration' does not exist on type 'TooltipProviderProps'.
+
+src/components/data-table/data-table-sheet/data-table-sheet-details.tsx
+  Property 'render' does not exist on type 'DialogCloseProps'.
+
+src/components/data-table/data-table-filter-controls.tsx
+  Property 'type' does not exist on type 'AccordionProps'.
+
+src/components/data-table/data-table-infinite/hover-card-timestamp.tsx
+  Property 'openDelay' does not exist on type 'HoverCardProps'.
+
+src/lib/table-schema/generators/columns.tsx
+  Type 'boolean | "indeterminate"' is not assignable to type 'boolean | undefined'.
+```
+
+**Cause.** The project is on Base UI. Since shadcn v4, `npx shadcn@latest init -d`
+defaults to the `base-nova` preset, which installs Base UI primitives
+(`@base-ui/react`). Their props differ from Radix — `delay` instead of
+`delayDuration`, `render` instead of `asChild`, no `type` on `Accordion` — and the
+blocks are written against Radix. The `data-table` block ships no `ui/` files of
+its own, so the CLI resolves `tooltip`, `accordion`, `dialog`, and the rest from
+whatever library your `components.json` names. Check it: a `"style"` starting
+with `base-` is Base UI.
+
+**Fix.** Switch the project to Radix, then reinstall the blocks so they pick up
+the Radix primitives:
+
+```bash
+npx shadcn@latest init -b radix -p nova --force --reinstall
+npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --overwrite
+```
+
+The CLI asks once whether to continue — answer `y`. `--reinstall` rewrites every
+file in `components/ui/`; if you customized any of them, re-apply your changes
+afterwards. Verified on a broken Base UI project: the switch plus the re-add
+takes about 20 seconds and leaves `tsc` and `next build` green. Starting fresh? Initialize with
+`npx shadcn@latest init -b radix -p nova` and the errors never appear — see the
+[Quick Start](/docs/quick-start#1-prerequisite).
+
+Base UI support is tracked; until it lands, Radix is the prerequisite on every
+install surface (`README`, `llms.txt`, the skill, and the MCP `get_install_plan`).
+
+## Performance
 
 We use `react-scan` for performance debugging:
 

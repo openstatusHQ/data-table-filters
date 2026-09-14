@@ -12,6 +12,19 @@ export type RegistryItem = {
 export const registryItems: RegistryItem[] = manifest.items;
 
 /**
+ * The one prerequisite every install surface states, word for word.
+ *
+ * The blocks are written against Radix. Since shadcn v4 the CLI default
+ * (`init -d`, preset `base-nova`) installs Base UI primitives whose props
+ * differ (`delay` for `delayDuration`, `render` for `asChild`, no `type` on
+ * Accordion), so the blocks fail to typecheck there. `docs-consistency.test.ts`
+ * checks that every hand-written install surface carries this line too.
+ */
+export const RADIX_INIT_COMMAND = "npx shadcn@latest init -b radix -p nova";
+
+export const PREREQUISITE = `Requires a shadcn project on the Radix library (\`${RADIX_INIT_COMMAND}\`). The shadcn CLI default, Base UI (\`init -d\`, preset \`base-nova\`), is not supported yet — the blocks fail to typecheck on it.`;
+
+/**
  * Agent-facing "when do I need this block?" guidance.
  *
  * `registry.json` descriptions say what a block *is*; an agent picking blocks

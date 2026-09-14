@@ -13,6 +13,10 @@ Claude Code skill provides.
 Blocks are installed into the repo with the shadcn CLI — this is not an npm
 dependency. Stack: React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui.
 
+> **Prerequisite:** a shadcn project on the Radix library — `npx shadcn@latest init -b radix -p nova`. The shadcn CLI default (`init -d`, Base UI) is not supported yet: the blocks are written against Radix and fail to typecheck on Base UI.
+Check `components.json` first: a `"style"` starting with `base-` means Base UI —
+stop and tell the user instead of installing.
+
 Full docs for agents:
 
 - MCP server (ask instead of fetch): https://data-table.openstatus.dev/api/mcp
