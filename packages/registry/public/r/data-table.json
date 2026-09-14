@@ -22,6 +22,7 @@
     "@dnd-kit/utilities@^3.2.2"
   ],
   "registryDependencies": [
+    "utils",
     "button",
     "input",
     "input-group",
@@ -239,11 +240,6 @@
     {
       "path": "src/lib/store/adapters/memory/index.ts",
       "content": "/**\n * In-Memory Adapter for BYOS\n *\n * A lightweight adapter that stores filter state in refs with a subscriber\n * pattern, compatible with React's useSyncExternalStore. No URL sync or\n * external store needed — ideal for the builder where state is ephemeral.\n */\n\n\"use client\";\n\nimport { useCallback, useMemo, useRef } from \"react\";\nimport type { InternalStoreAdapter } from \"../../adapter/types\";\nimport { getSchemaDefaults } from \"../../schema/serialization\";\nimport type { SchemaDefinition, StoreSnapshot } from \"../../schema/types\";\n\nexport function useMemoryAdapter<T extends Record<string, unknown>>(\n  schema: SchemaDefinition,\n  options?: { id?: string },\n): InternalStoreAdapter<T> {\n  const defaults = useMemo(() => getSchemaDefaults(schema) as T, [schema]);\n\n  const stateRef = useRef<T>({ ...defaults });\n  const versionRef = useRef(0);\n  const listenersRef = useRef(new Set<() => void>());\n  const pausedRef = useRef(false);\n  const pendingRef = useRef<Partial<T> | null>(null);\n\n  const notify = useCallback(() => {\n    for (const listener of listenersRef.current) {\n      listener();\n    }\n  }, []);\n\n  const adapter = useMemo<InternalStoreAdapter<T>>(() => {\n    return {\n      subscribe(listener: () => void) {\n        listenersRef.current.add(listener);\n        return () => {\n          listenersRef.current.delete(listener);\n        };\n      },\n\n      getSnapshot(): StoreSnapshot<T> {\n        return {\n          state: stateRef.current,\n          version: versionRef.current,\n        };\n      },\n\n      getServerSnapshot(): StoreSnapshot<T> {\n        return {\n          state: { ...defaults } as T,\n          version: 0,\n        };\n      },\n\n      setState(partial: Partial<T>) {\n        if (pausedRef.current) {\n          pendingRef.current = {\n            ...(pendingRef.current ?? {}),\n            ...partial,\n          } as Partial<T>;\n          return;\n        }\n\n        stateRef.current = { ...stateRef.current, ...partial };\n        versionRef.current++;\n        notify();\n      },\n\n      setField<K extends keyof T>(key: K, value: T[K]) {\n        this.setState({ [key]: value } as unknown as Partial<T>);\n      },\n\n      reset(fields?: (keyof T)[]) {\n        if (fields) {\n          const resetPartial: Partial<T> = {};\n          for (const field of fields) {\n            resetPartial[field] = defaults[field];\n          }\n          this.setState(resetPartial);\n        } else {\n          stateRef.current = { ...defaults };\n          versionRef.current++;\n          notify();\n        }\n      },\n\n      pause() {\n        pausedRef.current = true;\n      },\n\n      resume() {\n        pausedRef.current = false;\n        if (pendingRef.current) {\n          const pending = pendingRef.current;\n          pendingRef.current = null;\n          this.setState(pending);\n        }\n      },\n\n      isPaused() {\n        return pausedRef.current;\n      },\n\n      destroy() {\n        listenersRef.current.clear();\n      },\n\n      getTableId() {\n        return options?.id ?? \"memory\";\n      },\n\n      getSchema() {\n        return schema;\n      },\n\n      getDefaults() {\n        return defaults;\n      },\n    };\n  }, [schema, defaults, notify]);\n\n  return adapter;\n}\n",
-      "type": "registry:lib"
-    },
-    {
-      "path": "src/lib/utils.ts",
-      "content": "import { clsx, type ClassValue } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
       "type": "registry:lib"
     },
     {
