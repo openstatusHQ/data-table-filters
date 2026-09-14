@@ -296,17 +296,22 @@ describe("coerceRowTimestamps", () => {
     expect(coerceRowTimestamps(row, ["__proto__.x"])).toEqual(row);
   });
 
-  // The inherited object has to hold a *coercible* value, or the write never
-  // happens and the test passes with or without the guard.
-  it("refuses to write through an inherited intermediate object", () => {
+  // What this actually proves: `resolveOwnPath` refuses the inherited segment,
+  // so the read yields nothing and no write is attempted. Read and write share
+  // one resolver, so there is one guard here rather than a second, unreachable
+  // copy in the writer.
+  //
+  // The inherited object has to hold a *coercible* value, or the read returns
+  // undefined for an unrelated reason and the test passes either way.
+  it("does not write through an inherited intermediate object", () => {
     const shared = { nested: { when: "2024-01-01T00:00:00.000Z" } };
     const rowA = Object.create(shared) as Record<string, unknown>;
     const rowB = Object.create(shared) as Record<string, unknown>;
 
     coerceRowTimestamps(rowA, ["nested.when"]);
 
-    // Writing through the inherited `nested` would convert it in place, and
-    // every row sharing that prototype would see the change.
+    // Converting it in place would change what every row sharing that
+    // prototype sees.
     expect(shared.nested.when).toBe("2024-01-01T00:00:00.000Z");
     expect((rowB.nested as Record<string, unknown>).when).toBe(
       "2024-01-01T00:00:00.000Z",

@@ -130,51 +130,65 @@ export function timestampKeys(schema: TimestampKeySource): string[] {
     .filter(isSafeKeyPath);
 }
 
-/** Reads a possibly-dotted key path off a row. */
-function getPath(row: Record<string, unknown>, path: string): unknown {
-  if (!isSafeKeyPath(path)) return undefined;
+/**
+ * Resolve a dotted path to the object that owns its final segment.
+ *
+ * One resolver for both reading and writing. Two copies of this traversal meant
+ * two copies of the own-property guard — and the one in the writer was
+ * unreachable, because the reader ran first and already refused an inherited
+ * segment. A guard that cannot execute is a guard nobody can test, and its
+ * test quietly asserts something else.
+ *
+ * Returns `null` when the path is unsafe or any intermediate segment is not the
+ * object's own data.
+ */
+function resolveOwnPath(
+  row: Record<string, unknown>,
+  path: string,
+): { parent: Record<string, unknown>; key: string } | null {
+  if (!isSafeKeyPath(path)) return null;
   // A row may carry the dotted key literally — `createDrizzleHandler` projects
-  // `"timing.dns"` as a flat property — so the exact key wins before the path
-  // is walked.
-  if (Object.hasOwn(row, path)) return row[path];
-  if (!path.includes(".")) return undefined;
-  let current: unknown = row;
-  for (const segment of path.split(".")) {
-    if (current === null || typeof current !== "object") return undefined;
-    // Own data only. Without this, `"meta.toString"` resolves an inherited
-    // method that is identical on every row.
-    if (!Object.hasOwn(current, segment)) return undefined;
-    current = (current as Record<string, unknown>)[segment];
+  // `"timing.dns"` as a flat property — so the exact key wins before walking.
+  if (Object.hasOwn(row, path) || !path.includes(".")) {
+    return { parent: row, key: path };
   }
-  return current;
+
+  const segments = path.split(".");
+  const key = segments.pop()!;
+  let current: Record<string, unknown> = row;
+  for (const segment of segments) {
+    // Own data only. An inherited intermediate is shared with every other row
+    // on that prototype, and `"meta.toString"` would otherwise resolve a method
+    // that is identical on every row.
+    if (!Object.hasOwn(current, segment)) return null;
+    const next = current[segment];
+    if (next === null || typeof next !== "object") return null;
+    current = next as Record<string, unknown>;
+  }
+  return { parent: current, key };
 }
 
-/** Writes a possibly-dotted key path on a row, creating objects as needed. */
+/** Reads a possibly-dotted key path off a row. */
+function getPath(row: Record<string, unknown>, path: string): unknown {
+  const target = resolveOwnPath(row, path);
+  if (!target) return undefined;
+  // The final segment must be own data too: an inherited `toString` at the end
+  // of the path is the same leak as one in the middle.
+  return Object.hasOwn(target.parent, target.key)
+    ? target.parent[target.key]
+    : undefined;
+}
+
+/** Writes a possibly-dotted key path on a row, if every segment is own data. */
 function setPath(
   row: Record<string, unknown>,
   path: string,
   value: unknown,
 ): void {
-  if (!isSafeKeyPath(path)) return;
-  // Mirrors `getPath`: a literal dotted key is written back where it was read.
-  if (Object.hasOwn(row, path) || !path.includes(".")) {
-    row[path] = value;
-    return;
-  }
-  const segments = path.split(".");
-  const last = segments.pop()!;
-  let current: Record<string, unknown> = row;
-  for (const segment of segments) {
-    // Own data only. An inherited intermediate object is shared with every
-    // other row on that prototype, so writing through it corrupts siblings.
-    if (!Object.hasOwn(current, segment)) return;
-    const next = current[segment];
-    if (next === null || typeof next !== "object") return;
-    current = next as Record<string, unknown>;
-  }
-  // `last` may legitimately not exist yet, so `hasOwn` cannot gate it —
-  // `isSafeKeyPath` above is what keeps it from being `__proto__`.
-  current[last] = value;
+  const target = resolveOwnPath(row, path);
+  // The final key may legitimately not exist yet, so `hasOwn` cannot gate it —
+  // `isSafeKeyPath` inside the resolver is what keeps it from being `__proto__`.
+  if (target) target.parent[target.key] = value;
 }
 
 /**

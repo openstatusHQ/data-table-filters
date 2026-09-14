@@ -109,15 +109,17 @@ describe("applyRenderers", () => {
     });
 
     const onUnknownKey = vi.fn();
+    const onUnusableColumn = vi.fn();
     const result = applyRenderers(
       definition,
       { uuid: { cell } },
-      {
-        onUnknownKey,
-      },
+      { onUnknownKey, onUnusableColumn },
     );
 
-    expect(onUnknownKey).toHaveBeenCalledWith("__proto__");
+    // Reported as an unusable schema column, not as a stale override — the
+    // override warning would send the reader hunting for one that never existed.
+    expect(onUnusableColumn).toHaveBeenCalledWith("__proto__");
+    expect(onUnknownKey).not.toHaveBeenCalled();
     expect(Object.keys(result)).toEqual(["uuid", "level", "latency"]);
     // The prototype must be untouched — a reassigned one is the actual damage.
     expect(Object.getPrototypeOf(result)).toBe(Object.prototype);

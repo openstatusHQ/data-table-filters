@@ -36,8 +36,7 @@ export type RendererOverrides = Record<string, ColRenderers>;
 
 export type ApplyRenderersOptions = {
   /**
-   * Called for an override whose key is not in the schema, and for a schema
-   * column whose key is unusable (a prototype-reaching name).
+   * Called for an override whose key is not in the schema.
    *
    * Worth listening to: a remote schema can drop a column between deploys, and
    * an override left behind for it is silently dead. The default warns to the
@@ -45,12 +44,29 @@ export type ApplyRenderersOptions = {
    * a table.
    */
   onUnknownKey?: (key: string) => void;
+  /**
+   * Called for a schema column whose key cannot be used.
+   *
+   * A separate channel from {@link onUnknownKey} because the two say opposite
+   * things: one means "your override names nothing", the other means "the
+   * schema's own column is unusable". Reporting a dropped column through the
+   * override warning sends the reader looking for a stale override that does
+   * not exist.
+   */
+  onUnusableColumn?: (key: string) => void;
 };
 
 function defaultOnUnknownKey(key: string): void {
   console.warn(
     `[applyRenderers] no column ${JSON.stringify(key)} in the schema — ` +
       `the override will not be used. Did the endpoint's schema change?`,
+  );
+}
+
+function defaultOnUnusableColumn(key: string): void {
+  console.warn(
+    `[applyRenderers] dropped schema column ${JSON.stringify(key)}: the key ` +
+      `reaches an object prototype, so it cannot address a column.`,
   );
 }
 
@@ -70,6 +86,7 @@ export function applyRenderers(
   options?: ApplyRenderersOptions,
 ): TableSchemaDefinition {
   const onUnknownKey = options?.onUnknownKey ?? defaultOnUnknownKey;
+  const onUnusableColumn = options?.onUnusableColumn ?? defaultOnUnusableColumn;
   const keys = Object.keys(overrides);
   if (keys.length === 0) return definition;
 
@@ -86,7 +103,7 @@ export function applyRenderers(
     // from every `Object.keys` consumer with no diagnostic. Guarding only the
     // override lookup still ran that assignment on the pass-through path.
     if (!isSafeColumnKey(key)) {
-      onUnknownKey(key);
+      onUnusableColumn(key);
       continue;
     }
     const override = Object.hasOwn(overrides, key) ? overrides[key] : undefined;
