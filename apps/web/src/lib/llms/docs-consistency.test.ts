@@ -123,12 +123,12 @@ describe("registry urls in agent-facing docs", () => {
   });
 });
 
-describe("the radix prerequisite", () => {
-  // The blocks fail to typecheck on Base UI, which is the shadcn CLI default
-  // since v4. A stranger following any install surface — human or agent —
-  // must read the prerequisite before the first install command, and it is
-  // the one sentence from blocks.ts, verbatim, so that llms.txt, the MCP
-  // server, and every hand-written page say the same searchable thing.
+describe("the component library line", () => {
+  // Which shadcn libraries the blocks install on is the first thing a stranger
+  // needs — human or agent — and it has to arrive before the first install
+  // command. It is the one sentence from blocks.ts, verbatim, so that
+  // llms.txt, the MCP server, and every hand-written page say the same
+  // searchable thing.
 
   /** The page as a reader meets it: mdx frontmatter (FAQ answers) stripped. */
   function body(file: string): string {

@@ -112,7 +112,7 @@ describe("docs mcp server", () => {
     expect(result.instructions).toContain("get_install_plan");
   });
 
-  it("states the radix prerequisite in its instructions", async () => {
+  it("states the component library line in its instructions", async () => {
     const { result } = await rpc("initialize", {
       protocolVersion: "2025-03-26",
       capabilities: {},
@@ -255,7 +255,7 @@ describe("get_doc", () => {
 });
 
 describe("list_blocks", () => {
-  it("states the radix prerequisite before the catalog", async () => {
+  it("states the component library line before the catalog", async () => {
     const catalog = parse(await callTool("list_blocks"));
 
     expect(Object.keys(catalog)[0]).toBe("prerequisite");
@@ -286,7 +286,7 @@ describe("list_blocks", () => {
 
 describe("get_install_plan", () => {
   it.each(RECIPES.map((recipe) => recipe.id))(
-    "puts the radix prerequisite first in the %s plan",
+    "puts the component library line first in the %s plan",
     async (goal) => {
       const plan = parse(await callTool("get_install_plan", { goal }));
 

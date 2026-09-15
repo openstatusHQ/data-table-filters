@@ -133,7 +133,7 @@ describe("buildLlmsTxt", () => {
     expect(output).toContain("/r/index.md");
   });
 
-  it("states the radix prerequisite before the first recipe", () => {
+  it("states the component library line before the first recipe", () => {
     expect(output.indexOf(PREREQUISITE)).toBeGreaterThan(-1);
     expect(output.indexOf(PREREQUISITE)).toBeLessThan(
       output.indexOf("npx shadcn@latest add"),
@@ -141,11 +141,14 @@ describe("buildLlmsTxt", () => {
   });
 });
 
-describe("the radix prerequisite", () => {
-  it("names the init command and the unsupported default", () => {
+describe("the component library line", () => {
+  it("names both libraries and the command for each", () => {
+    expect(PREREQUISITE).toContain("npx shadcn@latest init -d");
     expect(PREREQUISITE).toContain("npx shadcn@latest init -b radix -p nova");
     expect(PREREQUISITE).toContain("Base UI");
-    expect(PREREQUISITE).toContain("not supported");
+    // The blocks install on either library; a surface claiming otherwise is
+    // out of date with `registry-install.yml`, which proves both.
+    expect(PREREQUISITE).not.toContain("not supported");
   });
 
   it("is repeated in the full docs and the registry index", () => {

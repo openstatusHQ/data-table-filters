@@ -1,12 +1,12 @@
 "use client";
 
-import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@dtf/registry/components/ui/accordion";
+} from "@dtf/registry/components/custom/accordion";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import * as React from "react";
 import { DataTableFilterCheckbox } from "./data-table-filter-checkbox";
 import { DataTableFilterInput } from "./data-table-filter-input";

@@ -9,6 +9,7 @@ import {
   SheetTitle,
 } from "@dtf/registry/components/custom/sheet";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { TOOLTIP_DELAY } from "@dtf/registry/components/data-table/ui-compat";
 import { Button } from "@dtf/registry/components/ui/button";
 import { Kbd } from "@dtf/registry/components/ui/kbd";
 import { Separator } from "@dtf/registry/components/ui/separator";
@@ -147,8 +148,8 @@ export function DataTableSheetDetails({
               )}
             </SheetTitle>
             <div className="flex h-7 items-center gap-1">
-              <TooltipProvider>
-                <Tooltip delayDuration={100}>
+              <TooltipProvider {...TOOLTIP_DELAY}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       size="icon"
@@ -168,8 +169,8 @@ export function DataTableSheetDetails({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip delayDuration={100}>
+              <TooltipProvider {...TOOLTIP_DELAY}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       size="icon"

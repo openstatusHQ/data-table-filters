@@ -10,7 +10,35 @@ const Sheet = SheetPrimitive.Root;
 
 const SheetTrigger = SheetPrimitive.Trigger;
 
-const SheetClose = SheetPrimitive.Close;
+/**
+ * Radix's close, plus Base UI's `render`.
+ *
+ * The shadcn CLI rewrites `asChild` into `render={<child />}` when it installs
+ * into a Base UI project. This sheet is built on Radix in both cases — it
+ * ships with the block rather than resolving from the project's library — so
+ * it has to accept the prop the CLI writes.
+ */
+function SheetClose({
+  render,
+  children,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Close> & {
+  render?: React.ReactElement;
+}) {
+  if (!render) {
+    return <SheetPrimitive.Close {...props}>{children}</SheetPrimitive.Close>;
+  }
+
+  // `asChild` is spread rather than written as an attribute so the same CLI
+  // codemod doesn't rewrite it here, inside the component implementing it.
+  return (
+    <SheetPrimitive.Close {...{ asChild: true }} {...props}>
+      {children === undefined
+        ? render
+        : React.cloneElement(render, undefined, children)}
+    </SheetPrimitive.Close>
+  );
+}
 
 const SheetPortal = SheetPrimitive.Portal;
 

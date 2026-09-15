@@ -42,11 +42,12 @@ jobs:
           - next-no-src:core
           - next-no-src:large-table
           # The Quick Start, verbatim: its install command and its paste, read
-          # from the docs page. The base row is the shadcn CLI default since
-          # v4; its install-and-typecheck is pinned as an expected failure
-          # until the blocks support Base UI, so it goes red when that changes.
+          # from the docs page. The base rows are the shadcn CLI default since
+          # v4 (`init -d`, preset `base-nova`); they install and typecheck like
+          # any other, so a change that only works on Radix goes red here.
           - next-src:quick-start
           - next-src-base:quick-start
+          - next-src-base:large-table
     env:
       REGISTRY_E2E: "1"
       E2E_CASE: ${{ matrix.case }}

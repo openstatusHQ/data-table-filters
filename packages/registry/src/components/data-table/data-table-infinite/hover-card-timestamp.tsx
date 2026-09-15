@@ -1,6 +1,7 @@
 "use client";
 
 import { UTCDate } from "@date-fns/utc";
+import { HOVER_CARD_DELAY } from "@dtf/registry/components/data-table/ui-compat";
 import {
   HoverCard,
   HoverCardContent,
@@ -34,7 +35,7 @@ export function HoverCardTimestamp({
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
-    <HoverCard openDelay={0} closeDelay={0}>
+    <HoverCard {...HOVER_CARD_DELAY}>
       <HoverCardTrigger asChild>
         <div className={cn("font-mono whitespace-nowrap", className)}>
           {format(date, "LLL dd, y HH:mm:ss")}
