@@ -17,6 +17,7 @@ import {
   scatteredGroups,
   snapshot,
   typecheck,
+  type CommandResult,
 } from "./harness";
 
 /**
@@ -101,8 +102,12 @@ const ALL_CASES: Case[] = [
   { fixture: BASE_UI_FIXTURE, ...QUICK_START },
   // The Quick Start's two blocks already reach the sheet and the cells through
   // registryDependencies, but the large table is where the most files land on
-  // a library the source isn't written in — the case that would catch the CLI
-  // changing how it translates `asChild` on its way into a Base UI project.
+  // a library the source isn't written in. It pastes nothing, so it typechecks
+  // rather than builds: the blocks it adds beyond the Quick Start's two (query,
+  // nuqs, drizzle) need providers and a database around them before a route
+  // could render, which is more fixture than the coverage is worth. The CLI's
+  // `asChild` translation is covered on this case without a render, by reading
+  // the installed source.
   { fixture: BASE_UI_FIXTURE, blocks: LARGE_TABLE, label: "large-table" },
 ];
 
@@ -148,6 +153,14 @@ describe.skipIf(!enabled)("registry install", () => {
       let installed: string[];
       let before: Map<string, string>;
       let after: Map<string, string>;
+      let deps: CommandResult | undefined;
+
+      // Asserted by the tests that need `node_modules`, not by the hook that
+      // runs it. A registry flake during `npm install` should fail those two
+      // and leave the file-placement assertions — which read the snapshots
+      // taken above, before the install — reporting their own signal.
+      const expectDependencies = () =>
+        expect(deps?.status, `npm install failed:\n${deps?.output}`).toBe(0);
 
       beforeAll(() => {
         project = prepareProject(fixture.name);
@@ -166,8 +179,7 @@ describe.skipIf(!enabled)("registry install", () => {
       beforeAll(() => {
         if (paste) writeFileSync(join(project, fixture.page), paste);
 
-        const deps = npmInstall(project);
-        expect(deps.status, `npm install failed:\n${deps.output}`).toBe(0);
+        deps = npmInstall(project);
       }, 900_000);
 
       afterAll(() => {
@@ -211,7 +223,50 @@ describe.skipIf(!enabled)("registry install", () => {
         expect(stray).toEqual([]);
       });
 
+      // The one defect in this PR's class that nothing else here can see.
+      // `SortableOverlay` passes `asChild` as a spread rather than a literal
+      // because the CLI rewrites a literal `asChild` into `render` on its way
+      // into a Base UI project, and drops it where the child is an expression
+      // — silently turning the drag overlay into a wrapper div. The typecheck
+      // stays green either way (`SortableItem` accepts both props), and the
+      // build test cannot reach it: the overlay renders through a portal only
+      // while a drag is active, so it is never in the prerendered HTML. So
+      // read the installed source. If a future CLI learns to rewrite spreads
+      // too, this is the assertion that says so.
+      it("keeps the drag overlay's asChild through the CLI's codemod", () => {
+        const path = installed.find((entry) =>
+          entry.endsWith("custom/sortable.tsx"),
+        );
+        expect(
+          path,
+          `custom/sortable.tsx was not installed:\n${installed.join("\n")}`,
+        ).toBeDefined();
+
+        const source = readFileSync(join(project, path as string), "utf8");
+        const overlay = source.indexOf("function SortableOverlay");
+        expect(
+          overlay,
+          "SortableOverlay is gone from the installed file",
+        ).toBeGreaterThan(-1);
+
+        const item = source.indexOf("<SortableItem", overlay);
+        expect(
+          item,
+          "the overlay no longer renders a SortableItem",
+        ).toBeGreaterThan(-1);
+
+        // The opening tag only — `asChild` anywhere else in the file proves
+        // nothing about the overlay.
+        const tag = source.slice(item, source.indexOf(">", item));
+        expect(
+          /asChild|render=/.test(tag),
+          `the overlay's SortableItem lost its asChild:\n${tag}`,
+        ).toBe(true);
+      });
+
       it("typechecks", () => {
+        expectDependencies();
+
         const result = typecheck(project);
         expect(result.status, `tsc reported errors:\n${result.output}`).toBe(0);
       }, 900_000);
@@ -222,6 +277,8 @@ describe.skipIf(!enabled)("registry install", () => {
       it.skipIf(!paste)(
         "builds, and prerenders the table",
         () => {
+          expectDependencies();
+
           const result = build(project);
           expect(result.status, `next build failed:\n${result.output}`).toBe(0);
 
