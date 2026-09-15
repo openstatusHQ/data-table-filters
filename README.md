@@ -1,10 +1,10 @@
-## About The Project
+# data-table-filters
 
 Data tables for React and shadcn/ui: faceted filters, sorting, infinite scroll, and a row detail sheet. Installed as source with the shadcn CLI, so the code is yours to change.
 
-One `createTableSchema` definition drives the columns, the filter controls, the row sheet, the Drizzle route handler, and the MCP tool schema. When the rows live in Postgres, filtering, faceted counts, and cursor pagination run in SQL. Built for the openstatus dashboard and used there in production.
-
 ![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
+
+One `createTableSchema` definition drives the columns, the filter controls, the row sheet, the Drizzle route handler, and the MCP tool schema. When the rows live in Postgres, filtering, faceted counts, and cursor pagination run in SQL. Built for the openstatus dashboard and used there in production.
 
 Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn more. Read the [Docs](https://data-table.openstatus.dev/docs) for full documentation.
 
