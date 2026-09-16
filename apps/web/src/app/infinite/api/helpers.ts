@@ -3,8 +3,9 @@ import {
   calculatePercentileRanks,
   calculateSpecificPercentile,
 } from "@/lib/request/percentile";
+import { bucketChartData } from "@dtf/registry/lib/data-table/chart-data";
+import { evaluateIntervalMs } from "@dtf/registry/lib/data-table/interval";
 import { defineFilters } from "@dtf/registry/lib/filters";
-import { addDays, differenceInMinutes } from "date-fns";
 import type {
   ColumnSchema,
   FacetMetadataSchema,
@@ -154,84 +155,21 @@ export function groupChartData(
   dates: Date[] | null,
 ): TimelineChartSchema[] {
   if (data?.length === 0 && !dates) return [];
-
-  // If we only have one date, we need to add a day to it
-  const _dates = dates?.length === 1 ? [dates[0], addDays(dates[0], 1)] : dates;
-
-  const between =
-    _dates && _dates.length > 0
-      ? _dates
-      : data?.length
-        ? [data[data.length - 1].date, data[0].date]
-        : [];
-
-  if (!between.length) return [];
-  const interval = evaluateInterval(between);
-
-  const duration = Math.abs(
-    between[0].getTime() - between[between.length - 1].getTime(),
-  );
-  const steps = Math.floor(duration / interval);
-  const startTime = between[0].getTime();
-
-  type LevelCounts = Record<(typeof LEVELS)[number], number>;
-
-  const timestamps: TimelineChartSchema[] = Array.from({ length: steps }).map(
-    (_, i) => ({
-      timestamp: startTime + i * interval, // TODO: use date-fns and interval to determine the format
-      ...LEVELS.reduce((acc, level) => {
-        acc[level] = 0;
-        return acc;
-      }, {} as LevelCounts),
-    }),
-  );
-
-  for (const row of data) {
-    const timeDiff = row.date.getTime() - startTime;
-
-    if (timeDiff >= 0 && timeDiff <= duration) {
-      const bucketIndex = Math.floor(timeDiff / interval);
-
-      if (timestamps[bucketIndex]) {
-        timestamps[bucketIndex][row.level] += 1;
-      }
-    }
-  }
-
-  return timestamps;
+  // The bucketing lives in the chart block now, shared with the example
+  // route; this keeps the demo's signature.
+  return bucketChartData(data, {
+    timestamp: (row) => row.date,
+    series: (row) => row.level,
+    keys: LEVELS,
+    range: dates,
+  }) as TimelineChartSchema[];
 }
 
+/** The bucket ladder, on a time-range filter value. `0` when it says nothing. */
 export function evaluateInterval(dates: Date[] | null): number {
   if (!dates) return 0;
   if (dates.length < 1 || dates.length > 3) return 0;
-
-  // Calculate the time difference in minutes
-  const timeDiffInMinutes = Math.abs(differenceInMinutes(dates[0], dates[1]));
-
-  // Define thresholds and their respective intervals in milliseconds
-  const intervals = [
-    { threshold: 1, interval: 1000 }, // 1 second
-    { threshold: 5, interval: 5000 }, // 5 seconds
-    { threshold: 10, interval: 10000 }, // 10 seconds
-    { threshold: 30, interval: 30000 }, // 30 seconds
-    { threshold: 60, interval: 60000 }, // 1 minute
-    { threshold: 120, interval: 120000 }, // 2 minutes
-    { threshold: 240, interval: 240000 }, // 4 minutes
-    { threshold: 480, interval: 480000 }, // 8 minutes
-    { threshold: 1440, interval: 1440000 }, // 24 minutes
-    { threshold: 2880, interval: 2880000 }, // 48 minutes
-    { threshold: 5760, interval: 5760000 }, // 96 minutes
-    { threshold: 11520, interval: 11520000 }, // 192 minutes
-    { threshold: 23040, interval: 23040000 }, // 384 minutes
-  ];
-
-  // Iterate over the intervals and return the matching one
-  for (const { threshold, interval } of intervals) {
-    if (timeDiffInMinutes < threshold) {
-      return interval;
-    }
-  }
-
-  // Default to the largest interval if no match found
-  return 46080000; // 768 minutes
+  return evaluateIntervalMs(
+    (dates[0]?.getTime() ?? NaN) - (dates[1]?.getTime() ?? NaN),
+  );
 }

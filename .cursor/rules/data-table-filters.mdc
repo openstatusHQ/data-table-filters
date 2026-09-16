@@ -53,6 +53,7 @@ All URLs are `https://data-table.openstatus.dev/r/<name>.json`.
 | `data-table-mcp`               | Agents should query the table over MCP                                                          |
 | `data-table-actions`           | Users need to act on rows — replay, acknowledge, delete (requires drizzle)                       |
 | `data-table-remote`            | The table should render from an API endpoint's manifest, with no per-column code                |
+| `data-table-chart`            | A stacked timeline above the table; the endpoint returns `meta.chartData` (Drizzle handler does, or use `bucketChartData`) |
 | `data-table-example-infinite`            | A complete table on screen before any data is wired up — ships app/example and every block it needs |
 
 ## Large table (server-side, 100k+ rows)

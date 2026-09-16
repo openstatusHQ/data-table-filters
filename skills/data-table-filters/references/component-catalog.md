@@ -258,10 +258,38 @@ const tableSchema = createTableSchema({
 />;
 ```
 
+## Timeline Chart
+
+**Block:** `data-table-chart`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-chart.json`
+**Depends on:** data-table, shadcn `chart` and `button` (installed automatically)
+
+```tsx
+import { TimelineChart } from "@/components/data-table/data-table-chart/timeline-chart";
+
+<DataTableInfinite
+  chartSlot={
+    <TimelineChart
+      data={meta?.chartData ?? []}
+      columnId="date" // the timerange column the zoom writes to
+      series={[
+        { key: "error", label: "Error" },
+        { key: "warning", label: "Warning" },
+        { key: "info", label: "Info" },
+      ]}
+    />
+  }
+/>;
+```
+
+A stacked bar per time bucket, one series per key, above the table. Dragging across buckets selects a range; Zoom writes it to the `columnId` time filter. `series` is bottom-up stack order and doubles as the tooltip order; omit it and every numeric key of the first point becomes a series. Colours default to `var(--<key>)`, which the core block defines for `success`, `warning`, `error` and `info`.
+
+The endpoint returns the points as `meta.chartData` (`{ timestamp, [key]: number }[]`). The Drizzle handler computes them in SQL; for rows in memory, `bucketChartData(rows, { timestamp, series, keys, range })` from `@/lib/data-table/chart-data` builds them with the same bucket ladder.
+
 ## Example: infinite table
 
 **Block:** `data-table-example-infinite`
 **Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-example-infinite.json`
-**Depends on:** data-table, data-table-schema, data-table-query, data-table-nuqs, data-table-sheet, data-table-cell, data-table-filter-command (installed automatically)
+**Depends on:** data-table, data-table-schema, data-table-query, data-table-nuqs, data-table-sheet, data-table-cell, data-table-filter-command, data-table-chart (installed automatically)
 
-Ships a working `/example` route into `app/example/`: `table-schema.ts` (the one definition every surface reads), `schema.ts` (URL state via nuqs), `data.ts` (5,000 seeded mock rows), `api/route.ts` (in-memory filtering, facets and cursor pagination with the same semantics as the Drizzle handler), `client.tsx`, `page.tsx`, and `layout.tsx` (React Query and nuqs providers scoped to the route). Use it to see the table running before wiring real data; change the columns in `table-schema.ts`, or delete the folder afterwards. To create a whole project around it: `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova`.
+Ships a working `/example` route into `app/example/`: `table-schema.ts` (the one definition every surface reads), `schema.ts` (URL state via nuqs), `data.ts` (5,000 seeded mock rows), `api/route.ts` (in-memory filtering, facets, chart buckets and cursor pagination with the same semantics as the Drizzle handler), `client.tsx`, `page.tsx`, and `layout.tsx` (React Query and nuqs providers scoped to the route). Use it to see the table running before wiring real data; change the columns in `table-schema.ts`, or delete the folder afterwards. To create a whole project around it: `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova`.

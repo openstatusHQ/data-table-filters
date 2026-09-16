@@ -299,7 +299,13 @@ Anything a manifest cannot describe is a slot:
   searchParamsSerializer={searchParamsSerializer}
   loadingSlot={<Skeleton />}
   errorSlot={(error) => <TableError error={error} />}
-  chartSlot={(data, config) => <TimelineChart data={data} config={config} />}
+  chartSlot={(data, config) => (
+    <TimelineChart
+      data={data}
+      columnId={config?.columnKey ?? "date"}
+      series={config?.series}
+    />
+  )}
   sheetSlot={(fields) => <SheetDetails fields={fields} />}
   getRowClassName={(row) => getLevelRowClassName(row.original.level)}
 />

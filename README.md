@@ -63,6 +63,7 @@ From `create-next-app` to a green `next build` this takes about 30 seconds on a 
 | `data-table-mcp`               | `.../r/data-table-mcp.json`               | MCP server endpoint for AI agents                                                                                          |
 | `data-table-actions`           | `.../r/data-table-actions.json`           | Row and bulk actions rendered from server metadata                                                                         |
 | `data-table-remote`            | `.../r/data-table-remote.json`            | Headless table that renders from an API endpoint's manifest                                                                |
+| `data-table-chart`             | `.../r/data-table-chart.json`             | Timeline chart over the table: stacked buckets per level, drag to zoom the time filter                                     |
 | `data-table-example-infinite`  | `.../r/data-table-example-infinite.json`  | Ready-to-run `/example` route: schema, mock API, infinite table with URL state                                             |
 
 All URLs use base `https://data-table.openstatus.dev`.

@@ -89,6 +89,8 @@ export const BLOCK_GUIDANCE: Record<string, string> = {
     "The table should be queryable by AI agents over MCP, using the same schema the UI uses.",
   "data-table-actions":
     "Users need to DO something to rows — replay, acknowledge, delete — not just read them. Actions are declared once next to their Drizzle handler; the list endpoint advertises them and stamps each row with what applies, the UI renders row menus, a bulk bar, and an apply-to-all-matching menu from that JSON, and one POST runs the handler in a transaction. Requires the drizzle block.",
+  "data-table-chart":
+    "The table should show a stacked timeline above the rows — one bar per time bucket, one series per level — with drag-to-zoom on the time filter. The endpoint has to return meta.chartData: the Drizzle handler does; for rows in memory, bucketChartData from lib/data-table/chart-data builds it with the same semantics. Pass the series (keys, labels, colours) or let the chart infer them from the data.",
   "data-table-example-infinite":
     "You want to see a complete table running before wiring your own data. Ships a /example route: a table schema, a mock API that filters, computes facets and cursor-paginates in memory with the same semantics as the Drizzle handler, and the infinite table with URL state, command palette and row sheet. Installs every block it needs. Delete app/example when you have your own table.",
   "data-table-remote":
@@ -120,7 +122,7 @@ export const RECIPES: Recipe[] = [
     // recipe shaped like every other one, and the CLI installs it once.
     blocks: ["data-table", EXAMPLE_BLOCK],
     notes:
-      "Installs app/example: a page and layout with the providers, a table schema, a mock API route, and the infinite table with URL state, command palette and row sheet. Run the dev server and open /example. Change the columns in app/example/table-schema.ts; replace app/example/api/route.ts with createDrizzleHandler when the rows live in Postgres.",
+      "Installs app/example: a page and layout with the providers, a table schema, a mock API route, and the infinite table with a timeline chart, URL state, command palette and row sheet. Run the dev server and open /example. Change the columns in app/example/table-schema.ts; replace app/example/api/route.ts with createDrizzleHandler when the rows live in Postgres.",
   },
   {
     id: "large-table",

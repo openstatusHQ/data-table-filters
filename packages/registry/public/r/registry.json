@@ -248,6 +248,10 @@
         {
           "path": "src/hooks/use-local-storage.ts",
           "type": "registry:hook"
+        },
+        {
+          "path": "src/lib/data-table/interval.ts",
+          "type": "registry:lib"
         }
       ],
       "registryDependencies": [
@@ -664,10 +668,6 @@
           "type": "registry:lib"
         },
         {
-          "path": "src/lib/drizzle/interval.ts",
-          "type": "registry:lib"
-        },
-        {
           "path": "src/lib/drizzle/pagination.ts",
           "type": "registry:lib"
         },
@@ -923,10 +923,36 @@
       ]
     },
     {
+      "name": "data-table-chart",
+      "type": "registry:block",
+      "title": "Timeline Chart",
+      "description": "Stacked timeline bar chart above the table: one bar per time bucket, one series per level, drag to select a range and zoom the table's time filter to it. Ships the bucketing helper that turns rows into chart data with the same semantics as the Drizzle handler.",
+      "registryDependencies": [
+        "https://data-table.openstatus.dev/r/data-table.json",
+        "chart",
+        "button"
+      ],
+      "dependencies": ["date-fns@^4.1.0", "lucide-react@^0.469.0"],
+      "files": [
+        {
+          "path": "src/components/data-table/data-table-chart/timeline-chart.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/data-table/data-table-chart/timeline-chart-utils.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/lib/data-table/chart-data.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "data-table-example-infinite",
       "type": "registry:block",
       "title": "Example: infinite table",
-      "description": "A complete /example route to see the table running before wiring your own data: a table schema, a mock API that filters, computes facets and cursor-paginates in memory with the same semantics as the Drizzle handler, and the infinite table with URL state, command palette and row sheet. Delete app/example when you have your own.",
+      "description": "A complete /example route to see the table running before wiring your own data: a table schema, a mock API that filters, computes facets and cursor-paginates in memory with the same semantics as the Drizzle handler, and the infinite table with a timeline chart, URL state, command palette and row sheet. Delete app/example when you have your own.",
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json",
         "https://data-table.openstatus.dev/r/data-table-schema.json",
@@ -934,7 +960,8 @@
         "https://data-table.openstatus.dev/r/data-table-nuqs.json",
         "https://data-table.openstatus.dev/r/data-table-sheet.json",
         "https://data-table.openstatus.dev/r/data-table-cell.json",
-        "https://data-table.openstatus.dev/r/data-table-filter-command.json"
+        "https://data-table.openstatus.dev/r/data-table-filter-command.json",
+        "https://data-table.openstatus.dev/r/data-table-chart.json"
       ],
       "files": [
         {

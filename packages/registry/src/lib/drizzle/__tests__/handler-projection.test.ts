@@ -1,9 +1,9 @@
+import { evaluateIntervalMs } from "@dtf/registry/lib/data-table/interval";
 import { defineFilters, type FilterSpec } from "@dtf/registry/lib/filters";
 import { count, sql, type SQL } from "drizzle-orm";
 import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createDrizzleHandler } from "../handler";
-import { evaluateIntervalMs } from "../interval";
 import type { ColumnMapping } from "../types";
 import { createPgliteDb, type PgliteDb } from "./pglite";
 

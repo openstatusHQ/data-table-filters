@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  TimelineChart,
+  type TimelineChartSeries,
+} from "@dtf/registry/components/data-table/data-table-chart/timeline-chart";
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
@@ -35,6 +39,13 @@ const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
 const defaultColumnVisibility = getDefaultColumnVisibility(
   tableSchema.definition,
 );
+
+/** The chart's stacked series, bottom-up. Colours come from the core block's CSS variables. */
+const CHART_SERIES: TimelineChartSeries[] = [
+  { key: "error", label: "Error" },
+  { key: "warning", label: "Warning" },
+  { key: "info", label: "Info" },
+];
 
 /** URL state that is not a column filter. */
 const STATE_KEYS = new Set(["sort", "uuid", "size", "direction", "cursor"]);
@@ -96,6 +107,14 @@ function Table() {
       getRowId={(row) => row.uuid}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
+      chartSlot={
+        <TimelineChart
+          data={meta?.chartData ?? []}
+          columnId="date"
+          series={CHART_SERIES}
+          className="-mb-2"
+        />
+      }
       commandSlot={
         <DataTableFilterCommand
           schema={filterSchema.definition}

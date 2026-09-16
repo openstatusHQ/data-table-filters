@@ -4,7 +4,7 @@ import { LiveButton } from "@/components/data-table/data-table-infinite/live-but
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
 import { RefreshButton } from "@/components/data-table/data-table-infinite/refresh-button";
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
-import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
+import { timelineChartSeries } from "@/components/data-table/data-table-infinite/timeline-chart-series";
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
 import { getLevelRowClassName } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ import {
   DataTableActionsBar,
   DataTableActionsProvider,
 } from "@dtf/registry/components/data-table/data-table-actions";
+import { TimelineChart } from "@dtf/registry/components/data-table/data-table-chart/timeline-chart";
 import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/data-table-filter-command-ai";
 import { DataTableFloatingBar } from "@dtf/registry/components/data-table/data-table-floating-bar";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
@@ -198,6 +199,7 @@ function ClientInner() {
             data={chartData ?? []}
             className="-mb-2"
             columnId="date"
+            series={timelineChartSeries}
           />
         }
         footerSlot={

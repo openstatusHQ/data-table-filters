@@ -2,11 +2,12 @@ import type {
   FacetMetadataSchema,
   InfiniteQueryResponse,
 } from "@dtf/registry/lib/data-table";
+import { bucketChartData } from "@dtf/registry/lib/data-table/chart-data";
 import { defineFilters } from "@dtf/registry/lib/filters";
 import SuperJSON from "superjson";
 import { rows } from "../data";
 import { searchParamsCache, type SearchParams } from "../schema";
-import { tableSchema, type ColumnSchema } from "../table-schema";
+import { LEVELS, tableSchema, type ColumnSchema } from "../table-schema";
 
 export const dynamic = "force-dynamic";
 
@@ -54,13 +55,23 @@ export async function GET(request: Request): Promise<Response> {
         ...facetsOf(withoutSliders, sliderKeys),
         ...facetsOf(filtered, facetKeys),
       };
+  // One point per time bucket with a count per level, over the date filter
+  // when one is set and the rows' own span otherwise.
+  const chartData = skipMeta
+    ? []
+    : bucketChartData(filtered, {
+        timestamp: (row) => row.date,
+        series: (row) => row.level,
+        keys: LEVELS,
+        range: search.date,
+      });
 
   const response: InfiniteQueryResponse<ColumnSchema[]> = {
     data: page,
     meta: {
       totalRowCount: rows.length,
       filterRowCount: filtered.length,
-      chartData: [],
+      chartData,
       facets,
     },
     prevCursor: page.length > 0 ? page[0].date.getTime() : null,
