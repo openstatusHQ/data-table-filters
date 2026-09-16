@@ -18,11 +18,12 @@ No library check needed before installing: the blocks resolve their primitives
 from whichever library `components.json` names.
 
 No project yet? One command creates a Next.js app, initializes shadcn, and
-installs the core table and schema blocks (add `-b radix` before `-p nova` for
-Radix):
+installs a working `/example` route with every block it needs (add `-b radix`
+before `-p nova` for Radix); run the dev server and open
+http://localhost:3000/example:
 
 ```bash
-npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova
 ```
 
 Full docs for agents:
@@ -52,6 +53,7 @@ All URLs are `https://data-table.openstatus.dev/r/<name>.json`.
 | `data-table-mcp`               | Agents should query the table over MCP                                                          |
 | `data-table-actions`           | Users need to act on rows — replay, acknowledge, delete (requires drizzle)                       |
 | `data-table-remote`            | The table should render from an API endpoint's manifest, with no per-column code                |
+| `data-table-example-infinite`            | A complete table on screen before any data is wired up — ships app/example and every block it needs |
 
 ## Large table (server-side, 100k+ rows)
 

@@ -3,7 +3,7 @@ name: data-table-filters
 description: >
   Install and extend data-table-filters — a React data table system with faceted filters
   (checkbox, input, slider, timerange), sorting, infinite scroll, virtualization, and BYOS
-  state management. Delivered as 13 shadcn registry blocks installable via
+  state management. Delivered as 14 shadcn registry blocks installable via
   `npx shadcn@latest add`. Use when: (1) installing data-table-filters from the shadcn
   registry, (2) adding extension blocks (command palette, AI filters, cell renderers, sheet panel,
   store adapters, schema system, Drizzle helpers, query layer), (3) configuring store
@@ -41,12 +41,13 @@ Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencie
 | **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                                                       |
 | **data-table-actions**           | `.../r/data-table-actions.json`                       | Row and bulk actions rendered from server metadata (requires drizzle)                                                      |
 | **data-table-remote**            | `.../r/data-table-remote.json`                        | Headless table driven by an endpoint's manifest — schema, capabilities, row identity                                       |
+| **data-table-example-infinite**  | `.../r/data-table-example-infinite.json`              | Ready-to-run `/example` route: schema, mock API, infinite table with URL state                                             |
 
 All URLs use base `https://data-table.openstatus.dev`.
 
 ## Quick Start
 
-1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue. No project at all yet? `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova` creates a Next.js app with shadcn initialized and the two blocks from step 2 installed, in one command (add `-b radix` before `-p nova` for Radix); then skip to step 3.
+1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue. No project at all yet? `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova` creates a Next.js app with shadcn initialized and a working `/example` route installed, with every block it needs (add `-b radix` before `-p nova` for Radix); run the dev server, open http://localhost:3000/example, and edit `app/example/table-schema.ts` — or continue with step 2 for a table of your own.
 2. Install core + schema: `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`
 3. Scaffold a minimal working table (see below), or render `<DataTableAuto data={rows} />` when the data shape is unknown
 4. Extend with additional blocks as needed

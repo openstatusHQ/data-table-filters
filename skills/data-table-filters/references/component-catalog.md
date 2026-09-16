@@ -257,3 +257,11 @@ const tableSchema = createTableSchema({
   }
 />;
 ```
+
+## Example: infinite table
+
+**Block:** `data-table-example-infinite`
+**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-example-infinite.json`
+**Depends on:** data-table, data-table-schema, data-table-query, data-table-nuqs, data-table-sheet, data-table-cell, data-table-filter-command (installed automatically)
+
+Ships a working `/example` route into `app/example/`: `table-schema.ts` (the one definition every surface reads), `schema.ts` (URL state via nuqs), `data.ts` (5,000 seeded mock rows), `api/route.ts` (in-memory filtering, facets and cursor pagination with the same semantics as the Drizzle handler), `client.tsx`, `page.tsx`, and `layout.tsx` (React Query and nuqs providers scoped to the route). Use it to see the table running before wiring real data; change the columns in `table-schema.ts`, or delete the folder afterwards. To create a whole project around it: `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova`.

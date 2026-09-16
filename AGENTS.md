@@ -19,11 +19,12 @@ Router is first-class; the blocks work in any React app.
 > whichever library `components.json` names.
 
 **No project yet?** One command creates a Next.js app, initializes shadcn, and
-installs the core table and schema blocks (add `-b radix` before `-p nova` for
-Radix):
+installs a working `/example` route with every block it needs (add `-b radix`
+before `-p nova` for Radix); run the dev server and open
+http://localhost:3000/example:
 
 ```bash
-npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova
 ```
 
 **Load the full instructions before wiring anything up:**

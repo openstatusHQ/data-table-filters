@@ -48,6 +48,12 @@ jobs:
           - next-src:quick-start
           - next-src-base:quick-start
           - next-src-base:large-table
+          # The example block, which a fresh project created from the Quick
+          # Start's one command installs: files with a `target` under
+          # app/example on both layouts, and the route has to build.
+          - next-src:example
+          - next-no-src:example
+          - next-src-base:example
     env:
       REGISTRY_E2E: "1"
       E2E_CASE: ${{ matrix.case }}

@@ -60,7 +60,7 @@ const FIXTURES: Fixture[] = [
   },
   {
     name: "next-no-src",
-    allowedRoots: ["components/", "lib/", "hooks/"],
+    allowedRoots: ["components/", "lib/", "hooks/", "app/"],
     page: "app/page.tsx",
   },
 ];
@@ -78,6 +78,11 @@ type Case = {
   label: string;
   /** Written into `fixture.page` after the install, before the typecheck. */
   paste?: string;
+  /**
+   * A route the block ships itself, in place of a paste. The build has to
+   * compile it — its page and its API handler — for the case to pass.
+   */
+  route?: string;
 };
 
 /**
@@ -93,6 +98,18 @@ const QUICK_START: Omit<Case, "fixture"> = {
   paste: quickStartSample(),
 };
 
+/**
+ * The example block: what a fresh project created from the Quick Start's one
+ * command installs. It pastes nothing — it ships its own route under
+ * `app/example`, so this is the case that proves `target` files land where
+ * the imports between them expect, on both fixture layouts.
+ */
+const EXAMPLE: Omit<Case, "fixture"> = {
+  blocks: ["data-table-example-infinite"],
+  label: "example",
+  route: "example",
+};
+
 const ALL_CASES: Case[] = [
   ...FIXTURES.flatMap((fixture) => [
     { fixture, blocks: CORE, label: "core" },
@@ -100,6 +117,8 @@ const ALL_CASES: Case[] = [
   ]),
   { fixture: FIXTURES[0], ...QUICK_START },
   { fixture: BASE_UI_FIXTURE, ...QUICK_START },
+  ...FIXTURES.map((fixture) => ({ fixture, ...EXAMPLE })),
+  { fixture: BASE_UI_FIXTURE, ...EXAMPLE },
   // The Quick Start's two blocks already reach the sheet and the cells through
   // registryDependencies, but the large table is where the most files land on
   // a library the source isn't written in. It pastes nothing, so it typechecks
@@ -148,7 +167,7 @@ describe.skipIf(!enabled)("registry install", () => {
 
   describe.each(CASES)(
     "$fixture.name / $label",
-    ({ fixture, blocks, paste }) => {
+    ({ fixture, blocks, paste, route }) => {
       let project: string;
       let installed: string[];
       let before: Map<string, string>;
@@ -271,10 +290,10 @@ describe.skipIf(!enabled)("registry install", () => {
         expect(result.status, `tsc reported errors:\n${result.output}`).toBe(0);
       }, 900_000);
 
-      // Only the cases that paste real usage into a route. Next bundles what
-      // the routes import, so building a project where nothing imports the
-      // blocks would compile an empty app and prove nothing.
-      it.skipIf(!paste)(
+      // Only the cases that paste real usage into a route, or ship one. Next
+      // bundles what the routes import, so building a project where nothing
+      // imports the blocks would compile an empty app and prove nothing.
+      it.skipIf(!paste && !route)(
         "builds, and prerenders the table",
         () => {
           expectDependencies();
@@ -282,15 +301,32 @@ describe.skipIf(!enabled)("registry install", () => {
           const result = build(project);
           expect(result.status, `next build failed:\n${result.output}`).toBe(0);
 
-          // Exiting 0 is not the point: the prerendered HTML is the proof that
-          // the blocks' render path ran on the server against this project's
-          // primitives. Read off the artifact rather than the build's stdout,
-          // which changes shape between Next versions. The accordion is the
-          // marker because the block ships its own — the filter sidebar is
-          // where the two libraries diverge past a prop name.
-          const page = join(project, ".next", "server", "app", "index.html");
-          expect(existsSync(page), `${page} was not prerendered`).toBe(true);
-          expect(readFileSync(page, "utf8")).toContain('data-slot="accordion"');
+          if (paste) {
+            // Exiting 0 is not the point: the prerendered HTML is the proof
+            // that the blocks' render path ran on the server against this
+            // project's primitives. Read off the artifact rather than the
+            // build's stdout, which changes shape between Next versions. The
+            // accordion is the marker because the block ships its own — the
+            // filter sidebar is where the two libraries diverge past a prop
+            // name.
+            const page = join(project, ".next", "server", "app", "index.html");
+            expect(existsSync(page), `${page} was not prerendered`).toBe(true);
+            expect(readFileSync(page, "utf8")).toContain(
+              'data-slot="accordion"',
+            );
+          }
+
+          if (route) {
+            // A page that reads search params is dynamic, so there is no
+            // prerendered HTML. The compiled server entries are the proof
+            // that the page, its layout and its API handler all bundled.
+            for (const entry of [`${route}/page.js`, `${route}/api/route.js`]) {
+              const compiled = join(project, ".next", "server", "app", entry);
+              expect(existsSync(compiled), `${compiled} was not built`).toBe(
+                true,
+              );
+            }
+          }
         },
         900_000,
       );

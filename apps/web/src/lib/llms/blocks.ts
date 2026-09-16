@@ -35,19 +35,24 @@ export const PREREQUISITE = `Works on either shadcn library: the CLI default, Ba
 export const QUICK_START_BLOCKS = ["data-table", "data-table-schema"];
 
 /**
+ * The block that ships a working `/example` route — page, layout with the
+ * providers, table schema, mock API — and pulls in every block it needs. It
+ * is what a fresh project installs, so the first thing on screen is a table.
+ */
+export const EXAMPLE_BLOCK = "data-table-example-infinite";
+
+/**
  * Starting from nothing: `shadcn init` creates the app, initializes shadcn,
  * and installs the blocks it is given, in one command. Verified on shadcn
  * 4.21.0: `--template next -p nova` lands on Base UI (style `base-nova`) and
- * `next build` is green with the Quick Start paste; `-b radix -p nova` lands
- * on Radix. Not `-d`: combined with `--name` it writes the pre-v4 `new-york`
- * style instead of `base-nova`.
+ * `next build` is green; `-b radix -p nova` lands on Radix. Not `-d`:
+ * combined with `--name` it writes the pre-v4 `new-york` style instead of
+ * `base-nova`.
  */
-export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${QUICK_START_BLOCKS.map(
-  (name) => `${BASE_URL}/r/${name}.json`,
-).join(" ")} --name my-app --template next -p nova`;
+export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${BASE_URL}/r/${EXAMPLE_BLOCK}.json --name my-app --template next -p nova`;
 
 /** The one line about creating a project that llms.txt and the MCP server state. */
-export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs the two Quick Start blocks in one command. Add \`-b radix\` before \`-p nova\` for Radix.`;
+export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs; run the dev server and open http://localhost:3000/example. Add \`-b radix\` before \`-p nova\` for Radix.`;
 
 /**
  * Agent-facing "when do I need this block?" guidance.
@@ -84,6 +89,8 @@ export const BLOCK_GUIDANCE: Record<string, string> = {
     "The table should be queryable by AI agents over MCP, using the same schema the UI uses.",
   "data-table-actions":
     "Users need to DO something to rows — replay, acknowledge, delete — not just read them. Actions are declared once next to their Drizzle handler; the list endpoint advertises them and stamps each row with what applies, the UI renders row menus, a bulk bar, and an apply-to-all-matching menu from that JSON, and one POST runs the handler in a transaction. Requires the drizzle block.",
+  "data-table-example-infinite":
+    "You want to see a complete table running before wiring your own data. Ships a /example route: a table schema, a mock API that filters, computes facets and cursor-paginates in memory with the same semantics as the Drizzle handler, and the infinite table with URL state, command palette and row sheet. Installs every block it needs. Delete app/example when you have your own table.",
   "data-table-remote":
     "The table should render from an API endpoint rather than from per-column code — you own the data and publish only a schema. Serve a table manifest (schema, primaryKey, capabilities, actions) with createTableManifestHandler, then point <DataTableRemote /> at it: columns, filters, sheet fields and row identity are all derived, and anything the endpoint says it cannot compute (facets, counts, chart, backwards paging) degrades instead of rendering empty.",
 };
@@ -104,6 +111,17 @@ export type Recipe = {
  * exactly these, in this order" than with a catalog they have to reason over.
  */
 export const RECIPES: Recipe[] = [
+  {
+    id: "example",
+    docs: ["quick-start", "table-schema"],
+    title: "Working example route (see it running first)",
+    when: "A new or empty app, and the goal is a table on screen before any data is wired up.",
+    // The example pulls the core block in itself; listing it first keeps the
+    // recipe shaped like every other one, and the CLI installs it once.
+    blocks: ["data-table", EXAMPLE_BLOCK],
+    notes:
+      "Installs app/example: a page and layout with the providers, a table schema, a mock API route, and the infinite table with URL state, command palette and row sheet. Run the dev server and open /example. Change the columns in app/example/table-schema.ts; replace app/example/api/route.ts with createDrizzleHandler when the rows live in Postgres.",
+  },
   {
     id: "large-table",
     docs: ["table-schema", "drizzle-orm", "data-fetching"],
