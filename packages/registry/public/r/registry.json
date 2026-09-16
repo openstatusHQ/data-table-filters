@@ -18,6 +18,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/data-table/ui-compat.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/data-table/data-table-provider.tsx",
           "type": "registry:component"
         },
@@ -83,6 +87,10 @@
         },
         {
           "path": "src/components/custom/table.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/custom/accordion.tsx",
           "type": "registry:component"
         },
         {
@@ -253,7 +261,6 @@
         "dropdown-menu",
         "separator",
         "label",
-        "accordion",
         "command",
         "popover",
         "skeleton",
@@ -277,14 +284,17 @@
         "@dnd-kit/core@^6.3.1",
         "@dnd-kit/modifiers@^9.0.0",
         "@dnd-kit/sortable@^10.0.0",
-        "@dnd-kit/utilities@^3.2.2"
+        "@dnd-kit/utilities@^3.2.2",
+        "@radix-ui/react-accordion@^1.2.2"
       ],
       "cssVars": {
         "theme": {
           "--color-success": "var(--success)",
           "--color-warning": "var(--warning)",
           "--color-error": "var(--error)",
-          "--color-info": "var(--info)"
+          "--color-info": "var(--info)",
+          "--animate-accordion-down": "accordion-down 0.2s ease-out",
+          "--animate-accordion-up": "accordion-up 0.2s ease-out"
         },
         "light": {
           "success": "oklch(0.97 0 0)",
@@ -299,7 +309,25 @@
           "info": "oklch(0.685 0.148 237.321)"
         }
       },
-      "docs": "https://data-table.openstatus.dev/docs"
+      "docs": "https://data-table.openstatus.dev/docs",
+      "css": {
+        "@keyframes accordion-down": {
+          "from": {
+            "height": "0"
+          },
+          "to": {
+            "height": "var(--radix-accordion-content-height)"
+          }
+        },
+        "@keyframes accordion-up": {
+          "from": {
+            "height": "var(--radix-accordion-content-height)"
+          },
+          "to": {
+            "height": "0"
+          }
+        }
+      }
     },
     {
       "name": "data-table-filter-command",

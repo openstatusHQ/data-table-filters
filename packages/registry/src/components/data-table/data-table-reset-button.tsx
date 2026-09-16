@@ -11,14 +11,15 @@ import {
 } from "@dtf/registry/components/ui/tooltip";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { X } from "lucide-react";
+import { TOOLTIP_DELAY } from "./ui-compat";
 
 export function DataTableResetButton() {
   const { table } = useDataTable();
   useHotKey(table.resetColumnFilters, "Escape");
 
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={100}>
+    <TooltipProvider {...TOOLTIP_DELAY}>
+      <Tooltip>
         <TooltipTrigger asChild>
           <Button variant="ghost" onClick={() => table.resetColumnFilters()}>
             <X className="mr-2 h-4 w-4" />

@@ -215,7 +215,16 @@ function SortableOverlay({
   return (
     <DragOverlay dropAnimation={dropAnimation} {...props}>
       {activeId ? (
-        <SortableItem value={activeId} className="cursor-grabbing" asChild>
+        // REMINDER: `asChild` is spread, not written as an attribute. When the
+        // shadcn CLI installs into a Base UI project it rewrites a literal
+        // `asChild` into `render={<child />}` — and where the child is an
+        // expression rather than an element, as here, it drops the prop
+        // instead, which would silently turn the overlay into a wrapper div.
+        <SortableItem
+          value={activeId}
+          className="cursor-grabbing"
+          {...{ asChild: true }}
+        >
           {children}
         </SortableItem>
       ) : null}
@@ -266,13 +275,24 @@ interface SortableItemProps extends SlotProps {
    * @type boolean | undefined
    */
   asChild?: boolean;
+
+  /**
+   * The element to render as, with the item's props merged into it — Base UI's
+   * spelling of `asChild`. The shadcn CLI rewrites `asChild` into `render` when
+   * it installs into a Base UI project, so this component has to understand
+   * both; it is built on Radix either way, since it ships with the block.
+   * @type React.ReactElement | undefined
+   */
+  render?: React.ReactElement;
 }
 
 function SortableItem({
   value,
   asTrigger,
   asChild,
+  render,
   className,
+  children,
   ref,
   ...props
 }: SortableItemProps & { ref?: React.Ref<HTMLDivElement> }) {
@@ -299,7 +319,15 @@ function SortableItem({
     transition,
   };
 
-  const Comp = asChild ? Slot : "div";
+  const Comp = asChild || render ? Slot : "div";
+
+  // Base UI nests the children inside the `render` element; Radix's `asChild`
+  // expects them to already be there.
+  const content = render
+    ? children === undefined
+      ? render
+      : React.cloneElement(render, undefined, children)
+    : children;
 
   return (
     <SortableItemContext.Provider value={context}>
@@ -315,7 +343,9 @@ function SortableItem({
         {...(asTrigger ? attributes : {})}
         {...(asTrigger ? listeners : {})}
         {...props}
-      />
+      >
+        {content}
+      </Comp>
     </SortableItemContext.Provider>
   );
 }
