@@ -3,6 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  AGENT_START_PROMPT,
   CREATE_PROJECT_COMMAND,
   EXAMPLE_BLOCK,
   PREREQUISITE,
@@ -226,6 +227,30 @@ describe("the create-project command", () => {
         `${file.path} has a target`,
       ).toMatch(/^app\/example\//);
     }
+  });
+
+  it("has an agent prompt twin on the Quick Start that names the same block", () => {
+    expect(read("apps/web/src/content/docs/01-quick-start.mdx")).toContain(
+      AGENT_START_PROMPT,
+    );
+    expect(AGENT_START_PROMPT).toContain(`/r/${EXAMPLE_BLOCK}.json`);
+    expect(AGENT_START_PROMPT).toContain(CREATE_PROJECT_COMMAND);
+    expect(AGENT_START_PROMPT).toContain("/llms.txt");
+  });
+
+  it("opens the Quick Start with the from-scratch path", () => {
+    // The first heading after the title, and the first code fence, are the
+    // one-command path — not the prerequisite for an existing project.
+    const body = read("apps/web/src/content/docs/01-quick-start.mdx").replace(
+      /^---[\s\S]*?\n---\n/,
+      "",
+    );
+    const firstHeading = body.match(/^## (.+)$/m)?.[1];
+    expect(firstHeading).toBe("Start from scratch");
+    const firstFence = body.indexOf("```");
+    expect(body.slice(firstFence, firstFence + 400)).toContain(
+      CREATE_PROJECT_COMMAND,
+    );
   });
 
   it("scaffolds a Next.js app on a named preset, not with -d", () => {

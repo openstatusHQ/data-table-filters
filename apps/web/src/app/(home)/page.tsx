@@ -8,6 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   createJsonLDGraph,
+  getJsonLDCreateProjectHowTo,
   getJsonLDHomepageFAQ,
   getJsonLDOrganization,
   getJsonLDSoftwareApplication,
@@ -15,11 +16,12 @@ import {
 } from "@/lib/metadata/structured-data";
 import { cn } from "@/lib/utils";
 import { default as NextLink } from "next/link";
-import { HeroAIInput } from "./hero-ai-input";
+import { HeroStart } from "./hero-start";
 
 const jsonLd = createJsonLDGraph([
   getJsonLDOrganization(),
   getJsonLDSoftwareApplication(),
+  getJsonLDCreateProjectHowTo(),
   getJsonLDHomepageFAQ(),
 ]);
 const jsonLdSerialized = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
@@ -516,7 +518,7 @@ function Hero() {
           <span className="relative">Learn more in the Docs.&nbsp;</span>
         </NextLink>
       </p>
-      <HeroAIInput className="max-w-xl pt-2" />
+      <HeroStart className="max-w-2xl pt-2" />
     </div>
   );
 }

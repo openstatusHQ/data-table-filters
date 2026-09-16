@@ -16,6 +16,7 @@ import {
   createJsonLDGraph,
   getJsonLDBlogPosting,
   getJsonLDBreadcrumbList,
+  getJsonLDCreateProjectHowTo,
   getJsonLDFAQPage,
   getJsonLDOrganization,
   getJsonLDWebPage,
@@ -82,6 +83,8 @@ export default async function DocsSectionPage({
       { name: section.meta.title, url: `${BASE_URL}/docs/${slug}` },
     ]),
     getJsonLDFAQPage(section.meta),
+    // The from-scratch command as a HowTo, on the page that documents it.
+    slug === "quick-start" ? getJsonLDCreateProjectHowTo() : null,
   ]);
 
   return (
