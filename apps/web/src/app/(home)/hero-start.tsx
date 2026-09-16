@@ -12,7 +12,7 @@ import { AGENT_START_PROMPT, CREATE_PROJECT_COMMAND } from "@/lib/llms/blocks";
 import { cn } from "@/lib/utils";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { Check, Copy, Sparkles } from "lucide-react";
-import NextLink from "next/link";
+import { Link } from "@/components/custom/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -99,12 +99,12 @@ export function HeroStart({ className }: { className?: string }) {
       )}
       <p className="text-muted-foreground text-sm">
         {active.hint}{" "}
-        <NextLink
+        <Link
           href="/docs/quick-start"
           className="text-foreground whitespace-nowrap underline underline-offset-4"
         >
           Quick Start
-        </NextLink>
+        </Link>
       </p>
     </div>
   );
