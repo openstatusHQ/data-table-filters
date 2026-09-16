@@ -6,6 +6,8 @@ publishedAt: "2026-03-12"
 faq:
   - question: "How do I install data-table-filters?"
     answer: "In any shadcn project, run `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`. That installs the core table engine, the memory store adapter, all 4 filter types, and the schema system with DataTableAuto. Then render `<DataTableAuto data={rows} />`."
+  - question: "How do I create a new project with data-table-filters already installed?"
+    answer: "Run `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova`. The shadcn CLI creates the Next.js app, initializes shadcn on Base UI, and installs the core table and schema blocks in one step. Add `-b radix` before `-p nova` for Radix, then paste `<DataTableAuto data={rows} />` into `app/page.tsx`."
   - question: "What are the prerequisites?"
     answer: "A React project with Tailwind CSS v4 and shadcn/ui initialized — either library. `npx shadcn@latest init -d` (Base UI, the CLI default) and `npx shadcn@latest init -b radix -p nova` (Radix) both work. The CLI handles all dependency resolution automatically."
   - question: "Does data-table-filters work with Base UI?"
@@ -22,13 +24,16 @@ Measured on a clean machine, the whole path from `create-next-app` to a green
 
 > **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
 
-Starting from nothing:
+Starting from nothing? One command creates the Next.js app, initializes
+shadcn, and installs the two blocks from step 2:
 
 ```bash
-npx create-next-app@latest my-app --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --yes
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
 cd my-app
-npx shadcn@latest init -d
 ```
+
+That lands on Base UI. For Radix, add `-b radix` before `-p nova`. Either
+way, skip to step 3.
 
 Already have a shadcn project? Nothing to change: any `"style"` in
 `components.json` works — `base-…` (Base UI), `radix-…`, or the pre-v4
@@ -50,7 +55,8 @@ paths to match your `components.json`, and injects the CSS variables.
 
 ## 3. Render
 
-Paste this into a page — for example `src/app/page.tsx`:
+Paste this into a page — `app/page.tsx`, or `src/app/page.tsx` if the project
+uses a `src` directory:
 
 ```tsx
 import { DataTableAuto } from "@/components/data-table/data-table-auto";

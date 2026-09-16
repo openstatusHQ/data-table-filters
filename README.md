@@ -40,6 +40,12 @@ export default function Page() {
 }
 ```
 
+Starting from nothing? One command creates the Next.js app, initializes shadcn, and installs both blocks (add `-b radix` before `-p nova` for Radix):
+
+```bash
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
+```
+
 From `create-next-app` to a green `next build` this takes about 30 seconds on a clean machine. See the [Quick Start](https://data-table.openstatus.dev/docs/quick-start) for the full walkthrough, and add any block below as you need it.
 
 | Block                          | Install URL                               | What it adds                                                                                                               |
