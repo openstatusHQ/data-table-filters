@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "@/components/custom/link";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -12,7 +13,6 @@ import { AGENT_START_PROMPT, CREATE_PROJECT_COMMAND } from "@/lib/llms/blocks";
 import { cn } from "@/lib/utils";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { Check, Copy, Sparkles } from "lucide-react";
-import { Link } from "@/components/custom/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
