@@ -1,3 +1,4 @@
+import { BASE_URL } from "@/lib/metadata/shared-metadata";
 import manifest from "@dtf/registry-manifest";
 
 export type RegistryItem = {
@@ -29,6 +30,24 @@ export const RADIX_INIT_COMMAND = "npx shadcn@latest init -b radix -p nova";
 export const BASE_UI_INIT_COMMAND = "npx shadcn@latest init -d";
 
 export const PREREQUISITE = `Works on either shadcn library: the CLI default, Base UI (\`${BASE_UI_INIT_COMMAND}\`), or Radix (\`${RADIX_INIT_COMMAND}\`). CI installs into both and typechecks them on every registry change and nightly.`;
+
+/** The two blocks the Quick Start installs: the core table and the schema system. */
+export const QUICK_START_BLOCKS = ["data-table", "data-table-schema"];
+
+/**
+ * Starting from nothing: `shadcn init` creates the app, initializes shadcn,
+ * and installs the blocks it is given, in one command. Verified on shadcn
+ * 4.21.0: `--template next -p nova` lands on Base UI (style `base-nova`) and
+ * `next build` is green with the Quick Start paste; `-b radix -p nova` lands
+ * on Radix. Not `-d`: combined with `--name` it writes the pre-v4 `new-york`
+ * style instead of `base-nova`.
+ */
+export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${QUICK_START_BLOCKS.map(
+  (name) => `${BASE_URL}/r/${name}.json`,
+).join(" ")} --name my-app --template next -p nova`;
+
+/** The one line about creating a project that llms.txt and the MCP server state. */
+export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs the two Quick Start blocks in one command. Add \`-b radix\` before \`-p nova\` for Radix.`;
 
 /**
  * Agent-facing "when do I need this block?" guidance.

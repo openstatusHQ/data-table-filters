@@ -18,6 +18,14 @@ Router is first-class; the blocks work in any React app.
 > Nothing to check before installing: the blocks resolve their primitives from
 > whichever library `components.json` names.
 
+**No project yet?** One command creates a Next.js app, initializes shadcn, and
+installs the core table and schema blocks (add `-b radix` before `-p nova` for
+Radix):
+
+```bash
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
+```
+
 **Load the full instructions before wiring anything up:**
 
 | Resource                                                | What it gives you                                       |

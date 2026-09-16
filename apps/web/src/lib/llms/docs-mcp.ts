@@ -7,7 +7,13 @@ import { BASE_URL } from "@/lib/metadata/shared-metadata";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";
-import { BLOCK_GUIDANCE, PREREQUISITE, RECIPES, registryItems } from "./blocks";
+import {
+  BLOCK_GUIDANCE,
+  CREATE_PROJECT,
+  PREREQUISITE,
+  RECIPES,
+  registryItems,
+} from "./blocks";
 import {
   blockUrl,
   buildDocMarkdown,
@@ -29,6 +35,8 @@ export type DocsSource = () => Promise<DocSource[]>;
 const SERVER_INSTRUCTIONS = `Docs and install recipes for data-table-filters, a React data table distributed as shadcn registry blocks (not an npm package — the code is copied into the user's repo).
 
 ${PREREQUISITE}
+
+${CREATE_PROJECT}
 
 Start with \`get_install_plan\` when the goal is to add a table: it returns the exact shadcn command for that goal and the docs to read next. Use \`search_docs\` for questions about behaviour or APIs, then \`get_doc\` to read a page in full. \`list_blocks\` is the catalog when the goal doesn't match a recipe.`;
 

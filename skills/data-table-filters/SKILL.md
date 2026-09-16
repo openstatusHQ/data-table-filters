@@ -46,7 +46,7 @@ All URLs use base `https://data-table.openstatus.dev`.
 
 ## Quick Start
 
-1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue.
+1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue. No project at all yet? `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova` creates a Next.js app with shadcn initialized and the two blocks from step 2 installed, in one command (add `-b radix` before `-p nova` for Radix); then skip to step 3.
 2. Install core + schema: `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`
 3. Scaffold a minimal working table (see below), or render `<DataTableAuto data={rows} />` when the data shape is unknown
 4. Extend with additional blocks as needed

@@ -1,6 +1,6 @@
 import type { SectionMeta } from "@/lib/mdx";
 import { describe, expect, it, vi } from "vitest";
-import { PREREQUISITE, RECIPES, registryItems } from "./blocks";
+import { CREATE_PROJECT, PREREQUISITE, RECIPES, registryItems } from "./blocks";
 import type { DocSource } from "./build";
 import {
   createDocsMcpHandler,
@@ -120,6 +120,16 @@ describe("docs mcp server", () => {
     });
 
     expect(result.instructions).toContain(PREREQUISITE);
+  });
+
+  it("states the create-project command in its instructions", async () => {
+    const { result } = await rpc("initialize", {
+      protocolVersion: "2025-03-26",
+      capabilities: {},
+      clientInfo: { name: "test", version: "1.0.0" },
+    });
+
+    expect(result.instructions).toContain(CREATE_PROJECT);
   });
 });
 

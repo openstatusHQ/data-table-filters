@@ -3,7 +3,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  CREATE_PROJECT_COMMAND,
   PREREQUISITE,
+  QUICK_START_BLOCKS,
   RADIX_INIT_COMMAND,
   RECIPES,
   registryItems,
@@ -156,6 +158,58 @@ describe("the component library line", () => {
     expect(read("skills/data-table-filters/scripts/detect-stack.sh")).toContain(
       RADIX_INIT_COMMAND,
     );
+  });
+});
+
+describe("the create-project command", () => {
+  // `shadcn init <blocks> --name` is the one-command path from nothing to a
+  // rendered table. It is the sentence from blocks.ts, verbatim, on every
+  // surface that also carries the two-step path, so a CLI flag change is a
+  // one-line fix rather than a hunt.
+
+  const CREATE_DOC_FILES = [
+    "README.md",
+    "AGENTS.md",
+    ".cursor/rules/data-table-filters.mdc",
+    "skills/data-table-filters/SKILL.md",
+    "apps/web/src/content/docs/01-quick-start.mdx",
+  ] as const;
+
+  it.each(CREATE_DOC_FILES)("is stated verbatim in %s", (file) => {
+    expect(read(file), `${file} carries CREATE_PROJECT_COMMAND`).toContain(
+      CREATE_PROJECT_COMMAND,
+    );
+  });
+
+  it("installs the Quick Start's two blocks, which are a canonical recipe", () => {
+    const blocks = Array.from(
+      CREATE_PROJECT_COMMAND.matchAll(/\/r\/([\w-]+)\.json/g),
+    ).map((match) => match[1]);
+
+    expect(blocks).toEqual(QUICK_START_BLOCKS);
+    expect(RECIPES.map((recipe) => recipe.blocks.join(" "))).toContain(
+      blocks.join(" "),
+    );
+    for (const name of blocks) {
+      expect(blockNames).toContain(name);
+    }
+  });
+
+  it("is the same two blocks the Quick Start's install command names", () => {
+    const [firstInstall] = installCommands(
+      read("apps/web/src/content/docs/01-quick-start.mdx"),
+    );
+    expect(firstInstall).toEqual(QUICK_START_BLOCKS);
+  });
+
+  it("scaffolds a Next.js app on a named preset, not with -d", () => {
+    // shadcn 4.21.0 with `--name` and `-d` writes the pre-v4 `new-york` style;
+    // `--template next -p nova` writes `base-nova`, the CLI default.
+    expect(CREATE_PROJECT_COMMAND).toMatch(/^npx shadcn@latest init /);
+    expect(CREATE_PROJECT_COMMAND).toContain("--name my-app");
+    expect(CREATE_PROJECT_COMMAND).toContain("--template next");
+    expect(CREATE_PROJECT_COMMAND).toContain("-p nova");
+    expect(CREATE_PROJECT_COMMAND).not.toMatch(/\s-d(\s|$)/);
   });
 });
 

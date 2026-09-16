@@ -1,6 +1,12 @@
 import type { SectionMeta } from "@/lib/mdx";
 import { BASE_URL } from "@/lib/metadata/shared-metadata";
-import { BLOCK_GUIDANCE, PREREQUISITE, RECIPES, registryItems } from "./blocks";
+import {
+  BLOCK_GUIDANCE,
+  CREATE_PROJECT,
+  PREREQUISITE,
+  RECIPES,
+  registryItems,
+} from "./blocks";
 
 export type DocSource = { meta: SectionMeta; source: string };
 
@@ -10,6 +16,7 @@ const SUMMARY =
 const FACTS = [
   "Stack: React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui. Next.js App Router is first-class; the blocks work in any React app.",
   PREREQUISITE,
+  CREATE_PROJECT,
   "Install with `npx shadcn@latest add <url>`. The shadcn CLI resolves block dependencies, rewrites `@/` import paths to match components.json, and injects the required CSS variables.",
   "Built for large tables: filtering, faceted counts, sorting, and cursor pagination all execute in SQL, and rows are virtualized, so table size is bounded by the database rather than the browser.",
   "One `createTableSchema` definition drives the columns, the filter controls, the row detail sheet, the server-side query handler, the natural-language filter parser, and the MCP tool schema.",

@@ -1,7 +1,14 @@
 import type { SectionMeta } from "@/lib/mdx";
 import { getAllSections, getSection } from "@/lib/mdx";
 import { describe, expect, it } from "vitest";
-import { BLOCK_GUIDANCE, PREREQUISITE, RECIPES, registryItems } from "./blocks";
+import {
+  BLOCK_GUIDANCE,
+  CREATE_PROJECT,
+  CREATE_PROJECT_COMMAND,
+  PREREQUISITE,
+  RECIPES,
+  registryItems,
+} from "./blocks";
 import {
   blockUrl,
   buildDocMarkdown,
@@ -138,6 +145,30 @@ describe("buildLlmsTxt", () => {
     expect(output.indexOf(PREREQUISITE)).toBeLessThan(
       output.indexOf("npx shadcn@latest add"),
     );
+  });
+
+  it("states the create-project command right after the library line", () => {
+    expect(output).toContain(CREATE_PROJECT);
+    expect(output.indexOf(CREATE_PROJECT)).toBeGreaterThan(
+      output.indexOf(PREREQUISITE),
+    );
+    expect(output.indexOf(CREATE_PROJECT)).toBeLessThan(
+      output.indexOf("npx shadcn@latest add"),
+    );
+  });
+});
+
+describe("the create-project line", () => {
+  it("carries the command and both library variants", () => {
+    expect(CREATE_PROJECT).toContain(CREATE_PROJECT_COMMAND);
+    expect(CREATE_PROJECT).toContain("Base UI");
+    expect(CREATE_PROJECT).toContain("-b radix");
+  });
+
+  it("points the command at this site's registry", () => {
+    for (const name of ["data-table", "data-table-schema"]) {
+      expect(CREATE_PROJECT_COMMAND).toContain(blockUrl(name));
+    }
   });
 });
 

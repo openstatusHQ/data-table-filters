@@ -17,6 +17,14 @@ dependency. Stack: React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui.
 No library check needed before installing: the blocks resolve their primitives
 from whichever library `components.json` names.
 
+No project yet? One command creates a Next.js app, initializes shadcn, and
+installs the core table and schema blocks (add `-b radix` before `-p nova` for
+Radix):
+
+```bash
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
+```
+
 Full docs for agents:
 
 - MCP server (ask instead of fetch): https://data-table.openstatus.dev/api/mcp
