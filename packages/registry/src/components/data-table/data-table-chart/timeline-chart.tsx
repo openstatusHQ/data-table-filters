@@ -27,7 +27,6 @@ import {
   getSelectionScrim,
   isPointerEvent,
   orderSelectionLabels,
-  sumBucketValues,
 } from "./timeline-chart-utils";
 
 /**
@@ -166,14 +165,10 @@ export function TimelineChart<TChart extends BaseChartSchema>({
     const bounds = getSelectionBounds(data, refAreaLeft, refAreaRight);
     if (!bounds) return null;
 
-    const { from, toBucket, displayEnd } = bounds;
+    const { from, displayEnd } = bounds;
 
     return {
       range: formatSelectionRange(from, displayEnd, timerange.period),
-      // the per-level counts the range covers. nothing shows them right now -
-      // the card is the range and the actions - but they're what a breakdown
-      // would be built from, and they stay in step with the bounds above
-      values: sumBucketValues(data, from, toBucket),
       // the instants the two edges sit on: `from` opens the first bucket and
       // `displayEnd` is where the last one runs out, which is the boundary the
       // right edge is drawn at

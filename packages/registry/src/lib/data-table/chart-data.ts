@@ -4,8 +4,6 @@
 import { evaluateIntervalMs } from "./interval";
 import type { BaseChartSchema } from "./types";
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
 export type BucketChartDataOptions<TRow> = {
   /** The instant a row belongs to. */
   timestamp: (row: TRow) => Date | number;
@@ -34,9 +32,10 @@ export function chartRange<TRow>(
   const dates = (range ?? []).filter(
     (date): date is Date => date instanceof Date,
   );
+  // One date is that whole local day — the same bounds the timerange filter
+  // selects rows by, so the chart covers exactly the rows in the table.
   if (dates.length === 1) {
-    const start = dates[0].getTime();
-    return [start, start + ONE_DAY_MS];
+    return [startOfDay(dates[0]).getTime(), endOfDay(dates[0]).getTime()];
   }
   if (dates.length >= 2) {
     const a = dates[0].getTime();
@@ -77,7 +76,9 @@ export function bucketChartData<TRow>(
   const interval = options.intervalMs ?? evaluateIntervalMs(duration);
   if (interval <= 0) return [];
 
-  const steps = Math.floor(duration / interval);
+  // At least one bucket: a span shorter than the interval — a single row, a
+  // tight zoom — still has rows to show, and an empty array hides the chart.
+  const steps = Math.max(1, Math.floor(duration / interval));
   const buckets: BaseChartSchema[] = Array.from({ length: steps }, (_, i) => {
     const bucket: BaseChartSchema = { timestamp: start + i * interval };
     for (const key of options.keys) bucket[key] = 0;
@@ -98,4 +99,16 @@ export function bucketChartData<TRow>(
 
 function toTime(value: Date | number): number {
   return value instanceof Date ? value.getTime() : value;
+}
+
+function startOfDay(date: Date): Date {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function endOfDay(date: Date): Date {
+  const result = new Date(date);
+  result.setHours(23, 59, 59, 999);
+  return result;
 }

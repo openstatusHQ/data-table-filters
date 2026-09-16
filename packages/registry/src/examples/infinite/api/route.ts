@@ -88,14 +88,25 @@ function compare(left: unknown, right: unknown): number {
   return String(a).localeCompare(String(b));
 }
 
+/**
+ * Newest first, the order a timestamp cursor addresses. The caller's sort
+ * only decides between rows sharing a timestamp, and `uuid` settles the rest
+ * — the same composition as the Drizzle handler (cursor, sort, tiebreak).
+ * Sorting by the requested column alone would make every page after the
+ * first re-read or skip rows, because the cursor is still a timestamp.
+ */
 function sortRows(
   data: ColumnSchema[],
   sort: SearchParams["sort"],
 ): ColumnSchema[] {
-  if (!sort) return data;
-  const key = sort.id as keyof ColumnSchema;
-  const direction = sort.desc ? -1 : 1;
-  return [...data].sort((a, b) => compare(a[key], b[key]) * direction);
+  const key = sort?.id as keyof ColumnSchema | undefined;
+  const direction = sort?.desc ? -1 : 1;
+  return [...data].sort(
+    (a, b) =>
+      compare(b.date, a.date) ||
+      (key ? compare(a[key], b[key]) * direction : 0) ||
+      compare(a.uuid, b.uuid),
+  );
 }
 
 /**
@@ -108,7 +119,8 @@ function pageRows(
   search: Pick<SearchParams, "cursor" | "size" | "direction">,
 ): ColumnSchema[] {
   const cursor = search.cursor?.getTime() ?? Date.now();
-  const size = search.size ?? 40;
+  // A `size` of zero or less would send back an empty first page forever.
+  const size = search.size && search.size > 0 ? search.size : 40;
 
   if (search.direction === "prev") {
     return data.filter((row) => row.date.getTime() > cursor);

@@ -22,12 +22,11 @@ describe("chartRange", () => {
     expect(chartRange([], (r: Row) => r.date, null)).toBeNull();
   });
 
-  it("reads a single date as that whole day", () => {
-    const day = new Date("2024-01-15T00:00:00Z");
-    expect(chartRange([], (r: Row) => r.date, [day])).toEqual([
-      day.getTime(),
-      day.getTime() + 24 * 60 * 60 * 1000,
-    ]);
+  it("reads a single date as that whole local day, like the filter does", () => {
+    const noon = new Date(2024, 0, 15, 12, 30);
+    const start = new Date(2024, 0, 15, 0, 0, 0, 0).getTime();
+    const end = new Date(2024, 0, 15, 23, 59, 59, 999).getTime();
+    expect(chartRange([], (r: Row) => r.date, [noon])).toEqual([start, end]);
   });
 
   it("orders a backwards range", () => {
@@ -91,6 +90,30 @@ describe("bucketChartData", () => {
     expect(result).toHaveLength(2);
     expect(result[0].success).toBe(1);
     expect(result[1].error).toBe(0);
+  });
+
+  it("keeps one bucket when the span is shorter than the interval", () => {
+    // 2.5 s → 5 s buckets, which would floor to none
+    const result = bucketChartData([row(1500), row(3000, "error")], {
+      timestamp: (r) => r.date,
+      series: (r) => r.level,
+      keys: LEVELS,
+      range: [new Date(1000), new Date(3500)],
+      intervalMs: 5000,
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      timestamp: 1000,
+      success: 1,
+      warning: 0,
+      error: 1,
+    });
+  });
+
+  it("buckets a single row with no range", () => {
+    const result = bucket([row(1000, "warning")], null);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ timestamp: 1000, warning: 1 });
   });
 
   it("ignores a series it was not told about", () => {

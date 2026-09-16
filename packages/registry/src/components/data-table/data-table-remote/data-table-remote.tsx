@@ -13,6 +13,7 @@ import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
   getMetaPage,
+  type BaseChartSchema,
   type PaginationStrategy,
   type Transport,
 } from "@dtf/registry/lib/data-table";
@@ -102,7 +103,7 @@ export type RemoteSlots = {
    * says it has a chart. Not rendered at all when it does not.
    */
   chartSlot?: (
-    chartData: unknown[],
+    chartData: BaseChartSchema[],
     config: TableChartConfig | undefined,
   ) => React.ReactNode;
   sheetSlot?: (fields: SheetField<RemoteRow>[]) => React.ReactNode;

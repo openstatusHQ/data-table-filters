@@ -40,7 +40,7 @@ export default function Page() {
 }
 ```
 
-Starting from nothing? One command creates the Next.js app, initializes shadcn, and installs a working example with every block it needs (add `-b radix` before `-p nova` for Radix). Run `npm run dev` and open [localhost:3000/example](http://localhost:3000/example):
+Starting from nothing? One command creates the Next.js app, initializes shadcn, and installs a working example with every block it needs (add `-b radix` before `-p nova` for Radix). Run `cd my-app && npm run dev` and open [localhost:3000/example](http://localhost:3000/example):
 
 ```bash
 npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova

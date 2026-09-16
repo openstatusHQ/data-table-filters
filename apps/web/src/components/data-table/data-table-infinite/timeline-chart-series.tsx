@@ -12,11 +12,12 @@ export const timelineChartSeries: TimelineChartSeries[] = (
 
 function TooltipLabel({ level }: { level: (typeof LEVELS)[number] }) {
   return (
-    <div className="mr-2 flex w-20 items-center justify-between gap-2 font-mono">
-      <div className="text-foreground/70 capitalize">{level}</div>
-      <div className="text-muted-foreground/70 text-xs">
+    // spans, not divs: the chart tooltip renders the label inside a `<span>`
+    <span className="mr-2 inline-flex w-20 items-center justify-between gap-2 font-mono">
+      <span className="text-foreground/70 capitalize">{level}</span>
+      <span className="text-muted-foreground/70 text-xs">
         {getLevelLabel(level)}
-      </div>
-    </div>
+      </span>
+    </span>
   );
 }

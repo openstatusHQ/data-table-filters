@@ -14,6 +14,9 @@ All extension blocks install via `npx shadcn@latest add <url>` (base: `https://d
 - [Drizzle Helpers](#drizzle-helpers)
 - [Query Layer](#query-layer)
 - [Headless Table](#headless-table)
+- [DataTableInfinite Slot Props Reference](#datatableinfinite-slot-props-reference)
+- [Timeline Chart](#timeline-chart)
+- [Example: infinite table](#example-infinite-table)
 
 ---
 
