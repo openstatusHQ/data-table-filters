@@ -133,7 +133,8 @@ export const CREATE_PROJECT_STEPS: { name: string; text: string }[] = [
 /**
  * The "start from scratch" path as a HowTo, so a search engine or an agent
  * reading the page's structured data gets the command itself, not a summary
- * of it. Carried by the homepage and the Quick Start.
+ * of it. Carried by the Quick Start only, where the steps are visible on the
+ * page; the homepage has the command but not the steps.
  */
 export function getJsonLDCreateProjectHowTo(): WithContext<HowTo> {
   return {

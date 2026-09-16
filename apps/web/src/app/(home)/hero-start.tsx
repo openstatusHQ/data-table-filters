@@ -66,8 +66,10 @@ export function HeroStart({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
+      {/* toggle buttons, not tabs: there is no tabpanel and no arrow-key
+          navigation, so `aria-pressed` describes what they actually do */}
       <div
-        role="tablist"
+        role="group"
         aria-label="How to start"
         className="flex items-center gap-1"
       >
@@ -75,8 +77,7 @@ export function HeroStart({ className }: { className?: string }) {
           <button
             key={entry.id}
             type="button"
-            role="tab"
-            aria-selected={entry.id === mode}
+            aria-pressed={entry.id === mode}
             onClick={() => setMode(entry.id)}
             className={cn(
               "flex items-center gap-1 rounded-md px-2 py-1 font-mono text-xs transition-colors",
@@ -172,6 +173,7 @@ function DescribeForm() {
           <InputGroupInput
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            aria-label="Describe a table"
             placeholder="Describe a table... e.g. API logs with status, latency, region"
             maxLength={500}
             autoFocus

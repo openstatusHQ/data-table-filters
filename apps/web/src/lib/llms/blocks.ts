@@ -56,7 +56,7 @@ export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${BASE_URL}/r/${EX
  * It names the index the agent should read first and the one block to
  * install, and covers both starts: no app yet, or an existing project.
  */
-export const AGENT_START_PROMPT = `Read ${BASE_URL}/llms.txt, then set up data-table-filters here: install ${BASE_URL}/r/${EXAMPLE_BLOCK}.json with the shadcn CLI (if there is no app yet, create one with \`${CREATE_PROJECT_COMMAND}\` instead), start the dev server, and open /example.`;
+export const AGENT_START_PROMPT = `Read ${BASE_URL}/llms.txt, then set up data-table-filters here: install ${BASE_URL}/r/${EXAMPLE_BLOCK}.json with the shadcn CLI (run \`npx shadcn@latest init -d\` first if the project has no components.json; if there is no app yet, create one with \`${CREATE_PROJECT_COMMAND}\` instead), start the dev server, and open /example.`;
 
 /** The one line about creating a project that llms.txt and the MCP server state. */
 export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs; run the dev server and open http://localhost:3000/example. Add \`-b radix\` before \`-p nova\` for Radix.`;

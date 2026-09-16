@@ -46,7 +46,7 @@ that can run commands. It reads the docs index first and ends on the same
 page:
 
 ```text
-Read https://data-table.openstatus.dev/llms.txt, then set up data-table-filters here: install https://data-table.openstatus.dev/r/data-table-example-infinite.json with the shadcn CLI (if there is no app yet, create one with `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova` instead), start the dev server, and open /example.
+Read https://data-table.openstatus.dev/llms.txt, then set up data-table-filters here: install https://data-table.openstatus.dev/r/data-table-example-infinite.json with the shadcn CLI (run `npx shadcn@latest init -d` first if the project has no components.json; if there is no app yet, create one with `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova` instead), start the dev server, and open /example.
 ```
 
 That is the Quick Start. The rest of this page is for adding a table to a
@@ -54,9 +54,7 @@ project you already have.
 
 ## Add to an existing project
 
-Three steps: a shadcn project, one install command, one paste. Measured on a
-clean machine, the whole path from `create-next-app` to a green `next build`
-takes about 30 seconds.
+Three steps: a shadcn project, one install command, one paste.
 
 ### 1. Prerequisite
 

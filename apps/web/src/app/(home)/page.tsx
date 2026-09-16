@@ -8,7 +8,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   createJsonLDGraph,
-  getJsonLDCreateProjectHowTo,
   getJsonLDHomepageFAQ,
   getJsonLDOrganization,
   getJsonLDSoftwareApplication,
@@ -21,7 +20,6 @@ import { HeroStart } from "./hero-start";
 const jsonLd = createJsonLDGraph([
   getJsonLDOrganization(),
   getJsonLDSoftwareApplication(),
-  getJsonLDCreateProjectHowTo(),
   getJsonLDHomepageFAQ(),
 ]);
 const jsonLdSerialized = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
