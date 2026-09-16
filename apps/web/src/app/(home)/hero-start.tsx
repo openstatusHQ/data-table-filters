@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group";
 import { AGENT_START_PROMPT, CREATE_PROJECT_COMMAND } from "@/lib/llms/blocks";
 import { cn } from "@/lib/utils";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
@@ -116,14 +122,19 @@ function CopyRow({
   const { copy, isCopied } = useCopyToClipboard();
 
   return (
-    <div className="flex gap-2">
-      <div
-        className="border-input bg-background text-foreground flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md border px-3 font-mono text-sm"
-        title={value}
-      >
-        <span className="text-muted-foreground select-none">{prefix}</span>
-        <span className="truncate">{value}</span>
-      </div>
+    <ButtonGroup className="w-full">
+      <InputGroup className="shadow-none" title={value}>
+        <InputGroupAddon>
+          <InputGroupText className="font-mono">{prefix}</InputGroupText>
+        </InputGroupAddon>
+        <InputGroupInput
+          readOnly
+          value={value}
+          aria-label={`${label} command`}
+          className="truncate font-mono"
+          onFocus={(e) => e.currentTarget.select()}
+        />
+      </InputGroup>
       <Button
         type="button"
         variant="outline"
@@ -138,7 +149,7 @@ function CopyRow({
         )}
         {isCopied ? "Copied" : "Copy"}
       </Button>
-    </div>
+    </ButtonGroup>
   );
 }
 
@@ -155,22 +166,27 @@ function DescribeForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Describe a table... e.g. API logs with status, latency, region"
-        className="flex-1 shadow-none"
-        maxLength={500}
-        autoFocus
-      />
-      <Button
-        type="submit"
-        disabled={!description.trim()}
-        className="shadow-none"
-      >
-        Generate Table
-      </Button>
+    <form onSubmit={handleSubmit}>
+      <ButtonGroup className="w-full">
+        <InputGroup className="shadow-none">
+          <InputGroupInput
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe a table... e.g. API logs with status, latency, region"
+            maxLength={500}
+            autoFocus
+          />
+        </InputGroup>
+        <Button
+          type="submit"
+          variant="outline"
+          disabled={!description.trim()}
+          className="shrink-0 gap-1.5 font-mono shadow-none"
+        >
+          Generate
+          <Sparkles className="size-3.5" />
+        </Button>
+      </ButtonGroup>
     </form>
   );
 }
