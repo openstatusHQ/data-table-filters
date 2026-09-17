@@ -1,0 +1,282 @@
+---
+title: "Upgrading from shadcn/ui Table"
+description: "How to upgrade a basic shadcn data table with Linear-style faceted filters, URL state, infinite scroll, and server-side SQL execution"
+author: "openstatus"
+publishedAt: "2026-03-17"
+faq:
+  - question: "Does data-table-filters replace my existing shadcn components?"
+    answer: "No. It uses your existing shadcn primitives (Table, Button, Input, DropdownMenu, Checkbox, etc.). It upgrades the orchestration layer with declarative schemas, faceted filters, and state management without altering your UI styling."
+  - question: "How is data-table-filters different from the official shadcn data table example?"
+    answer: "The official shadcn tutorial provides a basic client-side table with a single text search input and local useState. data-table-filters adds multi-select faceted filters with dynamic counts, range sliders, date pickers, URL state persistence via nuqs, virtualized infinite scrolling, and server-side SQL execution with Drizzle ORM."
+  - question: "Can I preserve my custom column cell renderers?"
+    answer: "Yes. Standard TanStack Table cell functions work as-is, or you can use the pre-built data-table-cell renderers for badges, status codes, timestamps, and heatmaps."
+  - question: "Why should filter state live in the URL instead of useState?"
+    answer: "Storing filter, sorting, and pagination state in query parameters via nuqs makes tables shareable, bookmarkable, and refresh-safe. Anyone opening the link sees the exact same filtered dataset."
+  - question: "Do I need to migrate all columns and filters at once?"
+    answer: "No. You can start with client-side memory state and 1-2 faceted filters, then gradually add the command palette, row detail drawer, or server-side Drizzle handler when your data grows."
+---
+
+# Upgrading from shadcn/ui Table
+
+The official [shadcn/ui Data Table](https://ui.shadcn.com/docs/components/data-table) documentation is a great introduction to `@tanstack/react-table`. It demonstrates how to wrap table primitives (`Table`, `TableHeader`, `TableRow`) with sorting, column visibility, and client-side pagination.
+
+In production applications, however, basic tables quickly hit four friction points:
+
+1. **Single-field text search instead of faceted filters.** The tutorial provides an `<Input>` that filters one column. Real applications need multi-select checkbox lists with item counts (`Error (42)`, `Warning (8)`), numeric sliders, and date range pickers.
+2. **State lost on refresh.** Filters and sort state live in React's local `useState`. Refreshing the page, navigating away, or sharing the URL resets all user selections.
+3. **Client-side memory limits.** `getPaginationRowModel()` expects every row in browser memory. When datasets grow to tens of thousands of rows, client-side filtering and sorting degrades performance.
+4. **Repetitive boilerplate.** Every column requires 30–50 lines of manual `ColumnDef` code to wire up sorting buttons, formatters, and filter callbacks.
+
+`data-table-filters` is an upgrade path for existing shadcn/ui projects. It reuses your existing UI primitives while replacing manual table plumbing with declarative schemas, Linear-style faceted controls, and URL-synchronized state.
+
+---
+
+## Architectural Comparison
+
+| Capability             | Official shadcn/ui Tutorial         | With `data-table-filters`                                                  |
+| :--------------------- | :---------------------------------- | :------------------------------------------------------------------------- |
+| **Primitives & Theme** | `@/components/ui/table`             | Reuses your existing shadcn primitives                                     |
+| **Column Definitions** | Manual `ColumnDef<T>[]` boilerplate | Declarative `createTableSchema` + `col.*`                                  |
+| **Filtering**          | Single-column text `<Input />`      | Faceted checkboxes (with counts), sliders, date ranges, ⌘K command palette |
+| **State Persistence**  | React `useState` (lost on refresh)  | `nuqs` URL search params or `zustand`                                      |
+| **Pagination**         | Client 10-per-page buttons          | Virtualized infinite scroll (`DataTableInfinite`) or cursor pagination     |
+| **Server-Side SQL**    | Manual API & SQL orchestration      | `createDrizzleHandler` (filters, counts, cursors in SQL)                   |
+| **Row Details**        | Hand-rolled modal or drawer         | Pre-built `DataTableSheetDetails`                                          |
+
+---
+
+## Step 1: Install the Upgrade Blocks
+
+Preserve your existing `@/components/ui/table.tsx` and other primitives. Install the core table engine, declarative schema builder, and URL state adapter:
+
+```bash
+npx shadcn@latest add \
+  https://data-table.openstatus.dev/r/data-table.json \
+  https://data-table.openstatus.dev/r/data-table-schema.json \
+  https://data-table.openstatus.dev/r/data-table-nuqs.json
+```
+
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). The CLI resolves primitives from whichever base your `components.json` specifies.
+
+The CLI downloads the components into `src/components/data-table/` and helpers into `src/lib/`. You own the code directly.
+
+---
+
+## Step 2: Replace `ColumnDef[]` with `createTableSchema`
+
+In the standard shadcn tutorial, defining columns requires repetitive manual code for headers, sorting buttons, and formatting:
+
+### Before (Standard shadcn `columns.tsx`)
+
+```tsx
+// columns.tsx
+import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
+
+export type Payment = {
+  id: string;
+  amount: number;
+  status: "pending" | "processing" | "success" | "failed";
+  email: string;
+};
+
+export const columns: ColumnDef<Payment>[] = [
+  {
+    accessorKey: "status",
+    header: "Status",
+  },
+  {
+    accessorKey: "email",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Email
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+  },
+  {
+    accessorKey: "amount",
+    header: () => <div className="text-right">Amount</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("amount"));
+      return <div className="text-right font-medium">${amount.toFixed(2)}</div>;
+    },
+  },
+];
+```
+
+### After (`table-schema.ts`)
+
+With `createTableSchema`, each column's type, display label, sortability, and filter type are declared once:
+
+```tsx
+// table-schema.ts
+import { col, createTableSchema } from "@/lib/table-schema";
+import { generateColumns, generateFilterFields } from "@/lib/table-schema";
+
+export const paymentSchema = createTableSchema({
+  status: col
+    .enum(["pending", "processing", "success", "failed"])
+    .label("Status")
+    .filterable("checkbox"),
+  email: col.string().label("Email").sortable().filterable("input"),
+  amount: col
+    .number()
+    .label("Amount")
+    .sortable()
+    .filterable("slider", { min: 0, max: 1000 })
+    .cell((val) => `$${Number(val).toFixed(2)}`),
+});
+
+// Auto-generate columns and faceted filter definitions
+export const columns = generateColumns(paymentSchema.definition);
+export const filterFields = generateFilterFields(paymentSchema.definition);
+```
+
+One schema definition drives:
+
+- Typed column definitions (`columns`)
+- Faceted filter controls (`filterFields`)
+- Row detail drawer fields (`sheetFields`)
+- URL search param serialization
+
+---
+
+## Step 3: Sync with URL Search Params (`nuqs`)
+
+In standard shadcn, filters live in component state and vanish on page reload:
+
+```tsx
+// Standard shadcn: local state lost on refresh
+const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+  [],
+);
+const [sorting, setSorting] = React.useState<SortingState>([]);
+```
+
+Replace local state with `useNuqsAdapter`. Every filter selection, sort direction, and search query immediately synchronizes with the browser URL (e.g. `?status=failed&amount=100-500&sort=amount.desc`):
+
+```tsx
+// payments-table.tsx
+"use client";
+
+import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
+import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
+import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
+import { columns, filterFields, paymentSchema } from "./table-schema";
+import type { Payment } from "./types";
+
+export function PaymentsTable({ data }: { data: Payment[] }) {
+  const adapter = useNuqsAdapter(paymentSchema.definition);
+
+  return (
+    <DataTableStoreProvider adapter={adapter}>
+      <DataTableInfinite
+        columns={columns}
+        data={data}
+        filterFields={filterFields}
+      />
+    </DataTableStoreProvider>
+  );
+}
+```
+
+> **Setup Reminder:** As with any `nuqs` usage in Next.js App Router, ensure `<NuqsAdapter>` wraps your root layout (`app/layout.tsx`) and the client component is wrapped in a `<Suspense>` boundary.
+
+---
+
+## Step 4: Add Faceted Filter Controls and Command Palette
+
+The standard shadcn table renders a basic search input above the table. To upgrade to faceted controls:
+
+1. `filterFields` passed to `<DataTableInfinite>` automatically renders:
+
+   - Checkbox dropdowns with option counts
+   - Numeric range sliders with min/max bounds
+   - Date range pickers with presets
+   - Active filter badges and a "Reset" button
+
+2. **Add a ⌘K Command Palette:**
+   Install the palette block:
+
+   ```bash
+   npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-filter-command.json
+   ```
+
+   Pass it into `commandSlot`:
+
+   ```tsx
+   import { DataTableFilterCommand } from "@/components/data-table/data-table-filter-command";
+
+   <DataTableInfinite
+     columns={columns}
+     data={data}
+     filterFields={filterFields}
+     commandSlot={<DataTableFilterCommand schema={paymentSchema.definition} />}
+   />;
+   ```
+
+---
+
+## Step 5: (Optional) Scale to Server-Side SQL with Drizzle
+
+If your dataset grows beyond what the browser can comfortably handle, you do not need to rewrite the table. Install the Drizzle block:
+
+```bash
+npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-drizzle.json
+```
+
+Pass the exact same `paymentSchema.definition` to `createDrizzleHandler` in your Next.js Route Handler:
+
+```ts
+// app/api/payments/route.ts
+import { db } from "@/db";
+import { payments } from "@/db/schema";
+import { createDrizzleHandler } from "@/lib/drizzle";
+import { paymentSchema } from "@/app/payments/table-schema";
+
+const handler = createDrizzleHandler({
+  db,
+  table: payments,
+  schema: paymentSchema.definition,
+  columnMapping: {
+    id: payments.id,
+    status: payments.status,
+    email: payments.email,
+    amount: payments.amount,
+  },
+  cursorColumn: "id",
+});
+
+export const GET = (request: Request) => handler(request);
+```
+
+Dynamic `WHERE` clauses, multi-column sorting, cursor pagination, and faceted count aggregation now execute directly in PostgreSQL, bounded by database indexes rather than browser memory.
+
+---
+
+## Incremental Adoption Path
+
+You do not need to migrate everything at once:
+
+1. **Day 1:** Install `data-table` and `data-table-schema`. Replace your manual `ColumnDef[]` with `createTableSchema` and render `<DataTableInfinite>`. Start with in-memory state via `useMemoryAdapter`.
+2. **Day 2:** Switch `useMemoryAdapter` to `useNuqsAdapter` to enable shareable URL filter links.
+3. **Day 3:** Add optional blocks as needed:
+   - Detail side panel: `data-table-sheet`
+   - Cell renderers: `data-table-cell` (badges, status codes, timestamps)
+   - Bulk actions: `data-table-floating-bar`
+   - Timeline chart: `data-table-chart`
+4. **When Scaling:** Add `data-table-drizzle` to push filtering and facets into SQL.
+
+---
+
+## Next Steps
+
+- Explore all column types and presets in [Table Schema](/docs/table-schema)
+- Learn about URL state options in [State Management](/docs/state-management)
+- Check out full server-side walkthroughs in [Drizzle ORM](/docs/drizzle-orm)
+- Try the interactive [Table Builder](/builder) to experiment with schema options
