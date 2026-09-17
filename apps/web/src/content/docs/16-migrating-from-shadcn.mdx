@@ -116,7 +116,11 @@ With `createTableSchema`, each column's type, display label, sortability, and fi
 ```tsx
 // table-schema.ts
 import { col, createTableSchema } from "@/lib/table-schema";
-import { generateColumns, generateFilterFields } from "@/lib/table-schema";
+import {
+  generateColumns,
+  generateFilterFields,
+  generateFilterSchema,
+} from "@/lib/table-schema";
 
 export const paymentSchema = createTableSchema({
   status: col
@@ -129,12 +133,13 @@ export const paymentSchema = createTableSchema({
     .label("Amount")
     .sortable()
     .filterable("slider", { min: 0, max: 1000 })
-    .cell((val) => `$${Number(val).toFixed(2)}`),
+    .display("custom", { cell: (val) => `$${Number(val).toFixed(2)}` }),
 });
 
-// Auto-generate columns and faceted filter definitions
+// Auto-generate columns, faceted filter definitions, and store schema
 export const columns = generateColumns(paymentSchema.definition);
 export const filterFields = generateFilterFields(paymentSchema.definition);
+export const filterSchema = generateFilterSchema(paymentSchema.definition);
 ```
 
 One schema definition drives:
@@ -167,11 +172,14 @@ Replace local state with `useNuqsAdapter`. Every filter selection, sort directio
 import { DataTableInfinite } from "@/components/data-table/data-table-infinite";
 import { useNuqsAdapter } from "@/lib/store/adapters/nuqs";
 import { DataTableStoreProvider } from "@/lib/store/provider/DataTableStoreProvider";
-import { columns, filterFields, paymentSchema } from "./table-schema";
+import { columns, filterFields, filterSchema } from "./table-schema";
 import type { Payment } from "./types";
 
+const noop = () => Promise.resolve();
+const noopRefetch = () => {};
+
 export function PaymentsTable({ data }: { data: Payment[] }) {
-  const adapter = useNuqsAdapter(paymentSchema.definition);
+  const adapter = useNuqsAdapter(filterSchema.definition, { id: "payments" });
 
   return (
     <DataTableStoreProvider adapter={adapter}>
@@ -179,6 +187,11 @@ export function PaymentsTable({ data }: { data: Payment[] }) {
         columns={columns}
         data={data}
         filterFields={filterFields}
+        totalRows={data.length}
+        totalRowsFetched={data.length}
+        hasNextPage={false}
+        fetchNextPage={noop}
+        refetch={noopRefetch}
       />
     </DataTableStoreProvider>
   );
@@ -216,7 +229,12 @@ The standard shadcn table renders a basic search input above the table. To upgra
      columns={columns}
      data={data}
      filterFields={filterFields}
-     commandSlot={<DataTableFilterCommand schema={paymentSchema.definition} />}
+     totalRows={data.length}
+     totalRowsFetched={data.length}
+     hasNextPage={false}
+     fetchNextPage={noop}
+     refetch={noopRefetch}
+     commandSlot={<DataTableFilterCommand schema={filterSchema.definition} />}
    />;
    ```
 
@@ -236,13 +254,14 @@ Pass the exact same `paymentSchema.definition` to `createDrizzleHandler` in your
 // app/api/payments/route.ts
 import { db } from "@/db";
 import { payments } from "@/db/schema";
-import { createDrizzleHandler } from "@/lib/drizzle";
+import { createDrizzleHandler, defineFilters } from "@/lib/drizzle";
 import { paymentSchema } from "@/app/payments/table-schema";
+import { NextRequest } from "next/server";
 
 const handler = createDrizzleHandler({
   db,
   table: payments,
-  schema: paymentSchema.definition,
+  filters: defineFilters(paymentSchema.definition),
   columnMapping: {
     id: payments.id,
     status: payments.status,
@@ -252,7 +271,11 @@ const handler = createDrizzleHandler({
   cursorColumn: "id",
 });
 
-export const GET = (request: Request) => handler(request);
+export async function GET(req: NextRequest) {
+  const search = Object.fromEntries(req.nextUrl.searchParams);
+  const result = await handler.execute(search);
+  return Response.json(result);
+}
 ```
 
 Dynamic `WHERE` clauses, multi-column sorting, cursor pagination, and faceted count aggregation now execute directly in PostgreSQL, bounded by database indexes rather than browser memory.
