@@ -114,6 +114,8 @@ export const columns: ColumnDef<Payment>[] = [
 ];
 ```
 
+> **Tip on timestamp fields:** The basic shadcn tutorial data only defines `id`, `amount`, `status`, and `email`. Adding a timestamp field such as `createdAt: Date` to your data model unlocks time range filters (`col.timestamp().filterable("timerange")`) and timestamp cursor pagination (`cursorColumn: "createdAt"`). Ensure your row objects include this field before applying the timestamp column.
+
 ### After (`table-schema.ts`)
 
 With `createTableSchema`, each column's type, display label, sortability, and filter type are declared once:
