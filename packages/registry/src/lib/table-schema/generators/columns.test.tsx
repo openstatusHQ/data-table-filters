@@ -503,6 +503,19 @@ describe("generateColumns — header", () => {
     expect(def!.header).toBe("Date");
   });
 
+  it("sets enableSorting from the schema, not just the header", () => {
+    // TanStack defaults `enableSorting` to true, so without this a column
+    // that never opted in could still be sorted through state (a URL param).
+    const [on, off, never] = defs({
+      date: presets.timestamp().label("Date"),
+      created: presets.timestamp().label("Created").sortable(false),
+      host: col.string().label("Host"),
+    });
+    expect(on!.enableSorting).toBe(true);
+    expect(off!.enableSorting).toBe(false);
+    expect(never!.enableSorting).toBe(false);
+  });
+
   it("prefers hideHeader over sortable when both are set", () => {
     const [def] = defs({
       level: col

@@ -187,7 +187,10 @@ const EMITTERS: EmitterMap = {
   hidden: (value) => (value ? [".hidden()"] : []),
   hideHeader: (value) => (value ? [".hideHeader()"] : []),
   resizable: (value) => (value ? [".resizable()"] : []),
-  sortable: (value) => (value ? [".sortable()"] : []),
+  // Only reached when the value differs from the baseline, so `false` here
+  // means a preset (`timestamp`, `latency`, …) switched sorting on and the
+  // author switched it off again.
+  sortable: (value) => [value ? ".sortable()" : ".sortable(false)"],
   optional: (value) => (value ? [".optional()"] : []),
 
   // `enableHiding: false` together with `hidden` is exactly `.sheetOnly()`;

@@ -4,7 +4,6 @@ import { LiveButton } from "@/components/data-table/data-table-infinite/live-but
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
 import { timelineChartSeries } from "@/components/data-table/data-table-infinite/timeline-chart-series";
-import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
 import { getLevelRowClassName } from "@/lib/request/level";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +20,7 @@ import { DataTableRefreshButton } from "@dtf/registry/components/data-table/data
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";
 import type { SheetField } from "@dtf/registry/components/data-table/types";
+import { timingPhasesColumn } from "@dtf/registry/examples/infinite/timing-phases";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
 import {
@@ -51,7 +51,7 @@ import { tableSchema } from "./table-schema";
 
 const baseColumns = [
   ...generateColumns<ColumnSchema>(tableSchema.definition),
-  timingPhasesColumn,
+  timingPhasesColumn<ColumnSchema>(),
 ];
 // Renders from `meta.actions` + each row's `_actions`. Appended only once the
 // server advertises actions, and hidden by default even then — users enable it

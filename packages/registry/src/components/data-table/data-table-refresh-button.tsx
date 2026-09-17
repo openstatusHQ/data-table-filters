@@ -22,6 +22,7 @@ export function DataTableRefreshButton({ onClick }: { onClick: () => void }) {
 
   return (
     <Button
+      type="button"
       variant="outline"
       size="icon"
       disabled={isLoading}

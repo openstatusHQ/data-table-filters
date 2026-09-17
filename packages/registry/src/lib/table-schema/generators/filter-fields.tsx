@@ -13,12 +13,15 @@ import type { ResolvedColumn, TableSchemaDefinition } from "../types";
 /**
  * The checkbox option a display picks when the column supplied no
  * `component` of its own. A `level-indicator` column shows the same dot it
- * renders in its cells, so the filter sidebar reads like the table.
+ * renders in its cells, so the filter sidebar reads like the table — which
+ * is why it is limited to the kinds whose cells draw the dot (`renderCell`
+ * falls back to plain text for anything but a string).
  */
 function defaultFilterComponent(
   config: ResolvedColumn,
 ): ((props: Option) => JSX.Element | null) | undefined {
   if (config.display.type !== "level-indicator") return undefined;
+  if (config.kind !== "enum" && config.kind !== "string") return undefined;
   const colorMap = config.display.colorMap;
   return function LevelOption({ label, value }: Option) {
     return (

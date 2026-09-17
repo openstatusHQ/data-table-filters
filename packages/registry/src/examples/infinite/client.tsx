@@ -39,7 +39,7 @@ import { timingPhasesColumn } from "./timing-phases";
 // exception is the timing bar, which spans five columns and is appended by hand.
 const columns = [
   ...generateColumns<ColumnSchema>(tableSchema.definition),
-  timingPhasesColumn,
+  timingPhasesColumn<ColumnSchema>(),
 ];
 const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
 const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);

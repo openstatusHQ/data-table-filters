@@ -109,6 +109,23 @@ describe("generateFilterFields", () => {
     }
   });
 
+  it("gives no swatch to a kind whose cells fall back to text", () => {
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["error", "info"] as const)
+        .label("Level")
+        .display("level-indicator"),
+      ok: col.boolean().label("OK").display("level-indicator"),
+    };
+    const [level, ok] = generateFilterFields(schema);
+    if (level.type === "checkbox" && ok.type === "checkbox") {
+      expect(typeof level.component).toBe("function");
+      // `renderCell` draws a boolean as text, so the sidebar must not show a
+      // dot the table does not.
+      expect(ok.component).toBeUndefined();
+    }
+  });
+
   it("keeps an explicit checkbox component over the display default", () => {
     const custom = () => null;
     const schema: TableSchemaDefinition = {

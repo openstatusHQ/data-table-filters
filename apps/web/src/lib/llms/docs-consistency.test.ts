@@ -275,7 +275,9 @@ describe("the create-project command", () => {
     // match it or a reader gets a different command depending on the page.
     for (const file of [
       "apps/web/src/content/docs/01-quick-start.mdx",
+      "apps/web/src/content/docs/13-agents.mdx",
       "README.md",
+      "AGENTS.md",
     ]) {
       expect(read(file), `${file} carries the skill install`).toContain(
         SKILL_INSTALL_COMMAND,

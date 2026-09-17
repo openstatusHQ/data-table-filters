@@ -416,6 +416,19 @@ describe("schemaToTypeScript — factory selection reads provenance", () => {
     expectRoundTrip(schema.toJSON());
   });
 
+  it("keeps .sortable(false) on a preset that enables sorting", () => {
+    // The emitter used to write only truthy values, so the opt-out was
+    // dropped and the regenerated schema was sortable again.
+    const schema = createTableSchema({
+      date: col.presets.timestamp().label("Date").sortable(false),
+    });
+    const ts = schemaToTypeScript(schema.toJSON());
+
+    expect(ts).toContain("col.presets.timestamp()");
+    expect(ts).toContain(".sortable(false)");
+    expectRoundTrip(schema.toJSON());
+  });
+
   it("does NOT mis-attribute an enum that merely resembles logLevel", () => {
     const schema = createTableSchema({
       level: col.enum(LEVELS).label("Level").defaultOpen(),

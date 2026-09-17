@@ -15,6 +15,15 @@ export type TimingPhase = (typeof TIMING_PHASES)[number];
 
 export type Timing = Record<TimingPhase, number>;
 
+/**
+ * What `timingPhasesColumn` and `SheetTimingPhases` read off a row: the
+ * total, and whichever phases the row carries. Any row type with these keys
+ * fits, which is how the docs site's own demos share the components.
+ */
+export type TimingRow = { latency: number } & Partial<
+  Record<TimingPhase, number>
+>;
+
 const PHASES: Record<TimingPhase, { label: string; color: string }> = {
   "timing.dns": { label: "DNS", color: "bg-emerald-500" },
   "timing.connection": { label: "Connection", color: "bg-cyan-500" },
@@ -31,6 +40,18 @@ export function getTimingColor(phase: TimingPhase): string {
   return PHASES[phase].color;
 }
 
+/**
+ * One phase's share of the latency, as a percentage for a bar's `width`.
+ * A row with no latency has no shares, not `NaN` ones.
+ */
+export function getTimingShare(
+  timing: Timing,
+  phase: TimingPhase,
+  latency: number,
+): number {
+  return latency > 0 ? (timing[phase] / latency) * 100 : 0;
+}
+
 /** Each phase's share of the latency, formatted for display (`"12.5%"`, `"<1%"`). */
 export function getTimingPercentage(
   timing: Timing,
@@ -38,9 +59,8 @@ export function getTimingPercentage(
 ): Record<TimingPhase, string> {
   const out = {} as Record<TimingPhase, string>;
   for (const phase of TIMING_PHASES) {
-    const ratio = latency > 0 ? timing[phase] / latency : 0;
-    out[phase] =
-      ratio > 0 && ratio < 0.01 ? "<1%" : `${(ratio * 100).toFixed(1)}%`;
+    const share = getTimingShare(timing, phase, latency);
+    out[phase] = share > 0 && share < 1 ? "<1%" : `${share.toFixed(1)}%`;
   }
   return out;
 }
