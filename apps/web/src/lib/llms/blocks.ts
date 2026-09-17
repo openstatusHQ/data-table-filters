@@ -71,6 +71,14 @@ export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${blockRef(EXAMPLE
  */
 export const AGENT_START_PROMPT = `Read ${BASE_URL}/llms.txt, then set up data-table-filters here: install ${blockRef(EXAMPLE_BLOCK)} with the shadcn CLI (run \`npx shadcn@latest init -d\` first if the project has no components.json; if there is no app yet, create one with \`${CREATE_PROJECT_COMMAND}\` instead), start the dev server, and open /example.`;
 
+/**
+ * The agent skill, installed with the `skills` CLI so it works in Claude
+ * Code, Cursor or Codex alike. The home page's Skill tab, llms.txt and the
+ * Quick Start all carry this exact line.
+ */
+export const SKILL_INSTALL_COMMAND =
+  "npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters";
+
 /** The one line about creating a project that llms.txt and the MCP server state. */
 export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs; run the dev server and open http://localhost:3000/example. Add \`-b radix\` before \`-p nova\` for Radix.`;
 
