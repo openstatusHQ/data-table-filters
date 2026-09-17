@@ -95,7 +95,6 @@ function ClientInner() {
     fetchNextPage,
     hasNextPage,
     fetchPreviousPage,
-    refetch,
   } = useInfiniteQuery(dataOptions(search));
 
   const queryClient = useQueryClient();
@@ -172,7 +171,6 @@ function ClientInner() {
         fetchNextPage={fetchNextPage}
         hasNextPage={hasNextPage}
         fetchPreviousPage={fetchPreviousPage}
-        refetch={refetch}
         getRowClassName={(row) => {
           const rowTimestamp = row.original.date.getTime();
           const isPast = rowTimestamp <= (liveMode.timestamp || -1);

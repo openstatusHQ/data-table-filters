@@ -52,7 +52,7 @@ function ClientInner() {
   // Read full state from adapter for data fetching
   const search = useFilterState<FilterState>();
 
-  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
+  const { data, isFetching, isLoading, fetchNextPage, hasNextPage } =
     useInfiniteQuery(dataOptions(search));
 
   const flatData = React.useMemo(
@@ -134,7 +134,6 @@ function ClientInner() {
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
-      refetch={refetch}
       tableId="light"
       commandSlot={
         <DataTableFilterCommand

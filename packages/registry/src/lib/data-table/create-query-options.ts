@@ -240,16 +240,17 @@ export function getMetaPage<TData, TMeta>(
  *
  * Returns `undefined` for an empty cache so `setQueryData` leaves it alone.
  */
-export function resetPagesForRefresh<TPage, TPageParam>(
+export function resetPagesForRefresh<
+  TPage,
+  TPageParam extends Pick<MetaPageParam, "_meta">,
+>(
   data: InfiniteData<TPage, TPageParam> | undefined,
   initialPageParam: TPageParam,
 ): InfiniteData<TPage, TPageParam> | undefined {
   if (!data?.pages?.length) return undefined;
   const index = Math.max(
     0,
-    data.pageParams.findIndex(
-      (param) => (param as { _meta?: boolean } | null)?._meta,
-    ),
+    data.pageParams.findIndex((param) => param?._meta),
   );
   return {
     pages: data.pages.slice(index),
@@ -264,11 +265,24 @@ export function resetPagesForRefresh<TPage, TPageParam>(
  * {@link resetPagesForRefresh} for why the bare one breaks after live mode.
  * Pass the options freshly built from the current search so the initial page
  * param carries the current time rather than the one captured on first load.
+ *
+ * The page param must carry `_meta: true` — that flag is what marks the page
+ * whose chart data and facets the client reads (`getMetaPage`) and what the
+ * reset uses to find where the fresh list starts. Options built with
+ * `createDataTableQueryOptions` always do; anything else is rejected up front
+ * rather than left to refetch a list with no meta on it.
  */
-export function refreshDataTableQuery<TPageParam>(
+export function refreshDataTableQuery<
+  TPageParam extends Pick<MetaPageParam, "_meta">,
+>(
   queryClient: QueryClient,
   options: { queryKey: QueryKey; initialPageParam: TPageParam },
 ): Promise<void> {
+  if (options.initialPageParam._meta !== true) {
+    throw new Error(
+      "refreshDataTableQuery: `initialPageParam` must carry `_meta: true`; build the options with `createDataTableQueryOptions`.",
+    );
+  }
   queryClient.setQueryData<InfiniteData<unknown, TPageParam>>(
     options.queryKey,
     (old) => resetPagesForRefresh(old, options.initialPageParam),

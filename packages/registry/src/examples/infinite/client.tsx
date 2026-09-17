@@ -65,7 +65,7 @@ export function Client({ initialState }: { initialState: SearchParams }) {
 
 function Table() {
   const search = useFilterState<FilterState>();
-  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
+  const { data, isFetching, isLoading, fetchNextPage, hasNextPage } =
     useInfiniteQuery(dataOptions(search));
 
   const flatData = React.useMemo(
@@ -103,7 +103,6 @@ function Table() {
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
-      refetch={refetch}
       getRowId={(row) => row.uuid}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}

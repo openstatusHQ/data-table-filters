@@ -293,7 +293,7 @@ export function Client() {
 function ClientInner() {
   const search = useFilterState<FilterState>();
 
-  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
+  const { data, isFetching, isLoading, fetchNextPage, hasNextPage } =
     useInfiniteQuery(dataOptions(search));
 
   const flatData = React.useMemo(
@@ -356,7 +356,6 @@ function ClientInner() {
       isLoading={isLoading}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
-      refetch={refetch}
       schema={filterSchema.definition}
       adapterType="nuqs"
       meta={{}}

@@ -1,5 +1,5 @@
 /**
- * Where the live indicator sits in a row of visible columns.
+ * Where the live indicator and its label sit in a row of visible columns.
  *
  * The live row is not a data row: it is one indicator cell plus a label that
  * spans everything after it. Which cell holds the indicator depends on the
@@ -8,12 +8,25 @@
  * visible column ids rather than assumed to be "first cell, then the rest".
  */
 export type LiveRowLayout = {
-  /** Visible column ids before the indicator column, one empty cell each. */
+  /** Visible column ids before the indicator column. */
   leading: string[];
   /** The indicator column id, or `undefined` when it is not visible. */
   indicator: string | undefined;
-  /** How many columns the label spans after the indicator. */
+  /** How many columns the label cell spans. */
   span: number;
+  /**
+   * Where the label cell goes. It is never dropped: a marker row without its
+   * label is just a stray dot.
+   *
+   * - `"after"`: one empty cell per leading column, the indicator, then the
+   *   label spanning the `span` columns that follow (the usual layout).
+   * - `"before"`: the indicator is the last visible column, so the label takes
+   *   the leading columns' place (`span` is their count) and the indicator
+   *   closes the row.
+   * - `"indicator"`: the indicator is the only visible column, so the label
+   *   shares its cell and `span` is 0.
+   */
+  label: "after" | "before" | "indicator";
 };
 
 export function getLiveRowLayout(
@@ -23,11 +36,30 @@ export function getLiveRowLayout(
   const index = visibleColumnIds.indexOf(indicatorColumnId);
   if (index === -1) {
     // No indicator column on screen: the label takes the whole row.
-    return { leading: [], indicator: undefined, span: visibleColumnIds.length };
+    return {
+      leading: [],
+      indicator: undefined,
+      span: visibleColumnIds.length,
+      label: "after",
+    };
   }
-  return {
-    leading: visibleColumnIds.slice(0, index),
-    indicator: indicatorColumnId,
-    span: visibleColumnIds.length - index - 1,
-  };
+  const leading = visibleColumnIds.slice(0, index);
+  const after = visibleColumnIds.length - index - 1;
+  if (after > 0) {
+    return {
+      leading,
+      indicator: indicatorColumnId,
+      span: after,
+      label: "after",
+    };
+  }
+  if (leading.length > 0) {
+    return {
+      leading,
+      indicator: indicatorColumnId,
+      span: leading.length,
+      label: "before",
+    };
+  }
+  return { leading, indicator: indicatorColumnId, span: 0, label: "indicator" };
 }

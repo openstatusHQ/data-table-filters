@@ -7,6 +7,7 @@ describe("getLiveRowLayout", () => {
       leading: [],
       indicator: "level",
       span: 2,
+      label: "after",
     });
   });
 
@@ -15,14 +16,31 @@ describe("getLiveRowLayout", () => {
   it("leaves an empty cell for each column before the indicator", () => {
     expect(
       getLiveRowLayout(["select", "level", "date", "status"], "level"),
-    ).toEqual({ leading: ["select"], indicator: "level", span: 2 });
+    ).toEqual({
+      leading: ["select"],
+      indicator: "level",
+      span: 2,
+      label: "after",
+    });
   });
 
-  it("follows the column order, not the definition order", () => {
+  // Regression: with the indicator column last, the label had zero columns
+  // to span and was dropped, leaving a marker row with no "Live Mode" text.
+  it("moves the label in front when the indicator column is last", () => {
     expect(getLiveRowLayout(["date", "select", "level"], "level")).toEqual({
       leading: ["date", "select"],
       indicator: "level",
+      span: 2,
+      label: "before",
+    });
+  });
+
+  it("shares the indicator cell when it is the only column", () => {
+    expect(getLiveRowLayout(["level"], "level")).toEqual({
+      leading: [],
+      indicator: "level",
       span: 0,
+      label: "indicator",
     });
   });
 
@@ -31,6 +49,7 @@ describe("getLiveRowLayout", () => {
       leading: [],
       indicator: undefined,
       span: 3,
+      label: "after",
     });
   });
 
@@ -39,6 +58,7 @@ describe("getLiveRowLayout", () => {
       leading: [],
       indicator: undefined,
       span: 0,
+      label: "after",
     });
   });
 });

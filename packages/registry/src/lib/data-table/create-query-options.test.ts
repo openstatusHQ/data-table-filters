@@ -244,10 +244,13 @@ describe("resetPagesForRefresh", () => {
   it("keeps everything when no param is flagged", () => {
     const first = page({ data: [{ id: 1 }] });
     const second = page({ data: [{ id: 2 }] });
-    const opaque = { pages: [first, second], pageParams: ["a", "b"] };
-    expect(resetPagesForRefresh(opaque, "c")).toEqual({
+    const unflagged = {
       pages: [first, second],
-      pageParams: ["c", "b"],
+      pageParams: [cursorParam(false), cursorParam(false)],
+    };
+    expect(resetPagesForRefresh(unflagged, fresh)).toEqual({
+      pages: [first, second],
+      pageParams: [fresh, cursorParam(false)],
     });
   });
 });
@@ -402,5 +405,19 @@ describe("refreshDataTableQuery", () => {
     // Nothing cached under the key, so nothing to refetch either.
     expect(requests).toHaveLength(0);
     expect(client.getQueryData(opts.queryKey)).toBeUndefined();
+  });
+
+  // The reset and `getMetaPage` both key off `_meta: true`. A hand-built
+  // param without it would refetch a list that never carries meta, so it is
+  // rejected up front instead of degrading silently.
+  it("rejects an initial page param that is not flagged as the meta page", () => {
+    const { client, options } = setup([10, 20]);
+    const opts = options({ cursor: new Date(30) });
+    expect(() =>
+      refreshDataTableQuery(client, {
+        queryKey: opts.queryKey,
+        initialPageParam: { ...opts.initialPageParam, _meta: false },
+      }),
+    ).toThrow(/_meta: true/);
   });
 });

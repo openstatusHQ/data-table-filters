@@ -80,7 +80,6 @@ export function DataTableAuto({ data }: DataTableAutoProps) {
 }
 
 const noop = () => Promise.resolve();
-const noopRefetch = () => {};
 
 function DataTableAutoInner({
   data,
@@ -108,7 +107,6 @@ function DataTableAutoInner({
       totalRowsFetched={data.length}
       hasNextPage={false}
       fetchNextPage={noop}
-      refetch={noopRefetch}
       isFetching={false}
       isLoading={false}
       tableId="auto"

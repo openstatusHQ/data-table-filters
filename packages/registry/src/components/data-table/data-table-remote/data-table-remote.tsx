@@ -282,7 +282,6 @@ function RemoteTableQuery({
     fetchNextPage,
     hasNextPage,
     fetchPreviousPage,
-    refetch,
   } = useInfiniteQuery(queryOptions(search));
 
   const flatData = React.useMemo(
@@ -348,7 +347,6 @@ function RemoteTableQuery({
       // Backwards paging is what live mode is built on. Without it the button
       // is not rendered at all, rather than rendered and inert.
       {...(capabilities.backwardPagination ? { fetchPreviousPage } : {})}
-      refetch={refetch}
       getRowId={accessors.getRowId}
       {...(getRowClassName ? { getRowClassName } : {})}
       // When the server cannot facet, these fall through to the table's own
