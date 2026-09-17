@@ -122,7 +122,7 @@ export const CREATE_PROJECT_STEPS: { name: string; text: string }[] = [
   },
   {
     name: "Start the dev server",
-    text: "Run cd my-app && npm run dev.",
+    text: "Run cd data-table-app && npm run dev.",
   },
   {
     name: "Open the example",
@@ -158,7 +158,7 @@ export function getJsonLDCreateProjectHowTo(): WithContext<HowTo> {
 export const HOMEPAGE_FAQS: { question: string; answer: string }[] = [
   {
     question: "How do I start a new project with a data table from scratch?",
-    answer: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates the Next.js app, initializes shadcn, and installs a working example route with every block it needs. Then cd my-app, npm run dev, and open http://localhost:3000/example. Add -b radix before -p nova for Radix.`,
+    answer: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates the Next.js app, initializes shadcn, and installs a working example route with every block it needs. Then cd data-table-app, npm run dev, and open http://localhost:3000/example. Add -b radix before -p nova for Radix.`,
   },
   {
     question: "What is data-table-filters?",

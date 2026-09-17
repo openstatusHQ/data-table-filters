@@ -5,7 +5,7 @@ author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
   - question: "How do I start a new project with a data table from scratch?"
-    answer: "Run `npx shadcn@latest init @data-table-filters/data-table-example-infinite --name my-app --template next -p nova`. The shadcn CLI creates the Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs. Run `cd my-app && npm run dev` and open http://localhost:3000/example. Add `-b radix` before `-p nova` for Radix."
+    answer: "Run `npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova`. The shadcn CLI creates the Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs. Run `cd data-table-app && npm run dev` and open http://localhost:3000/example. Add `-b radix` before `-p nova` for Radix."
   - question: "How do I install data-table-filters?"
     answer: "In any shadcn project, run `npx shadcn@latest add @data-table-filters/data-table @data-table-filters/data-table-schema`. That installs the core table engine, the memory store adapter, all 4 filter types, and the schema system with DataTableAuto. Then render `<DataTableAuto data={rows} />`."
   - question: "What are the prerequisites?"
@@ -25,8 +25,8 @@ One shadcn command creates the Next.js app, initializes shadcn, and installs
 a working example with every block it needs:
 
 ```bash
-npx shadcn@latest init @data-table-filters/data-table-example-infinite --name my-app --template next -p nova
-cd my-app
+npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
+cd data-table-app
 npm run dev
 ```
 
@@ -46,7 +46,7 @@ that can run commands. It reads the docs index first and ends on the same
 page:
 
 ```text
-Read https://data-table.openstatus.dev/llms.txt, then set up data-table-filters here: install @data-table-filters/data-table-example-infinite with the shadcn CLI (run `npx shadcn@latest init -d` first if the project has no components.json; if there is no app yet, create one with `npx shadcn@latest init @data-table-filters/data-table-example-infinite --name my-app --template next -p nova` instead), start the dev server, and open /example.
+Read https://data-table.openstatus.dev/llms.txt, then set up data-table-filters here: install @data-table-filters/data-table-example-infinite with the shadcn CLI (run `npx shadcn@latest init -d` first if the project has no components.json; if there is no app yet, create one with `npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova` instead), start the dev server, and open /example.
 ```
 
 That is the Quick Start. The rest of this page is for adding a table to a

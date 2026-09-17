@@ -276,7 +276,7 @@ describe("the create-project command", () => {
     // shadcn 4.21.0 with `--name` and `-d` writes the pre-v4 `new-york` style;
     // `--template next -p nova` writes `base-nova`, the CLI default.
     expect(CREATE_PROJECT_COMMAND).toMatch(/^npx shadcn@latest init /);
-    expect(CREATE_PROJECT_COMMAND).toContain("--name my-app");
+    expect(CREATE_PROJECT_COMMAND).toContain("--name data-table-app");
     expect(CREATE_PROJECT_COMMAND).toContain("--template next");
     expect(CREATE_PROJECT_COMMAND).toContain("-p nova");
     expect(CREATE_PROJECT_COMMAND).not.toMatch(/\s-d(\s|$)/);

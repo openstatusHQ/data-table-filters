@@ -24,7 +24,7 @@ before `-p nova` for Radix); run the dev server and open
 http://localhost:3000/example:
 
 ```bash
-npx shadcn@latest init @data-table-filters/data-table-example-infinite --name my-app --template next -p nova
+npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
 ```
 
 **Load the full instructions before wiring anything up:**
