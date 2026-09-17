@@ -24,32 +24,32 @@ A shadcn registry for building filterable, sortable data tables with infinite sc
 
 ## Registry Blocks
 
-Install any block via `npx shadcn@latest add <url>`. The CLI handles dependencies, path rewriting, and CSS variable injection.
+Install any block via `npx shadcn@latest add @data-table-filters/<block>`. The CLI handles dependencies, path rewriting, and CSS variable injection.
 
-| Block                            | Install URL                                           | What it adds                                                                                                               |
-| -------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **data-table**                   | `https://data-table.openstatus.dev/r/data-table.json` | Core: table engine, store, 4 filter types, memory adapter (61 files)                                                       |
-| **data-table-filter-command**    | `.../r/data-table-filter-command.json`                | Command palette with history + keyboard shortcuts                                                                          |
-| **data-table-cell**              | `.../r/data-table-cell.json`                          | 12 cell renderers (text, code, number, bar, heatmap, gauge, badge, boolean, star, status-code, level-indicator, timestamp) |
-| **data-table-sheet**             | `.../r/data-table-sheet.json`                         | Row detail side panel (auto-installs cells)                                                                                |
-| **data-table-nuqs**              | `.../r/data-table-nuqs.json`                          | nuqs URL state adapter                                                                                                     |
-| **data-table-zustand**           | `.../r/data-table-zustand.json`                       | zustand state adapter                                                                                                      |
-| **data-table-schema**            | `.../r/data-table-schema.json`                        | Declarative schema system with `col.*` factories                                                                           |
-| **data-table-drizzle**           | `.../r/data-table-drizzle.json`                       | Drizzle ORM server-side helpers (auto-installs schema)                                                                     |
-| **data-table-query**             | `.../r/data-table-query.json`                         | React Query infinite query integration                                                                                     |
-| **data-table-filter-command-ai** | `.../r/data-table-filter-command-ai.json`             | AI-powered natural language → filter inference (provider-agnostic)                                                         |
-| **data-table-mcp**               | `.../r/data-table-mcp.json`                           | MCP server endpoint for AI agents (stateless, serverless-compatible)                                                       |
-| **data-table-actions**           | `.../r/data-table-actions.json`                       | Row and bulk actions rendered from server metadata (requires drizzle)                                                      |
-| **data-table-remote**            | `.../r/data-table-remote.json`                        | Headless table driven by an endpoint's manifest — schema, capabilities, row identity                                       |
-| **data-table-chart**             | `.../r/data-table-chart.json`                         | Timeline chart over the table: stacked buckets per level, drag to zoom the time filter                                     |
-| **data-table-example-infinite**  | `.../r/data-table-example-infinite.json`              | Ready-to-run `/example` route: schema, mock API, infinite table with URL state                                             |
+| Block                            | Install                                            | What it adds                                                                                                               |
+| -------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **data-table**                   | `@data-table-filters/data-table`                   | Core: table engine, store, 4 filter types, memory adapter (61 files)                                                       |
+| **data-table-filter-command**    | `@data-table-filters/data-table-filter-command`    | Command palette with history + keyboard shortcuts                                                                          |
+| **data-table-cell**              | `@data-table-filters/data-table-cell`              | 12 cell renderers (text, code, number, bar, heatmap, gauge, badge, boolean, star, status-code, level-indicator, timestamp) |
+| **data-table-sheet**             | `@data-table-filters/data-table-sheet`             | Row detail side panel (auto-installs cells)                                                                                |
+| **data-table-nuqs**              | `@data-table-filters/data-table-nuqs`              | nuqs URL state adapter                                                                                                     |
+| **data-table-zustand**           | `@data-table-filters/data-table-zustand`           | zustand state adapter                                                                                                      |
+| **data-table-schema**            | `@data-table-filters/data-table-schema`            | Declarative schema system with `col.*` factories                                                                           |
+| **data-table-drizzle**           | `@data-table-filters/data-table-drizzle`           | Drizzle ORM server-side helpers (auto-installs schema)                                                                     |
+| **data-table-query**             | `@data-table-filters/data-table-query`             | React Query infinite query integration                                                                                     |
+| **data-table-filter-command-ai** | `@data-table-filters/data-table-filter-command-ai` | AI-powered natural language → filter inference (provider-agnostic)                                                         |
+| **data-table-mcp**               | `@data-table-filters/data-table-mcp`               | MCP server endpoint for AI agents (stateless, serverless-compatible)                                                       |
+| **data-table-actions**           | `@data-table-filters/data-table-actions`           | Row and bulk actions rendered from server metadata (requires drizzle)                                                      |
+| **data-table-remote**            | `@data-table-filters/data-table-remote`            | Headless table driven by an endpoint's manifest — schema, capabilities, row identity                                       |
+| **data-table-chart**             | `@data-table-filters/data-table-chart`             | Timeline chart over the table: stacked buckets per level, drag to zoom the time filter                                     |
+| **data-table-example-infinite**  | `@data-table-filters/data-table-example-infinite`  | Ready-to-run `/example` route: schema, mock API, infinite table with URL state                                             |
 
-All URLs use base `https://data-table.openstatus.dev`.
+Blocks install by name from the shadcn registry directory; the JSON form `https://data-table.openstatus.dev/r/<block>.json` works too.
 
 ## Quick Start
 
-1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue. No project at all yet? `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova` creates a Next.js app with shadcn initialized and a working `/example` route (timeline chart, filters, infinite scroll, row sheet) installed, with every block it needs (add `-b radix` before `-p nova` for Radix); run the dev server, open http://localhost:3000/example, and edit `app/example/table-schema.ts` — or continue with step 2 for a table of your own.
-2. Install core + schema: `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`
+1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue. No project at all yet? `npx shadcn@latest init @data-table-filters/data-table-example-infinite --name my-app --template next -p nova` creates a Next.js app with shadcn initialized and a working `/example` route (timeline chart, filters, infinite scroll, row sheet) installed, with every block it needs (add `-b radix` before `-p nova` for Radix); run the dev server, open http://localhost:3000/example, and edit `app/example/table-schema.ts` — or continue with step 2 for a table of your own.
+2. Install core + schema: `npx shadcn@latest add @data-table-filters/data-table @data-table-filters/data-table-schema`
 3. Scaffold a minimal working table (see below), or render `<DataTableAuto data={rows} />` when the data shape is unknown
 4. Extend with additional blocks as needed
 
@@ -139,7 +139,7 @@ import { DataTableFloatingBar } from "@/components/data-table/data-table-floatin
 
 ### Row Actions → `data-table-actions`
 
-Install: `npx shadcn@latest add .../r/data-table-actions.json` (requires the drizzle block).
+Install: `npx shadcn@latest add @data-table-filters/data-table-actions` (requires the drizzle block).
 
 Actions are declared once on the server, next to their Drizzle handler. The list endpoint advertises them (`meta.actions`) and stamps each row with the ids that apply (`_actions`); the UI renders from that JSON and never learns what an action does.
 
@@ -242,7 +242,7 @@ Install adapter block, swap in provider. See [references/store-adapters.md](refe
 
 ## Schema Generation
 
-Install: `npx shadcn@latest add .../r/data-table-schema.json`
+Install: `npx shadcn@latest add @data-table-filters/data-table-schema`
 
 Map data model → `createTableSchema` + `col.*`:
 
@@ -291,7 +291,7 @@ See [references/auto-infer.md](references/auto-infer.md) for inference heuristic
 
 ## Server-Side Integration
 
-Install: `npx shadcn@latest add .../r/data-table-drizzle.json`
+Install: `npx shadcn@latest add @data-table-filters/data-table-drizzle`
 
 Scaffold route handler with `createDrizzleHandler({ db, table, columnMapping, cursorColumn, schema })`.
 
@@ -301,7 +301,7 @@ See [references/drizzle-integration.md](references/drizzle-integration.md).
 
 ## Fetch Layer
 
-Install: `npx shadcn@latest add .../r/data-table-query.json`
+Install: `npx shadcn@latest add @data-table-filters/data-table-query`
 
 Wire `createDataTableQueryOptions({ queryKeyPrefix, apiEndpoint, searchParamsSerializer })`.
 
@@ -311,7 +311,7 @@ See [references/fetch-layer.md](references/fetch-layer.md).
 
 ## Headless Table (Point at an Endpoint)
 
-Install: `npx shadcn@latest add .../r/data-table-remote.json`
+Install: `npx shadcn@latest add @data-table-filters/data-table-remote`
 
 For a table whose data and endpoint are owned elsewhere, with no per-column code in the app.
 

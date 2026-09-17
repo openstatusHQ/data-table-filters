@@ -51,9 +51,9 @@ Preserve your existing `@/components/ui/table.tsx` and other primitives. Install
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-schema.json \
-  https://data-table.openstatus.dev/r/data-table-nuqs.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-schema \
+  @data-table-filters/data-table-nuqs
 ```
 
 > **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). The CLI resolves primitives from whichever base your `components.json` specifies.
@@ -237,7 +237,7 @@ The standard shadcn table renders a basic search input above the table. To upgra
    Install the palette block:
 
    ```bash
-   npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-filter-command.json
+   npx shadcn@latest add @data-table-filters/data-table-filter-command
    ```
 
    Pass it into `commandSlot`:
@@ -265,7 +265,7 @@ The standard shadcn table renders a basic search input above the table. To upgra
 If your dataset grows beyond what the browser can comfortably handle, you do not need to rewrite the table. Install the Drizzle block:
 
 ```bash
-npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-drizzle.json
+npx shadcn@latest add @data-table-filters/data-table-drizzle
 ```
 
 Pass the exact same `paymentSchema.definition` to `createDrizzleHandler` in your Next.js Route Handler:

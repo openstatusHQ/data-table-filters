@@ -1,6 +1,6 @@
 # Drizzle Integration
 
-**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-drizzle.json`
+**Install:** `npx shadcn@latest add @data-table-filters/data-table-drizzle`
 
 Auto-installs the schema block. Requires `drizzle-orm` in the project.
 

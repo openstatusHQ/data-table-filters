@@ -1,6 +1,6 @@
 # Schema API
 
-**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-schema.json`
+**Install:** `npx shadcn@latest add @data-table-filters/data-table-schema`
 
 ## Table of Contents
 

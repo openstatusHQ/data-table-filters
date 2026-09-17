@@ -13,6 +13,18 @@ export type RegistryItem = {
 export const registryItems: RegistryItem[] = manifest.items;
 
 /**
+ * The registry's name in the shadcn directory (ui.shadcn.com/docs/directory).
+ * Because it is listed there, `npx shadcn@latest add @data-table-filters/<block>`
+ * resolves in any project with no `registries` entry in components.json.
+ */
+export const REGISTRY_NAMESPACE = `@${manifest.name}`;
+
+/** `@data-table-filters/data-table` — a block as the shadcn CLI addresses it. */
+export function blockRef(name: string): string {
+  return `${REGISTRY_NAMESPACE}/${name}`;
+}
+
+/**
  * The one line about libraries every install surface states, word for word.
  *
  * The blocks are written against Radix and install on either library. The
@@ -49,14 +61,14 @@ export const EXAMPLE_BLOCK = "data-table-example-infinite";
  * combined with `--name` it writes the pre-v4 `new-york` style instead of
  * `base-nova`.
  */
-export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${BASE_URL}/r/${EXAMPLE_BLOCK}.json --name my-app --template next -p nova`;
+export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${blockRef(EXAMPLE_BLOCK)} --name my-app --template next -p nova`;
 
 /**
  * The prompt to paste into an agent instead of running the command yourself.
  * It names the index the agent should read first and the one block to
  * install, and covers both starts: no app yet, or an existing project.
  */
-export const AGENT_START_PROMPT = `Read ${BASE_URL}/llms.txt, then set up data-table-filters here: install ${BASE_URL}/r/${EXAMPLE_BLOCK}.json with the shadcn CLI (run \`npx shadcn@latest init -d\` first if the project has no components.json; if there is no app yet, create one with \`${CREATE_PROJECT_COMMAND}\` instead), start the dev server, and open /example.`;
+export const AGENT_START_PROMPT = `Read ${BASE_URL}/llms.txt, then set up data-table-filters here: install ${blockRef(EXAMPLE_BLOCK)} with the shadcn CLI (run \`npx shadcn@latest init -d\` first if the project has no components.json; if there is no app yet, create one with \`${CREATE_PROJECT_COMMAND}\` instead), start the dev server, and open /example.`;
 
 /** The one line about creating a project that llms.txt and the MCP server state. */
 export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs; run the dev server and open http://localhost:3000/example. Add \`-b radix\` before \`-p nova\` for Radix.`;

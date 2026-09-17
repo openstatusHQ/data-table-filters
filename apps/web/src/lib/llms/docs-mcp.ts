@@ -9,6 +9,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { z } from "zod";
 import {
   BLOCK_GUIDANCE,
+  blockRef,
   CREATE_PROJECT,
   PREREQUISITE,
   RECIPES,
@@ -186,19 +187,20 @@ export function createDocsMcpServer(load: SectionLoader): McpServer {
     {
       title: "List the registry blocks",
       description:
-        "The registry catalog: every installable block, what it adds, when to use it, and its install URL.",
+        "The registry catalog: every installable block, what it adds, when to use it, and its install name and URL.",
       annotations: { readOnlyHint: true, openWorldHint: false },
       inputSchema: {},
     },
     async () =>
       json({
         prerequisite: PREREQUISITE,
-        install: `npx shadcn@latest add ${blockUrl("<block>")}`,
+        install: `npx shadcn@latest add ${blockRef("<block>")}`,
         note: "The shadcn CLI installs each block's registry dependencies automatically, so listing a dependency explicitly is redundant but harmless.",
         blocks: registryItems.map((item) => ({
           name: item.name,
           description: item.description,
           useWhen: BLOCK_GUIDANCE[item.name],
+          ref: blockRef(item.name),
           url: blockUrl(item.name),
           pullsIn: (item.registryDependencies ?? [])
             .map((dep) => dep.match(/\/r\/([\w-]+)\.json$/)?.[1])

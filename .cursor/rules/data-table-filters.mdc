@@ -23,7 +23,7 @@ before `-p nova` for Radix); run the dev server and open
 http://localhost:3000/example:
 
 ```bash
-npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova
+npx shadcn@latest init @data-table-filters/data-table-example-infinite --name my-app --template next -p nova
 ```
 
 Full docs for agents:
@@ -36,7 +36,7 @@ Full docs for agents:
 
 ## Blocks
 
-All URLs are `https://data-table.openstatus.dev/r/<name>.json`.
+Blocks install by name from the shadcn registry directory; the JSON form `https://data-table.openstatus.dev/r/<block>.json` works too.
 
 | Block                          | Install when                                                                                   |
 | ------------------------------ | ---------------------------------------------------------------------------------------------- |
@@ -60,13 +60,13 @@ All URLs are `https://data-table.openstatus.dev/r/<name>.json`.
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-schema.json \
-  https://data-table.openstatus.dev/r/data-table-cell.json \
-  https://data-table.openstatus.dev/r/data-table-sheet.json \
-  https://data-table.openstatus.dev/r/data-table-drizzle.json \
-  https://data-table.openstatus.dev/r/data-table-query.json \
-  https://data-table.openstatus.dev/r/data-table-nuqs.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-schema \
+  @data-table-filters/data-table-cell \
+  @data-table-filters/data-table-sheet \
+  @data-table-filters/data-table-drizzle \
+  @data-table-filters/data-table-query \
+  @data-table-filters/data-table-nuqs
 ```
 
 1. `createTableSchema` with `col.*` factories — one definition per table.
@@ -80,9 +80,9 @@ Filtering, faceted counts, sorting, and cursor pagination all execute in SQL.
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-cell.json \
-  https://data-table.openstatus.dev/r/data-table-sheet.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-cell \
+  @data-table-filters/data-table-sheet
 ```
 
 Use `useMemoryAdapter`. No API route, no schema block.
@@ -91,11 +91,11 @@ Use `useMemoryAdapter`. No API route, no schema block.
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-schema.json \
-  https://data-table.openstatus.dev/r/data-table-query.json \
-  https://data-table.openstatus.dev/r/data-table-nuqs.json \
-  https://data-table.openstatus.dev/r/data-table-remote.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-schema \
+  @data-table-filters/data-table-query \
+  @data-table-filters/data-table-nuqs \
+  @data-table-filters/data-table-remote
 ```
 
 Serve a manifest with `createTableManifest` + `createTableManifestHandler`, then

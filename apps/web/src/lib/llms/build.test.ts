@@ -3,6 +3,7 @@ import { getAllSections, getSection } from "@/lib/mdx";
 import { describe, expect, it } from "vitest";
 import {
   BLOCK_GUIDANCE,
+  blockRef,
   CREATE_PROJECT,
   CREATE_PROJECT_COMMAND,
   EXAMPLE_BLOCK,
@@ -93,7 +94,7 @@ describe("block guidance", () => {
 describe("installCommand", () => {
   it("builds a single shadcn command for a block list", () => {
     expect(installCommand(["data-table", "data-table-nuqs"])).toBe(
-      `npx shadcn@latest add ${blockUrl("data-table")} ${blockUrl("data-table-nuqs")}`,
+      `npx shadcn@latest add ${blockRef("data-table")} ${blockRef("data-table-nuqs")}`,
     );
   });
 });
@@ -167,7 +168,8 @@ describe("the create-project line", () => {
   });
 
   it("points the command at this site's example block", () => {
-    expect(CREATE_PROJECT_COMMAND).toContain(blockUrl(EXAMPLE_BLOCK));
+    expect(CREATE_PROJECT_COMMAND).toContain(blockRef(EXAMPLE_BLOCK));
+    expect(CREATE_PROJECT_COMMAND).not.toContain("/r/");
     expect(CREATE_PROJECT).toContain("localhost:3000/example");
   });
 });

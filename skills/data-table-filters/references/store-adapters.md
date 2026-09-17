@@ -32,7 +32,7 @@ const adapter = useMemoryAdapter(schema.definition);
 
 ## nuqs (URL State)
 
-**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-nuqs.json`
+**Install:** `npx shadcn@latest add @data-table-filters/data-table-nuqs`
 
 ### Hook
 
@@ -240,7 +240,7 @@ The outer/inner split is needed so `useFilterState()` runs inside `DataTableStor
 
 ## zustand (Client State)
 
-**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-zustand.json`
+**Install:** `npx shadcn@latest add @data-table-filters/data-table-zustand`
 
 ### Create Store with Filter Slice
 

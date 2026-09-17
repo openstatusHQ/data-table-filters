@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   AGENT_START_PROMPT,
+  blockRef,
   CREATE_PROJECT_COMMAND,
   EXAMPLE_BLOCK,
   PREREQUISITE,
@@ -48,6 +49,12 @@ const INSTALL_DOC_FILES = AGENT_FACING_FILES.filter(
 /** Served from `/r/` alongside the blocks, but not a block. */
 const NOT_A_BLOCK = new Set(["registry", "index"]);
 
+/**
+ * Every block a piece of prose names, by either spelling the CLI accepts:
+ * `@data-table-filters/<block>` (the directory namespace) or `/r/<block>.json`.
+ */
+const BLOCK_REF = /(?:@data-table-filters\/|\/r\/)([\w-]+)/g;
+
 const blockNames = new Set(registryItems.map((item) => item.name));
 
 const filesByBlock = new Map(
@@ -77,24 +84,36 @@ function installCommands(source: string): string[][] {
 
   return Array.from(normalized.matchAll(/npx shadcn@latest add ([^\n`]+)/g))
     .map((match) =>
-      Array.from(match[1].matchAll(/\/r\/([\w-]+)\.json/g)).map(
-        (url) => url[1],
-      ),
+      Array.from(match[1].matchAll(BLOCK_REF)).map((ref) => ref[1]),
     )
     .filter((blocks) => blocks.length > 0);
 }
 
-describe("registry urls in agent-facing docs", () => {
+describe("block references in agent-facing docs", () => {
   it.each(INSTALL_DOC_FILES)("only names real blocks in %s", (file) => {
-    const referenced = Array.from(read(file).matchAll(/\/r\/([\w-]+)\.json/g))
+    const referenced = Array.from(read(file).matchAll(BLOCK_REF))
       .map((match) => match[1])
       .filter((name) => !NOT_A_BLOCK.has(name));
 
     expect(referenced.length).toBeGreaterThan(0);
     for (const name of referenced) {
-      expect(blockNames, `${file} links /r/${name}.json`).toContain(name);
+      expect(blockNames, `${file} names block ${name}`).toContain(name);
     }
   });
+
+  it.each(INSTALL_DOC_FILES)(
+    "installs by directory name, not by URL, in %s",
+    (file) => {
+      // The namespace needs no components.json entry, so it is the one form
+      // every install command spells. The URL form is mentioned as a fallback.
+      const normalized = read(file).replace(/\\\r?\n\s*/g, " ");
+      for (const match of normalized.matchAll(
+        /npx shadcn@latest (?:add|init) ([^\n`]+)/g,
+      )) {
+        expect(match[1], `${file}: ${match[0]}`).not.toContain("/r/");
+      }
+    },
+  );
 
   it.each(INSTALL_DOC_FILES)(
     "only spells out canonical recipes in %s",
@@ -121,7 +140,7 @@ describe("registry urls in agent-facing docs", () => {
     ]) {
       const source = read(file);
       for (const name of blockNames) {
-        expect(source, `${file} lists ${name}`).toContain(`/r/${name}.json`);
+        expect(source, `${file} lists ${name}`).toContain(blockRef(name));
       }
     }
   });
@@ -184,9 +203,9 @@ describe("the create-project command", () => {
   });
 
   it("installs the example block, which is a real block and a recipe", () => {
-    const blocks = Array.from(
-      CREATE_PROJECT_COMMAND.matchAll(/\/r\/([\w-]+)\.json/g),
-    ).map((match) => match[1]);
+    const blocks = Array.from(CREATE_PROJECT_COMMAND.matchAll(BLOCK_REF)).map(
+      (match) => match[1],
+    );
 
     expect(blocks).toEqual([EXAMPLE_BLOCK]);
     expect(blockNames).toContain(EXAMPLE_BLOCK);
@@ -233,7 +252,7 @@ describe("the create-project command", () => {
     expect(read("apps/web/src/content/docs/01-quick-start.mdx")).toContain(
       AGENT_START_PROMPT,
     );
-    expect(AGENT_START_PROMPT).toContain(`/r/${EXAMPLE_BLOCK}.json`);
+    expect(AGENT_START_PROMPT).toContain(blockRef(EXAMPLE_BLOCK));
     expect(AGENT_START_PROMPT).toContain(CREATE_PROJECT_COMMAND);
     expect(AGENT_START_PROMPT).toContain("/llms.txt");
   });
@@ -272,7 +291,7 @@ describe("counts claimed in prose", () => {
       const claim = line.match(/(\d+) files/);
       if (!claim) continue;
 
-      const blocks = Array.from(line.matchAll(/\/r\/([\w-]+)\.json/g)).map(
+      const blocks = Array.from(line.matchAll(BLOCK_REF)).map(
         (match) => match[1],
       );
       expect(blocks, `"${claim[0]}" in ${file} names its block`).toHaveLength(

@@ -1,6 +1,12 @@
 import type { SectionMeta } from "@/lib/mdx";
 import { describe, expect, it, vi } from "vitest";
-import { CREATE_PROJECT, PREREQUISITE, RECIPES, registryItems } from "./blocks";
+import {
+  blockRef,
+  CREATE_PROJECT,
+  PREREQUISITE,
+  RECIPES,
+  registryItems,
+} from "./blocks";
 import type { DocSource } from "./build";
 import {
   createDocsMcpHandler,
@@ -272,11 +278,12 @@ describe("list_blocks", () => {
     expect(catalog.prerequisite).toBe(PREREQUISITE);
   });
 
-  it("returns every block with its url and guidance", async () => {
+  it("returns every block with its install name, url and guidance", async () => {
     const { blocks } = parse(await callTool("list_blocks"));
 
     expect(blocks).toHaveLength(registryItems.length);
     for (const block of blocks) {
+      expect(block.ref).toBe(blockRef(block.name));
       expect(block.url).toBe(
         `https://data-table.openstatus.dev/r/${block.name}.json`,
       );
@@ -315,7 +322,7 @@ describe("get_install_plan", () => {
       RECIPES.find((recipe) => recipe.id === "large-table")?.blocks,
     );
     for (const block of plan.blocks) {
-      expect(plan.command).toContain(`/r/${block}.json`);
+      expect(plan.command).toContain(blockRef(block));
     }
   });
 
