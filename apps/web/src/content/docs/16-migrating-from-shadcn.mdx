@@ -144,6 +144,9 @@ export const columns = generateColumns(paymentSchema.definition);
 export const filterFields = generateFilterFields(paymentSchema.definition);
 export const filterSchema = generateFilterSchema(paymentSchema.definition, {
   sort: field.sort(),
+  size: field.number().default(40),
+  cursor: field.string(),
+  direction: field.stringLiteral(["prev", "next"]).default("next"),
 });
 ```
 
