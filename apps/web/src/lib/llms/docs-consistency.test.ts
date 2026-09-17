@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   AGENT_START_PROMPT,
-  SKILL_INSTALL_COMMAND,
   blockRef,
   CREATE_PROJECT_COMMAND,
   CREATE_PROJECT_DIR,
@@ -14,6 +13,7 @@ import {
   RADIX_INIT_COMMAND,
   RECIPES,
   registryItems,
+  SKILL_INSTALL_COMMAND,
 } from "./blocks";
 
 // The install commands, block lists, and counts an agent reads are written by
