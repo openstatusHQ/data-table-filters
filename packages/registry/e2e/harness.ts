@@ -54,9 +54,15 @@ export function quickStartBlocks(): string[] {
   if (!command) {
     throw new Error(`No fenced install command in ${QUICK_START_DOC}`);
   }
-  return Array.from(command[1].matchAll(/\/r\/([\w-]+)\.json/g)).map(
-    (url) => url[1],
-  );
+  // Either spelling the CLI accepts: `@data-table-filters/<block>` (the
+  // shadcn directory namespace, what the page shows) or `/r/<block>.json`.
+  const blocks = Array.from(
+    command[1].matchAll(/(?:@data-table-filters\/|\/r\/)([\w-]+)/g),
+  ).map((match) => match[1]);
+  if (blocks.length === 0) {
+    throw new Error(`Install command names no blocks: ${command[1]}`);
+  }
+  return blocks;
 }
 
 /**
