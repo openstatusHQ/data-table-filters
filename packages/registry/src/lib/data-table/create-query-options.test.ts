@@ -1,8 +1,11 @@
+import { QueryClient } from "@tanstack/react-query";
 import SuperJSON from "superjson";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createDataTableQueryOptions,
   getMetaPage,
+  refreshDataTableQuery,
+  resetPagesForRefresh,
   type InfiniteQueryResponse,
 } from "./create-query-options";
 import { offsetPagination, type PaginationStrategy } from "./transport";
@@ -188,5 +191,216 @@ describe("getMetaPage", () => {
     expect(getMetaPage({ pages: [first, last], pageParams: [{}, {}] })).toBe(
       last,
     );
+  });
+});
+
+describe("resetPagesForRefresh", () => {
+  const fresh = {
+    page: { cursor: 9, direction: "next" as const },
+    _meta: true,
+  };
+
+  it("returns undefined for an empty cache", () => {
+    expect(resetPagesForRefresh(undefined, fresh)).toBeUndefined();
+    expect(resetPagesForRefresh({ pages: [], pageParams: [] }, fresh)).toBe(
+      undefined,
+    );
+  });
+
+  it("replaces the first param and keeps the rest", () => {
+    const initial = page({ data: [{ id: 1 }] });
+    const next = page({ data: [{ id: 2 }] });
+    const nextParam = cursorParam(false);
+    expect(
+      resetPagesForRefresh(
+        { pages: [initial, next], pageParams: [cursorParam(true), nextParam] },
+        fresh,
+      ),
+    ).toEqual({ pages: [initial, next], pageParams: [fresh, nextParam] });
+  });
+
+  // Regression: live mode prepends "prev" pages, so the first param is a
+  // backward cursor. Refetching from it wiped the list.
+  it("drops pages prepended before the meta page", () => {
+    const live = page({ data: [{ id: 0 }] });
+    const initial = page({ data: [{ id: 1 }] });
+    const next = page({ data: [{ id: 2 }] });
+    const prevParam = {
+      page: { cursor: 5, direction: "prev" as const },
+      _meta: false,
+    };
+    const nextParam = cursorParam(false);
+    expect(
+      resetPagesForRefresh(
+        {
+          pages: [live, live, initial, next],
+          pageParams: [prevParam, prevParam, cursorParam(true), nextParam],
+        },
+        fresh,
+      ),
+    ).toEqual({ pages: [initial, next], pageParams: [fresh, nextParam] });
+  });
+
+  it("keeps everything when no param is flagged", () => {
+    const first = page({ data: [{ id: 1 }] });
+    const second = page({ data: [{ id: 2 }] });
+    const opaque = { pages: [first, second], pageParams: ["a", "b"] };
+    expect(resetPagesForRefresh(opaque, "c")).toEqual({
+      pages: [first, second],
+      pageParams: ["c", "b"],
+    });
+  });
+});
+
+describe("refreshDataTableQuery", () => {
+  /**
+   * An endpoint over a fixed set of rows keyed by timestamp, paging two rows
+   * at a time — enough to load pages forward, prepend a "prev" page the way
+   * live mode does, and see what a refetch makes of it.
+   */
+  function setup(rows: number[]) {
+    const requests: string[] = [];
+    const fetchMock = vi.fn(async (url: string) => {
+      requests.push(url);
+      const params = new URL(url, "http://localhost").searchParams;
+      const cursor = Number(params.get("cursor"));
+      const direction = params.get("direction");
+      const data =
+        direction === "prev"
+          ? rows.filter((t) => t > cursor).map((t) => ({ id: t }))
+          : rows
+              .filter((t) => t < cursor)
+              .sort((a, b) => b - a)
+              .slice(0, 2)
+              .map((t) => ({ id: t }));
+      const body: InfiniteQueryResponse<Row[], unknown> = page({
+        data,
+        nextCursor: data.length ? data[data.length - 1].id : null,
+        prevCursor: data.length ? data[0].id : cursor,
+      });
+      return new Response(JSON.stringify(SuperJSON.stringify(body)));
+    });
+    const serialize = (search: Record<string, unknown>) => {
+      const params = new URLSearchParams();
+      for (const key of ["cursor", "direction"]) {
+        const value = search[key];
+        if (value === null || value === undefined) continue;
+        params.set(
+          key,
+          value instanceof Date ? String(value.getTime()) : String(value),
+        );
+      }
+      return `?${params.toString()}`;
+    };
+    const options = createDataTableQueryOptions<Row[], unknown>({
+      queryKeyPrefix: "rows",
+      apiEndpoint: "/api",
+      searchParamsSerializer: serialize,
+      skipMetaOnPagination: true,
+      transport: { fetch: fetchMock as unknown as typeof fetch },
+    });
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return { client, options, requests };
+  }
+
+  const ids = (client: QueryClient, key: readonly unknown[]) =>
+    (
+      client.getQueryData(key) as { pages: InfiniteQueryResponse<Row[]>[] }
+    ).pages.flatMap((p) => p.data.map((r) => r.id));
+
+  it("bare refetch after live mode restarts from the prepended param", async () => {
+    const { client, options, requests } = setup([10, 20, 30, 40, 50]);
+    const opts = options({ cursor: new Date(45) });
+    await client.prefetchInfiniteQuery({ ...opts, pages: 2 });
+    expect(ids(client, opts.queryKey)).toEqual([40, 30, 20, 10]);
+
+    const query = client.getQueryCache().find({ queryKey: opts.queryKey })!;
+    // Live mode's tick: a backward fetch that finds nothing new.
+    await query.fetch(undefined, {
+      meta: { fetchMore: { direction: "backward" } },
+    });
+    expect(ids(client, opts.queryKey)).toEqual([50, 40, 30, 20, 10]);
+    await query.fetch(undefined, {
+      meta: { fetchMore: { direction: "backward" } },
+    });
+    expect(ids(client, opts.queryKey)).toEqual([50, 40, 30, 20, 10]);
+
+    requests.length = 0;
+    await client.refetchQueries({ queryKey: opts.queryKey, exact: true });
+    // The refetch re-requests the (empty) prev page, finds no next cursor, and
+    // stops — the list is gone. This is the bug the helper exists for.
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toContain("direction=prev");
+    expect(ids(client, opts.queryKey)).toEqual([]);
+  });
+
+  it("reloads the same number of pages from a fresh initial param", async () => {
+    const { client, options, requests } = setup([10, 20, 30, 40, 50]);
+    const opts = options({ cursor: new Date(45) });
+    await client.prefetchInfiniteQuery({ ...opts, pages: 2 });
+    const query = client.getQueryCache().find({ queryKey: opts.queryKey })!;
+    await query.fetch(undefined, {
+      meta: { fetchMore: { direction: "backward" } },
+    });
+    await query.fetch(undefined, {
+      meta: { fetchMore: { direction: "backward" } },
+    });
+    expect(ids(client, opts.queryKey)).toEqual([50, 40, 30, 20, 10]);
+
+    requests.length = 0;
+    // A refresh builds the options again, so the initial cursor is "now".
+    await refreshDataTableQuery(client, options({ cursor: new Date(60) }));
+
+    expect(requests).toHaveLength(2);
+    expect(requests[0]).toContain("cursor=60");
+    expect(requests[0]).toContain("direction=next");
+    expect(requests[0]).not.toContain("_meta=false");
+    expect(requests[1]).toContain("_meta=false");
+    expect(ids(client, opts.queryKey)).toEqual([50, 40, 30, 20]);
+
+    const data = client.getQueryData(opts.queryKey) as {
+      pages: InfiniteQueryResponse<Row[]>[];
+      pageParams: unknown[];
+    };
+    expect(getMetaPage(data)).toBe(data.pages[0]);
+  });
+
+  it("keeps the loaded rows on screen while the refetch is in flight", async () => {
+    const { client, options } = setup([10, 20, 30, 40, 50]);
+    const opts = options({ cursor: new Date(45) });
+    await client.prefetchInfiniteQuery({ ...opts, pages: 2 });
+    const query = client.getQueryCache().find({ queryKey: opts.queryKey })!;
+    await query.fetch(undefined, {
+      meta: { fetchMore: { direction: "backward" } },
+    });
+    expect(ids(client, opts.queryKey)).toEqual([50, 40, 30, 20, 10]);
+
+    const pending = refreshDataTableQuery(
+      client,
+      options({ cursor: new Date(60) }),
+    );
+    // Synchronously after the call: the prepended live page is gone, the
+    // originally loaded pages are still there, and the meta page is index 0.
+    expect(ids(client, opts.queryKey)).toEqual([40, 30, 20, 10]);
+    const data = client.getQueryData(opts.queryKey) as {
+      pages: InfiniteQueryResponse<Row[]>[];
+      pageParams: unknown[];
+    };
+    expect(getMetaPage(data)).toBe(data.pages[0]);
+    expect(query.state.fetchStatus).toBe("fetching");
+
+    await pending;
+    expect(ids(client, opts.queryKey)).toEqual([50, 40, 30, 20]);
+  });
+
+  it("is a no-op reset on an empty cache", async () => {
+    const { client, options, requests } = setup([10, 20]);
+    const opts = options({ cursor: new Date(30) });
+    await refreshDataTableQuery(client, opts);
+    // Nothing cached under the key, so nothing to refetch either.
+    expect(requests).toHaveLength(0);
+    expect(client.getQueryData(opts.queryKey)).toBeUndefined();
   });
 });

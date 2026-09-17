@@ -20,7 +20,10 @@ import type { SheetField } from "@dtf/registry/components/data-table/types";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
 import { useLiveMode } from "@dtf/registry/hooks/use-live-mode";
-import { getMetaPage } from "@dtf/registry/lib/data-table";
+import {
+  getMetaPage,
+  refreshDataTableQuery,
+} from "@dtf/registry/lib/data-table";
 import {
   applyFacets,
   getFacetedMinMaxValues,
@@ -38,7 +41,7 @@ import {
   getDefaultColumnVisibility,
 } from "@dtf/registry/lib/table-schema";
 import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import type { Row } from "@tanstack/react-table";
 import { Check, Copy } from "lucide-react";
 import * as React from "react";
@@ -150,6 +153,15 @@ function ClientInner({
     refetch,
   } = useInfiniteQuery(dataOptions(search));
 
+  const queryClient = useQueryClient();
+  // REMINDER: not the bare `refetch` — that restarts from the first cached page
+  // param, which after live mode is a "prev" cursor and wipes the list. The
+  // helper resets the cache to a fresh initial page (now, with meta) first.
+  const refresh = React.useCallback(
+    () => refreshDataTableQuery(queryClient, dataOptions(search)),
+    [queryClient, search],
+  );
+
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
     [data?.pages],
@@ -220,7 +232,7 @@ function ClientInner({
       renderLiveRow={(props) => {
         if (!liveMode.timestamp) return null;
         if (props?.row.original.uuid !== liveMode?.row?.uuid) return null;
-        return <LiveRow colSpan={columns.length - 1} />;
+        return <LiveRow />;
       }}
       commandSlot={
         <DataTableFilterAICommand
@@ -231,7 +243,7 @@ function ClientInner({
         />
       }
       toolbarActions={[
-        <RefreshButton key="refresh" onClick={refetch} />,
+        <RefreshButton key="refresh" onClick={refresh} />,
         fetchPreviousPage ? (
           <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />
         ) : null,

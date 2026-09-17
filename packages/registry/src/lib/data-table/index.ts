@@ -1,6 +1,8 @@
 export {
   createDataTableQueryOptions,
   getMetaPage,
+  refreshDataTableQuery,
+  resetPagesForRefresh,
   type DataTableQueryOptionsConfig,
   type InfiniteQueryMeta,
   type InfiniteQueryResponse,
