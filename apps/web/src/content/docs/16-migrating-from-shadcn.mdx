@@ -115,6 +115,7 @@ With `createTableSchema`, each column's type, display label, sortability, and fi
 
 ```tsx
 // table-schema.ts
+import { field } from "@/lib/store/schema";
 import { col, createTableSchema } from "@/lib/table-schema";
 import {
   generateColumns,
@@ -139,7 +140,9 @@ export const paymentSchema = createTableSchema({
 // Auto-generate columns, faceted filter definitions, and store schema
 export const columns = generateColumns(paymentSchema.definition);
 export const filterFields = generateFilterFields(paymentSchema.definition);
-export const filterSchema = generateFilterSchema(paymentSchema.definition);
+export const filterSchema = generateFilterSchema(paymentSchema.definition, {
+  sort: field.sort(),
+});
 ```
 
 One schema definition drives:
@@ -254,7 +257,8 @@ Pass the exact same `paymentSchema.definition` to `createDrizzleHandler` in your
 // app/api/payments/route.ts
 import { db } from "@/db";
 import { payments } from "@/db/schema";
-import { createDrizzleHandler, defineFilters } from "@/lib/drizzle";
+import { createDrizzleHandler } from "@/lib/drizzle";
+import { defineFilters } from "@/lib/filters";
 import { paymentSchema } from "@/app/payments/table-schema";
 import { NextRequest } from "next/server";
 
