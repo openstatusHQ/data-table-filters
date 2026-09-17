@@ -19,10 +19,17 @@ import { Kbd } from "@/components/ui/kbd";
 import { useDebounce } from "@dtf/registry/hooks/use-debounce";
 import { useQuery } from "@tanstack/react-query";
 import { Command as CommandPrimitive } from "cmdk";
-import { Loader2, SearchIcon } from "lucide-react";
+import { BookOpen, Loader2, SearchIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { cn } from "../utils";
+import {
+  filterPaletteGroups,
+  PALETTE_GROUPS,
+  type PaletteAction,
+  type PaletteGroup,
+} from "./docs-search-actions";
 import type { SectionMeta } from "./get-content";
 import { tokenize } from "./search";
 
@@ -38,6 +45,7 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
   const [search, setSearch] = React.useState("");
   const debouncedSearch = useDebounce(search, 300);
   const router = useRouter();
+  const { setTheme } = useTheme();
 
   const {
     data: results = [],
@@ -71,6 +79,50 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
 
   const loading = isLoading || isFetching;
   const showAllDocs = !debouncedSearch;
+
+  // The static rows filter on the live query, not the debounced one: they
+  // are local, so there is no reason to make them wait for the network.
+  // Pages sit above the docs, the rest below them.
+  const matched = filterPaletteGroups(PALETTE_GROUPS, search);
+  const groups = {
+    before: matched.filter((group) => group.heading === "Pages"),
+    after: matched.filter((group) => group.heading !== "Pages"),
+  };
+  const hasActions = matched.length > 0;
+
+  const close = () => {
+    setOpen(false);
+    setSearch("");
+  };
+
+  const run = (action: PaletteAction) => {
+    close();
+    if (action.theme) {
+      setTheme(action.theme);
+    } else if (action.external) {
+      window.open(action.href, "_blank", "noopener,noreferrer");
+    } else {
+      router.push(action.href);
+    }
+  };
+
+  const renderGroup = (group: PaletteGroup) => (
+    <CommandGroup key={group.heading} heading={group.heading}>
+      {group.actions.map((action) => (
+        <CommandItem
+          key={action.label}
+          value={`${group.heading}:${action.label}`}
+          onSelect={() => run(action)}
+        >
+          <action.icon className="size-4 shrink-0" aria-hidden="true" />
+          {/* one child, or the item's flex gap splits the word at the mark */}
+          <span className="truncate">
+            <HighlightMatch text={action.label} search={search} />
+          </span>
+        </CommandItem>
+      ))}
+    </CommandGroup>
+  );
 
   return (
     <>
@@ -116,35 +168,41 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
               />
             </div>
             <CommandList>
-              {!loading && debouncedSearch && results.length === 0 ? (
+              {!loading &&
+              debouncedSearch &&
+              results.length === 0 &&
+              !hasActions ? (
                 <CommandEmpty>No results found.</CommandEmpty>
               ) : null}
+              {groups.before.map(renderGroup)}
               {showAllDocs ? (
                 <CommandGroup heading="Documentation">
                   {sections.map((section) => (
                     <CommandItem
                       key={section.slug}
-                      value={section.title}
+                      value={`Documentation:${section.title}`}
                       onSelect={() => {
+                        close();
                         router.push(`/docs/${section.slug}`);
-                        setOpen(false);
-                        setSearch("");
                       }}
                     >
+                      <BookOpen
+                        className="size-4 shrink-0"
+                        aria-hidden="true"
+                      />
                       {section.title}
                     </CommandItem>
                   ))}
                 </CommandGroup>
               ) : results.length > 0 ? (
-                <CommandGroup heading="Results">
+                <CommandGroup heading="Documentation">
                   {results.map((item) => (
                     <CommandItem
                       key={item.slug}
-                      value={item.title}
+                      value={`Results:${item.title}`}
                       onSelect={() => {
+                        close();
                         router.push(item.href);
-                        setOpen(false);
-                        setSearch("");
                       }}
                     >
                       <div className="grid min-w-0">
@@ -164,6 +222,7 @@ export function DocsSearch({ sections }: { sections: SectionMeta[] }) {
                   ))}
                 </CommandGroup>
               ) : null}
+              {groups.after.map(renderGroup)}
             </CommandList>
           </Command>
         </DialogContent>
