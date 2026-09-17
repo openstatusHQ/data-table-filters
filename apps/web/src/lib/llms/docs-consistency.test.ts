@@ -6,6 +6,7 @@ import {
   AGENT_START_PROMPT,
   blockRef,
   CREATE_PROJECT_COMMAND,
+  CREATE_PROJECT_DIR,
   EXAMPLE_BLOCK,
   PREREQUISITE,
   QUICK_START_BLOCKS,
@@ -53,7 +54,7 @@ const NOT_A_BLOCK = new Set(["registry", "index"]);
  * Every block a piece of prose names, by either spelling the CLI accepts:
  * `@data-table-filters/<block>` (the directory namespace) or `/r/<block>.json`.
  */
-const BLOCK_REF = /(?:@data-table-filters\/|\/r\/)([\w-]+)/g;
+const BLOCK_REF = /(?:@data-table-filters\/|\/r\/(?=[\w-]+\.json\b))([\w-]+)/g;
 
 const blockNames = new Set(registryItems.map((item) => item.name));
 
@@ -201,6 +202,17 @@ describe("the create-project command", () => {
       CREATE_PROJECT_COMMAND,
     );
   });
+
+  it.each(CREATE_DOC_FILES)(
+    "tells the reader to cd into the app in %s",
+    (file) => {
+      // `--name` decides the directory; every surface that hands out the
+      // command also says where the app landed, from the same constant.
+      expect(read(file), `${file} says cd ${CREATE_PROJECT_DIR}`).toContain(
+        `cd ${CREATE_PROJECT_DIR}`,
+      );
+    },
+  );
 
   it("installs the example block, which is a real block and a recipe", () => {
     const blocks = Array.from(CREATE_PROJECT_COMMAND.matchAll(BLOCK_REF)).map(

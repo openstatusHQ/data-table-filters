@@ -57,7 +57,9 @@ export function quickStartBlocks(): string[] {
   // Either spelling the CLI accepts: `@data-table-filters/<block>` (the
   // shadcn directory namespace, what the page shows) or `/r/<block>.json`.
   const blocks = Array.from(
-    command[1].matchAll(/(?:@data-table-filters\/|\/r\/)([\w-]+)/g),
+    command[1].matchAll(
+      /(?:@data-table-filters\/|\/r\/(?=[\w-]+\.json\b))([\w-]+)/g,
+    ),
   ).map((match) => match[1]);
   if (blocks.length === 0) {
     throw new Error(`Install command names no blocks: ${command[1]}`);

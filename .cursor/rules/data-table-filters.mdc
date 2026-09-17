@@ -19,7 +19,7 @@ from whichever library `components.json` names.
 
 No project yet? One command creates a Next.js app, initializes shadcn, and
 installs a working `/example` route with every block it needs (add `-b radix`
-before `-p nova` for Radix); run the dev server and open
+before `-p nova` for Radix); `cd data-table-app`, run the dev server and open
 http://localhost:3000/example:
 
 ```bash

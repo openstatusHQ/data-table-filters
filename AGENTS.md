@@ -20,12 +20,14 @@ Router is first-class; the blocks work in any React app.
 
 **No project yet?** One command creates a Next.js app, initializes shadcn, and
 installs a working `/example` route with every block it needs (add `-b radix`
-before `-p nova` for Radix); run the dev server and open
+before `-p nova` for Radix); `cd data-table-app`, run the dev server and open
 http://localhost:3000/example:
 
 ```bash
 npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
 ```
+
+Blocks install by name from the shadcn registry directory; the JSON form `https://data-table.openstatus.dev/r/<block>.json` works too.
 
 **Load the full instructions before wiring anything up:**
 
