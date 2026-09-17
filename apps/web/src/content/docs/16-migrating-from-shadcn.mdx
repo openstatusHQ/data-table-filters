@@ -134,7 +134,9 @@ export const paymentSchema = createTableSchema({
     .label("Amount")
     .sortable()
     .filterable("slider", { min: 0, max: 1000 })
-    .display("custom", { cell: (val) => `$${Number(val).toFixed(2)}` }),
+    .display("custom", {
+      cell: (val) => <span>${Number(val).toFixed(2)}</span>,
+    }),
 });
 
 // Auto-generate columns, faceted filter definitions, and store schema
@@ -259,8 +261,11 @@ import { db } from "@/db";
 import { payments } from "@/db/schema";
 import { createDrizzleHandler } from "@/lib/drizzle";
 import { defineFilters } from "@/lib/filters";
-import { paymentSchema } from "@/app/payments/table-schema";
+import { createNuqsSearchParams } from "@/lib/store/adapters/nuqs/server";
+import { filterSchema, paymentSchema } from "@/app/payments/table-schema";
 import { NextRequest } from "next/server";
+
+const { searchParamsCache } = createNuqsSearchParams(filterSchema.definition);
 
 const handler = createDrizzleHandler({
   db,
@@ -276,7 +281,9 @@ const handler = createDrizzleHandler({
 });
 
 export async function GET(req: NextRequest) {
-  const search = Object.fromEntries(req.nextUrl.searchParams);
+  const search = searchParamsCache.parse(
+    Object.fromEntries(req.nextUrl.searchParams),
+  );
   const result = await handler.execute(search);
   return Response.json(result);
 }
