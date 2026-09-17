@@ -40,10 +40,10 @@ export default function Page() {
 }
 ```
 
-Starting from nothing? One command creates the Next.js app, initializes shadcn, and installs both blocks (add `-b radix` before `-p nova` for Radix):
+Starting from nothing? One command creates the Next.js app, initializes shadcn, and installs a working example with every block it needs (add `-b radix` before `-p nova` for Radix). Run `cd my-app && npm run dev` and open [localhost:3000/example](http://localhost:3000/example):
 
 ```bash
-npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova
 ```
 
 From `create-next-app` to a green `next build` this takes about 30 seconds on a clean machine. See the [Quick Start](https://data-table.openstatus.dev/docs/quick-start) for the full walkthrough, and add any block below as you need it.
@@ -63,6 +63,8 @@ From `create-next-app` to a green `next build` this takes about 30 seconds on a 
 | `data-table-mcp`               | `.../r/data-table-mcp.json`               | MCP server endpoint for AI agents                                                                                          |
 | `data-table-actions`           | `.../r/data-table-actions.json`           | Row and bulk actions rendered from server metadata                                                                         |
 | `data-table-remote`            | `.../r/data-table-remote.json`            | Headless table that renders from an API endpoint's manifest                                                                |
+| `data-table-chart`             | `.../r/data-table-chart.json`             | Timeline chart over the table: stacked buckets per level, drag to zoom the time filter                                     |
+| `data-table-example-infinite`  | `.../r/data-table-example-infinite.json`  | Ready-to-run `/example` route: schema, mock API, infinite table with URL state                                             |
 
 All URLs use base `https://data-table.openstatus.dev`.
 

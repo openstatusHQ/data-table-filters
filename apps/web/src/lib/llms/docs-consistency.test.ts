@@ -3,7 +3,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  AGENT_START_PROMPT,
   CREATE_PROJECT_COMMAND,
+  EXAMPLE_BLOCK,
   PREREQUISITE,
   QUICK_START_BLOCKS,
   RADIX_INIT_COMMAND,
@@ -181,25 +183,74 @@ describe("the create-project command", () => {
     );
   });
 
-  it("installs the Quick Start's two blocks, which are a canonical recipe", () => {
+  it("installs the example block, which is a real block and a recipe", () => {
     const blocks = Array.from(
       CREATE_PROJECT_COMMAND.matchAll(/\/r\/([\w-]+)\.json/g),
     ).map((match) => match[1]);
 
-    expect(blocks).toEqual(QUICK_START_BLOCKS);
-    expect(RECIPES.map((recipe) => recipe.blocks.join(" "))).toContain(
-      blocks.join(" "),
-    );
-    for (const name of blocks) {
-      expect(blockNames).toContain(name);
-    }
+    expect(blocks).toEqual([EXAMPLE_BLOCK]);
+    expect(blockNames).toContain(EXAMPLE_BLOCK);
+    expect(
+      RECIPES.some((recipe) => recipe.blocks.includes(EXAMPLE_BLOCK)),
+      "a recipe installs the example block",
+    ).toBe(true);
   });
 
-  it("is the same two blocks the Quick Start's install command names", () => {
+  it("brings the Quick Start's two blocks with it", () => {
+    // The example depends on the blocks the two-step path installs, so a
+    // project created this way can follow the rest of the Quick Start as is.
+    const example = registryItems.find((item) => item.name === EXAMPLE_BLOCK);
+    const dependencies = (example?.registryDependencies ?? [])
+      .map((dep) => dep.match(/\/r\/([\w-]+)\.json$/)?.[1])
+      .filter((name): name is string => !!name);
+
+    for (const name of QUICK_START_BLOCKS) {
+      expect(dependencies, `${EXAMPLE_BLOCK} depends on ${name}`).toContain(
+        name,
+      );
+    }
     const [firstInstall] = installCommands(
       read("apps/web/src/content/docs/01-quick-start.mdx"),
     );
     expect(firstInstall).toEqual(QUICK_START_BLOCKS);
+  });
+
+  it("ships the example as pages under app/example, not into components/", () => {
+    // Every file carries a target: without one the CLI files the route by
+    // type — `registry:file` into lib/, the page into components/ — and the
+    // relative imports between them no longer resolve.
+    const example = registryItems.find((item) => item.name === EXAMPLE_BLOCK);
+    expect(example?.files?.length).toBeGreaterThan(0);
+    for (const file of example?.files ?? []) {
+      expect(
+        (file as { target?: string }).target,
+        `${file.path} has a target`,
+      ).toMatch(/^app\/example\//);
+    }
+  });
+
+  it("has an agent prompt twin on the Quick Start that names the same block", () => {
+    expect(read("apps/web/src/content/docs/01-quick-start.mdx")).toContain(
+      AGENT_START_PROMPT,
+    );
+    expect(AGENT_START_PROMPT).toContain(`/r/${EXAMPLE_BLOCK}.json`);
+    expect(AGENT_START_PROMPT).toContain(CREATE_PROJECT_COMMAND);
+    expect(AGENT_START_PROMPT).toContain("/llms.txt");
+  });
+
+  it("opens the Quick Start with the from-scratch path", () => {
+    // The first heading after the title, and the first code fence, are the
+    // one-command path — not the prerequisite for an existing project.
+    const body = read("apps/web/src/content/docs/01-quick-start.mdx").replace(
+      /^---[\s\S]*?\n---\n/,
+      "",
+    );
+    const firstHeading = body.match(/^## (.+)$/m)?.[1];
+    expect(firstHeading).toBe("Start from scratch");
+    const firstFence = body.indexOf("```");
+    expect(body.slice(firstFence, firstFence + 400)).toContain(
+      CREATE_PROJECT_COMMAND,
+    );
   });
 
   it("scaffolds a Next.js app on a named preset, not with -d", () => {

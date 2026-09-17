@@ -1,8 +1,9 @@
 "use client";
 
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
-import { TimelineChart } from "@/components/data-table/data-table-infinite/timeline-chart";
+import { timelineChartSeries } from "@/components/data-table/data-table-infinite/timeline-chart-series";
 import { getLevelRowClassName } from "@/lib/request/level";
+import { TimelineChart } from "@dtf/registry/components/data-table/data-table-chart/timeline-chart";
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
@@ -146,6 +147,7 @@ function ClientInner() {
           data={chartData ?? []}
           className="-mb-2"
           columnId="timestamp"
+          series={timelineChartSeries}
         />
       }
       footerSlot={

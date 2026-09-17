@@ -1,8 +1,10 @@
+import { CREATE_PROJECT_COMMAND } from "@/lib/llms/blocks";
 import type { SectionMeta } from "@/lib/mdx/get-content";
 import type {
   BlogPosting,
   BreadcrumbList,
   FAQPage,
+  HowTo,
   Organization,
   SoftwareApplication,
   WebPage,
@@ -96,6 +98,15 @@ export function getJsonLDSoftwareApplication(): WithContext<SoftwareApplication>
     },
     description: DESCRIPTION,
     url: BASE_URL,
+    // Where and how it is installed: the CLI is the distribution, and the
+    // one-command first run is the fastest way in.
+    installUrl: `${BASE_URL}/docs/quick-start`,
+    softwareRequirements:
+      "Node.js and a React project with Tailwind CSS v4 and shadcn/ui, on either component library (Base UI or Radix). Installed as source with the shadcn CLI.",
+    softwareHelp: {
+      "@type": "CreativeWork",
+      url: `${BASE_URL}/docs`,
+    },
     author: {
       "@type": "Organization",
       name: "openstatus",
@@ -103,7 +114,52 @@ export function getJsonLDSoftwareApplication(): WithContext<SoftwareApplication>
   };
 }
 
+/** The steps of the one-command first run, in the words the page uses. */
+export const CREATE_PROJECT_STEPS: { name: string; text: string }[] = [
+  {
+    name: "Create the project",
+    text: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates a Next.js app, initializes shadcn on Base UI, and installs the data-table-example-infinite block with every block it depends on. Add -b radix before -p nova for Radix.`,
+  },
+  {
+    name: "Start the dev server",
+    text: "Run cd my-app && npm run dev.",
+  },
+  {
+    name: "Open the example",
+    text: "Open http://localhost:3000/example: a table over 5,000 mock rows with a timeline chart, filters, facet counts, infinite scroll, a command palette and a row sheet. It lives in app/example; edit app/example/table-schema.ts to change the columns.",
+  },
+];
+
+/**
+ * The "start from scratch" path as a HowTo, so a search engine or an agent
+ * reading the page's structured data gets the command itself, not a summary
+ * of it. Carried by the Quick Start only, where the steps are visible on the
+ * page; the homepage has the command but not the steps.
+ */
+export function getJsonLDCreateProjectHowTo(): WithContext<HowTo> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "Create a shadcn project with a data table from scratch",
+    description:
+      "One shadcn CLI command scaffolds a Next.js app, initializes shadcn/ui, and installs a working data table example with filters, facet counts, a timeline chart and infinite scroll.",
+    totalTime: "PT2M",
+    tool: [{ "@type": "HowToTool", name: "shadcn CLI (npx shadcn@latest)" }],
+    step: CREATE_PROJECT_STEPS.map((step, index) => ({
+      "@type": "HowToStep" as const,
+      position: index + 1,
+      name: step.name,
+      text: step.text,
+      url: `${BASE_URL}/docs/quick-start#start-from-scratch`,
+    })),
+  };
+}
+
 export const HOMEPAGE_FAQS: { question: string; answer: string }[] = [
+  {
+    question: "How do I start a new project with a data table from scratch?",
+    answer: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates the Next.js app, initializes shadcn, and installs a working example route with every block it needs. Then cd my-app, npm run dev, and open http://localhost:3000/example. Add -b radix before -p nova for Radix.`,
+  },
   {
     question: "What is data-table-filters?",
     answer:

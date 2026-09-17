@@ -5,6 +5,7 @@ import {
   BLOCK_GUIDANCE,
   CREATE_PROJECT,
   CREATE_PROJECT_COMMAND,
+  EXAMPLE_BLOCK,
   PREREQUISITE,
   RECIPES,
   registryItems,
@@ -165,10 +166,9 @@ describe("the create-project line", () => {
     expect(CREATE_PROJECT).toContain("-b radix");
   });
 
-  it("points the command at this site's registry", () => {
-    for (const name of ["data-table", "data-table-schema"]) {
-      expect(CREATE_PROJECT_COMMAND).toContain(blockUrl(name));
-    }
+  it("points the command at this site's example block", () => {
+    expect(CREATE_PROJECT_COMMAND).toContain(blockUrl(EXAMPLE_BLOCK));
+    expect(CREATE_PROJECT).toContain("localhost:3000/example");
   });
 });
 

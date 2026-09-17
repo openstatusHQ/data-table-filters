@@ -1,13 +1,13 @@
 ---
 title: "Quick Start"
-description: "From an empty shadcn project to a rendered, filterable table: one prerequisite, one install command, one paste"
+description: "Start from scratch with one shadcn command and a working table at /example, or add the blocks to a project you already have: one prerequisite, one install command, one paste"
 author: "openstatus"
 publishedAt: "2026-03-12"
 faq:
+  - question: "How do I start a new project with a data table from scratch?"
+    answer: "Run `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova`. The shadcn CLI creates the Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs. Run `cd my-app && npm run dev` and open http://localhost:3000/example. Add `-b radix` before `-p nova` for Radix."
   - question: "How do I install data-table-filters?"
     answer: "In any shadcn project, run `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json`. That installs the core table engine, the memory store adapter, all 4 filter types, and the schema system with DataTableAuto. Then render `<DataTableAuto data={rows} />`."
-  - question: "How do I create a new project with data-table-filters already installed?"
-    answer: "Run `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova`. The shadcn CLI creates the Next.js app, initializes shadcn on Base UI, and installs the core table and schema blocks in one step. Add `-b radix` before `-p nova` for Radix, then paste `<DataTableAuto data={rows} />` into `app/page.tsx`."
   - question: "What are the prerequisites?"
     answer: "A React project with Tailwind CSS v4 and shadcn/ui initialized — either library. `npx shadcn@latest init -d` (Base UI, the CLI default) and `npx shadcn@latest init -b radix -p nova` (Radix) both work. The CLI handles all dependency resolution automatically."
   - question: "Does data-table-filters work with Base UI?"
@@ -16,31 +16,56 @@ faq:
 
 # Quick Start
 
-Three steps: a shadcn project, one install command, one paste.
-Measured on a clean machine, the whole path from `create-next-app` to a green
-`next build` takes about 30 seconds.
+Two ways in. Starting from nothing, one command creates the app and a working
+table. Already have a shadcn project, one install command and one paste.
 
-## 1. Prerequisite
+## Start from scratch
+
+One shadcn command creates the Next.js app, initializes shadcn, and installs
+a working example with every block it needs:
+
+```bash
+npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova
+cd my-app
+npm run dev
+```
+
+Open [localhost:3000/example](http://localhost:3000/example): a table over
+5,000 mock rows with a timeline chart, filters, facet counts, infinite scroll,
+a command palette and a row sheet. It lives in `app/example` — the table
+schema, a mock API route, and the page — so change the columns in
+`app/example/table-schema.ts` and watch every surface follow, or delete the
+folder once you have your own table.
+
+That lands on Base UI, the shadcn default. For Radix, add `-b radix` before
+`-p nova`. The whole thing takes about a minute on a clean machine, most of
+it `npm install`.
+
+Using an agent instead? Paste this into Claude Code, Cursor or any agent
+that can run commands. It reads the docs index first and ends on the same
+page:
+
+```text
+Read https://data-table.openstatus.dev/llms.txt, then set up data-table-filters here: install https://data-table.openstatus.dev/r/data-table-example-infinite.json with the shadcn CLI (run `npx shadcn@latest init -d` first if the project has no components.json; if there is no app yet, create one with `npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova` instead), start the dev server, and open /example.
+```
+
+That is the Quick Start. The rest of this page is for adding a table to a
+project you already have.
+
+## Add to an existing project
+
+Three steps: a shadcn project, one install command, one paste.
+
+### 1. Prerequisite
 
 > **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
 
-Starting from nothing? One command creates the Next.js app, initializes
-shadcn, and installs the two blocks from step 2:
+Any `"style"` in `components.json` works — `base-…` (Base UI), `radix-…`, or
+the pre-v4 `new-york` / `default`. The blocks read the primitives from
+whichever one you are on. No shadcn yet? `npx shadcn@latest init -d` in the
+project first.
 
-```bash
-npx shadcn@latest init https://data-table.openstatus.dev/r/data-table.json https://data-table.openstatus.dev/r/data-table-schema.json --name my-app --template next -p nova
-cd my-app
-```
-
-That lands on Base UI. For Radix, add `-b radix` before `-p nova`. Either
-way, skip to step 3.
-
-Already have a shadcn project? Nothing to change: any `"style"` in
-`components.json` works — `base-…` (Base UI), `radix-…`, or the pre-v4
-`new-york` / `default`. The blocks read the primitives from whichever one you
-are on.
-
-## 2. Install
+### 2. Install
 
 One command installs the core `data-table` block (table engine, memory store
 adapter, all 4 filter types) and `data-table-schema` (the schema system,
@@ -53,7 +78,7 @@ npx shadcn@latest add https://data-table.openstatus.dev/r/data-table.json https:
 The CLI resolves the shadcn primitives the blocks need, rewrites `@/` import
 paths to match your `components.json`, and injects the CSS variables.
 
-## 3. Render
+### 3. Render
 
 Paste this into a page — `app/page.tsx`, or `src/app/page.tsx` if the project
 uses a `src` directory:
@@ -120,21 +145,23 @@ Every block installs with the same command:
 npx shadcn@latest add https://data-table.openstatus.dev/r/<block>.json
 ```
 
-| Block                          | Install URL                                                                                                | What it adds                                                         |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `data-table`                   | [data-table.json](https://data-table.openstatus.dev/r/data-table.json)                                     | Core: table engine, store, 4 filter types, memory adapter            |
-| `data-table-schema`            | [data-table-schema.json](https://data-table.openstatus.dev/r/data-table-schema.json)                       | Declarative schema system with `col.*` factories and `DataTableAuto` |
-| `data-table-cell`              | [data-table-cell.json](https://data-table.openstatus.dev/r/data-table-cell.json)                           | Cell renderers: badges, bars, heatmaps, status codes, timestamps     |
-| `data-table-sheet`             | [data-table-sheet.json](https://data-table.openstatus.dev/r/data-table-sheet.json)                         | Row detail side panel                                                |
-| `data-table-filter-command`    | [data-table-filter-command.json](https://data-table.openstatus.dev/r/data-table-filter-command.json)       | Command palette with history and keyboard shortcuts                  |
-| `data-table-nuqs`              | [data-table-nuqs.json](https://data-table.openstatus.dev/r/data-table-nuqs.json)                           | nuqs URL state adapter                                               |
-| `data-table-zustand`           | [data-table-zustand.json](https://data-table.openstatus.dev/r/data-table-zustand.json)                     | zustand state adapter                                                |
-| `data-table-drizzle`           | [data-table-drizzle.json](https://data-table.openstatus.dev/r/data-table-drizzle.json)                     | Drizzle ORM server-side helpers                                      |
-| `data-table-query`             | [data-table-query.json](https://data-table.openstatus.dev/r/data-table-query.json)                         | React Query infinite query integration                               |
-| `data-table-filter-command-ai` | [data-table-filter-command-ai.json](https://data-table.openstatus.dev/r/data-table-filter-command-ai.json) | Natural language → filter inference                                  |
-| `data-table-mcp`               | [data-table-mcp.json](https://data-table.openstatus.dev/r/data-table-mcp.json)                             | MCP server endpoint for AI agents                                    |
-| `data-table-actions`           | [data-table-actions.json](https://data-table.openstatus.dev/r/data-table-actions.json)                     | Row and bulk actions rendered from server metadata                   |
-| `data-table-remote`            | [data-table-remote.json](https://data-table.openstatus.dev/r/data-table-remote.json)                       | Headless table that renders from an API endpoint's manifest          |
+| Block                          | Install URL                                                                                                | What it adds                                                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `data-table`                   | [data-table.json](https://data-table.openstatus.dev/r/data-table.json)                                     | Core: table engine, store, 4 filter types, memory adapter                              |
+| `data-table-schema`            | [data-table-schema.json](https://data-table.openstatus.dev/r/data-table-schema.json)                       | Declarative schema system with `col.*` factories and `DataTableAuto`                   |
+| `data-table-cell`              | [data-table-cell.json](https://data-table.openstatus.dev/r/data-table-cell.json)                           | Cell renderers: badges, bars, heatmaps, status codes, timestamps                       |
+| `data-table-sheet`             | [data-table-sheet.json](https://data-table.openstatus.dev/r/data-table-sheet.json)                         | Row detail side panel                                                                  |
+| `data-table-filter-command`    | [data-table-filter-command.json](https://data-table.openstatus.dev/r/data-table-filter-command.json)       | Command palette with history and keyboard shortcuts                                    |
+| `data-table-nuqs`              | [data-table-nuqs.json](https://data-table.openstatus.dev/r/data-table-nuqs.json)                           | nuqs URL state adapter                                                                 |
+| `data-table-zustand`           | [data-table-zustand.json](https://data-table.openstatus.dev/r/data-table-zustand.json)                     | zustand state adapter                                                                  |
+| `data-table-drizzle`           | [data-table-drizzle.json](https://data-table.openstatus.dev/r/data-table-drizzle.json)                     | Drizzle ORM server-side helpers                                                        |
+| `data-table-query`             | [data-table-query.json](https://data-table.openstatus.dev/r/data-table-query.json)                         | React Query infinite query integration                                                 |
+| `data-table-filter-command-ai` | [data-table-filter-command-ai.json](https://data-table.openstatus.dev/r/data-table-filter-command-ai.json) | Natural language → filter inference                                                    |
+| `data-table-mcp`               | [data-table-mcp.json](https://data-table.openstatus.dev/r/data-table-mcp.json)                             | MCP server endpoint for AI agents                                                      |
+| `data-table-actions`           | [data-table-actions.json](https://data-table.openstatus.dev/r/data-table-actions.json)                     | Row and bulk actions rendered from server metadata                                     |
+| `data-table-remote`            | [data-table-remote.json](https://data-table.openstatus.dev/r/data-table-remote.json)                       | Headless table that renders from an API endpoint's manifest                            |
+| `data-table-chart`             | [data-table-chart.json](https://data-table.openstatus.dev/r/data-table-chart.json)                         | Timeline chart over the table: stacked buckets per level, drag to zoom the time filter |
+| `data-table-example-infinite`  | [data-table-example-infinite.json](https://data-table.openstatus.dev/r/data-table-example-infinite.json)   | Ready-to-run `/example` route: schema, mock API, infinite table with URL state         |
 
 > Looking to add natural language filtering? The `data-table-filter-command-ai` block translates queries like _"5xx errors last 24h"_ into structured filters using any LLM. See [AI Filters](/docs/ai-filters) for setup.
 

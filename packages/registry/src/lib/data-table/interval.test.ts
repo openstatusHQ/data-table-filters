@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateIntervalMs } from "../interval";
+import { evaluateIntervalMs } from "./interval";
 
 /**
  * The bucket-size ladder, pinned rung by rung.

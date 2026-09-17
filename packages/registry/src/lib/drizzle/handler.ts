@@ -1,3 +1,4 @@
+import { evaluateIntervalMs } from "@dtf/registry/lib/data-table/interval";
 import type { FacetMetadataSchema } from "@dtf/registry/lib/data-table/types";
 import type { Filters } from "@dtf/registry/lib/filters";
 import { and, count, eq, sql, type Column, type SQL } from "drizzle-orm";
@@ -8,7 +9,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { computeFacets } from "./facets";
 import { buildWhereConditions } from "./filters";
-import { evaluateIntervalMs } from "./interval";
 import { buildCursorPagination } from "./pagination";
 import { buildOrderBy } from "./sorting";
 import type {

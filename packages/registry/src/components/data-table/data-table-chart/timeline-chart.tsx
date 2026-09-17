@@ -1,23 +1,21 @@
 "use client";
 
-import type { TimelineChartSchema } from "@/app/infinite/schema";
-import { Button } from "@/components/ui/button";
+import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { Button } from "@dtf/registry/components/ui/button";
 import {
-  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
-import { getLevelLabel } from "@/lib/request/level";
-import { cn } from "@/lib/utils";
-import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+  type ChartConfig,
+} from "@dtf/registry/components/ui/chart";
 import type { BaseChartSchema } from "@dtf/registry/lib/data-table/types";
+import { cn } from "@dtf/registry/lib/utils";
 import { format } from "date-fns";
 import { ZoomIn } from "lucide-react";
+import * as React from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bar, BarChart, CartesianGrid, ReferenceArea, XAxis } from "recharts";
-import type { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
 import type { Box } from "./timeline-chart-utils";
 import {
   formatAxisTick,
@@ -29,32 +27,60 @@ import {
   getSelectionScrim,
   isPointerEvent,
   orderSelectionLabels,
-  sumBucketValues,
 } from "./timeline-chart-utils";
 
-export const description = "A stacked bar chart";
+/**
+ * The chart's own mouse handler type, read off `BarChart` rather than imported
+ * from a deep `recharts/types/...` path: those paths moved between recharts 2
+ * and 3, and the consumer gets whichever version shadcn's `chart` installs.
+ */
+type ChartMouseHandler = NonNullable<
+  React.ComponentProps<typeof BarChart>["onMouseDown"]
+>;
 
 /** Shared by every control floating over the chart. */
 const PILL_BUTTON =
   "flex-1 h-5 rounded-md px-1.5! py-1! font-mono text-[10px] shadow-none";
 
-const chartConfig = {
-  success: {
-    label: <TooltipLabel level="success" />,
-    color: "var(--success)",
-  },
-  warning: {
-    label: <TooltipLabel level="warning" />,
-    color: "var(--warning)",
-  },
-  error: {
-    label: <TooltipLabel level="error" />,
-    color: "var(--error)",
-  },
-} satisfies ChartConfig;
+/**
+ * One stacked series: a key in every chart point, what the tooltip calls it,
+ * and its colour. The same shape as a table manifest's `chart.series`, so a
+ * headless table can hand the endpoint's config straight through.
+ */
+export type TimelineChartSeries = {
+  /** The numeric key in each `BaseChartSchema` point. */
+  key: string;
+  /** Tooltip label. Defaults to the key. */
+  label?: React.ReactNode;
+  /**
+   * Any CSS colour. Defaults to `var(--<key>)`, which the core block defines
+   * for `success`, `warning`, `error` and `info`.
+   */
+  color?: string;
+};
 
-/** Stack order, bottom-up - the tooltip follows it too. */
-const LEVELS = ["error", "warning", "success"] as const;
+/**
+ * Every numeric key the first point carries, in the order it carries them —
+ * the fallback when the caller states no series.
+ */
+function inferSeries(data: BaseChartSchema[]): TimelineChartSeries[] {
+  const first = data[0];
+  if (!first) return [];
+  return Object.keys(first)
+    .filter((key) => key !== "timestamp" && typeof first[key] === "number")
+    .map((key) => ({ key }));
+}
+
+function toChartConfig(series: TimelineChartSeries[]): ChartConfig {
+  const config: ChartConfig = {};
+  for (const entry of series) {
+    config[entry.key] = {
+      label: entry.label ?? entry.key,
+      color: entry.color ?? `var(--${entry.key})`,
+    };
+  }
+  return config;
+}
 
 /** A selected range, both ends kept apart so the separator can be styled. */
 type SelectionRange = { start: string; end: string };
@@ -70,14 +96,25 @@ interface TimelineChartProps<TChart extends BaseChartSchema> {
    * Same data as of the InfiniteQueryMeta.
    */
   data: TChart[];
+  /**
+   * The stacked series, bottom-up; the tooltip lists them in the same order.
+   * Omitted, every numeric key of the first point becomes a series.
+   */
+  series?: TimelineChartSeries[];
 }
 
 export function TimelineChart<TChart extends BaseChartSchema>({
   data,
   className,
   columnId,
+  series,
 }: TimelineChartProps<TChart>) {
   const { table } = useDataTable();
+  const chartSeries = useMemo(
+    () => series ?? inferSeries(data),
+    [series, data],
+  );
+  const chartConfig = useMemo(() => toChartConfig(chartSeries), [chartSeries]);
   // state, not a ref: the card is portaled into it, so a render has to follow
   // the element being attached
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
@@ -128,14 +165,10 @@ export function TimelineChart<TChart extends BaseChartSchema>({
     const bounds = getSelectionBounds(data, refAreaLeft, refAreaRight);
     if (!bounds) return null;
 
-    const { from, toBucket, displayEnd } = bounds;
+    const { from, displayEnd } = bounds;
 
     return {
       range: formatSelectionRange(from, displayEnd, timerange.period),
-      // the per-level counts the range covers. nothing shows them right now -
-      // the card is the range and the actions - but they're what a breakdown
-      // would be built from, and they stay in step with the bounds above
-      values: sumBucketValues(data, from, toBucket),
       // the instants the two edges sit on: `from` opens the first bucket and
       // `displayEnd` is where the last one runs out, which is the boundary the
       // right edge is drawn at
@@ -159,22 +192,24 @@ export function TimelineChart<TChart extends BaseChartSchema>({
     [refAreaLeft, refAreaRight],
   );
 
-  const handleMouseDown: CategoricalChartFunc = (e) => {
+  const handleMouseDown: ChartMouseHandler = (e) => {
     if (e.activeLabel) {
       // a new drag replaces whatever was still awaiting confirmation
-      setRefAreaLeft(e.activeLabel);
+      // (recharts 3 types the label as string | number; ours are the date
+      // strings `chart` was built with)
+      setRefAreaLeft(String(e.activeLabel));
       setRefAreaRight(null);
       setIsSelecting(true);
     }
   };
 
-  const handleMouseMove: CategoricalChartFunc = (e, event) => {
+  const handleMouseMove: ChartMouseHandler = (e, event) => {
     // only a moving pointer widens the selection - taking the a11y layer's
     // spoofed move too (see `isPointerEvent`) would make a click select from
     // the first bucket to the bar it landed on
     if (!isPointerEvent(event)) return;
     if (isSelecting && e.activeLabel) {
-      setRefAreaRight(e.activeLabel);
+      setRefAreaRight(String(e.activeLabel));
     }
   };
 
@@ -288,7 +323,13 @@ export function TimelineChart<TChart extends BaseChartSchema>({
             content={
               <ChartTooltipContent
                 labelFormatter={(value) => {
-                  const date = new Date(value);
+                  // recharts 3 types the label as a ReactNode; the axis feeds it
+                  // the date string, anything else is not a date
+                  const date = new Date(
+                    typeof value === "string" || typeof value === "number"
+                      ? value
+                      : NaN,
+                  );
                   if (isNaN(date.getTime())) return "N/A";
                   if (timerange.period === "10m") {
                     return format(date, "LLL dd, HH:mm:ss");
@@ -298,12 +339,12 @@ export function TimelineChart<TChart extends BaseChartSchema>({
               />
             }
           />
-          {LEVELS.map((level) => (
+          {chartSeries.map(({ key }) => (
             <Bar
-              key={level}
-              dataKey={level}
+              key={key}
+              dataKey={key}
               stackId="a"
-              fill={`var(--color-${level})`}
+              fill={`var(--color-${key})`}
             />
           ))}
           {refArea && (
@@ -550,20 +591,4 @@ function calculatePeriod(interval: number): "10m" | "1d" | "1w" | "1mo" {
     return "1w";
   }
   return "1mo"; // defaults to 1 month
-}
-
-// TODO: use a `formatTooltipLabel` function instead for composability
-function TooltipLabel({
-  level,
-}: {
-  level: keyof Omit<TimelineChartSchema, "timestamp">;
-}) {
-  return (
-    <div className="mr-2 flex w-20 items-center justify-between gap-2 font-mono">
-      <div className="text-foreground/70 capitalize">{level}</div>
-      <div className="text-muted-foreground/70 text-xs">
-        {getLevelLabel(level)}
-      </div>
-    </div>
-  );
 }

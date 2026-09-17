@@ -45,7 +45,7 @@
     "lucide-react": "^0.469.0",
     "radix-ui": "^1.4.3",
     "react-day-picker": "^9.14.0",
-    "recharts": "^2.15.4",
+    "recharts": "^3.8.0",
     "sonner": "^1.7.2",
     "superjson": "^2.2.2",
     "tailwind-merge": "^2.6.0",

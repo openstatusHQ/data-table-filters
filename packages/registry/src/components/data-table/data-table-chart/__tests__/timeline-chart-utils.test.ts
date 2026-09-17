@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Box } from "./timeline-chart-utils";
+import type { Box } from "../timeline-chart-utils";
 import {
   centerWithin,
   formatAxisTick,
@@ -19,7 +19,7 @@ import {
   SELECTION_LABEL_OFFSET,
   sumBucketRows,
   sumBucketValues,
-} from "./timeline-chart-utils";
+} from "../timeline-chart-utils";
 
 const buckets = [
   { timestamp: 1_000, success: 10, warning: 2, error: 1 },
