@@ -129,8 +129,9 @@ export function Client() {
 
 function DataTableContent() {
   const search = useFilterState<FilterState>();
-  const { data, isFetching, fetchNextPage, hasNextPage, refetch } =
-    useInfiniteQuery(dataOptions(search));
+  const { data, isFetching, fetchNextPage, hasNextPage } = useInfiniteQuery(
+    dataOptions(search),
+  );
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
@@ -156,7 +157,6 @@ function DataTableContent() {
       isFetching={isFetching}
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
-      refetch={refetch}
       commandSlot={
         <DataTableFilterAICommand
           schema={filterSchema.definition}

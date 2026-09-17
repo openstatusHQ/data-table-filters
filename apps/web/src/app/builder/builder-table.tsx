@@ -119,7 +119,7 @@ function BuilderTableQuery({
     return rest;
   }, [search]);
 
-  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, refetch } =
+  const { data, isFetching, isLoading, fetchNextPage, hasNextPage } =
     useInfiniteQuery(builderDataOptions(dataId, filters, sort));
 
   const flatData = React.useMemo(
@@ -152,7 +152,6 @@ function BuilderTableQuery({
       totalRowsFetched={totalFetched}
       hasNextPage={hasNextPage}
       fetchNextPage={fetchNextPage}
-      refetch={refetch}
       isFetching={isFetching}
       isLoading={isLoading}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}

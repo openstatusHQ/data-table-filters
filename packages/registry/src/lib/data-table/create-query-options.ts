@@ -1,5 +1,11 @@
 import type { ActionDescriptor } from "@dtf/registry/lib/actions/types";
-import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  keepPreviousData,
+  type InfiniteData,
+  type QueryClient,
+  type QueryKey,
+} from "@tanstack/react-query";
 import type { PaginationStrategy, Transport } from "./transport";
 import {
   resolveUrl,
@@ -208,4 +214,81 @@ export function getMetaPage<TData, TMeta>(
     (param) => (param as { _meta?: boolean } | null)?._meta,
   );
   return data.pages[index] ?? data.pages[data.pages.length - 1];
+}
+
+/**
+ * The cache shape a refresh can start from.
+ *
+ * React Query refetches an infinite query by re-requesting `pageParams[0]` and
+ * walking forward from there for as many pages as were loaded. That is only a
+ * refresh when `pageParams[0]` is the initial page — and after live mode has
+ * prepended backward pages it is not: the first param is a "prev" cursor with
+ * `_meta: false`, and a prepended page is empty more often than not. Refetching
+ * from it fetches the few rows newer than the latest live tick (or none), finds
+ * no next cursor, stops, and replaces the whole list with that one page: every
+ * row and the chart vanish, the facets lose their counts, and the footer
+ * reports "no more data".
+ *
+ * This drops the prepended pages and replaces the first param with a fresh
+ * initial one, so the refetch starts at `initialPageParam` (now, with meta)
+ * and loads the same number of pages forward. The remaining pages are kept so
+ * the rows stay on screen until the new data lands.
+ *
+ * Also fixes a plain refresh without live mode: the stored initial param
+ * carries the cursor captured on first load, so refetching from it never
+ * surfaced rows newer than that load.
+ *
+ * Returns `undefined` for an empty cache so `setQueryData` leaves it alone.
+ */
+export function resetPagesForRefresh<
+  TPage,
+  TPageParam extends Pick<MetaPageParam, "_meta">,
+>(
+  data: InfiniteData<TPage, TPageParam> | undefined,
+  initialPageParam: TPageParam,
+): InfiniteData<TPage, TPageParam> | undefined {
+  if (!data?.pages?.length) return undefined;
+  const index = Math.max(
+    0,
+    data.pageParams.findIndex((param) => param?._meta),
+  );
+  return {
+    pages: data.pages.slice(index),
+    pageParams: [initialPageParam, ...data.pageParams.slice(index + 1)],
+  };
+}
+
+/**
+ * Refresh a data table list from "now".
+ *
+ * Use this in place of the bare `refetch` returned by `useInfiniteQuery`; see
+ * {@link resetPagesForRefresh} for why the bare one breaks after live mode.
+ * Pass the options freshly built from the current search so the initial page
+ * param carries the current time rather than the one captured on first load.
+ *
+ * The page param must carry `_meta: true` — that flag is what marks the page
+ * whose chart data and facets the client reads (`getMetaPage`) and what the
+ * reset uses to find where the fresh list starts. Options built with
+ * `createDataTableQueryOptions` always do; anything else is rejected up front
+ * rather than left to refetch a list with no meta on it.
+ */
+export function refreshDataTableQuery<
+  TPageParam extends Pick<MetaPageParam, "_meta">,
+>(
+  queryClient: QueryClient,
+  options: { queryKey: QueryKey; initialPageParam: TPageParam },
+): Promise<void> {
+  if (options.initialPageParam._meta !== true) {
+    throw new Error(
+      "refreshDataTableQuery: `initialPageParam` must carry `_meta: true`; build the options with `createDataTableQueryOptions`.",
+    );
+  }
+  queryClient.setQueryData<InfiniteData<unknown, TPageParam>>(
+    options.queryKey,
+    (old) => resetPagesForRefresh(old, options.initialPageParam),
+  );
+  return queryClient.refetchQueries({
+    queryKey: options.queryKey,
+    exact: true,
+  });
 }

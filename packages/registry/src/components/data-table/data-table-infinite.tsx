@@ -32,7 +32,6 @@ import { cn } from "@dtf/registry/lib/utils";
 import {
   type FetchNextPageOptions,
   type FetchPreviousPageOptions,
-  type RefetchOptions,
 } from "@tanstack/react-query";
 import type {
   ColumnDef,
@@ -140,7 +139,6 @@ export interface DataTableInfiniteProps<TData extends RowData> {
   fetchPreviousPage?: (
     options?: FetchPreviousPageOptions | undefined,
   ) => Promise<unknown>;
-  refetch: (options?: RefetchOptions | undefined) => void;
   renderLiveRow?: (props?: {
     row: Row<DataTableFeatures, TData>;
   }) => React.ReactNode;
@@ -171,7 +169,6 @@ export function DataTableInfinite<TData extends RowData>({
   fetchNextPage,
   hasNextPage,
   fetchPreviousPage,
-  refetch,
   totalRows,
   filterRows,
   totalRowsFetched = 0,
