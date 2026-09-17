@@ -90,8 +90,10 @@ function compare(left: unknown, right: unknown): number {
 
 /**
  * Newest first, the order a timestamp cursor addresses. The caller's sort
- * only decides between rows sharing a timestamp, and `uuid` settles the rest
- * — the same composition as the Drizzle handler (cursor, sort, tiebreak).
+ * only decides between rows sharing a timestamp, and `uuid` descending
+ * settles the rest — the same composition and directions as the Drizzle
+ * handler (cursor desc, sort, tiebreak desc), so swapping it in does not
+ * reshuffle tied rows.
  * Sorting by the requested column alone would make every page after the
  * first re-read or skip rows, because the cursor is still a timestamp.
  */
@@ -105,7 +107,7 @@ function sortRows(
     (a, b) =>
       compare(b.date, a.date) ||
       (key ? compare(a[key], b[key]) * direction : 0) ||
-      compare(a.uuid, b.uuid),
+      compare(b.uuid, a.uuid),
   );
 }
 

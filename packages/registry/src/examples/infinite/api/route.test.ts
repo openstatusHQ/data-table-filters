@@ -1,6 +1,7 @@
 import type { InfiniteQueryResponse } from "@dtf/registry/lib/data-table";
 import SuperJSON from "superjson";
 import { describe, expect, it } from "vitest";
+import { rows } from "../data";
 import type { ColumnSchema } from "../table-schema";
 import { GET } from "./route";
 
@@ -37,6 +38,13 @@ const isDescending = (rows: ColumnSchema[]) =>
       index === 0 || rows[index - 1].date.getTime() >= row.date.getTime(),
   );
 
+const uuids = (rows: ColumnSchema[]) => rows.map((row) => row.uuid);
+
+// The mock rows are generated newest first with no two sharing a timestamp,
+// so whatever the sort, three pages must be exactly the first 120 of them —
+// which catches a skipped row as well as a repeated one.
+const EXPECTED_120 = uuids(rows.slice(0, 120));
+
 describe("example route pagination", () => {
   it("serves newest first with a full page by default", async () => {
     const [page] = await walk({}, 1);
@@ -47,9 +55,7 @@ describe("example route pagination", () => {
 
   it("does not repeat or skip rows across pages", async () => {
     const pages = await walk({}, 3);
-    const uuids = pages.flatMap((page) => page.data.map((row) => row.uuid));
-    expect(new Set(uuids).size).toBe(uuids.length);
-    expect(isDescending(pages.flatMap((page) => page.data))).toBe(true);
+    expect(uuids(pages.flatMap((page) => page.data))).toEqual(EXPECTED_120);
   });
 
   // Regression: sorting by ascending date (or any non-date column) used to
@@ -60,10 +66,7 @@ describe("example route pagination", () => {
     async (sort) => {
       const pages = await walk({ sort }, 3);
       expect(pages).toHaveLength(3);
-      const rows = pages.flatMap((page) => page.data);
-      expect(rows).toHaveLength(120);
-      expect(new Set(rows.map((row) => row.uuid)).size).toBe(120);
-      expect(isDescending(rows)).toBe(true);
+      expect(uuids(pages.flatMap((page) => page.data))).toEqual(EXPECTED_120);
     },
   );
 
