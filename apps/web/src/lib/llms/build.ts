@@ -2,6 +2,7 @@ import type { SectionMeta } from "@/lib/mdx";
 import { BASE_URL } from "@/lib/metadata/shared-metadata";
 import {
   BLOCK_GUIDANCE,
+  blockRef,
   CREATE_PROJECT,
   PREREQUISITE,
   RECIPES,
@@ -17,7 +18,7 @@ const FACTS = [
   "Stack: React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui. Next.js App Router is first-class; the blocks work in any React app.",
   PREREQUISITE,
   CREATE_PROJECT,
-  "Install with `npx shadcn@latest add <url>`. The shadcn CLI resolves block dependencies, rewrites `@/` import paths to match components.json, and injects the required CSS variables.",
+  `Install with \`npx shadcn@latest add ${blockRef("<block>")}\` — the registry is in the shadcn directory, so no components.json entry is needed; the block URL \`${BASE_URL}/r/<block>.json\` works too. The shadcn CLI resolves block dependencies, rewrites \`@/\` import paths to match components.json, and injects the required CSS variables.`,
   "Built for large tables: filtering, faceted counts, sorting, and cursor pagination all execute in SQL, and rows are virtualized, so table size is bounded by the database rather than the browser.",
   "One `createTableSchema` definition drives the columns, the filter controls, the row detail sheet, the server-side query handler, the natural-language filter parser, and the MCP tool schema.",
 ];
@@ -27,7 +28,7 @@ export function blockUrl(name: string): string {
 }
 
 export function installCommand(names: string[]): string {
-  return `npx shadcn@latest add ${names.map(blockUrl).join(" ")}`;
+  return `npx shadcn@latest add ${names.map(blockRef).join(" ")}`;
 }
 
 function docUrl(slug: string, extension = ""): string {
@@ -169,17 +170,17 @@ export function buildRegistryIndexMd(): string {
     "",
     PREREQUISITE,
     "",
-    `Install any block with \`npx shadcn@latest add ${blockUrl("<block>")}\`. Blocks may be combined in a single command; the CLI installs each block's registry dependencies automatically, so listing a dependency explicitly is redundant but harmless.`,
+    `Install any block with \`npx shadcn@latest add ${blockRef("<block>")}\`, or by URL with \`npx shadcn@latest add ${blockUrl("<block>")}\`. Blocks may be combined in a single command; the CLI installs each block's registry dependencies automatically, so listing a dependency explicitly is redundant but harmless.`,
     "",
     "## Blocks",
     "",
-    "| Block | Install URL | What it adds | Use when |",
-    "| --- | --- | --- | --- |",
+    "| Block | Install | URL | What it adds | Use when |",
+    "| --- | --- | --- | --- | --- |",
   ];
 
   for (const item of registryItems) {
     lines.push(
-      `| \`${item.name}\` | \`${blockUrl(item.name)}\` | ${item.description ?? ""} | ${BLOCK_GUIDANCE[item.name] ?? ""} |`,
+      `| \`${item.name}\` | \`${blockRef(item.name)}\` | ${blockUrl(item.name)} | ${item.description ?? ""} | ${BLOCK_GUIDANCE[item.name] ?? ""} |`,
     );
   }
 

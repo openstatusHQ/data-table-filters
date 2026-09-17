@@ -1,6 +1,6 @@
 # Fetch Layer (React Query)
 
-**Install:** `npx shadcn@latest add https://data-table.openstatus.dev/r/data-table-query.json`
+**Install:** `npx shadcn@latest add @data-table-filters/data-table-query`
 
 Auto-installs `@tanstack/react-query` and `superjson`.
 

@@ -20,12 +20,14 @@ Router is first-class; the blocks work in any React app.
 
 **No project yet?** One command creates a Next.js app, initializes shadcn, and
 installs a working `/example` route with every block it needs (add `-b radix`
-before `-p nova` for Radix); run the dev server and open
+before `-p nova` for Radix); `cd data-table-app`, run the dev server and open
 http://localhost:3000/example:
 
 ```bash
-npx shadcn@latest init https://data-table.openstatus.dev/r/data-table-example-infinite.json --name my-app --template next -p nova
+npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
 ```
+
+Blocks install by name from the shadcn registry directory; the JSON form `https://data-table.openstatus.dev/r/<block>.json` works too.
 
 **Load the full instructions before wiring anything up:**
 
@@ -68,13 +70,13 @@ assumes a shadcn project on either library, as above.
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-schema.json \
-  https://data-table.openstatus.dev/r/data-table-cell.json \
-  https://data-table.openstatus.dev/r/data-table-sheet.json \
-  https://data-table.openstatus.dev/r/data-table-drizzle.json \
-  https://data-table.openstatus.dev/r/data-table-query.json \
-  https://data-table.openstatus.dev/r/data-table-nuqs.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-schema \
+  @data-table-filters/data-table-cell \
+  @data-table-filters/data-table-sheet \
+  @data-table-filters/data-table-drizzle \
+  @data-table-filters/data-table-query \
+  @data-table-filters/data-table-nuqs
 ```
 
 Define the table once with `createTableSchema`, hand it to `createDrizzleHandler`
@@ -86,9 +88,9 @@ Table size is bounded by the database, not the browser.
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-cell.json \
-  https://data-table.openstatus.dev/r/data-table-sheet.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-cell \
+  @data-table-filters/data-table-sheet
 ```
 
 Use `useMemoryAdapter`. No API route, no schema block.
@@ -98,11 +100,11 @@ elsewhere, and there should be no per-column code in the app:**
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-schema.json \
-  https://data-table.openstatus.dev/r/data-table-query.json \
-  https://data-table.openstatus.dev/r/data-table-nuqs.json \
-  https://data-table.openstatus.dev/r/data-table-remote.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-schema \
+  @data-table-filters/data-table-query \
+  @data-table-filters/data-table-nuqs \
+  @data-table-filters/data-table-remote
 ```
 
 Serve a manifest — schema, `primaryKey`, capabilities, actions — with

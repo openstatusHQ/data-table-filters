@@ -38,6 +38,15 @@ URL returns the source — [`/docs/drizzle-orm.md`](https://data-table.openstatu
 for example. Agents fetching the rendered HTML pay several times the tokens and
 lose code-fence fidelity on the way through.
 
+The registry is `@data-table-filters` in the shadcn directory, so an agent with
+a shell can list and inspect the blocks with the CLI alone, no docs fetch and no
+`components.json` entry needed:
+
+```bash
+npx shadcn@latest search @data-table-filters
+npx shadcn@latest view @data-table-filters/data-table
+```
+
 ## Ask the docs instead of reading them
 
 The endpoints above hand an agent pages. `/api/mcp` serves the same content as
@@ -115,13 +124,13 @@ Then describe what you want:
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-schema.json \
-  https://data-table.openstatus.dev/r/data-table-cell.json \
-  https://data-table.openstatus.dev/r/data-table-sheet.json \
-  https://data-table.openstatus.dev/r/data-table-drizzle.json \
-  https://data-table.openstatus.dev/r/data-table-query.json \
-  https://data-table.openstatus.dev/r/data-table-nuqs.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-schema \
+  @data-table-filters/data-table-cell \
+  @data-table-filters/data-table-sheet \
+  @data-table-filters/data-table-drizzle \
+  @data-table-filters/data-table-query \
+  @data-table-filters/data-table-nuqs
 ```
 
 Define the table once with [`createTableSchema`](/docs/table-schema), pass it to
@@ -134,9 +143,9 @@ virtualized — the client only ever holds the pages it rendered.
 
 ```bash
 npx shadcn@latest add \
-  https://data-table.openstatus.dev/r/data-table.json \
-  https://data-table.openstatus.dev/r/data-table-cell.json \
-  https://data-table.openstatus.dev/r/data-table-sheet.json
+  @data-table-filters/data-table \
+  @data-table-filters/data-table-cell \
+  @data-table-filters/data-table-sheet
 ```
 
 Use `useMemoryAdapter`. No API route and no schema block required.
