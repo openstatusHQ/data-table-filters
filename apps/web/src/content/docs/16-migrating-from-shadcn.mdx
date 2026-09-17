@@ -79,6 +79,7 @@ export type Payment = {
   amount: number;
   status: "pending" | "processing" | "success" | "failed";
   email: string;
+  createdAt: Date;
 };
 
 export const columns: ColumnDef<Payment>[] = [
@@ -105,6 +106,10 @@ export const columns: ColumnDef<Payment>[] = [
       const amount = parseFloat(row.getValue("amount"));
       return <div className="text-right font-medium">${amount.toFixed(2)}</div>;
     },
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Created At",
   },
 ];
 ```
@@ -137,6 +142,11 @@ export const paymentSchema = createTableSchema({
     .display("custom", {
       cell: (val) => <span>${Number(val).toFixed(2)}</span>,
     }),
+  createdAt: col
+    .timestamp()
+    .label("Created At")
+    .sortable()
+    .filterable("timerange"),
 });
 
 // Auto-generate columns, faceted filter definitions, and store schema
@@ -145,7 +155,7 @@ export const filterFields = generateFilterFields(paymentSchema.definition);
 export const filterSchema = generateFilterSchema(paymentSchema.definition, {
   sort: field.sort(),
   size: field.number().default(40),
-  cursor: field.string(),
+  cursor: field.timestamp(),
   direction: field.stringLiteral(["prev", "next"]).default("next"),
 });
 ```
@@ -279,8 +289,9 @@ const handler = createDrizzleHandler({
     status: payments.status,
     email: payments.email,
     amount: payments.amount,
+    createdAt: payments.createdAt,
   },
-  cursorColumn: "id",
+  cursorColumn: "createdAt",
 });
 
 export async function GET(req: NextRequest) {
