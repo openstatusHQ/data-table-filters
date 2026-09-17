@@ -1,6 +1,7 @@
 import type { DatePreset } from "@dtf/registry/components/data-table/types";
 import { describe, expect, it } from "vitest";
 import { col, resolveColumn } from "./col";
+import { presets } from "./presets";
 
 // Stand-in renderers. The test file is `.ts`, so the closures return `null`
 // rather than JSX — identity is all these assertions care about.
@@ -57,6 +58,23 @@ describe("col.string()", () => {
   it(".sortable() sets sortable to true", () => {
     expect(resolveColumn(col.string().label("Host").sortable()).sortable).toBe(
       true,
+    );
+  });
+
+  it(".sortable(false) switches sorting off again", () => {
+    expect(
+      resolveColumn(col.string().label("Host").sortable().sortable(false))
+        .sortable,
+    ).toBe(false);
+  });
+
+  it(".sortable(false) overrides a preset that enables sorting", () => {
+    expect(resolveColumn(presets.timestamp()).sortable).toBe(true);
+    expect(resolveColumn(presets.timestamp().sortable(false)).sortable).toBe(
+      false,
+    );
+    expect(resolveColumn(presets.latency("ms").sortable(false)).sortable).toBe(
+      false,
     );
   });
 

@@ -1,4 +1,5 @@
 import { LEVELS, METHODS, REGIONS, type ColumnSchema } from "./table-schema";
+import { TIMING_PHASES, type Timing } from "./timing";
 
 const ROWS = 5000;
 const DAYS = 7;
@@ -47,6 +48,31 @@ function statusFor(random: () => number): number {
   return 500;
 }
 
+/** Rough share of a request each phase takes; jittered per row below. */
+const TIMING_WEIGHTS = [0.05, 0.1, 0.15, 0.5, 0.2] as const;
+
+/**
+ * Split the latency over the phases so they add up to it exactly: every
+ * phase but the last is rounded, and the last takes whatever is left.
+ */
+function timingFor(random: () => number, latency: number): Timing {
+  const weights = TIMING_WEIGHTS.map(
+    (weight) => weight * (0.6 + random() * 0.8),
+  );
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  const timing = {} as Timing;
+  let remaining = latency;
+  TIMING_PHASES.forEach((phase, index) => {
+    const last = index === TIMING_PHASES.length - 1;
+    const value = last
+      ? remaining
+      : Math.round((latency * weights[index]) / total);
+    timing[phase] = Math.max(0, value);
+    remaining -= value;
+  });
+  return timing;
+}
+
 function levelFor(status: number): (typeof LEVELS)[number] {
   if (status >= 500) return "error";
   if (status >= 400) return "warning";
@@ -68,6 +94,7 @@ export function createRows(now: number = Date.now()): ColumnSchema[] {
     const status = statusFor(random);
     const base = 40 + random() * 200;
     const slow = random() < 0.05 ? random() * 3000 : 0;
+    const latency = Math.round(base + slow);
     rows.push({
       uuid: hex(random, 32),
       // Jitter stays under one step, so the order is strictly descending.
@@ -77,7 +104,8 @@ export function createRows(now: number = Date.now()): ColumnSchema[] {
       method: pick(random, METHODS),
       pathname: pick(random, PATHNAMES),
       region: pick(random, REGIONS),
-      latency: Math.round(base + slow),
+      latency,
+      ...timingFor(random, latency),
     });
   }
 

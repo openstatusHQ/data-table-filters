@@ -13,7 +13,10 @@ function Table({
 }: TableProps) {
   return (
     <div
-      className={cn("w-full overflow-auto", containerClassName)}
+      // `relative` makes this the containing block for anything absolutely
+      // positioned inside a cell (an `sr-only` label, a tooltip anchor), so it
+      // scrolls and clips with the rows instead of stretching the page.
+      className={cn("relative w-full overflow-auto", containerClassName)}
       // REMINDER: we are not scrolling the table, but the container
       {...{ onScroll }}
     >

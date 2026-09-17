@@ -326,8 +326,9 @@ export interface ColBuilder<T, F extends FilterType = FilterType> {
    * @example
    * col.timestamp().label("Date").sortable()
    * col.number().label("Latency").filterable("slider", { min: 0, max: 5000 }).sortable()
+   * col.presets.timestamp().sortable(false) // switch a preset's sorting off
    */
-  sortable(): ColBuilder<T, F>;
+  sortable(enabled?: boolean): ColBuilder<T, F>;
 
   /**
    * Marks the data field as potentially `undefined` in the row type.

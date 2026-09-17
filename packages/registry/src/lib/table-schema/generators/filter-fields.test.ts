@@ -92,6 +92,38 @@ describe("generateFilterFields", () => {
     }
   });
 
+  it("gives level-indicator checkbox options a swatch component by default", () => {
+    const LEVELS = ["error", "warn", "info"] as const;
+    const schema: TableSchemaDefinition = {
+      level: col.enum(LEVELS).label("Level").display("level-indicator"),
+      method: col.enum(["GET", "POST"] as const).label("Method"),
+    };
+    const [level, method] = generateFilterFields(schema);
+    expect(level.type).toBe("checkbox");
+    expect(method.type).toBe("checkbox");
+    if (level.type === "checkbox" && method.type === "checkbox") {
+      // The dot the column renders in its cells, reused in the sidebar.
+      expect(typeof level.component).toBe("function");
+      // Plain enums keep the plain label.
+      expect(method.component).toBeUndefined();
+    }
+  });
+
+  it("keeps an explicit checkbox component over the display default", () => {
+    const custom = () => null;
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["error", "info"] as const)
+        .label("Level")
+        .display("level-indicator")
+        .filterable("checkbox", { component: custom }),
+    };
+    const [field] = generateFilterFields(schema);
+    if (field.type === "checkbox") {
+      expect(field.component).toBe(custom);
+    }
+  });
+
   it("auto-derives checkbox options from col.boolean()", () => {
     const schema: TableSchemaDefinition = {
       active: col.boolean().label("Active"),

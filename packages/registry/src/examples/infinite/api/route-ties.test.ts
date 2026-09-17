@@ -18,6 +18,12 @@ vi.mock("../data", () => {
     pathname: "/",
     region: "ams",
     latency,
+    // The whole request in one phase keeps the sum equal to the latency.
+    "timing.dns": 0,
+    "timing.connection": 0,
+    "timing.tls": 0,
+    "timing.ttfb": latency,
+    "timing.transfer": 0,
   });
   return { rows: [row("a", 30), row("b", 10), row("c", 20)] };
 });

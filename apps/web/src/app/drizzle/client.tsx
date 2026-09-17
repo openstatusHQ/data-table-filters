@@ -2,7 +2,6 @@
 
 import { LiveButton } from "@/components/data-table/data-table-infinite/live-button";
 import { LiveRow } from "@/components/data-table/data-table-infinite/live-row";
-import { RefreshButton } from "@/components/data-table/data-table-infinite/refresh-button";
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
 import { timelineChartSeries } from "@/components/data-table/data-table-infinite/timeline-chart-series";
 import { timingPhasesColumn } from "@/components/data-table/data-table-infinite/timing-phases-column";
@@ -18,6 +17,7 @@ import { DataTableFilterAICommand } from "@dtf/registry/components/data-table/da
 import { DataTableFloatingBar } from "@dtf/registry/components/data-table/data-table-floating-bar";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { DataTableRefreshButton } from "@dtf/registry/components/data-table/data-table-refresh-button";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";
 import type { SheetField } from "@dtf/registry/components/data-table/types";
@@ -194,7 +194,7 @@ function ClientInner() {
           />
         }
         toolbarActions={[
-          <RefreshButton key="refresh" onClick={refresh} />,
+          <DataTableRefreshButton key="refresh" onClick={refresh} />,
           fetchPreviousPage ? (
             <LiveButton key="live" fetchPreviousPage={fetchPreviousPage} />
           ) : null,

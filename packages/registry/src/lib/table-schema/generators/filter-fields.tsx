@@ -1,6 +1,36 @@
-import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
+// Imported from its file, not the cell barrel: this generator runs on the
+// server too (the filter schema reads it), and the barrel drags in cells that
+// use client-only hooks.
+import { DataTableCellLevelIndicator } from "@dtf/registry/components/data-table/data-table-cell/data-table-cell-level-indicator";
+import type {
+  DataTableFilterField,
+  Option,
+} from "@dtf/registry/components/data-table/types";
+import type { JSX } from "react";
 import { fromPresetDescriptor, resolveColumns } from "../col";
-import type { TableSchemaDefinition } from "../types";
+import type { ResolvedColumn, TableSchemaDefinition } from "../types";
+
+/**
+ * The checkbox option a display picks when the column supplied no
+ * `component` of its own. A `level-indicator` column shows the same dot it
+ * renders in its cells, so the filter sidebar reads like the table.
+ */
+function defaultFilterComponent(
+  config: ResolvedColumn,
+): ((props: Option) => JSX.Element | null) | undefined {
+  if (config.display.type !== "level-indicator") return undefined;
+  const colorMap = config.display.colorMap;
+  return function LevelOption({ label, value }: Option) {
+    return (
+      <DataTableCellLevelIndicator
+        value={String(value)}
+        label={label}
+        color={colorMap?.[String(value)]}
+        showLabel
+      />
+    );
+  };
+}
 
 /**
  * Generate DataTableFilterField[] from a table schema definition.
@@ -65,7 +95,8 @@ export function generateFilterFields<TData>(
           ...base,
           type: "checkbox",
           options,
-          component: config.renderers.filterComponent,
+          component:
+            config.renderers.filterComponent ?? defaultFilterComponent(config),
         });
         break;
       }

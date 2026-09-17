@@ -5,6 +5,7 @@ import {
   SLIDER_DELIMITER,
 } from "@dtf/registry/lib/delimiters";
 import type { ColumnFiltersState } from "@tanstack/react-table";
+import type { CSSProperties } from "react";
 import { z } from "zod";
 import type { DataTableFilterField } from "./types";
 
@@ -85,4 +86,52 @@ export function canLoadMore({
   if (!hasNextPage) return false;
   if (filterRows === undefined || totalRowsFetched === undefined) return true;
   return totalRowsFetched < filterRows;
+}
+
+/**
+ * The sizing bounds TanStack merges into every column def
+ * (`getDefaultColumnSizingColumnDef` in table-core, not re-exported).
+ */
+const TANSTACK_SIZE_DEFAULTS = {
+  minSize: 20,
+  maxSize: Number.MAX_SAFE_INTEGER,
+};
+
+/**
+ * Derive a header/cell width style from the column's sizing mode:
+ *
+ * - resizable → track the measured size var (`clamp` is `"min"` on headers so
+ *   a drag can grow past the content, `"max"` on cells so `truncate` kicks in)
+ * - locked (`maxSize` on the def) → pin the var as width, min and max
+ * - floor only (`minSize` without `maxSize`) → flex, but never below the floor
+ * - unsized → flex freely
+ *
+ * TanStack merges its own defaults (`minSize: 20`, `maxSize: MAX_SAFE_INTEGER`)
+ * into every `columnDef`, so "not set" has to be read as "still the default".
+ * Reading presence alone locked every column, and a table narrower than its
+ * container then spread the surplus over all of them instead of letting the
+ * one unsized column absorb it.
+ */
+export function columnSizeStyle(
+  column: {
+    getCanResize: () => boolean;
+    columnDef: { minSize?: number; maxSize?: number };
+  },
+  sizeVar: string,
+  clamp: "min" | "max",
+): CSSProperties | undefined {
+  const width = `var(${sizeVar})`;
+  if (column.getCanResize()) {
+    return clamp === "min"
+      ? { width, minWidth: width }
+      : { width, maxWidth: width };
+  }
+  const { minSize, maxSize } = column.columnDef;
+  const hasMax =
+    maxSize !== undefined && maxSize !== TANSTACK_SIZE_DEFAULTS.maxSize;
+  const hasMin =
+    minSize !== undefined && minSize !== TANSTACK_SIZE_DEFAULTS.minSize;
+  if (hasMax) return { width, minWidth: width, maxWidth: width };
+  if (hasMin) return { minWidth: width };
+  return undefined;
 }

@@ -1,6 +1,7 @@
 import {
   DataTableCellBadge,
   DataTableCellHeatmap,
+  DataTableCellLevelIndicator,
   DataTableCellNumber,
   DataTableCellText,
 } from "@dtf/registry/components/data-table/data-table-cell";
@@ -10,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import { col } from "../col";
 import { createTableSchema } from "../index";
 import { inferSchemaFromJSON } from "../infer";
+import { presets } from "../presets";
 import type { TableSchemaDefinition } from "../types";
 import { generateColumns } from "./columns";
 import { generateSheetFields } from "./sheet-fields";
@@ -494,6 +496,13 @@ describe("generateColumns — header", () => {
     expect(element.props).toMatchObject({ title: "Date", column: columnStub });
   });
 
+  it("renders a plain string header when sorting is switched off on a preset", () => {
+    const [def] = defs({
+      date: presets.timestamp().label("Date").sortable(false),
+    });
+    expect(def!.header).toBe("Date");
+  });
+
   it("prefers hideHeader over sortable when both are set", () => {
     const [def] = defs({
       level: col
@@ -571,6 +580,20 @@ describe("generateColumns — cell rendering", () => {
     const element = invokeCell(def!, { getValue: () => 250 });
     expect(element?.type).toBe(DataTableCellHeatmap);
     expect(element?.props).toMatchObject({ value: 250, min: 0, max: 500 });
+  });
+
+  it("level-indicator renders the dot without its label in a table cell", () => {
+    const [def] = defs({
+      level: col
+        .enum(["error", "info"] as const)
+        .label("Level")
+        .display("level-indicator"),
+    });
+    const element = invokeCell(def!, { getValue: () => "info" });
+    expect(element?.type).toBe(DataTableCellLevelIndicator);
+    expect(element?.props).toMatchObject({ value: "info" });
+    // The sheet opts into the label; the 37px table column never should.
+    expect(element?.props.showLabel).toBeUndefined();
   });
 
   it("prefers faceted min/max over the display bounds", () => {

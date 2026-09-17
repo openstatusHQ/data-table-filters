@@ -47,37 +47,7 @@ import type {
 import { flexRender, Subscribe, useTable } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
-import { canLoadMore } from "./utils";
-
-/**
- * Derive a header/cell width style from the column's sizing mode:
- *
- * - resizable → track the measured size var (`clamp` is `"min"` on headers so
- *   a drag can grow past the content, `"max"` on cells so `truncate` kicks in)
- * - locked (`maxSize` on the def) → pin the var as width, min and max
- * - floor only (`minSize` without `maxSize`) → flex, but never below the floor
- * - unsized → flex freely
- */
-function columnSizeStyle(
-  column: {
-    getCanResize: () => boolean;
-    columnDef: { minSize?: number; maxSize?: number };
-  },
-  sizeVar: string,
-  clamp: "min" | "max",
-): React.CSSProperties | undefined {
-  const width = `var(${sizeVar})`;
-  if (column.getCanResize()) {
-    return clamp === "min"
-      ? { width, minWidth: width }
-      : { width, maxWidth: width };
-  }
-  // Presence, not truthiness: a bound of 0 is a bound.
-  if (column.columnDef.maxSize !== undefined)
-    return { width, minWidth: width, maxWidth: width };
-  if (column.columnDef.minSize !== undefined) return { minWidth: width };
-  return undefined;
-}
+import { canLoadMore, columnSizeStyle } from "./utils";
 
 // TODO: add a possible chartGroupBy
 /**

@@ -28,7 +28,7 @@ Install any block via `npx shadcn@latest add @data-table-filters/<block>`. The C
 
 | Block                            | Install                                            | What it adds                                                                                                               |
 | -------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **data-table**                   | `@data-table-filters/data-table`                   | Core: table engine, store, 4 filter types, memory adapter (61 files)                                                       |
+| **data-table**                   | `@data-table-filters/data-table`                   | Core: table engine, store, 4 filter types, memory adapter (62 files)                                                       |
 | **data-table-filter-command**    | `@data-table-filters/data-table-filter-command`    | Command palette with history + keyboard shortcuts                                                                          |
 | **data-table-cell**              | `@data-table-filters/data-table-cell`              | 12 cell renderers (text, code, number, bar, heatmap, gauge, badge, boolean, star, status-code, level-indicator, timestamp) |
 | **data-table-sheet**             | `@data-table-filters/data-table-sheet`             | Row detail side panel (auto-installs cells)                                                                                |
