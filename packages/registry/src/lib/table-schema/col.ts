@@ -270,8 +270,12 @@ export function createColBuilder<T, F extends FilterType = FilterType>(
       return next<T, F>({ minSize: px });
     },
 
-    sortable(): ColBuilder<T, F> {
-      return next<T, F>({ sortable: true });
+    /**
+     * Click-to-sort on the column header. Pass `false` to switch sorting off
+     * again on a preset that enables it (`timestamp`, `latency`, …).
+     */
+    sortable(enabled = true): ColBuilder<T, F> {
+      return next<T, F>({ sortable: enabled });
     },
 
     optional(): ColBuilder<T | undefined, F> {

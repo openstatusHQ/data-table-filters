@@ -29,6 +29,7 @@ import {
   type DataTableFeatures,
 } from "@dtf/registry/lib/table/features";
 import { cn } from "@dtf/registry/lib/utils";
+import { useControls } from "@dtf/registry/providers/controls";
 import {
   type FetchNextPageOptions,
   type FetchPreviousPageOptions,
@@ -47,37 +48,7 @@ import type {
 import { flexRender, Subscribe, useTable } from "@tanstack/react-table";
 import { LoaderCircle } from "lucide-react";
 import * as React from "react";
-import { canLoadMore } from "./utils";
-
-/**
- * Derive a header/cell width style from the column's sizing mode:
- *
- * - resizable → track the measured size var (`clamp` is `"min"` on headers so
- *   a drag can grow past the content, `"max"` on cells so `truncate` kicks in)
- * - locked (`maxSize` on the def) → pin the var as width, min and max
- * - floor only (`minSize` without `maxSize`) → flex, but never below the floor
- * - unsized → flex freely
- */
-function columnSizeStyle(
-  column: {
-    getCanResize: () => boolean;
-    columnDef: { minSize?: number; maxSize?: number };
-  },
-  sizeVar: string,
-  clamp: "min" | "max",
-): React.CSSProperties | undefined {
-  const width = `var(${sizeVar})`;
-  if (column.getCanResize()) {
-    return clamp === "min"
-      ? { width, minWidth: width }
-      : { width, maxWidth: width };
-  }
-  // Presence, not truthiness: a bound of 0 is a bound.
-  if (column.columnDef.maxSize !== undefined)
-    return { width, minWidth: width, maxWidth: width };
-  if (column.columnDef.minSize !== undefined) return { minWidth: width };
-  return undefined;
-}
+import { canLoadMore, columnSizeStyle } from "./utils";
 
 // TODO: add a possible chartGroupBy
 /**
@@ -199,9 +170,7 @@ export function DataTableInfinite<TData extends RowData>({
       getColumnVisibilityKey(tableId),
       defaultColumnVisibility,
     );
-  const topBarRef = React.useRef<HTMLDivElement>(null);
   const tableRef = React.useRef<HTMLTableElement>(null);
-  const [topBarHeight, setTopBarHeight] = React.useState(0);
 
   // Detect if a select column exists to enable multi-row selection
   const hasSelectColumn = React.useMemo(
@@ -229,21 +198,6 @@ export function DataTableInfinite<TData extends RowData>({
     filterRows,
     totalRowsFetched,
   });
-
-  React.useEffect(() => {
-    const observer = new ResizeObserver(() => {
-      const rect = topBarRef.current?.getBoundingClientRect();
-      if (rect) {
-        setTopBarHeight(rect.height);
-      }
-    });
-
-    const topBar = topBarRef.current;
-    if (!topBar) return;
-
-    observer.observe(topBar);
-    return () => observer.unobserve(topBar);
-  }, [topBarRef]);
 
   /**
    * BREAKING (v9): the options object has to be memoized by the caller.
@@ -393,23 +347,24 @@ export function DataTableInfinite<TData extends RowData>({
       getFacetedUniqueValues={getFacetedUniqueValues}
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >
+      {/*
+        The viewport is the frame: the sidebar and the main column are both
+        exactly one screen tall, and the only things that scroll are the filter
+        list and the table container. Nothing here depends on a measured
+        height, so the page itself can never grow past the viewport.
+      */}
       <div
-        className="flex h-full min-h-screen w-full flex-col sm:flex-row"
-        style={
-          {
-            "--top-bar-height": `${topBarHeight}px`,
-            ...columnSizeVars,
-          } as React.CSSProperties
-        }
+        className={cn(
+          "flex h-screen w-full flex-col sm:flex-row",
+          // Single source of truth for the panel width: the panel, its inner
+          // wrapper and the main pane's `max-width` all read this variable so
+          // they animate in lockstep.
+          "sm:[--controls-width:13rem] md:[--controls-width:18rem]",
+        )}
+        style={columnSizeVars as React.CSSProperties}
       >
-        <div
-          className={cn(
-            "h-full w-full flex-col sm:sticky sm:top-0 sm:max-h-screen sm:min-h-screen sm:max-w-52 sm:min-w-52 sm:self-start md:max-w-72 md:min-w-72",
-            "group-data-[expanded=false]/controls:hidden",
-            "hidden sm:flex",
-          )}
-        >
-          <div className="border-border bg-background border-b p-2 md:sticky md:top-0">
+        <FilterPanel>
+          <div className="border-border bg-background shrink-0 border-b p-2">
             <div className="flex h-[46px] items-center justify-between gap-3">
               <p className="text-foreground px-2 font-medium">Filters</p>
               <div>
@@ -420,28 +375,35 @@ export function DataTableInfinite<TData extends RowData>({
             </div>
           </div>
           {/* REMINDER: no top padding - it would offset the first filter row */}
-          <div className="flex-1 px-2 pb-2 sm:overflow-y-scroll">
+          <div className="min-h-0 flex-1 px-2 pb-2 sm:overflow-y-scroll">
             <DataTableFilterControls />
           </div>
           {footerSlot ? (
-            <div className="border-border bg-background border-t p-4 md:sticky md:bottom-0">
+            <div className="border-border bg-background shrink-0 border-t p-4">
               {footerSlot}
             </div>
           ) : null}
-        </div>
+        </FilterPanel>
         <div
           className={cn(
-            "border-border relative flex max-w-full flex-1 flex-col sm:border-l",
+            "border-border relative flex h-full max-w-full flex-1 flex-col",
+            // Collapsed, the panel is w-0 and the border would sit on the
+            // viewport edge. Keep the 1px so nothing shifts, drop the colour.
+            "sm:border-l sm:border-l-transparent",
+            "sm:group-data-[expanded=true]/controls:border-l-border",
             // Chrome issue
-            "sm:group-data-[expanded=true]/controls:max-w-[calc(100%-208px)] md:group-data-[expanded=true]/controls:max-w-[calc(100%-288px)]",
+            "sm:group-data-[expanded=true]/controls:max-w-[calc(100%-var(--controls-width))]",
+            // Matches the panel's own transition: without it the pane snaps to
+            // its final width while the panel is still sliding.
+            "transition-[max-width,border-color] duration-200 ease-linear motion-reduce:transition-none",
           )}
         >
           <DataTableFilterRail />
           <div
-            ref={topBarRef}
             className={cn(
-              "bg-background flex flex-col gap-4 p-2",
-              "sticky top-0 z-10 pb-4",
+              "bg-background flex shrink-0 flex-col gap-4 p-2 pb-4",
+              // Above the table so the command palette's popover overlays it.
+              "relative z-10",
             )}
           >
             {commandSlot}
@@ -451,13 +413,14 @@ export function DataTableInfinite<TData extends RowData>({
             />
             {chartSlot}
           </div>
-          <div className="z-0">
+          {/* `min-h-0` lets the flex item shrink so the table container scrolls instead of the page. */}
+          <div className="z-0 min-h-0 flex-1">
             <Table
               ref={tableRef}
               onScroll={onScroll}
               // REMINDER: https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
               className="border-separate border-spacing-0"
-              containerClassName="max-h-[calc(100vh-var(--top-bar-height))]"
+              containerClassName="max-h-full"
             >
               <TableHeader className={cn("bg-background sticky top-0 z-20")}>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -516,10 +479,9 @@ export function DataTableInfinite<TData extends RowData>({
                 id="content"
                 tabIndex={-1}
                 className="outline-primary outline-1 -outline-offset-1 transition-colors outline-none focus-visible:outline-solid"
-                // REMINDER: avoids scroll (skipping the table header) when using skip to content
-                style={{
-                  scrollMarginTop: "calc(var(--top-bar-height) + 40px)",
-                }}
+                // REMINDER: keeps the first rows out from under the sticky
+                // header when "skip to content" focuses the body
+                style={{ scrollMarginTop: "40px" }}
               >
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
@@ -584,6 +546,34 @@ export function DataTableInfinite<TData extends RowData>({
       {sheetSlot}
       {floatingBarSlot}
     </DataTableProvider>
+  );
+}
+
+/**
+ * The filter controls column. Collapsing animates `width` — `display` can't be
+ * transitioned — so the inner wrapper holds its own width and the content
+ * slides out of view instead of reflowing on every frame. Mirrors the shadcn
+ * sidebar's `transition-[width] duration-200 ease-linear`.
+ */
+function FilterPanel({ children }: { children: React.ReactNode }) {
+  const { open } = useControls();
+
+  return (
+    <div
+      // `hidden sm:flex` is the breakpoint only; the collapsed state is `w-0`,
+      // which leaves the filters focusable — hence `inert`.
+      inert={!open}
+      className={cn(
+        "h-full w-full flex-col sm:w-(--controls-width) sm:shrink-0",
+        "sm:group-data-[expanded=false]/controls:w-0",
+        "hidden overflow-hidden transition-[width] duration-200 ease-linear sm:flex",
+        "motion-reduce:transition-none",
+      )}
+    >
+      <div className="flex h-full w-full flex-col sm:w-(--controls-width)">
+        {children}
+      </div>
+    </div>
   );
 }
 

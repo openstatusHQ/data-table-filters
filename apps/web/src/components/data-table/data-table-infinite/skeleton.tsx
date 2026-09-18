@@ -19,18 +19,11 @@ interface SkeletonProps {
 
 export function Skeleton({ withChart = true }: SkeletonProps) {
   return (
-    <div
-      className="flex h-full min-h-screen w-full flex-col sm:flex-row"
-      style={
-        {
-          "--top-bar-height": "0px",
-        } as React.CSSProperties
-      }
-    >
+    <div className="flex h-screen w-full flex-col sm:flex-row">
       {/* Left Sidebar - Filters */}
       <div
         className={cn(
-          "h-full w-full flex-col sm:sticky sm:top-0 sm:max-h-screen sm:min-h-screen sm:max-w-52 sm:min-w-52 sm:self-start md:max-w-72 md:min-w-72",
+          "h-full w-full flex-col sm:max-w-52 sm:min-w-52 md:max-w-72 md:min-w-72",
           "hidden sm:flex",
         )}
       >
@@ -80,14 +73,14 @@ export function Skeleton({ withChart = true }: SkeletonProps) {
       {/* Main Content Area */}
       <div
         className={cn(
-          "border-border flex max-w-full flex-1 flex-col sm:border-l",
+          "border-border flex h-full max-w-full flex-1 flex-col sm:border-l",
         )}
       >
         {/* Top Bar */}
         <div
           className={cn(
             "bg-background flex flex-col gap-4 p-2",
-            "sticky top-0 z-10 pb-4",
+            "relative z-10 shrink-0 pb-4",
           )}
         >
           {/* Search Command Palette */}
@@ -133,10 +126,10 @@ export function Skeleton({ withChart = true }: SkeletonProps) {
         </div>
 
         {/* Data Table */}
-        <div className="z-0">
+        <div className="z-0 min-h-0 flex-1">
           <Table
             className="border-separate border-spacing-0"
-            containerClassName="max-h-[calc(100vh-var(--top-bar-height))]"
+            containerClassName="max-h-full"
           >
             <TableHeader className={cn("bg-background sticky top-0 z-20")}>
               <TableRow

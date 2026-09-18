@@ -6,7 +6,12 @@ import {
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import type { DataTableFilterField } from "./types";
-import { canLoadMore, deserialize, serializeColumnFilters } from "./utils";
+import {
+  canLoadMore,
+  columnSizeStyle,
+  deserialize,
+  serializeColumnFilters,
+} from "./utils";
 
 // ── deserialize ──────────────────────────────────────────────────────────────
 
@@ -289,5 +294,78 @@ describe("canLoadMore", () => {
     // rather than losing the button entirely.
     expect(canLoadMore({ hasNextPage: true, totalRowsFetched: 42 })).toBe(true);
     expect(canLoadMore({ hasNextPage: true, filterRows: 66 })).toBe(true);
+  });
+});
+
+// ── columnSizeStyle ──────────────────────────────────────────────────────────
+//
+// `columnDef` is what TanStack hands back after merging its defaults, so the
+// stubs below carry those defaults the way a real column would.
+
+const TANSTACK_DEFAULTS = { minSize: 20, maxSize: Number.MAX_SAFE_INTEGER };
+
+function column(
+  def: { minSize?: number; maxSize?: number },
+  canResize = false,
+) {
+  return {
+    getCanResize: () => canResize,
+    columnDef: { ...TANSTACK_DEFAULTS, ...def },
+  };
+}
+
+describe("columnSizeStyle", () => {
+  const w = "var(--col-x-size)";
+
+  it("locks width, min and max for a sized column", () => {
+    expect(
+      columnSizeStyle(
+        column({ minSize: 37, maxSize: 37 }),
+        "--col-x-size",
+        "max",
+      ),
+    ).toEqual({
+      width: w,
+      minWidth: w,
+      maxWidth: w,
+    });
+  });
+
+  it("only sets a floor for a column with minSize but no maxSize", () => {
+    expect(
+      columnSizeStyle(column({ minSize: 200 }), "--col-x-size", "max"),
+    ).toEqual({
+      minWidth: w,
+    });
+  });
+
+  it("leaves an unsized column free to flex, despite TanStack's merged defaults", () => {
+    // Regression: the merged `maxSize: MAX_SAFE_INTEGER` used to read as
+    // "locked", so every column got a fixed width and the table spread its
+    // surplus over all of them instead of the one flex column.
+    expect(columnSizeStyle(column({}), "--col-x-size", "max")).toBeUndefined();
+  });
+
+  it("tracks the measured size for a resizable column, clamped per side", () => {
+    expect(
+      columnSizeStyle(
+        column({ minSize: 37, maxSize: 37 }, true),
+        "--col-x-size",
+        "min",
+      ),
+    ).toEqual({
+      width: w,
+      minWidth: w,
+    });
+    expect(
+      columnSizeStyle(
+        column({ minSize: 37, maxSize: 37 }, true),
+        "--col-x-size",
+        "max",
+      ),
+    ).toEqual({
+      width: w,
+      maxWidth: w,
+    });
   });
 });

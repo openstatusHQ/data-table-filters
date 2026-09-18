@@ -7,6 +7,7 @@ import {
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
 import { DataTableInfinite } from "@dtf/registry/components/data-table/data-table-infinite";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
+import { DataTableRefreshButton } from "@dtf/registry/components/data-table/data-table-refresh-button";
 import { MemoizedDataTableSheetContent } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-content";
 import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-table-sheet/data-table-sheet-details";
 import type { SheetField } from "@dtf/registry/components/data-table/types";
@@ -15,6 +16,7 @@ import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
   getMetaPage,
+  refreshDataTableQuery,
 } from "@dtf/registry/lib/data-table";
 import { isActive } from "@dtf/registry/lib/filters";
 import { useNuqsAdapter } from "@dtf/registry/lib/store/adapters/nuqs";
@@ -26,14 +28,20 @@ import {
   generateSheetFields,
   getDefaultColumnVisibility,
 } from "@dtf/registry/lib/table-schema";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
+import { Footer } from "./footer";
 import { dataOptions } from "./query-options";
 import { filterSchema, type FilterState, type SearchParams } from "./schema";
 import { tableSchema, type ColumnSchema } from "./table-schema";
+import { timingPhasesColumn } from "./timing-phases";
 
-// Everything the table renders is generated from the schema, once.
-const columns = generateColumns<ColumnSchema>(tableSchema.definition);
+// Everything the table renders is generated from the schema, once. The one
+// exception is the timing bar, which spans five columns and is appended by hand.
+const columns = [
+  ...generateColumns<ColumnSchema>(tableSchema.definition),
+  timingPhasesColumn<ColumnSchema>(),
+];
 const filterFields = generateFilterFields<ColumnSchema>(tableSchema.definition);
 const sheetFields = generateSheetFields<ColumnSchema>(tableSchema.definition);
 const defaultColumnVisibility = getDefaultColumnVisibility(
@@ -65,8 +73,16 @@ export function Client({ initialState }: { initialState: SearchParams }) {
 
 function Table() {
   const search = useFilterState<FilterState>();
+  const queryClient = useQueryClient();
   const { data, isFetching, isLoading, fetchNextPage, hasNextPage } =
     useInfiniteQuery(dataOptions(search));
+
+  // Not the bare `refetch`: that would restart from the first cached page
+  // param. The helper resets the cache to a fresh first page (now, with meta).
+  const refresh = React.useCallback(
+    () => refreshDataTableQuery(queryClient, dataOptions(search)),
+    [queryClient, search],
+  );
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
@@ -114,6 +130,8 @@ function Table() {
           className="-mb-2"
         />
       }
+      toolbarActions={<DataTableRefreshButton onClick={refresh} />}
+      footerSlot={<Footer />}
       commandSlot={
         <DataTableFilterCommand
           schema={filterSchema.definition}

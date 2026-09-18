@@ -200,6 +200,7 @@ A column without `.size()` flexes to absorb the table's leftover width. Give it 
 
 ```ts
 col.number().sortable(); // Click-to-sort on column header
+col.presets.timestamp().sortable(false); // Switch it off again on a preset
 col.string().optional(); // T becomes T | undefined in InferTableType
 ```
 

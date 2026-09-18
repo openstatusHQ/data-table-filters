@@ -3,6 +3,7 @@ import SuperJSON from "superjson";
 import { describe, expect, it } from "vitest";
 import { rows } from "../data";
 import type { ColumnSchema } from "../table-schema";
+import { TIMING_PHASES } from "../timing";
 import { GET } from "./route";
 
 type Page = InfiniteQueryResponse<ColumnSchema[]>;
@@ -89,5 +90,34 @@ describe("example route pagination", () => {
     expect(newer.data.map((row) => row.uuid)).toEqual(
       first.data.slice(0, 9).map((row) => row.uuid),
     );
+  });
+});
+
+describe("timing phases", () => {
+  it("adds up to the latency on every row", () => {
+    for (const row of rows) {
+      const sum = TIMING_PHASES.reduce((total, phase) => total + row[phase], 0);
+      expect(sum).toBe(row.latency);
+      for (const phase of TIMING_PHASES)
+        expect(row[phase]).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("serves a min/max facet per phase for the sliders", async () => {
+    const page = await fetchPage({});
+    for (const phase of TIMING_PHASES) {
+      const facet = page.meta.facets?.[phase];
+      expect(facet?.min).toBeGreaterThanOrEqual(0);
+      expect(facet?.max).toBeGreaterThan(facet?.min ?? 0);
+    }
+  });
+
+  it("filters by a phase range", async () => {
+    const page = await fetchPage({ "timing.ttfb": "100-200" });
+    expect(page.data.length).toBeGreaterThan(0);
+    for (const row of page.data) {
+      expect(row["timing.ttfb"]).toBeGreaterThanOrEqual(100);
+      expect(row["timing.ttfb"]).toBeLessThanOrEqual(200);
+    }
   });
 });

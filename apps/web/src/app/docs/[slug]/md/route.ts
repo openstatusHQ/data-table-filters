@@ -10,9 +10,11 @@ export async function generateStaticParams() {
 }
 
 /**
- * Raw markdown for a docs page. Reachable as `/docs/<slug>.md` via the rewrite
- * in `next.config.mjs` — the HTML page costs an agent several times the tokens
- * and loses code-fence fidelity on the way through.
+ * Raw markdown for a docs page. Reachable as `/docs/<slug>.md`, or as
+ * `/docs/<slug>` with `Accept: text/markdown`, via the rewrites in
+ * `next.config.mjs` (which also sets `Vary: Accept` on that url) — the HTML
+ * page costs an agent several times the tokens and loses code-fence fidelity
+ * on the way through.
  */
 export async function GET(
   _request: Request,

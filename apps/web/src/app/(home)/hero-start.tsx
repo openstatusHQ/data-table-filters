@@ -9,14 +9,18 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
-import { AGENT_START_PROMPT, CREATE_PROJECT_COMMAND } from "@/lib/llms/blocks";
+import {
+  AGENT_START_PROMPT,
+  CREATE_PROJECT_COMMAND,
+  SKILL_INSTALL_COMMAND,
+} from "@/lib/llms/blocks";
 import { cn } from "@/lib/utils";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
 import { Check, Copy, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
-type Mode = "terminal" | "agent" | "describe";
+type Mode = "terminal" | "agent" | "skill" | "describe";
 
 const MODES: {
   id: Mode;
@@ -40,6 +44,11 @@ const MODES: {
     hint: "Paste into Claude Code, Cursor, or any agent that runs commands.",
   },
   {
+    id: "skill",
+    label: "Skill",
+    hint: "Then ask the agent for a data table. It picks the blocks and wires them up.",
+  },
+  {
     id: "describe",
     label: "Describe",
     // The one mode that goes through an AI: say so with the sparkle.
@@ -54,11 +63,13 @@ const SNIPPETS: Record<
 > = {
   terminal: { prefix: "$", value: CREATE_PROJECT_COMMAND },
   agent: { prefix: ">", value: AGENT_START_PROMPT },
+  skill: { prefix: "$", value: SKILL_INSTALL_COMMAND },
 };
 
 /**
- * Three ways to start, one row. Terminal and Agent are the same constants the
- * Quick Start, llms.txt and the page's HowTo carry; Describe is the builder.
+ * Four ways to start, one row. Terminal, Agent and Skill are the same
+ * constants the Quick Start, llms.txt and the page's HowTo carry; Describe is
+ * the builder.
  */
 export function HeroStart({ className }: { className?: string }) {
   const [mode, setMode] = React.useState<Mode>("terminal");

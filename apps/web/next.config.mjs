@@ -11,6 +11,24 @@ const nextConfig = {
         source: "/docs/:slug.md",
         destination: "/docs/:slug/md",
       },
+      // Same markdown for agents that ask for it on the plain URL. Next.js
+      // anchors `value` as ^...$, hence the wildcards around the media type.
+      {
+        source: "/docs/:slug",
+        has: [{ type: "header", key: "accept", value: ".*text/markdown.*" }],
+        destination: "/docs/:slug/md",
+      },
+    ];
+  },
+  async headers() {
+    return [
+      // `/docs/:slug` serves html or markdown depending on the accept header
+      // (see the rewrite above), so shared caches must key on it too.
+      // Next.js appends its own RSC values to Vary rather than replacing it.
+      {
+        source: "/docs/:slug",
+        headers: [{ key: "vary", value: "accept" }],
+      },
     ];
   },
   async redirects() {

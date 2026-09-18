@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { getLevelColor, getLevelLabel, getLevelRowClassName } from "./level";
 
@@ -68,4 +69,28 @@ describe("getLevelLabel", () => {
   it("returns 'Unknown' for info", () => {
     expect(getLevelLabel("info")).toBe("Unknown");
   });
+});
+
+describe("success colour", () => {
+  // The timeline chart paints the success series with `var(--success)`, the
+  // level dots with `getLevelColor("success").bg` (`bg-muted`). Both must be
+  // the same quiet grey, or the bars and the dots disagree.
+  const css = readFileSync(
+    new URL("../../styles/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  it.each([":root", ".dark"])(
+    "keeps --success equal to --muted in %s",
+    (selector) => {
+      const start = css.indexOf(`${selector} {`);
+      const block = css.slice(start, css.indexOf("}", start));
+      const token = (name: string) =>
+        new RegExp(`--${name}:\\s*([^;]+);`).exec(block)?.[1];
+
+      expect(getLevelColor("success").bg).toBe("bg-muted");
+      expect(token("success")).toBeDefined();
+      expect(token("success")).toBe(token("muted"));
+    },
+  );
 });

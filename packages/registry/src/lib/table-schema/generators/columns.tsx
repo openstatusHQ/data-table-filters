@@ -339,6 +339,9 @@ export function generateColumns<TData extends RowData>(
       header,
       cell,
       enableResizing: config.resizable,
+      // Not just the header: with the default (`true`) a column that never
+      // opted in could still be sorted through state, e.g. a URL param.
+      enableSorting: config.sortable,
       ...(config.enableHiding === false ? { enableHiding: false } : {}),
       ...(filterFn ? { filterFn } : {}),
       ...sizingFor(config),

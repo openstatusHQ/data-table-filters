@@ -4,14 +4,13 @@ import { DataTableColumnLevelIndicator } from "@/components/data-table/data-tabl
 import { DataTableColumnRegion } from "@/components/data-table/data-table-column/data-table-column-region";
 import { DataTableColumnStatusCode } from "@/components/data-table/data-table-column/data-table-column-status-code";
 import { PopoverPercentile } from "@/components/data-table/data-table-infinite/popover-percentile";
-import { SheetTimingPhases } from "@/components/data-table/data-table-infinite/sheet-timing-phases";
 import { LEVELS } from "@/constants/levels";
 import { METHODS } from "@/constants/method";
 import { REGIONS } from "@/constants/region";
 import { getLevelColor, getLevelLabel } from "@/lib/request/level";
 import { getStatusColor } from "@/lib/request/status-code";
-import type { TimingPhase } from "@/lib/request/timing";
 import { cn } from "@/lib/utils";
+import { SheetTimingPhases } from "@dtf/registry/examples/infinite/timing-phases";
 import { formatMilliseconds } from "@dtf/registry/lib/format";
 import {
   col,
@@ -247,15 +246,7 @@ export const tableSchema = createTableSchema({
     .hidden()
     .sheet({
       label: "Timing Phases",
-      component: (props) => {
-        const row = props as ColumnSchema;
-        return (
-          <SheetTimingPhases
-            latency={row.latency}
-            timing={row as unknown as Record<TimingPhase, number>}
-          />
-        );
-      },
+      component: SheetTimingPhases,
       className: "flex-col items-start w-full gap-1",
     }),
 

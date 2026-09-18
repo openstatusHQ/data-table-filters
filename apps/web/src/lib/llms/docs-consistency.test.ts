@@ -13,6 +13,7 @@ import {
   RADIX_INIT_COMMAND,
   RECIPES,
   registryItems,
+  SKILL_INSTALL_COMMAND,
 } from "./blocks";
 
 // The install commands, block lists, and counts an agent reads are written by
@@ -267,6 +268,21 @@ describe("the create-project command", () => {
     expect(AGENT_START_PROMPT).toContain(blockRef(EXAMPLE_BLOCK));
     expect(AGENT_START_PROMPT).toContain(CREATE_PROJECT_COMMAND);
     expect(AGENT_START_PROMPT).toContain("/llms.txt");
+  });
+
+  it("installs the skill with one line everywhere it is spelled out", () => {
+    // The home page's Skill tab reads the constant; the prose copies must
+    // match it or a reader gets a different command depending on the page.
+    for (const file of [
+      "apps/web/src/content/docs/01-quick-start.mdx",
+      "apps/web/src/content/docs/13-agents.mdx",
+      "README.md",
+      "AGENTS.md",
+    ]) {
+      expect(read(file), `${file} carries the skill install`).toContain(
+        SKILL_INSTALL_COMMAND,
+      );
+    }
   });
 
   it("opens the Quick Start with the from-scratch path", () => {

@@ -46,6 +46,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/data-table/data-table-refresh-button.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/data-table/data-table-view-options.tsx",
           "type": "registry:component"
         },
@@ -301,13 +305,13 @@
           "--animate-accordion-up": "accordion-up 0.2s ease-out"
         },
         "light": {
-          "success": "oklch(0.97 0 0)",
+          "success": "oklch(0.723 0.193 149.579)",
           "warning": "oklch(0.705 0.187 47.602)",
           "error": "oklch(0.637 0.208 25.326)",
           "info": "oklch(0.685 0.148 237.321)"
         },
         "dark": {
-          "success": "oklch(0.269 0 0)",
+          "success": "oklch(0.723 0.193 149.579)",
           "warning": "oklch(0.705 0.187 47.602)",
           "error": "oklch(0.637 0.208 25.326)",
           "info": "oklch(0.685 0.148 237.321)"
@@ -610,7 +614,7 @@
           "type": "registry:lib"
         },
         {
-          "path": "src/lib/table-schema/generators/filter-fields.ts",
+          "path": "src/lib/table-schema/generators/filter-fields.tsx",
           "type": "registry:lib"
         },
         {
@@ -952,7 +956,7 @@
       "name": "data-table-example-infinite",
       "type": "registry:block",
       "title": "Example: infinite table",
-      "description": "A complete /example route to see the table running before wiring your own data: a table schema, a mock API that filters, computes facets and cursor-paginates in memory with the same semantics as the Drizzle handler, and the infinite table with a timeline chart, URL state, command palette and row sheet. Delete app/example when you have your own.",
+      "description": "A complete /example route to see the table running before wiring your own data: a table schema, a mock API that filters, computes facets and cursor-paginates in memory with the same semantics as the Drizzle handler, and the infinite table with a timeline chart, URL state, command palette, row sheet and a hand-written timing phases column. Delete app/example when you have your own.",
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json",
         "https://data-table.openstatus.dev/r/data-table-schema.json",
@@ -961,7 +965,10 @@
         "https://data-table.openstatus.dev/r/data-table-sheet.json",
         "https://data-table.openstatus.dev/r/data-table-cell.json",
         "https://data-table.openstatus.dev/r/data-table-filter-command.json",
-        "https://data-table.openstatus.dev/r/data-table-chart.json"
+        "https://data-table.openstatus.dev/r/data-table-chart.json",
+        "hover-card",
+        "dropdown-menu",
+        "button"
       ],
       "files": [
         {
@@ -988,6 +995,21 @@
           "path": "src/examples/infinite/table-schema.ts",
           "type": "registry:file",
           "target": "app/example/table-schema.ts"
+        },
+        {
+          "path": "src/examples/infinite/timing.ts",
+          "type": "registry:file",
+          "target": "app/example/timing.ts"
+        },
+        {
+          "path": "src/examples/infinite/timing-phases.tsx",
+          "type": "registry:file",
+          "target": "app/example/timing-phases.tsx"
+        },
+        {
+          "path": "src/examples/infinite/footer.tsx",
+          "type": "registry:file",
+          "target": "app/example/footer.tsx"
         },
         {
           "path": "src/examples/infinite/data.ts",

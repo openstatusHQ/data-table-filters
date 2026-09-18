@@ -127,7 +127,7 @@ function renderSheetValue(
     case "level-indicator": {
       const hex = colorMap?.[String(rawValue)];
       return typeof rawValue === "string" ? (
-        <DataTableCellLevelIndicator value={rawValue} color={hex} />
+        <DataTableCellLevelIndicator value={rawValue} color={hex} showLabel />
       ) : (
         String(rawValue)
       );
