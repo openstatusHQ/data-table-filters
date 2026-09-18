@@ -23,7 +23,7 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --radius: 0.5rem;
-  --success: oklch(0.97 0 0);
+  --success: oklch(0.723 0.193 149.579);
   --warning: oklch(0.705 0.187 47.602);
   --error: oklch(0.637 0.208 25.326);
   --info: oklch(0.685 0.148 237.321);
@@ -48,7 +48,7 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --success: oklch(0.269 0 0);
+  --success: oklch(0.723 0.193 149.579);
   --warning: oklch(0.705 0.187 47.602);
   --error: oklch(0.637 0.208 25.326);
   --info: oklch(0.685 0.148 237.321);
