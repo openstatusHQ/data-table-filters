@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@dtf/registry/components/ui/button";
+import { buttonVariants } from "@dtf/registry/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,16 +68,19 @@ export function Footer() {
         </a>
       </p>
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon-sm" asChild>
-          <a
-            href="https://github.com/openstatusHQ/data-table-filters"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Github />
-            <span className="sr-only">View on GitHub</span>
-          </a>
-        </Button>
+        {/* No `asChild` here, on purpose: this file ships as `registry:file`,
+            which the shadcn CLI copies verbatim, so its Base UI codemod
+            (`asChild` → `render`) never runs on it. The link and the menu
+            trigger take the button styles directly instead. */}
+        <a
+          href="https://github.com/openstatusHQ/data-table-filters"
+          target="_blank"
+          rel="noreferrer"
+          className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+        >
+          <Github />
+          <span className="sr-only">View on GitHub</span>
+        </a>
         <ShortcutsMenu />
       </div>
     </div>
@@ -87,11 +90,11 @@ export function Footer() {
 function ShortcutsMenu() {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm">
-          <Keyboard />
-          <span className="sr-only">Keyboard shortcuts</span>
-        </Button>
+      <DropdownMenuTrigger
+        className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+      >
+        <Keyboard />
+        <span className="sr-only">Keyboard shortcuts</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-72" align="end">
         <DropdownMenuGroup>
