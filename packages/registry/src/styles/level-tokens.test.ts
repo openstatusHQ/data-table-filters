@@ -6,7 +6,10 @@ import { describe, expect, it } from "vitest";
 // The level tokens colour both the timeline chart's series (`var(--<key>)`)
 // and the level-indicator dots (`bg-<key>`). `--success` once shipped as a
 // copy of `--secondary`, a near-background neutral, so success bars and dots
-// all but vanished. These pin every copy of the tokens to a real colour.
+// all but vanished. These pin both copies the registry ships to a real colour.
+//
+// The docs site's own stylesheet is left out on purpose: its demos keep
+// success quiet (`--success` equals `--muted`, see `lib/request/level.ts`).
 
 const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -50,10 +53,6 @@ const sources = {
     light: cssBlock(read("packages/registry/src/styles/globals.css"), ":root"),
     dark: cssBlock(read("packages/registry/src/styles/globals.css"), ".dark"),
   },
-  "web globals.css": {
-    light: cssBlock(read("apps/web/src/styles/globals.css"), ":root"),
-    dark: cssBlock(read("apps/web/src/styles/globals.css"), ".dark"),
-  },
 };
 
 describe("level colour tokens", () => {
@@ -67,7 +66,7 @@ describe("level colour tokens", () => {
     }
   }
 
-  it("matches between the manifest and both stylesheets", () => {
+  it("matches between the manifest and the stylesheet", () => {
     for (const theme of ["light", "dark"] as const) {
       for (const level of LEVELS) {
         const values = Object.values(sources).map((s) => s[theme][level]);
