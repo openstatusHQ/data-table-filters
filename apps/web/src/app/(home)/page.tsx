@@ -473,8 +473,9 @@ function Pagination() {
 function Hero() {
   return (
     <div className="max-w-4xl space-y-3">
-      <h1 className="text-foreground text-3xl font-bold tracking-tight text-balance sm:text-4xl md:text-5xl">
-        React <span className="text-nowrap">Data Table</span> with Filters
+      <h1 className="text-foreground text-3xl font-bold tracking-tight text-balance md:text-4xl">
+        React Infinite <span className="text-nowrap">Data Table</span> with
+        Filters
       </h1>
       {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
       <h2 className="text-muted-foreground max-w-[900px] sm:text-xl">
