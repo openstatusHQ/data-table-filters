@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import nextConfig from "../../../../../next.config.mjs";
 
+type Header = {
+  source: string;
+  headers: { key: string; value: string }[];
+};
+
 type Rewrite = {
   source: string;
   destination: string;
@@ -40,5 +45,18 @@ describe("markdown rewrite on the accept header", () => {
       ),
     ).toBe(false);
     expect(matcher.test("*/*")).toBe(false);
+  });
+});
+
+describe("vary header on the negotiated url", () => {
+  it("tells shared caches that /docs/:slug varies on accept", async () => {
+    const headers = ((await nextConfig.headers?.()) ?? []) as Header[];
+    const rule = headers.find((h) => h.source === "/docs/:slug");
+
+    expect(
+      rule?.headers.some(
+        (h) => h.key.toLowerCase() === "vary" && /\baccept\b/i.test(h.value),
+      ),
+    ).toBe(true);
   });
 });

@@ -20,6 +20,17 @@ const nextConfig = {
       },
     ];
   },
+  async headers() {
+    return [
+      // `/docs/:slug` serves html or markdown depending on the accept header
+      // (see the rewrite above), so shared caches must key on it too.
+      // Next.js appends its own RSC values to Vary rather than replacing it.
+      {
+        source: "/docs/:slug",
+        headers: [{ key: "vary", value: "accept" }],
+      },
+    ];
+  },
   async redirects() {
     return [
       {
