@@ -448,15 +448,22 @@ describe("registry packaging", () => {
  * provider mounted from one copy is invisible to a hook imported from the
  * other — even when the copies are byte-identical.
  *
- * This is not hypothetical: pnpm keys an install by its resolved peers, and
- * `apps/web` and this package saw different optional peers of `next`
- * (`babel-plugin-react-compiler` is a devDependency of the app only). That gave
- * `nuqs` two lockfile entries, so `<NuqsAdapter>` in `apps/web/src/app/layout.tsx`
- * stopped being visible to `useNuqsAdapter()` here and every table SSR'd into
- * "[nuqs] nuqs requires an adapter to work with your framework" (NUQS-404).
+ * This is not hypothetical: `nuqs` ended up with two lockfile entries, so
+ * `<NuqsAdapter>` in `apps/web/src/app/layout.tsx` stopped being visible to
+ * `useNuqsAdapter()` here and every table SSR'd into "[nuqs] nuqs requires an
+ * adapter to work with your framework" (NUQS-404).
  *
- * Nothing in either package.json says that is wrong, and the split survives a
- * `pnpm install` once it is in the lockfile — hence this test.
+ * Two things split a package in two, and neither shows up as an error:
+ *
+ * 1. A bump applied to one manifest only. `pnpm --filter web add nuqs@^2.10.0`
+ *    leaves this package's peer range at `^2.3.0`, and pnpm honours both. Bump
+ *    the range in `apps/web/package.json` and here in the same commit.
+ * 2. Divergent peer keys at the same version. pnpm keys an install by its
+ *    resolved peers, and `apps/web` sees optional peers of `next` that this
+ *    package does not (`babel-plugin-react-compiler` is a devDependency of the
+ *    app only), which is enough to fork two otherwise identical copies. A
+ *    lockfile that has drifted that way stays drifted across `pnpm install`;
+ *    re-resolving the entry collapses it.
  */
 const reactContextPackages = [
   "react",
@@ -477,9 +484,15 @@ describe("workspace module resolution", () => {
   it.each(reactContextPackages)(
     "gives apps/web and the registry one instance of %s",
     (name) => {
-      expect(realpathSync(fromWeb.resolve(name))).toBe(
-        realpathSync(fromRegistry.resolve(name)),
-      );
+      const web = realpathSync(fromWeb.resolve(name));
+      const registry = realpathSync(fromRegistry.resolve(name));
+
+      expect(
+        web,
+        `apps/web and packages/registry load different copies of ${name}. ` +
+          `Check that both package.json files ask for the same range, then ` +
+          `re-resolve the entry so one copy is installed.`,
+      ).toBe(registry);
     },
   );
 });
