@@ -21,6 +21,7 @@ import {
   dataTableFeatures,
   type DataTableFeatures,
 } from "@dtf/registry/lib/table/features";
+import { useControls } from "@dtf/registry/providers/controls";
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -106,16 +107,22 @@ export function DataTable<TData extends RowData>({
       sorting={sorting}
       pagination={pagination}
     >
-      <div className="flex h-full w-full flex-col gap-3 sm:flex-row">
+      <div
+        className={cn(
+          "flex h-full w-full flex-col sm:flex-row",
+          "sm:[--controls-width:13rem] md:[--controls-width:16rem]",
+        )}
+      >
+        <FilterPanel>
+          <DataTableFilterControls />
+        </FilterPanel>
         <div
           className={cn(
-            "hidden w-full p-1 sm:block sm:max-w-52 sm:min-w-52 sm:self-start md:max-w-64 md:min-w-64",
-            "group-data-[expanded=false]/controls:hidden",
+            "flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1",
+            "sm:group-data-[expanded=true]/controls:ml-3",
+            "transition-[margin] duration-200 ease-linear motion-reduce:transition-none",
           )}
         >
-          <DataTableFilterControls />
-        </div>
-        <div className="flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1">
           <DataTableFilterCommand
             schema={filterSchema.definition}
             tableId="default"
@@ -178,5 +185,29 @@ export function DataTable<TData extends RowData>({
         </div>
       </div>
     </DataTableProvider>
+  );
+}
+
+/**
+ * Same width transition as the infinite table's FilterPanel: `display` can't
+ * be animated, so the outer box collapses to `w-0` while the inner wrapper
+ * keeps its width and the content slides out of view.
+ */
+function FilterPanel({ children }: { children: React.ReactNode }) {
+  const { open } = useControls();
+
+  return (
+    <div
+      // Collapsed is `w-0`, not `hidden`, so the filters stay in the DOM and
+      // would remain focusable without `inert`.
+      inert={!open}
+      className={cn(
+        "hidden w-full sm:block sm:w-(--controls-width) sm:shrink-0 sm:self-start",
+        "sm:group-data-[expanded=false]/controls:w-0",
+        "overflow-hidden transition-[width] duration-200 ease-linear motion-reduce:transition-none",
+      )}
+    >
+      <div className="w-full p-1 sm:w-(--controls-width)">{children}</div>
+    </div>
   );
 }

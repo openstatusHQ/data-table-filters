@@ -30,6 +30,7 @@ import {
 } from "@dtf/registry/lib/table-schema";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
+import { Footer } from "./footer";
 import { dataOptions } from "./query-options";
 import { filterSchema, type FilterState, type SearchParams } from "./schema";
 import { tableSchema, type ColumnSchema } from "./table-schema";
@@ -130,6 +131,7 @@ function Table() {
         />
       }
       toolbarActions={<DataTableRefreshButton onClick={refresh} />}
+      footerSlot={<Footer />}
       commandSlot={
         <DataTableFilterCommand
           schema={filterSchema.definition}

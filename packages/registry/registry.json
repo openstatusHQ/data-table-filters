@@ -966,7 +966,9 @@
         "https://data-table.openstatus.dev/r/data-table-cell.json",
         "https://data-table.openstatus.dev/r/data-table-filter-command.json",
         "https://data-table.openstatus.dev/r/data-table-chart.json",
-        "hover-card"
+        "hover-card",
+        "dropdown-menu",
+        "button"
       ],
       "files": [
         {
@@ -1003,6 +1005,11 @@
           "path": "src/examples/infinite/timing-phases.tsx",
           "type": "registry:file",
           "target": "app/example/timing-phases.tsx"
+        },
+        {
+          "path": "src/examples/infinite/footer.tsx",
+          "type": "registry:file",
+          "target": "app/example/footer.tsx"
         },
         {
           "path": "src/examples/infinite/data.ts",

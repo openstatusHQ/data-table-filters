@@ -102,11 +102,39 @@ describe("DataTableFilterRail", () => {
     );
 
     // Class-order-tolerant: `cn` is a `tailwindFunctions` entry, so prettier
-    // re-sorts this list whenever a class is added. Pin `relative` on the
-    // element that owns `sm:border-l`, not the string prettier happens to emit.
-    const column = source.match(/className=\{cn\(\s*"[^"]*sm:border-l[^"]*"/);
-    expect(column).not.toBeNull();
-    expect(column?.[0]).toMatch(/\brelative\b/);
-    expect(source).toMatch(/<DataTableFilterRail \/>/);
+    // re-sorts and may split this list whenever a class is added. Pin
+    // `relative` on the element that renders the rail — the `cn(` block
+    // immediately preceding it — not the string prettier happens to emit.
+    const railAt = source.indexOf("<DataTableFilterRail />");
+    expect(railAt).toBeGreaterThan(-1);
+    const columnAt = source.lastIndexOf("className={cn(", railAt);
+    expect(columnAt).toBeGreaterThan(-1);
+    const column = source.slice(columnAt, railAt);
+    expect(column).toMatch(/\bsm:border-l\b/);
+    expect(column).toMatch(/\brelative\b/);
+  });
+
+  it("collapses the sidebar by width so the toggle animates, and inerts it while closed", () => {
+    // `display: none` can't be transitioned. The panel mirrors the shadcn
+    // sidebar instead: `w-0` + `transition-[width]`, with the inner wrapper
+    // holding the open width so content slides out rather than reflowing.
+    // Because the filters stay in the DOM while collapsed, they have to be
+    // `inert` or they would remain focusable behind an invisible box.
+    const source = readFileSync(
+      join(__dirname, "data-table-infinite.tsx"),
+      "utf8",
+    );
+
+    const panelAt = source.indexOf("function FilterPanel(");
+    expect(panelAt).toBeGreaterThan(-1);
+    const panel = source.slice(panelAt, source.indexOf("\n}\n", panelAt));
+
+    expect(panel).toMatch(/inert=\{!open\}/);
+    expect(panel).toMatch(/group-data-\[expanded=false\]\/controls:w-0/);
+    expect(panel).toMatch(/transition-\[width\]/);
+    expect(panel).toMatch(/motion-reduce:transition-none/);
+    expect(source).not.toMatch(
+      /group-data-\[expanded=false\]\/controls:hidden/,
+    );
   });
 });
