@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -440,4 +441,58 @@ describe("registry packaging", () => {
 
     expect(stale).toEqual([]);
   });
+});
+
+/**
+ * Packages that carry React context. Two copies on disk are two contexts, so a
+ * provider mounted from one copy is invisible to a hook imported from the
+ * other — even when the copies are byte-identical.
+ *
+ * This is not hypothetical: `nuqs` ended up with two lockfile entries, so
+ * `<NuqsAdapter>` in `apps/web/src/app/layout.tsx` stopped being visible to
+ * `useNuqsAdapter()` here and every table SSR'd into "[nuqs] nuqs requires an
+ * adapter to work with your framework" (NUQS-404).
+ *
+ * Two things split a package in two, and neither shows up as an error:
+ *
+ * 1. A bump applied to one manifest only. `pnpm --filter web add nuqs@^2.10.0`
+ *    leaves this package's peer range at `^2.3.0`, and pnpm honours both. Bump
+ *    the range in `apps/web/package.json` and here in the same commit.
+ * 2. Divergent peer keys at the same version. pnpm keys an install by its
+ *    resolved peers, and `apps/web` sees optional peers of `next` that this
+ *    package does not (`babel-plugin-react-compiler` is a devDependency of the
+ *    app only), which is enough to fork two otherwise identical copies. A
+ *    lockfile that has drifted that way stays drifted across `pnpm install`;
+ *    re-resolving the entry collapses it.
+ */
+const reactContextPackages = [
+  "react",
+  "react-dom",
+  "nuqs",
+  "@tanstack/react-query",
+  "@tanstack/react-table",
+  "zustand",
+];
+
+describe("workspace module resolution", () => {
+  // Resolution is relative to the importing file, and the app compiles this
+  // package from source (`transpilePackages`), so each side resolves through
+  // its own node_modules. That is the resolution the bundler performs.
+  const fromRegistry = createRequire(join(root, "package.json"));
+  const fromWeb = createRequire(resolve(root, "../../apps/web/package.json"));
+
+  it.each(reactContextPackages)(
+    "gives apps/web and the registry one instance of %s",
+    (name) => {
+      const web = realpathSync(fromWeb.resolve(name));
+      const registry = realpathSync(fromRegistry.resolve(name));
+
+      expect(
+        web,
+        `apps/web and packages/registry load different copies of ${name}. ` +
+          `Check that both package.json files ask for the same range, then ` +
+          `re-resolve the entry so one copy is installed.`,
+      ).toBe(registry);
+    },
+  );
 });
