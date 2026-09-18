@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -440,4 +441,45 @@ describe("registry packaging", () => {
 
     expect(stale).toEqual([]);
   });
+});
+
+/**
+ * Packages that carry React context. Two copies on disk are two contexts, so a
+ * provider mounted from one copy is invisible to a hook imported from the
+ * other — even when the copies are byte-identical.
+ *
+ * This is not hypothetical: pnpm keys an install by its resolved peers, and
+ * `apps/web` and this package saw different optional peers of `next`
+ * (`babel-plugin-react-compiler` is a devDependency of the app only). That gave
+ * `nuqs` two lockfile entries, so `<NuqsAdapter>` in `apps/web/src/app/layout.tsx`
+ * stopped being visible to `useNuqsAdapter()` here and every table SSR'd into
+ * "[nuqs] nuqs requires an adapter to work with your framework" (NUQS-404).
+ *
+ * Nothing in either package.json says that is wrong, and the split survives a
+ * `pnpm install` once it is in the lockfile — hence this test.
+ */
+const reactContextPackages = [
+  "react",
+  "react-dom",
+  "nuqs",
+  "@tanstack/react-query",
+  "@tanstack/react-table",
+  "zustand",
+];
+
+describe("workspace module resolution", () => {
+  // Resolution is relative to the importing file, and the app compiles this
+  // package from source (`transpilePackages`), so each side resolves through
+  // its own node_modules. That is the resolution the bundler performs.
+  const fromRegistry = createRequire(join(root, "package.json"));
+  const fromWeb = createRequire(resolve(root, "../../apps/web/package.json"));
+
+  it.each(reactContextPackages)(
+    "gives apps/web and the registry one instance of %s",
+    (name) => {
+      expect(realpathSync(fromWeb.resolve(name))).toBe(
+        realpathSync(fromRegistry.resolve(name)),
+      );
+    },
+  );
 });
