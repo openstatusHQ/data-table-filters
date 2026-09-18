@@ -474,8 +474,8 @@ function Hero() {
   return (
     <div className="max-w-4xl space-y-3">
       <h1 className="text-foreground text-3xl font-bold tracking-tight text-balance md:text-4xl">
-        React Infinite <span className="text-nowrap">Data Table</span> with
-        Filters
+        React <em className="pr-[0.08em]">Infinite</em>{" "}
+        <span className="text-nowrap">Data Table</span> with Filters
       </h1>
       {/* REMINDER: text-balance produces layout shifts on iOS here - maybe due to arrow svg? */}
       <h2 className="text-muted-foreground max-w-[900px] sm:text-xl">
@@ -503,15 +503,15 @@ function Hero() {
         </Link>
         .
       </h2>
-      <p className="text-foreground max-w-[900px] text-balance italic sm:text-lg">
-        <span className="mr-2">
-          It&apos;s not a library. It&apos;s a playbook. Stop hand-rolling data
-          tables. Copy proven patterns, install the agent skill, ship.{" "}
-        </span>
-        <br />
+      <p className="text-muted-foreground max-w-[900px] sm:text-xl">
+        <span className="text-foreground">
+          It&apos;s not a library. It&apos;s a playbook.
+        </span>{" "}
+        Stop hand-rolling data tables. Copy proven patterns, install the agent
+        skill, ship.{" "}
         <NextLink
           href="/docs/introduction"
-          className="group text-foreground hover:text-background relative inline-block font-medium"
+          className="group text-foreground hover:text-background relative inline-block font-medium italic"
         >
           <span className="bg-muted group-hover:bg-foreground absolute inset-0 scale-x-105 -skew-x-12"></span>
           <span className="relative">Learn more in the Docs.&nbsp;</span>
