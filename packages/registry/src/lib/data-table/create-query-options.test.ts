@@ -54,7 +54,7 @@ function cursorParam(_meta: boolean) {
   return { page: { cursor: 1, direction: "next" as const }, _meta };
 }
 
-async function fetchUrlFor({
+async function fetchFor({
   skipMetaOnPagination,
   pageParam,
   searchParamsSerializer = serializer,
@@ -84,7 +84,11 @@ async function fetchUrlFor({
 
   // @ts-expect-error -- queryFn is invoked directly, without the query client
   await options.queryFn({ pageParam });
-  return String(spy.mock.calls[0][0]);
+  return { url: String(spy.mock.calls[0][0]), queryKey: options.queryKey };
+}
+
+async function fetchUrlFor(args: Parameters<typeof fetchFor>[0]) {
+  return (await fetchFor(args)).url;
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -155,12 +159,25 @@ describe("createDataTableQueryOptions — request url", () => {
   // Regression: only the cache key was normalized, so every untouched array
   // filter reached the request as an empty `key=` param.
   it("drops empty array filters from the request", async () => {
-    const url = await fetchUrlFor({
+    const { url } = await fetchFor({
       pageParam: cursorParam(true),
       searchParamsSerializer: nuqsSerializer,
       search: { level: ["warning"], region: [], host: null },
     });
     expect(url).toMatch(/\/api\?level=warning$/);
+  });
+
+  // The request and the cache key are serialized separately; they must agree
+  // on the filter state or one key ends up caching another request's rows.
+  // (This serializer does not declare the page-param keys, so nothing else
+  // differs between the two.)
+  it("requests the same filter state the cache key names", async () => {
+    const { url, queryKey } = await fetchFor({
+      pageParam: cursorParam(true),
+      searchParamsSerializer: nuqsSerializer,
+      search: { level: ["warning"], region: [], host: null },
+    });
+    expect(new URL(url).search).toBe(queryKey[1]);
   });
 });
 

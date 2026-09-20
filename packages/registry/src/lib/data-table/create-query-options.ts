@@ -58,6 +58,15 @@ type MetaPageParam = { page: any; _meta: boolean };
 export type DataTableQueryOptionsConfig<TData, TMeta> = {
   queryKeyPrefix: string;
   apiEndpoint: string;
+  /**
+   * Turns search state into a query string (`?a=1`, or `""` when empty).
+   *
+   * Must omit a param whose value is `null` — that is how the factory clears
+   * keys: omitted search keys, page-param keys in the cache key, and untouched
+   * array filters (`[]` is normalized to `null`). nuqs' `createSerializer`
+   * already behaves this way; a hand-rolled one that stringifies values would
+   * send `key=null`.
+   */
   searchParamsSerializer: (search: Record<string, unknown>) => string;
   /**
    * Append `_meta=false` to pagination requests so the API can skip recomputing
