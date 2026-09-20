@@ -1,3 +1,6 @@
+import { boxRadiusClassName } from "@dtf/registry/lib/style";
+import { cn } from "@dtf/registry/lib/utils";
+
 export function DataTableCellBadge({
   value,
   color,
@@ -7,7 +10,10 @@ export function DataTableCellBadge({
 }) {
   return (
     <span
-      className="rounded-sm border px-1.5 py-0.5 font-mono text-xs"
+      className={cn(
+        "border px-1.5 py-0.5 font-mono text-xs",
+        boxRadiusClassName,
+      )}
       style={
         color
           ? {

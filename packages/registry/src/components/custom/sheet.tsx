@@ -1,5 +1,6 @@
 "use client";
 
+import { boxRadiusClassName } from "@dtf/registry/lib/style";
 import { cn } from "@dtf/registry/lib/utils";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -102,7 +103,10 @@ function SheetContent({
         {!hideClose ? (
           <SheetPrimitive.Close
             autoFocus={true}
-            className="data-[state=open]:bg-secondary focus-visible:border-ring focus-visible:ring-ring/50 absolute top-4 right-4 rounded-sm opacity-70 transition-all outline-none hover:opacity-100 focus-visible:ring-[3px] disabled:pointer-events-none"
+            className={cn(
+              "data-[state=open]:bg-secondary focus-visible:border-ring focus-visible:ring-ring/50 absolute top-4 right-4 opacity-70 transition-all outline-none hover:opacity-100 focus-visible:ring-[3px] disabled:pointer-events-none",
+              boxRadiusClassName,
+            )}
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>

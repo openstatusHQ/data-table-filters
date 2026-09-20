@@ -10,6 +10,10 @@ import {
 import { Label } from "@dtf/registry/components/ui/label";
 import { Skeleton } from "@dtf/registry/components/ui/skeleton";
 import { formatCompactNumber } from "@dtf/registry/lib/format";
+import {
+  boxRadiusClassName,
+  boxSurfaceClassName,
+} from "@dtf/registry/lib/style";
 import { cn } from "@dtf/registry/lib/utils";
 import { Search } from "lucide-react";
 import { useState } from "react";
@@ -49,14 +53,14 @@ export function DataTableFilterCheckbox<TData>({
   // REMINDER: if no options are defined, while fetching data, we should show a skeleton
   if (isLoading && !filterOptions?.length)
     return (
-      <div className="border-border grid divide-y rounded-lg border">
+      <div className={cn("grid divide-y border", boxSurfaceClassName)}>
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
             className="flex items-center justify-between gap-2 px-2 py-2.5"
           >
-            <Skeleton className="h-4 w-4 rounded-sm" />
-            <Skeleton className="h-4 w-full rounded-sm" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-full" />
           </div>
         ))}
       </div>
@@ -65,7 +69,7 @@ export function DataTableFilterCheckbox<TData>({
   return (
     <div className="grid gap-2">
       {options && options.length > 4 ? (
-        <InputGroup className="h-9 rounded-lg shadow-none">
+        <InputGroup className="h-9 shadow-none">
           <InputGroupAddon>
             <Search className="mt-0.5 h-4 w-4" />
           </InputGroupAddon>
@@ -77,7 +81,12 @@ export function DataTableFilterCheckbox<TData>({
         </InputGroup>
       ) : null}
       {/* FIXME: due to the added max-h and overflow-y-auto, the hover state and border is laying on top of the scroll bar */}
-      <div className="border-border max-h-[200px] overflow-y-auto rounded-lg border empty:border-none">
+      <div
+        className={cn(
+          "max-h-[200px] overflow-y-auto border empty:border-none",
+          boxSurfaceClassName,
+        )}
+      >
         {filterOptions
           // TODO: we shoudn't sort the options here, instead filterOptions should be sorted by default
           // .sort((a, b) => a.label.localeCompare(b.label))
@@ -103,7 +112,6 @@ export function DataTableFilterCheckbox<TData>({
                       newValue?.length ? newValue : undefined,
                     );
                   }}
-                  className="border-foreground! shadow-none"
                 />
                 <Label
                   htmlFor={`${value}-${option.value}`}
@@ -126,7 +134,8 @@ export function DataTableFilterCheckbox<TData>({
                     onClick={() => column?.setFilterValue([option.value])}
                     className={cn(
                       "text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 hidden font-normal backdrop-blur-xs group-hover:block",
-                      "focus-visible:border-ring focus-visible:ring-ring/50 rounded-md transition-all outline-none focus-visible:ring-[3px]",
+                      "focus-visible:border-ring focus-visible:ring-ring/50 transition-all outline-none focus-visible:ring-[3px]",
+                      boxRadiusClassName,
                     )}
                   >
                     <span className="px-2">only</span>

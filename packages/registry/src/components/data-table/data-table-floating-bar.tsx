@@ -9,7 +9,9 @@ import {
   TooltipTrigger,
 } from "@dtf/registry/components/ui/tooltip";
 import { useHotKey } from "@dtf/registry/hooks/use-hot-key";
+import { boxRadiusClassName } from "@dtf/registry/lib/style";
 import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
+import { cn } from "@dtf/registry/lib/utils";
 import type { Row, RowData, Table as TTable } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import * as React from "react";
@@ -40,7 +42,12 @@ export function DataTableFloatingBar<TData extends RowData>({
 
   return (
     <div className="fixed inset-x-0 bottom-4 z-50 mx-auto w-fit">
-      <div className="bg-background border-border flex items-center gap-2 rounded-lg border px-4 py-2.5 shadow-lg">
+      <div
+        className={cn(
+          "bg-background border-border flex items-center gap-2 border px-4 py-2.5 shadow-lg",
+          boxRadiusClassName,
+        )}
+      >
         <div className="flex items-center gap-1">
           <span className="text-muted-foreground text-sm whitespace-nowrap">
             {selectedRowCount} selected
@@ -52,7 +59,7 @@ export function DataTableFloatingBar<TData extends RowData>({
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => table.resetRowSelection()}
-                  className="text-muted-foreground hover:text-foreground rounded-sm p-0.5 transition-colors"
+                  className="text-muted-foreground hover:text-foreground p-0.5 transition-colors"
                   aria-label="Deselect all"
                 >
                   <X className="size-4" />

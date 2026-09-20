@@ -45,7 +45,7 @@ export function DataTableFilterInput<TData>({
       <Label htmlFor={value} className="text-muted-foreground sr-only px-2">
         {value}
       </Label>
-      <InputGroup className="h-9 rounded-lg shadow-none">
+      <InputGroup className="h-9 shadow-none">
         <InputGroupAddon>
           <Search className="mt-0.5 h-4 w-4" />
         </InputGroupAddon>

@@ -9,6 +9,7 @@ import {
   type ChartConfig,
 } from "@dtf/registry/components/ui/chart";
 import type { BaseChartSchema } from "@dtf/registry/lib/data-table/types";
+import { boxRadiusClassName } from "@dtf/registry/lib/style";
 import { cn } from "@dtf/registry/lib/utils";
 import { format } from "date-fns";
 import { ZoomIn } from "lucide-react";
@@ -40,7 +41,7 @@ type ChartMouseHandler = NonNullable<
 
 /** Shared by every control floating over the chart. */
 const PILL_BUTTON =
-  "flex-1 h-5 rounded-md px-1.5! py-1! font-mono text-[10px] shadow-none";
+  "flex-1 h-5 px-1.5! py-1! font-mono text-[10px] shadow-none";
 
 /**
  * One stacked series: a key in every chart point, what the tooltip calls it,
@@ -539,7 +540,10 @@ function SelectionCard({
     <div
       ref={ref}
       style={{ left: getSelectionCardLeft(selection, width, chartWidth) }}
-      className="border-border/50 bg-background pointer-events-none absolute top-0 grid w-max min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl"
+      className={cn(
+        "border-border/50 bg-background pointer-events-none absolute top-0 grid w-max min-w-[8rem] items-start gap-1.5 border px-2.5 py-1.5 text-xs shadow-xl",
+        boxRadiusClassName,
+      )}
     >
       <div className="font-medium">
         {range.start}
