@@ -118,7 +118,7 @@ export function DataTableFilterCheckbox<TData>({
                   className="text-foreground/70 group-hover:text-accent-foreground flex w-full items-center justify-center gap-1 truncate"
                 >
                   {Component ? (
-                    <Component {...option} />
+                    <Component {...option} options={options} />
                   ) : (
                     <span className="truncate font-normal">{option.label}</span>
                   )}

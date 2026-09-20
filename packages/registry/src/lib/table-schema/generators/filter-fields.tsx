@@ -3,6 +3,7 @@
 // use client-only hooks.
 import { DataTableCellLevelIndicator } from "@dtf/registry/components/data-table/data-table-cell/data-table-cell-level-indicator";
 import type {
+  CheckboxOptionProps,
   DataTableFilterField,
   Option,
 } from "@dtf/registry/components/data-table/types";
@@ -21,15 +22,18 @@ import type { ResolvedColumn, TableSchemaDefinition } from "../types";
 function defaultFilterComponent(
   config: ResolvedColumn,
   options?: Option[],
-): ((props: Option) => JSX.Element | null) | undefined {
+): ((props: CheckboxOptionProps) => JSX.Element | null) | undefined {
   if (config.display.type !== "level-indicator") return undefined;
   if (config.kind !== "enum" && config.kind !== "string") return undefined;
   const colorMap = config.display.colorMap;
-  // The dot follows the label, so reserve the longest label's width to keep
-  // the dots in one column. Options injected later (facets) get no reserve.
-  const longest = Math.max(0, ...(options ?? []).map((o) => o.label.length));
-  const labelMinWidth = longest > 0 ? `${longest}ch` : undefined;
-  return function LevelOption({ label, value }: Option) {
+  // The dot follows the label, so every option is sized to the widest label
+  // to keep the dots in one column. The filter passes the options it renders,
+  // which are the facets' when the schema declared none.
+  return function LevelOption({
+    label,
+    value,
+    options: rendered = options,
+  }: CheckboxOptionProps) {
     return (
       <DataTableCellLevelIndicator
         value={String(value)}
@@ -37,10 +41,23 @@ function defaultFilterComponent(
         color={colorMap?.[String(value)]}
         showLabel
         dotPosition="end"
-        labelMinWidth={labelMinWidth}
+        alignLabels={widestLabelCandidates(rendered)}
       />
     );
   };
+}
+
+/** Each option renders a sizer per label, so a long list is cut to a few. */
+const MAX_ALIGN_LABELS = 8;
+
+/**
+ * The labels that might be the widest. Character count only shortlists them —
+ * the browser does the measuring — so a miss costs alignment, never text.
+ */
+export function widestLabelCandidates(options?: Option[]): string[] {
+  return [...new Set((options ?? []).map((o) => o.label))]
+    .sort((a, b) => b.length - a.length)
+    .slice(0, MAX_ALIGN_LABELS);
 }
 
 /**

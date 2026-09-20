@@ -23,9 +23,16 @@ export type Input = {
   options?: Option[];
 };
 
+/**
+ * What a checkbox filter hands its option component: the option, plus the
+ * full list it is rendered in — known only at render time when facets supply
+ * the options — for anything that depends on the siblings, like alignment.
+ */
+export type CheckboxOptionProps = Option & { options?: Option[] };
+
 export type Checkbox = {
   type: "checkbox";
-  component?: (props: Option) => JSX.Element | null;
+  component?: (props: CheckboxOptionProps) => JSX.Element | null;
   options?: Option[];
 };
 
