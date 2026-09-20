@@ -27,6 +27,8 @@ http://localhost:3000/example:
 pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
 ```
 
+Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm.
+
 Blocks install by name from the shadcn registry directory; the JSON form `https://data-table.openstatus.dev/r/<block>.json` works too.
 
 **Load the full instructions before wiring anything up:**

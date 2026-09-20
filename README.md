@@ -46,6 +46,8 @@ Starting from nothing? One command creates the Next.js app, initializes shadcn, 
 pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
 ```
 
+Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm.
+
 From `create-next-app` to a green `next build` this takes about 30 seconds on a clean machine. See the [Quick Start](https://data-table.openstatus.dev/docs/quick-start) for the full walkthrough, and add any block below as you need it.
 
 | Block                          | Install                                            | What it adds                                                                                                               |

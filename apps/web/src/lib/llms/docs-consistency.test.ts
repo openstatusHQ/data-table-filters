@@ -7,6 +7,7 @@ import {
   blockRef,
   CREATE_PROJECT_COMMAND,
   CREATE_PROJECT_DIR,
+  CREATE_PROJECT_NOTE,
   EXAMPLE_BLOCK,
   PREREQUISITE,
   QUICK_START_BLOCKS,
@@ -108,10 +109,19 @@ describe("block references in agent-facing docs", () => {
     (file) => {
       // The namespace needs no components.json entry, so it is the one form
       // every install command spells. The URL form is mentioned as a fallback.
+      // Both runners: `add` is spelled with npx, the create-project command
+      // with `pnpm dlx`, and a runner rename must not quietly empty this scan.
       const normalized = read(file).replace(/\\\r?\n\s*/g, " ");
-      for (const match of normalized.matchAll(
-        /npx shadcn@latest (?:add|init) ([^\n`]+)/g,
-      )) {
+      const commands = Array.from(
+        normalized.matchAll(
+          /(?:npx|pnpm dlx) shadcn@latest (?:add|init) ([^\n`]+)/g,
+        ),
+      );
+
+      expect(commands.length, `${file} has a shadcn command`).toBeGreaterThan(
+        0,
+      );
+      for (const match of commands) {
         expect(match[1], `${file}: ${match[0]}`).not.toContain("/r/");
       }
     },
@@ -201,6 +211,14 @@ describe("the create-project command", () => {
   it.each(CREATE_DOC_FILES)("is stated verbatim in %s", (file) => {
     expect(read(file), `${file} carries CREATE_PROJECT_COMMAND`).toContain(
       CREATE_PROJECT_COMMAND,
+    );
+  });
+
+  it.each(CREATE_DOC_FILES)("names the pnpm requirement in %s", (file) => {
+    // `pnpm dlx` fails with `pnpm: command not found` on a stock npm
+    // machine, and it is the first command the from-scratch path runs.
+    expect(read(file), `${file} carries CREATE_PROJECT_NOTE`).toContain(
+      CREATE_PROJECT_NOTE,
     );
   });
 
