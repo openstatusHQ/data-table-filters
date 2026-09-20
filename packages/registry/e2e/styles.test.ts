@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import styles from "../src/lib/__fixtures__/shadcn-styles.json";
-import { getRadiusClassName } from "../src/lib/style";
 import {
   cleanupProject,
   installBlocks,
@@ -81,10 +80,13 @@ describe.skipIf(!enabled)("registry install per shadcn style", () => {
         "utf8",
       );
       expect(button).toMatch(/export \{[^}]*\bbuttonVariants\b/);
-      const expected = getRadiusClassName(
-        styles[style as keyof typeof styles].outlineButton,
-      );
-      expect(button).toContain(expected);
+      // Every token, not just the radius: two styles can share a radius
+      // (vega, mira and the default are all `rounded-md`), so a CLI that fell
+      // back to another style would still pass on that alone.
+      const missing = styles[style as keyof typeof styles].outlineButton
+        .split(/\s+/)
+        .filter((token) => !button.includes(token));
+      expect(missing).toEqual([]);
     });
 
     it("ships the style helper with the core block", () => {

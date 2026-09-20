@@ -17,20 +17,26 @@ import { cn } from "./utils";
 // shadcn ships a new style.
 
 const here = dirname(fileURLToPath(import.meta.url));
-const commandSource = readFileSync(
-  join(here, "../components/data-table/data-table-filter-command/index.tsx"),
-  "utf8",
-);
 
-/** The literal our command block passes to a slot, read from its source. */
-function literal(pattern: RegExp): string {
-  const match = commandSource.match(pattern);
-  if (!match) throw new Error(`${pattern} not found in the command block`);
-  return match[1];
+// Both commands carry their own copy of the box and root literals.
+const COMMANDS = ["data-table-filter-command", "data-table-filter-command-ai"];
+
+/** The literals a command block passes to its box and to the `Command` root. */
+function literalsOf(command: string) {
+  const source = readFileSync(
+    join(here, `../components/data-table/${command}/index.tsx`),
+    "utf8",
+  );
+  const literal = (pattern: RegExp): string => {
+    const match = source.match(pattern);
+    if (!match) throw new Error(`${pattern} not found in ${command}`);
+    return match[1];
+  };
+  return {
+    boxLayout: literal(/"(h-11 [^"]+)"/),
+    rootReset: literal(/"(overflow-visible [^"]+)"/),
+  };
 }
-
-const boxLayout = literal(/"(h-11 [^"]+)"/);
-const rootReset = literal(/"(overflow-visible [^"]+)"/);
 
 const tokens = (className: string) => className.split(/\s+/);
 
@@ -46,24 +52,28 @@ describe.each(Object.entries(styles))("shadcn style %s", (_, style) => {
     expect(getBackgroundClassName(style.outlineButton)).not.toBe("");
   });
 
-  it("lets the command box set its own height, padding and alignment", () => {
-    const box = tokens(cn(style.outlineButton, boxLayout));
-    const only = (pattern: RegExp) => box.filter((t) => pattern.test(t));
-    expect(only(/^h-/)).toEqual(["h-11"]);
-    expect(only(/^px-/)).toEqual(["px-3"]);
-    expect(only(/^gap-/)).toEqual(["gap-2"]);
-    expect(only(/^justify-/)).toEqual(["justify-start"]);
-    expect(only(/^font-(normal|medium|semibold|bold)$/)).toEqual([
-      "font-normal",
-    ]);
-  });
+  describe.each(COMMANDS)("%s", (command) => {
+    const { boxLayout, rootReset } = literalsOf(command);
 
-  it("leaves no surface on the Command root", () => {
-    const root = tokens(cn(style.commandRoot, rootReset));
-    expect(root).not.toContain("bg-popover");
-    expect(root).not.toContain("overflow-hidden");
-    expect(root.filter((t) => /^p[xytrbl]?-/.test(t))).toEqual(["p-0"]);
-    expect(root).toContain("overflow-visible");
-    expect(root).toContain("bg-transparent");
+    it("lets the command box set its own height, padding and alignment", () => {
+      const box = tokens(cn(style.outlineButton, boxLayout));
+      const only = (pattern: RegExp) => box.filter((t) => pattern.test(t));
+      expect(only(/^h-/)).toEqual(["h-11"]);
+      expect(only(/^px-/)).toEqual(["px-3"]);
+      expect(only(/^gap-/)).toEqual(["gap-2"]);
+      expect(only(/^justify-/)).toEqual(["justify-start"]);
+      expect(only(/^font-(normal|medium|semibold|bold)$/)).toEqual([
+        "font-normal",
+      ]);
+    });
+
+    it("leaves no surface on the Command root", () => {
+      const root = tokens(cn(style.commandRoot, rootReset));
+      expect(root).not.toContain("bg-popover");
+      expect(root).not.toContain("overflow-hidden");
+      expect(root.filter((t) => /^p[xytrbl]?-/.test(t))).toEqual(["p-0"]);
+      expect(root).toContain("overflow-visible");
+      expect(root).toContain("bg-transparent");
+    });
   });
 });
