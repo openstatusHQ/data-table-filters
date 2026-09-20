@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -35,12 +35,14 @@ function blockFiles(dir: string): string[] {
 
 describe("blocks hardcode no radius", () => {
   for (const path of blockFiles(here)) {
-    const file = relative(here, path);
+    // `ALLOWED` is keyed with forward slashes; `relative` uses `\` on Windows
+    const file = relative(here, path).split(sep).join("/");
     it(file, () => {
       const code = readFileSync(path, "utf8")
         // comments may name utilities
         .replace(/\/\*[\s\S]*?\*\//g, "")
-        .replace(/^\s*\/\/.*$/gm, "");
+        // full-line and trailing `//`, but not the one in `https://`
+        .replace(/(?<!:)\/\/.*$/gm, "");
       const found = [...code.matchAll(/(?<![\w-])rounded-[\w[\]().,%-]+/g)]
         .map(([token]) => token)
         .filter((token) => !(ALLOWED[file] ?? []).includes(token));

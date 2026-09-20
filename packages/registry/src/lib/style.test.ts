@@ -17,6 +17,13 @@ describe("getRadiusClassName", () => {
     );
   });
 
+  it("reads the bare utility", () => {
+    expect(getRadiusClassName("inline-flex rounded border")).toBe("rounded");
+    expect(getRadiusClassName("roundedish hover:rounded border")).toBe(
+      "rounded-md",
+    );
+  });
+
   it("keeps arbitrary values", () => {
     expect(getRadiusClassName("h-6 rounded-[min(var(--radius-md),10px)]")).toBe(
       "rounded-[min(var(--radius-md),10px)]",

@@ -27,9 +27,16 @@ const FILES = [
 function classNameOf(source: string, opening: string): string {
   const start = source.indexOf(opening);
   if (start === -1) throw new Error(`no ${opening} in source`);
-  const attr = source.indexOf("className=", start);
-  const end = source.indexOf("\n        >", attr);
-  return source.slice(attr, end === -1 ? attr + 600 : end);
+  const attr = source.indexOf("className={", start);
+  if (attr === -1) throw new Error(`no className on ${opening}`);
+  // walk to the brace closing the attribute, so the slice never reaches the
+  // tag's other props or the markup after it
+  let depth = 0;
+  for (let i = attr + "className=".length; i < source.length; i++) {
+    if (source[i] === "{") depth++;
+    if (source[i] === "}" && --depth === 0) return source.slice(attr, i + 1);
+  }
+  throw new Error(`unclosed className on ${opening}`);
 }
 
 describe("command box chrome", () => {

@@ -1,14 +1,15 @@
 import { buttonVariants } from "@dtf/registry/components/ui/button";
 
 /**
- * The unprefixed `rounded-*` utilities of a class string, e.g. `"rounded-lg"`.
+ * The unprefixed `rounded` / `rounded-*` utilities of a class string, e.g.
+ * `"rounded-lg"`.
  * Variant-prefixed ones (`in-data-[slot=button-group]:rounded-lg`) are
  * conditional, so they say nothing about the box at rest and are skipped.
  */
 export function getRadiusClassName(className: string, fallback = "rounded-md") {
   const radius = className
     .split(/\s+/)
-    .filter((token) => token.startsWith("rounded-"))
+    .filter((token) => token === "rounded" || token.startsWith("rounded-"))
     .join(" ");
   return radius || fallback;
 }

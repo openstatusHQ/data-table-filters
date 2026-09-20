@@ -293,8 +293,10 @@ export function DataTableFilterAICommand({
           // The root only lays the box and the dropdown out: every visible
           // edge below is drawn by them, so strip the surface a style may put
           // here (nova ships `bg-popover p-1`, whose padding inset the
-          // dropdown by 4px and whose radius disagreed with the trigger).
-          "h-auto w-full overflow-visible border-none bg-transparent p-0 shadow-none",
+          // dropdown by 4px and whose radius disagreed with the trigger). Its
+          // size is left alone: styles use `size-full`, which `h-*`/`w-*` do
+          // not replace in `cn`, and a full height resolves to auto here.
+          "overflow-visible border-none bg-transparent p-0 shadow-none",
           open ? "visible" : "hidden",
         )}
         filter={(value, search, keywords) =>
