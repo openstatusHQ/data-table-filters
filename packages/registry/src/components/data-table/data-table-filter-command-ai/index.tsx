@@ -239,20 +239,25 @@ export function DataTableFilterAICommand({
 
   return (
     <div>
+      {/* REMINDER: the closed trigger and the open command box both pin their
+          height with `h-11` and share the same border, radius and px-3/gap-2
+          rhythm, so toggling the command never resizes the box. Keep the height
+          on the boxes, not on their children — a taller child (kbd, spinner,
+          browser extension node) must not grow one state only. */}
       <button
         type="button"
         className={cn(
-          "group border-input bg-background text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground focus-within:border-ring focus-within:ring-ring/50 flex w-full items-center rounded-lg border px-3 transition-all outline-none focus-within:ring-[3px]",
+          "group border-input bg-background text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground focus-within:border-ring focus-within:ring-ring/50 flex h-11 w-full items-center gap-2 rounded-lg border px-3 transition-all outline-none focus-within:ring-[3px]",
           open ? "hidden" : "visible",
         )}
         onClick={() => setOpen(true)}
       >
         {isLoading || isAILoading ? (
-          <LoaderCircle className="text-muted-foreground group-hover:text-popover-foreground mr-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+          <LoaderCircle className="text-muted-foreground group-hover:text-popover-foreground h-4 w-4 shrink-0 animate-spin opacity-50" />
         ) : (
-          <Search className="text-muted-foreground group-hover:text-popover-foreground mr-2 h-4 w-4 shrink-0 opacity-50" />
+          <Search className="text-muted-foreground group-hover:text-popover-foreground h-4 w-4 shrink-0 opacity-50" />
         )}
-        <span className="h-11 w-full max-w-sm truncate py-3 text-left text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50 md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
+        <span className="w-full max-w-sm truncate text-left text-sm md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
           {aiQuery ? (
             <TextShimmer duration={2}>{aiQuery}</TextShimmer>
           ) : inputValue.trim() ? (
@@ -268,7 +273,7 @@ export function DataTableFilterAICommand({
       </button>
       <Command
         className={cn(
-          "border-border dark:bg-muted/50 overflow-visible rounded-lg border shadow-md [&>div]:border-none",
+          "border-border dark:bg-muted/50 h-11 overflow-visible rounded-lg border shadow-md [&>div]:border-none",
           open ? "visible" : "hidden",
         )}
         filter={(value, search, keywords) =>
@@ -277,7 +282,7 @@ export function DataTableFilterAICommand({
       >
         <div
           data-slot="command-input-wrapper"
-          className="flex items-center gap-2 border-b px-3"
+          className="flex h-full items-center gap-2 border-b px-3"
         >
           <Search className="size-4 shrink-0 opacity-50" />
           <CommandPrimitive.Input
@@ -293,7 +298,7 @@ export function DataTableFilterAICommand({
               setCurrentWord(word);
             }}
             placeholder="Search data table..."
-            className="text-foreground placeholder:text-muted-foreground flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-foreground placeholder:text-muted-foreground flex h-full w-full rounded-md bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
         <div className="relative">
@@ -373,8 +378,14 @@ export function DataTableFilterAICommand({
                             }}
                           >
                             {`${optionValue}`}
+                            {/* data-slot="command-shortcut" hides the check icon the shadcn nova
+                                presets append to every item - a second ml-auto child would
+                                otherwise split the row and leave the count mid-way */}
                             {facetedValue?.has(optionValue) ? (
-                              <span className="text-muted-foreground ml-auto font-mono">
+                              <span
+                                data-slot="command-shortcut"
+                                className="text-muted-foreground ml-auto font-mono"
+                              >
                                 {formatCompactNumber(
                                   facetedValue.get(optionValue) || 0,
                                 )}
@@ -407,7 +418,10 @@ export function DataTableFilterAICommand({
                   >
                     <Sparkles className="size-4 shrink-0" />
                     {inputValue.trim()}
-                    <span className="text-muted-foreground ml-auto text-xs">
+                    <span
+                      data-slot="command-shortcut"
+                      className="text-muted-foreground ml-auto text-xs"
+                    >
                       describe your query to infer filters
                     </span>
                   </CommandItem>
@@ -437,7 +451,10 @@ export function DataTableFilterAICommand({
                             className="group"
                           >
                             {item.search}
-                            <span className="text-muted-foreground/80 ml-auto truncate group-aria-selected:block">
+                            <span
+                              data-slot="command-shortcut"
+                              className="text-muted-foreground/80 ml-auto truncate group-aria-selected:block"
+                            >
                               {formatDistanceToNow(item.timestamp, {
                                 addSuffix: true,
                               })}

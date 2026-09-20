@@ -40,11 +40,13 @@ export default function Page() {
 }
 ```
 
-Starting from nothing? One command creates the Next.js app, initializes shadcn, and installs a working example with every block it needs (add `-b radix` before `-p nova` for Radix). Run `cd data-table-app && npm run dev` and open [localhost:3000/example](http://localhost:3000/example):
+Starting from nothing? One command creates the Next.js app, initializes shadcn, and installs a working example with every block it needs (add `-b radix` before `-p nova` for Radix). Run `cd data-table-app && pnpm dev` and open [localhost:3000/example](http://localhost:3000/example):
 
 ```bash
-npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
+pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
 ```
+
+Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm.
 
 From `create-next-app` to a green `next build` this takes about 30 seconds on a clean machine. See the [Quick Start](https://data-table.openstatus.dev/docs/quick-start) for the full walkthrough, and add any block below as you need it.
 

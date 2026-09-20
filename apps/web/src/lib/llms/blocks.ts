@@ -62,7 +62,14 @@ export const EXAMPLE_BLOCK = "data-table-example-infinite";
  * `base-nova`.
  */
 export const CREATE_PROJECT_DIR = "data-table-app";
-export const CREATE_PROJECT_COMMAND = `npx shadcn@latest init ${blockRef(EXAMPLE_BLOCK)} --name ${CREATE_PROJECT_DIR} --template next -p nova`;
+export const CREATE_PROJECT_COMMAND = `pnpm dlx shadcn@latest init ${blockRef(EXAMPLE_BLOCK)} --name ${CREATE_PROJECT_DIR} --template next -p nova`;
+
+/**
+ * `pnpm dlx` is the one command here npm cannot run as written, so every
+ * surface that hands it out names the requirement and the npm spelling.
+ */
+export const CREATE_PROJECT_NOTE =
+  "Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm.";
 
 /**
  * The prompt to paste into an agent instead of running the command yourself.
