@@ -84,7 +84,7 @@ echo "Component library: $LIBRARY"
 if [ "$SHADCN" = "not initialized" ]; then
   echo "  Initialize shadcn first — either library works:"
   echo "    npx shadcn@latest init -d                  (Base UI, the CLI default)"
-  echo "    npx shadcn@latest init -b radix -p nova    (Radix)"
+  echo "    npx shadcn@latest init -b radix -p lyra    (Radix)"
 fi
 
 # ORM

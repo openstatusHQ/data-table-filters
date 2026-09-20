@@ -177,7 +177,7 @@ describe("the create-project line", () => {
 describe("the component library line", () => {
   it("names both libraries and the command for each", () => {
     expect(PREREQUISITE).toContain("npx shadcn@latest init -d");
-    expect(PREREQUISITE).toContain("npx shadcn@latest init -b radix -p nova");
+    expect(PREREQUISITE).toContain("npx shadcn@latest init -b radix -p lyra");
     expect(PREREQUISITE).toContain("Base UI");
     // The blocks install on either library; a surface claiming otherwise is
     // out of date with `registry-install.yml`, which proves both.

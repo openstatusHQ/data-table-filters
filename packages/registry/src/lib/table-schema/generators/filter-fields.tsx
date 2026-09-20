@@ -27,8 +27,9 @@ function defaultFilterComponent(
   if (config.kind !== "enum" && config.kind !== "string") return undefined;
   const colorMap = config.display.colorMap;
   // The dot follows the label, so every option is sized to the widest label
-  // to keep the dots in one column. The filter passes the options it renders,
-  // which are the facets' when the schema declared none.
+  // to keep the dots in one column. The filter passes the field's options,
+  // which win over the schema's: a field filled from facets after this
+  // component was created only has them there.
   return function LevelOption({
     label,
     value,
@@ -50,14 +51,24 @@ function defaultFilterComponent(
 /** Each option renders a sizer per label, so a long list is cut to a few. */
 const MAX_ALIGN_LABELS = 8;
 
+// Every option of a filter asks for the same list on every render, so the
+// shortlist is kept per options array — a large facet is sorted once, not once
+// per row.
+const candidatesCache = new WeakMap<Option[], string[]>();
+
 /**
  * The labels that might be the widest. Character count only shortlists them —
  * the browser does the measuring — so a miss costs alignment, never text.
  */
 export function widestLabelCandidates(options?: Option[]): string[] {
-  return [...new Set((options ?? []).map((o) => o.label))]
+  if (!options) return [];
+  const cached = candidatesCache.get(options);
+  if (cached) return cached;
+  const candidates = [...new Set(options.map((o) => o.label))]
     .sort((a, b) => b.length - a.length)
     .slice(0, MAX_ALIGN_LABELS);
+  candidatesCache.set(options, candidates);
+  return candidates;
 }
 
 /**

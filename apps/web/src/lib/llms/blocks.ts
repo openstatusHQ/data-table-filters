@@ -38,7 +38,7 @@ export function blockRef(name: string): string {
  * and typechecks it, and `docs-consistency.test.ts` checks that every
  * hand-written install surface carries this line too.
  */
-export const RADIX_INIT_COMMAND = "npx shadcn@latest init -b radix -p nova";
+export const RADIX_INIT_COMMAND = "npx shadcn@latest init -b radix -p lyra";
 export const BASE_UI_INIT_COMMAND = "npx shadcn@latest init -d";
 
 export const PREREQUISITE = `Works on either shadcn library: the CLI default, Base UI (\`${BASE_UI_INIT_COMMAND}\`), or Radix (\`${RADIX_INIT_COMMAND}\`). CI installs into both and typechecks them on every registry change and nightly.`;
@@ -56,13 +56,13 @@ export const EXAMPLE_BLOCK = "data-table-example-infinite";
 /**
  * Starting from nothing: `shadcn init` creates the app, initializes shadcn,
  * and installs the blocks it is given, in one command. Verified on shadcn
- * 4.21.0: `--template next -p nova` lands on Base UI (style `base-nova`) and
- * `next build` is green; `-b radix -p nova` lands on Radix. Not `-d`:
+ * 4.21.0: `--template next -p lyra` lands on Base UI (style `base-lyra`) and
+ * `next build` is green; `-b radix -p lyra` lands on Radix. Not `-d`:
  * combined with `--name` it writes the pre-v4 `new-york` style instead of
  * `base-nova`.
  */
-export const CREATE_PROJECT_DIR = "data-table-app";
-export const CREATE_PROJECT_COMMAND = `pnpm dlx shadcn@latest init ${blockRef(EXAMPLE_BLOCK)} --name ${CREATE_PROJECT_DIR} --template next -p nova`;
+export const CREATE_PROJECT_DIR = "logs-viewer";
+export const CREATE_PROJECT_COMMAND = `pnpm dlx shadcn@latest init ${blockRef(EXAMPLE_BLOCK)} --name ${CREATE_PROJECT_DIR} --template next -p lyra`;
 
 /**
  * `pnpm dlx` is the one command here npm cannot run as written, so every
@@ -87,7 +87,7 @@ export const SKILL_INSTALL_COMMAND =
   "npx skills add https://github.com/openstatushq/data-table-filters --skill data-table-filters";
 
 /** The one line about creating a project that llms.txt and the MCP server state. */
-export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs; run the dev server and open http://localhost:3000/example. Add \`-b radix\` before \`-p nova\` for Radix.`;
+export const CREATE_PROJECT = `Starting from nothing? \`${CREATE_PROJECT_COMMAND}\` creates a Next.js app, initializes shadcn on Base UI, and installs a working example route with every block it needs; run the dev server and open http://localhost:3000/example. Add \`-b radix\` before \`-p lyra\` for Radix.`;
 
 /**
  * Agent-facing "when do I need this block?" guidance.

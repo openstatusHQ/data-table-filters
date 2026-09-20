@@ -309,4 +309,21 @@ describe("widestLabelCandidates", () => {
     expect(labels[0]).toHaveLength(50);
     expect(labels[7]).toHaveLength(43);
   });
+
+  it("computes the shortlist once per options array", () => {
+    // Every row of a filter asks with the same array: a large facet must not
+    // be sorted once per row.
+    const options = [
+      { label: "info", value: "info" },
+      { label: "warning", value: "warning" },
+    ];
+    expect(widestLabelCandidates(options)).toBe(widestLabelCandidates(options));
+    // A new array — fresh facets — is computed afresh.
+    const next = [...options, { label: "critical error", value: "critical" }];
+    expect(widestLabelCandidates(next)).toEqual([
+      "critical error",
+      "warning",
+      "info",
+    ]);
+  });
 });

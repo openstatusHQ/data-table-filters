@@ -320,11 +320,11 @@ describe("the create-project command", () => {
 
   it("scaffolds a Next.js app on a named preset, not with -d", () => {
     // shadcn 4.21.0 with `--name` and `-d` writes the pre-v4 `new-york` style;
-    // `--template next -p nova` writes `base-nova`, the CLI default.
+    // `--template next -p lyra` writes `base-lyra`.
     expect(CREATE_PROJECT_COMMAND).toMatch(/^pnpm dlx shadcn@latest init /);
-    expect(CREATE_PROJECT_COMMAND).toContain("--name data-table-app");
+    expect(CREATE_PROJECT_COMMAND).toContain("--name logs-viewer");
     expect(CREATE_PROJECT_COMMAND).toContain("--template next");
-    expect(CREATE_PROJECT_COMMAND).toContain("-p nova");
+    expect(CREATE_PROJECT_COMMAND).toContain("-p lyra");
     expect(CREATE_PROJECT_COMMAND).not.toMatch(/\s-d(\s|$)/);
   });
 });

@@ -20,7 +20,7 @@ description: >
 
 A shadcn registry for building filterable, sortable data tables with infinite scroll and virtualization. Start with the core block, then extend with optional blocks for command palette, cell renderers, sheet panels, store adapters, schema generation, Drizzle ORM helpers, and React Query integration.
 
-> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p lyra`). CI installs into both and typechecks them on every registry change and nightly.
 
 ## Registry Blocks
 
@@ -48,7 +48,7 @@ Blocks install by name from the shadcn registry directory; the JSON form `https:
 
 ## Quick Start
 
-1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p nova` for Radix) first, then continue. No project at all yet? `pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova` creates a Next.js app with shadcn initialized and a working `/example` route (timeline chart, filters, infinite scroll, row sheet) installed, with every block it needs (add `-b radix` before `-p nova` for Radix). Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm. Then `cd data-table-app`, run the dev server, open http://localhost:3000/example, and edit `app/example/table-schema.ts` — or continue with step 2 for a table of your own.
+1. Run `scripts/detect-stack.sh` to detect the user's project setup. It reports which component library the project is on — either works. If it prints `shadcn/ui: not initialized`, initialize with `npx shadcn@latest init -d` (or `init -b radix -p lyra` for Radix) first, then continue. No project at all yet? `pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name logs-viewer --template next -p lyra` creates a Next.js app with shadcn initialized and a working `/example` route (timeline chart, filters, infinite scroll, row sheet) installed, with every block it needs (add `-b radix` before `-p lyra` for Radix). Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm. Then `cd logs-viewer`, run the dev server, open http://localhost:3000/example, and edit `app/example/table-schema.ts` — or continue with step 2 for a table of your own.
 2. Install core + schema: `npx shadcn@latest add @data-table-filters/data-table @data-table-filters/data-table-schema`
 3. Scaffold a minimal working table (see below), or render `<DataTableAuto data={rows} />` when the data shape is unknown
 4. Extend with additional blocks as needed

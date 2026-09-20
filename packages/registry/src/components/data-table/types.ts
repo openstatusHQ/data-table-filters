@@ -25,8 +25,10 @@ export type Input = {
 
 /**
  * What a checkbox filter hands its option component: the option, plus the
- * full list it is rendered in — known only at render time when facets supply
- * the options — for anything that depends on the siblings, like alignment.
+ * field's `options` as they are at render time — a field filled from facets
+ * only has them then — for anything that depends on the siblings, like
+ * alignment. It is the whole list, not the rows the search box leaves
+ * visible, so what depends on it holds still while the user types.
  */
 export type CheckboxOptionProps = Option & { options?: Option[] };
 
