@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { boxRadiusClassName, getRadiusClassName } from "./style";
+import {
+  boxRadiusClassName,
+  boxSurfaceClassName,
+  getBackgroundClassName,
+  getBorderClassName,
+  getRadiusClassName,
+} from "./style";
 
 describe("getRadiusClassName", () => {
   it("reads the radius a style writes into its class string", () => {
@@ -34,5 +40,53 @@ describe("getRadiusClassName", () => {
 describe("boxRadiusClassName", () => {
   it("follows the vendored button", () => {
     expect(boxRadiusClassName).toBe("rounded-md");
+  });
+});
+
+describe("getBackgroundClassName", () => {
+  it("keeps the resting background, light and dark", () => {
+    expect(
+      getBackgroundClassName(
+        "border bg-background shadow-xs dark:border-input dark:bg-input/30",
+      ),
+    ).toBe("bg-background dark:bg-input/30");
+  });
+
+  it("skips interactive backgrounds and bg-clip", () => {
+    expect(
+      getBackgroundClassName(
+        "bg-clip-padding bg-background hover:bg-muted aria-expanded:bg-muted dark:hover:bg-input/50",
+      ),
+    ).toBe("bg-background");
+  });
+
+  it("is empty when the style names none", () => {
+    expect(getBackgroundClassName("inline-flex border")).toBe("");
+  });
+});
+
+describe("boxSurfaceClassName", () => {
+  it("follows the vendored outline button", () => {
+    expect(boxSurfaceClassName).toBe(
+      "rounded-md dark:border-input border bg-background dark:bg-input/30",
+    );
+  });
+});
+
+describe("getBorderClassName", () => {
+  it("keeps the resting border, light and dark, in order", () => {
+    expect(
+      getBorderClassName(
+        "border border-transparent bg-clip-padding border-border dark:border-input",
+      ),
+    ).toBe("border border-transparent border-border dark:border-input");
+  });
+
+  it("skips interactive borders", () => {
+    expect(
+      getBorderClassName(
+        "border focus-visible:border-ring aria-invalid:border-destructive",
+      ),
+    ).toBe("border");
   });
 });

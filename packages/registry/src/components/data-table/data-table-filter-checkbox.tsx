@@ -10,7 +10,10 @@ import {
 import { Label } from "@dtf/registry/components/ui/label";
 import { Skeleton } from "@dtf/registry/components/ui/skeleton";
 import { formatCompactNumber } from "@dtf/registry/lib/format";
-import { boxRadiusClassName } from "@dtf/registry/lib/style";
+import {
+  boxRadiusClassName,
+  boxSurfaceClassName,
+} from "@dtf/registry/lib/style";
 import { cn } from "@dtf/registry/lib/utils";
 import { Search } from "lucide-react";
 import { useState } from "react";
@@ -50,9 +53,7 @@ export function DataTableFilterCheckbox<TData>({
   // REMINDER: if no options are defined, while fetching data, we should show a skeleton
   if (isLoading && !filterOptions?.length)
     return (
-      <div
-        className={cn("border-border grid divide-y border", boxRadiusClassName)}
-      >
+      <div className={cn("grid divide-y border", boxSurfaceClassName)}>
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
@@ -82,8 +83,8 @@ export function DataTableFilterCheckbox<TData>({
       {/* FIXME: due to the added max-h and overflow-y-auto, the hover state and border is laying on top of the scroll bar */}
       <div
         className={cn(
-          "border-border max-h-[200px] overflow-y-auto border empty:border-none",
-          boxRadiusClassName,
+          "max-h-[200px] overflow-y-auto border empty:border-none",
+          boxSurfaceClassName,
         )}
       >
         {filterOptions
@@ -111,7 +112,6 @@ export function DataTableFilterCheckbox<TData>({
                       newValue?.length ? newValue : undefined,
                     );
                   }}
-                  className="border-foreground! shadow-none"
                 />
                 <Label
                   htmlFor={`${value}-${option.value}`}

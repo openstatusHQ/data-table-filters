@@ -96,7 +96,7 @@ export function DataTableViewOptions() {
                       >
                         <div
                           className={cn(
-                            "border-foreground! flex h-4 w-4 items-center justify-center rounded-sm border",
+                            "border-input flex h-4 w-4 items-center justify-center rounded-sm border",
                             column.getIsVisible()
                               ? "bg-primary text-primary-foreground"
                               : "opacity-50 [&_svg]:invisible",
