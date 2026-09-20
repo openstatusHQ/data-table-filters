@@ -1027,7 +1027,6 @@
           "target": "app/example/api/route.ts"
         }
       ],
-      "dependencies": ["next-themes@^0.4.4"],
       "docs": "Start the dev server and open http://localhost:3000/example. The example lives in app/example \u2014 edit table-schema.ts to change the columns, or delete the folder once you have your own table."
     }
   ]

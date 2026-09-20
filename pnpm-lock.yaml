@@ -362,9 +362,6 @@ importers:
       next:
         specifier: '>=15'
         version: 16.2.12(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@types/node@22.20.1)(babel-plugin-react-compiler@19.0.0-beta-27714ef-20250124)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      next-themes:
-        specifier: ^0.4.4
-        version: 0.4.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       nuqs:
         specifier: ^2.3.0
         version: 2.3.0(next@16.2.12(@opentelemetry/api@1.9.0)(@types/node@22.20.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
