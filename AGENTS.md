@@ -14,17 +14,17 @@ to eject from; after install, the code belongs to the user.
 **Stack:** React 19+, TanStack Table v8, Tailwind CSS v4, shadcn/ui. Next.js App
 Router is first-class; the blocks work in any React app.
 
-> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p nova`). CI installs into both and typechecks them on every registry change and nightly.
+> **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p lyra`). CI installs into both and typechecks them on every registry change and nightly.
 > Nothing to check before installing: the blocks resolve their primitives from
 > whichever library `components.json` names.
 
 **No project yet?** One command creates a Next.js app, initializes shadcn, and
 installs a working `/example` route with every block it needs (add `-b radix`
-before `-p nova` for Radix); `cd data-table-app`, run the dev server and open
+before `-p lyra` for Radix); `cd logs-viewer`, run the dev server and open
 http://localhost:3000/example:
 
 ```bash
-pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
+pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name logs-viewer --template next -p lyra
 ```
 
 Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm.

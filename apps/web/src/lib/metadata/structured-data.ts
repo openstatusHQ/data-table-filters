@@ -118,7 +118,7 @@ export function getJsonLDSoftwareApplication(): WithContext<SoftwareApplication>
 export const CREATE_PROJECT_STEPS: { name: string; text: string }[] = [
   {
     name: "Create the project",
-    text: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates a Next.js app, initializes shadcn on Base UI, and installs the data-table-example-infinite block with every block it depends on. Add -b radix before -p nova for Radix.`,
+    text: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates a Next.js app, initializes shadcn on Base UI, and installs the data-table-example-infinite block with every block it depends on. Add -b radix before -p lyra for Radix.`,
   },
   {
     name: "Start the dev server",
@@ -158,7 +158,7 @@ export function getJsonLDCreateProjectHowTo(): WithContext<HowTo> {
 export const HOMEPAGE_FAQS: { question: string; answer: string }[] = [
   {
     question: "How do I start a new project with a data table from scratch?",
-    answer: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates the Next.js app, initializes shadcn, and installs a working example route with every block it needs. Then cd ${CREATE_PROJECT_DIR}, pnpm dev, and open http://localhost:3000/example. Add -b radix before -p nova for Radix.`,
+    answer: `Run ${CREATE_PROJECT_COMMAND}. The shadcn CLI creates the Next.js app, initializes shadcn, and installs a working example route with every block it needs. Then cd ${CREATE_PROJECT_DIR}, pnpm dev, and open http://localhost:3000/example. Add -b radix before -p lyra for Radix.`,
   },
   {
     question: "What is data-table-filters?",

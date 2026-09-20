@@ -1,7 +1,8 @@
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { col } from "../col";
 import type { TableSchemaDefinition } from "../types";
-import { generateFilterFields } from "./filter-fields";
+import { generateFilterFields, widestLabelCandidates } from "./filter-fields";
 
 // ── generateFilterFields ─────────────────────────────────────────────────────
 
@@ -107,6 +108,57 @@ describe("generateFilterFields", () => {
       // Plain enums keep the plain label.
       expect(method.component).toBeUndefined();
     }
+  });
+
+  it("puts the swatch after the label, sized to the widest label", () => {
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["error", "warning", "info"] as const)
+        .label("Level")
+        .display("level-indicator"),
+    };
+    const [level] = generateFilterFields(schema);
+    if (level.type !== "checkbox" || !level.component) {
+      throw new Error("expected a checkbox field with a component");
+    }
+    const html = renderToStaticMarkup(
+      level.component({ label: "info", value: "info" }),
+    );
+    // dots line up in one column however short the label is
+    expect(html).toContain('data-label="warning"');
+    expect(html.indexOf("bg-info")).toBeGreaterThan(html.indexOf(">info<"));
+  });
+
+  it("aligns to the rendered options when facets supply them", () => {
+    // The schema leaves the options to the data: `applyFacets` adds them
+    // later, so the filter hands the component the list it actually renders.
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["info", "warning"] as const)
+        .label("Level")
+        .display("level-indicator")
+        .filterable("checkbox", { options: [] }),
+    };
+    const [level] = generateFilterFields(schema);
+    if (level.type !== "checkbox" || !level.component) {
+      throw new Error("expected a checkbox field with a component");
+    }
+    const bare = renderToStaticMarkup(
+      level.component({ label: "info", value: "info" }),
+    );
+    expect(bare).not.toContain("data-label");
+
+    const faceted = renderToStaticMarkup(
+      level.component({
+        label: "info",
+        value: "info",
+        options: [
+          { label: "info", value: "info" },
+          { label: "warning", value: "warning" },
+        ],
+      }),
+    );
+    expect(faceted).toContain('data-label="warning"');
   });
 
   it("gives no swatch to a kind whose cells fall back to text", () => {
@@ -233,5 +285,45 @@ describe("generateFilterFields", () => {
     };
     const fields = generateFilterFields(schema);
     expect(fields.map((f) => f.value)).toEqual(["alpha", "beta", "gamma"]);
+  });
+});
+
+describe("widestLabelCandidates", () => {
+  it("dedupes labels and returns none without options", () => {
+    expect(widestLabelCandidates(undefined)).toEqual([]);
+    expect(
+      widestLabelCandidates([
+        { label: "info", value: "a" },
+        { label: "info", value: "b" },
+      ]),
+    ).toEqual(["info"]);
+  });
+
+  it("keeps only the longest few of a long list", () => {
+    const options = Array.from({ length: 50 }, (_, i) => ({
+      label: "x".repeat(i + 1),
+      value: i,
+    }));
+    const labels = widestLabelCandidates(options);
+    expect(labels).toHaveLength(8);
+    expect(labels[0]).toHaveLength(50);
+    expect(labels[7]).toHaveLength(43);
+  });
+
+  it("computes the shortlist once per options array", () => {
+    // Every row of a filter asks with the same array: a large facet must not
+    // be sorted once per row.
+    const options = [
+      { label: "info", value: "info" },
+      { label: "warning", value: "warning" },
+    ];
+    expect(widestLabelCandidates(options)).toBe(widestLabelCandidates(options));
+    // A new array — fresh facets — is computed afresh.
+    const next = [...options, { label: "critical error", value: "critical" }];
+    expect(widestLabelCandidates(next)).toEqual([
+      "critical error",
+      "warning",
+      "info",
+    ]);
   });
 });

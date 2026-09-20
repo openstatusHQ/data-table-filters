@@ -46,10 +46,7 @@ export const tableSchema = createTableSchema({
             </span>
             <div className="flex items-center gap-2">
               <div
-                className={cn(
-                  "h-2.5 w-2.5 rounded-[2px]",
-                  getLevelColor(value).bg,
-                )}
+                className={cn("size-3.5 rounded-sm", getLevelColor(value).bg)}
               />
               <span className="text-muted-foreground/70 text-xs">
                 {getLevelLabel(value)}

@@ -26,12 +26,26 @@ export function DataTableCellLevelIndicator({
   color: colorOverride,
   label = value,
   showLabel = false,
+  dotPosition = "start",
+  alignLabels,
 }: {
   value: string;
   color?: string;
   /** Text shown next to the dot. Defaults to the raw value. */
   label?: string;
   showLabel?: boolean;
+  /**
+   * Which side of the label the dot sits on. The filter sidebar puts it at the
+   * end: a mark right after the checkbox reads as a second checkbox.
+   */
+  dotPosition?: "start" | "end";
+  /**
+   * The labels of the sibling options. With the dot at the end, the label
+   * takes the width of the widest of them so the dots line up. They are laid
+   * out invisibly rather than counted in `ch`: only the browser knows how wide
+   * "WARNING" or a CJK label is in the current font.
+   */
+  alignLabels?: string[];
 }) {
   const builtinColor = LEVEL_COLORS[value.toLowerCase()] ?? "bg-muted";
   const dot = (
@@ -63,8 +77,26 @@ export function DataTableCellLevelIndicator({
       className="inline-flex items-center gap-1.5"
       style={colorOverride ? { color: colorOverride } : undefined}
     >
-      {dot}
-      <span className="truncate font-normal">{label}</span>
+      {dotPosition === "start" ? dot : null}
+      {alignLabels?.length ? (
+        // Every label shares one grid cell, so the cell is as wide as the
+        // widest. The sizers draw their text from an attribute: it stays out
+        // of the DOM text, the clipboard and the accessibility tree.
+        <span className="inline-grid font-normal">
+          {alignLabels.map((sizer) => (
+            <span
+              key={sizer}
+              aria-hidden
+              data-label={sizer}
+              className="invisible col-start-1 row-start-1 whitespace-nowrap before:content-[attr(data-label)]"
+            />
+          ))}
+          <span className="col-start-1 row-start-1 truncate">{label}</span>
+        </span>
+      ) : (
+        <span className="truncate font-normal">{label}</span>
+      )}
+      {dotPosition === "end" ? dot : null}
     </span>
   );
 }

@@ -33,7 +33,11 @@ import * as React from "react";
 import { Footer } from "./footer";
 import { dataOptions } from "./query-options";
 import { filterSchema, type FilterState, type SearchParams } from "./schema";
-import { tableSchema, type ColumnSchema } from "./table-schema";
+import {
+  getLevelRowClassName,
+  tableSchema,
+  type ColumnSchema,
+} from "./table-schema";
 import { timingPhasesColumn } from "./timing-phases";
 
 // Everything the table renders is generated from the schema, once. The one
@@ -54,6 +58,10 @@ const CHART_SERIES: TimelineChartSeries[] = [
   { key: "warning", label: "Warning" },
   { key: "info", label: "Info" },
 ];
+
+// Module-level so its identity is stable: the memoized rows compare it.
+const getRowClassName = (row: { original: ColumnSchema }) =>
+  getLevelRowClassName(row.original.level);
 
 /** URL state that is not a column filter. */
 const STATE_KEYS = new Set(["sort", "uuid", "size", "direction", "cursor"]);
@@ -120,6 +128,7 @@ function Table() {
       fetchNextPage={fetchNextPage}
       hasNextPage={hasNextPage}
       getRowId={(row) => row.uuid}
+      getRowClassName={getRowClassName}
       getFacetedUniqueValues={getFacetedUniqueValues(facets)}
       getFacetedMinMaxValues={getFacetedMinMaxValues(facets)}
       chartSlot={

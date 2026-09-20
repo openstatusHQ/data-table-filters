@@ -3,6 +3,7 @@
 // use client-only hooks.
 import { DataTableCellLevelIndicator } from "@dtf/registry/components/data-table/data-table-cell/data-table-cell-level-indicator";
 import type {
+  CheckboxOptionProps,
   DataTableFilterField,
   Option,
 } from "@dtf/registry/components/data-table/types";
@@ -13,26 +14,61 @@ import type { ResolvedColumn, TableSchemaDefinition } from "../types";
 /**
  * The checkbox option a display picks when the column supplied no
  * `component` of its own. A `level-indicator` column shows the same dot it
- * renders in its cells, so the filter sidebar reads like the table — which
+ * renders in its cells (after the label, clear of the checkbox), so the
+ * filter sidebar reads like the table — which
  * is why it is limited to the kinds whose cells draw the dot (`renderCell`
  * falls back to plain text for anything but a string).
  */
 function defaultFilterComponent(
   config: ResolvedColumn,
-): ((props: Option) => JSX.Element | null) | undefined {
+  options?: Option[],
+): ((props: CheckboxOptionProps) => JSX.Element | null) | undefined {
   if (config.display.type !== "level-indicator") return undefined;
   if (config.kind !== "enum" && config.kind !== "string") return undefined;
   const colorMap = config.display.colorMap;
-  return function LevelOption({ label, value }: Option) {
+  // The dot follows the label, so every option is sized to the widest label
+  // to keep the dots in one column. The filter passes the field's options,
+  // which win over the schema's: a field filled from facets after this
+  // component was created only has them there.
+  return function LevelOption({
+    label,
+    value,
+    options: rendered = options,
+  }: CheckboxOptionProps) {
     return (
       <DataTableCellLevelIndicator
         value={String(value)}
         label={label}
         color={colorMap?.[String(value)]}
         showLabel
+        dotPosition="end"
+        alignLabels={widestLabelCandidates(rendered)}
       />
     );
   };
+}
+
+/** Each option renders a sizer per label, so a long list is cut to a few. */
+const MAX_ALIGN_LABELS = 8;
+
+// Every option of a filter asks for the same list on every render, so the
+// shortlist is kept per options array — a large facet is sorted once, not once
+// per row.
+const candidatesCache = new WeakMap<Option[], string[]>();
+
+/**
+ * The labels that might be the widest. Character count only shortlists them —
+ * the browser does the measuring — so a miss costs alignment, never text.
+ */
+export function widestLabelCandidates(options?: Option[]): string[] {
+  if (!options) return [];
+  const cached = candidatesCache.get(options);
+  if (cached) return cached;
+  const candidates = [...new Set(options.map((o) => o.label))]
+    .sort((a, b) => b.length - a.length)
+    .slice(0, MAX_ALIGN_LABELS);
+  candidatesCache.set(options, candidates);
+  return candidates;
 }
 
 /**
@@ -99,7 +135,8 @@ export function generateFilterFields<TData>(
           type: "checkbox",
           options,
           component:
-            config.renderers.filterComponent ?? defaultFilterComponent(config),
+            config.renderers.filterComponent ??
+            defaultFilterComponent(config, options),
         });
         break;
       }

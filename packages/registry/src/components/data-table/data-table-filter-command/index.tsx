@@ -417,7 +417,10 @@ export function DataTableFilterCommand({
                 <span>
                   <Kbd>Esc</Kbd> to close
                 </span>
-                <Separator orientation="vertical" className="my-auto h-3" />
+                <Separator
+                  orientation="vertical"
+                  className="my-auto data-[orientation=vertical]:h-3"
+                />
                 <span>
                   Union: <Kbd>regions:a,b</Kbd>
                 </span>

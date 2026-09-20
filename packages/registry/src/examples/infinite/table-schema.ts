@@ -11,6 +11,30 @@ export const REGIONS = ["ams", "fra", "iad", "syd"] as const;
 export const STATUS_CODES = [200, 201, 400, 404, 500];
 
 /**
+ * A faint tint of the level's colour on the rows worth noticing, stepping up
+ * on hover, focus, and for the row that is open in the sheet or checked — the
+ * table marks that row `data-[state=selected]` without a select column, and
+ * `data-detail` / `data-checked` with one. `info` is nearly every row, so it
+ * stays plain.
+ */
+export function getLevelRowClassName(level: string): string {
+  switch (level) {
+    case "warning":
+      return [
+        "bg-warning/5 hover:bg-warning/10 focus-visible:bg-warning/10 data-[state=selected]:bg-warning/20 data-detail:bg-warning/20 data-checked:bg-warning/20",
+        "dark:bg-warning/10 dark:hover:bg-warning/20 dark:focus-visible:bg-warning/20 dark:data-[state=selected]:bg-warning/30 dark:data-detail:bg-warning/30 dark:data-checked:bg-warning/30",
+      ].join(" ");
+    case "error":
+      return [
+        "bg-error/5 hover:bg-error/10 focus-visible:bg-error/10 data-[state=selected]:bg-error/20 data-detail:bg-error/20 data-checked:bg-error/20",
+        "dark:bg-error/10 dark:hover:bg-error/20 dark:focus-visible:bg-error/20 dark:data-[state=selected]:bg-error/30 dark:data-detail:bg-error/30 dark:data-checked:bg-error/30",
+      ].join(" ");
+    default:
+      return "";
+  }
+}
+
+/**
  * The one definition the whole example reads from. The columns, the filter
  * sidebar, the command palette, the row sheet and the mock API's filter
  * semantics are all generated from it, so a column added here shows up on

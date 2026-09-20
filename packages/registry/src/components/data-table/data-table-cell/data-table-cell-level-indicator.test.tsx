@@ -35,4 +35,49 @@ describe("DataTableCellLevelIndicator", () => {
     expect(html).not.toContain("bg-success");
     expect(html).toContain("background-color:#ff00ff");
   });
+
+  it("puts the dot before the label by default", () => {
+    const html = renderToStaticMarkup(
+      <DataTableCellLevelIndicator value="info" showLabel />,
+    );
+    expect(html.indexOf("bg-info")).toBeLessThan(html.indexOf(">info<"));
+  });
+
+  it('puts the dot after the label with dotPosition="end"', () => {
+    const html = renderToStaticMarkup(
+      <DataTableCellLevelIndicator value="info" showLabel dotPosition="end" />,
+    );
+    expect(html.indexOf("bg-info")).toBeGreaterThan(html.indexOf(">info<"));
+  });
+
+  it("sizes the label to its widest sibling so end dots line up", () => {
+    const html = renderToStaticMarkup(
+      <DataTableCellLevelIndicator
+        value="info"
+        showLabel
+        dotPosition="end"
+        alignLabels={["warning", "info", "日本語のラベル"]}
+      />,
+    );
+    // one invisible sizer per sibling, stacked in the label's grid cell —
+    // measured by the browser, so wide glyphs need no special casing
+    expect(html).toContain("inline-grid");
+    expect(html).toContain('data-label="warning"');
+    expect(html).toContain('data-label="日本語のラベル"');
+    // no fixed or minimum width to outgrow or be clipped by
+    expect(html).not.toContain("width");
+  });
+
+  it("keeps the sizers out of the text and the accessibility tree", () => {
+    const html = renderToStaticMarkup(
+      <DataTableCellLevelIndicator
+        value="info"
+        showLabel
+        alignLabels={["warning", "info"]}
+      />,
+    );
+    expect(html).not.toContain(">warning<");
+    expect(html.match(/aria-hidden="true"/g)).toHaveLength(2);
+    expect(html.match(/>info</g)).toHaveLength(1);
+  });
 });

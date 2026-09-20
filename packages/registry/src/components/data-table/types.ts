@@ -23,9 +23,18 @@ export type Input = {
   options?: Option[];
 };
 
+/**
+ * What a checkbox filter hands its option component: the option, plus the
+ * field's `options` as they are at render time — a field filled from facets
+ * only has them then — for anything that depends on the siblings, like
+ * alignment. It is the whole list, not the rows the search box leaves
+ * visible, so what depends on it holds still while the user types.
+ */
+export type CheckboxOptionProps = Option & { options?: Option[] };
+
 export type Checkbox = {
   type: "checkbox";
-  component?: (props: Option) => JSX.Element | null;
+  component?: (props: CheckboxOptionProps) => JSX.Element | null;
   options?: Option[];
 };
 
