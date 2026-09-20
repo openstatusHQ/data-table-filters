@@ -11,6 +11,7 @@ import {
 } from "@dtf/registry/components/data-table/data-table-filter-command/utils";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import type { DataTableFilterField } from "@dtf/registry/components/data-table/types";
+import { buttonVariants } from "@dtf/registry/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -27,6 +28,7 @@ import { isStructuredQuery } from "@dtf/registry/lib/ai";
 import { getCommandHistoryKey } from "@dtf/registry/lib/constants/local-storage";
 import { formatCompactNumber } from "@dtf/registry/lib/format";
 import type { SchemaDefinition } from "@dtf/registry/lib/store/schema/types";
+import { boxRadiusClassName } from "@dtf/registry/lib/style";
 import type { TableSchemaDefinition } from "@dtf/registry/lib/table-schema";
 import { cn } from "@dtf/registry/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
@@ -45,6 +47,19 @@ interface DataTableFilterAICommandProps {
   /** Unique ID for this table (used to namespace localStorage) */
   tableId?: string;
 }
+
+/**
+ * Box chrome — radius, border, background, focus ring — comes from the
+ * project's own `buttonVariants` rather than from hardcoded utilities: every
+ * shadcn style keeps its box rhythm in that string, so a `rounded-lg border`
+ * that looks right on the default style is wrong on `nova`, which rounds and
+ * pads its boxes with other tokens. The closed trigger and the open command
+ * box share the constant, which is what keeps the two states identical.
+ */
+const boxClassName = cn(
+  buttonVariants({ variant: "outline" }),
+  "h-11 w-full justify-start gap-2 px-3 text-sm font-normal",
+);
 
 export function DataTableFilterAICommand({
   schema,
@@ -239,25 +254,27 @@ export function DataTableFilterAICommand({
 
   return (
     <div>
-      {/* REMINDER: the closed trigger and the open command box both pin their
-          height with `h-11` and share the same border, radius and px-3/gap-2
-          rhythm, so toggling the command never resizes the box. Keep the height
-          on the boxes, not on their children — a taller child (kbd, spinner,
-          browser extension node) must not grow one state only. */}
+      {/* REMINDER: the closed trigger and the open command box draw the same
+          `boxClassName`, so toggling the command can never change the box's
+          height, radius or padding, and the dropdown borrows its radius from
+          the same place. Keep the height on the boxes, not on their children —
+          a taller child (kbd, spinner, browser extension node) must not grow
+          one state only. */}
       <button
         type="button"
         className={cn(
-          "group border-input bg-background text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground focus-within:border-ring focus-within:ring-ring/50 flex h-11 w-full items-center gap-2 rounded-lg border px-3 transition-all outline-none focus-within:ring-[3px]",
+          boxClassName,
+          "text-muted-foreground",
           open ? "hidden" : "visible",
         )}
         onClick={() => setOpen(true)}
       >
         {isLoading || isAILoading ? (
-          <LoaderCircle className="text-muted-foreground group-hover:text-popover-foreground h-4 w-4 shrink-0 animate-spin opacity-50" />
+          <LoaderCircle className="size-4 shrink-0 animate-spin opacity-50" />
         ) : (
-          <Search className="text-muted-foreground group-hover:text-popover-foreground h-4 w-4 shrink-0 opacity-50" />
+          <Search className="size-4 shrink-0 opacity-50" />
         )}
-        <span className="w-full max-w-sm truncate text-left text-sm md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
+        <span className="w-full max-w-sm truncate text-left md:max-w-xl lg:max-w-4xl xl:max-w-5xl">
           {aiQuery ? (
             <TextShimmer duration={2}>{aiQuery}</TextShimmer>
           ) : inputValue.trim() ? (
@@ -266,14 +283,18 @@ export function DataTableFilterAICommand({
             <span>Search data table...</span>
           )}
         </span>
-        <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-auto">
+        <Kbd className="text-muted-foreground ml-auto">
           <span className="mr-1">⌘</span>
           <span>K</span>
         </Kbd>
       </button>
       <Command
         className={cn(
-          "border-border dark:bg-muted/50 h-11 overflow-visible rounded-lg border shadow-md [&>div]:border-none",
+          // The root only lays the box and the dropdown out: every visible
+          // edge below is drawn by them, so strip the surface a style may put
+          // here (nova ships `bg-popover p-1`, whose padding inset the
+          // dropdown by 4px and whose radius disagreed with the trigger).
+          "h-auto w-full overflow-visible border-none bg-transparent p-0 shadow-none",
           open ? "visible" : "hidden",
         )}
         filter={(value, search, keywords) =>
@@ -281,8 +302,10 @@ export function DataTableFilterAICommand({
         }
       >
         <div
-          data-slot="command-input-wrapper"
-          className="flex h-full items-center gap-2 border-b px-3"
+          className={cn(
+            boxClassName,
+            "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]",
+          )}
         >
           <Search className="size-4 shrink-0 opacity-50" />
           <CommandPrimitive.Input
@@ -298,11 +321,16 @@ export function DataTableFilterAICommand({
               setCurrentWord(word);
             }}
             placeholder="Search data table..."
-            className="text-foreground placeholder:text-muted-foreground flex h-full w-full rounded-md bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-foreground placeholder:text-muted-foreground flex h-full w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
         <div className="relative">
-          <div className="border-border bg-popover text-popover-foreground animate-in absolute top-2 z-10 w-full overflow-hidden rounded-lg border shadow-md outline-hidden">
+          <div
+            className={cn(
+              "bg-popover text-popover-foreground animate-in absolute top-2 z-10 w-full overflow-hidden border shadow-md outline-hidden",
+              boxRadiusClassName,
+            )}
+          >
             <CommandList className="max-h-[310px]">
               {!isNaturalLanguage && (
                 <>
@@ -474,7 +502,10 @@ export function DataTableFilterAICommand({
                                   ),
                                 );
                               }}
-                              className="hover:bg-background ml-1 hidden rounded-md p-0.5 group-aria-selected:block"
+                              className={cn(
+                                "hover:bg-background ml-1 hidden p-0.5 group-aria-selected:block",
+                                boxRadiusClassName,
+                              )}
                             >
                               <X className="h-4 w-4" />
                             </button>

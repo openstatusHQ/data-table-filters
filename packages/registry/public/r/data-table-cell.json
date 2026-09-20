@@ -32,7 +32,7 @@
     },
     {
       "path": "src/components/data-table/data-table-cell/data-table-cell-badge.tsx",
-      "content": "export function DataTableCellBadge({\n  value,\n  color,\n}: {\n  value: string | number;\n  color?: string;\n}) {\n  return (\n    <span\n      className=\"rounded-sm border px-1.5 py-0.5 font-mono text-xs\"\n      style={\n        color\n          ? {\n              color,\n              backgroundColor: `${color}1a`,\n              borderColor: `${color}33`,\n            }\n          : undefined\n      }\n    >\n      {value}\n    </span>\n  );\n}\n",
+      "content": "import { boxRadiusClassName } from \"@/lib/style\";\nimport { cn } from \"@/lib/utils\";\n\nexport function DataTableCellBadge({\n  value,\n  color,\n}: {\n  value: string | number;\n  color?: string;\n}) {\n  return (\n    <span\n      className={cn(\n        \"border px-1.5 py-0.5 font-mono text-xs\",\n        boxRadiusClassName,\n      )}\n      style={\n        color\n          ? {\n              color,\n              backgroundColor: `${color}1a`,\n              borderColor: `${color}33`,\n            }\n          : undefined\n      }\n    >\n      {value}\n    </span>\n  );\n}\n",
       "type": "registry:component"
     },
     {

@@ -186,6 +186,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/style.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/delimiters.ts",
           "type": "registry:lib"
         },
@@ -354,6 +358,7 @@
       ],
       "registryDependencies": [
         "https://data-table.openstatus.dev/r/data-table.json",
+        "button",
         "command",
         "kbd",
         "separator"
@@ -777,6 +782,7 @@
         "https://data-table.openstatus.dev/r/data-table.json",
         "https://data-table.openstatus.dev/r/data-table-filter-command.json",
         "https://data-table.openstatus.dev/r/data-table-schema.json",
+        "button",
         "command",
         "kbd",
         "separator"

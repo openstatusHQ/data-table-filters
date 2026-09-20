@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@dtf/registry/components/ui/popover";
+import { boxRadiusClassName } from "@dtf/registry/lib/style";
 import { cn } from "@dtf/registry/lib/utils";
 import { Check, GripVertical, Settings2 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -69,7 +70,11 @@ export function DataTableViewOptions() {
                 onValueChange={(items) =>
                   table.setColumnOrder(items.map((c) => c.id))
                 }
-                overlay={<div className="bg-muted/60 h-8 w-full rounded-md" />}
+                overlay={
+                  <div
+                    className={cn("bg-muted/60 h-8 w-full", boxRadiusClassName)}
+                  />
+                }
                 onDragStart={() => setDrag(true)}
                 onDragEnd={() => setDrag(false)}
                 onDragCancel={() => setDrag(false)}

@@ -69,7 +69,7 @@ export function DataTableFilterSlider<TData>({
           >
             Min.
           </Label>
-          <InputGroup className="mb-2 h-9 rounded-lg font-mono shadow-none">
+          <InputGroup className="mb-2 h-9 font-mono shadow-none">
             <InputGroupInput
               placeholder="from"
               type="number"
@@ -94,7 +94,7 @@ export function DataTableFilterSlider<TData>({
           >
             Max.
           </Label>
-          <InputGroup className="mb-2 h-9 rounded-lg font-mono shadow-none">
+          <InputGroup className="mb-2 h-9 font-mono shadow-none">
             <InputGroupInput
               placeholder="to"
               type="number"

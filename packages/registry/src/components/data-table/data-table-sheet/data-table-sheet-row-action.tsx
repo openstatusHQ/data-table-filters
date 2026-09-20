@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@dtf/registry/components/ui/dropdown-menu";
 import { useCopyToClipboard } from "@dtf/registry/hooks/use-copy-to-clipboard";
+import { boxRadiusClassName } from "@dtf/registry/lib/style";
 import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { cn } from "@dtf/registry/lib/utils";
 import { RowData, Table } from "@tanstack/react-table";
@@ -146,7 +147,8 @@ export function DataTableSheetRowAction<
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "focus-visible:border-ring focus-visible:ring-ring/50 rounded-md transition-all outline-none focus-visible:ring-[3px]",
+          "focus-visible:border-ring focus-visible:ring-ring/50 transition-all outline-none focus-visible:ring-[3px]",
+          boxRadiusClassName,
           "relative",
           className,
         )}
