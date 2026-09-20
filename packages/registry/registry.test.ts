@@ -468,6 +468,7 @@ describe("registry packaging", () => {
 const reactContextPackages = [
   "react",
   "react-dom",
+  "next-themes",
   "nuqs",
   "@tanstack/react-query",
   "@tanstack/react-table",

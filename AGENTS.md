@@ -24,7 +24,7 @@ before `-p nova` for Radix); `cd data-table-app`, run the dev server and open
 http://localhost:3000/example:
 
 ```bash
-npx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
+pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --name data-table-app --template next -p nova
 ```
 
 Blocks install by name from the shadcn registry directory; the JSON form `https://data-table.openstatus.dev/r/<block>.json` works too.

@@ -7,11 +7,14 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@dtf/registry/components/ui/dropdown-menu";
-import { Github, Keyboard } from "lucide-react";
+import { Github, Keyboard, Laptop, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 /**
  * The chords `useHotKey` registers for the example. The hook only fires with
@@ -48,9 +51,16 @@ export function formatShortcut(key: Shortcut["key"]) {
   return `⌘${key === "Escape" ? "Esc" : key.toUpperCase()}`;
 }
 
+/** The modes `next-themes` is asked for, in the order the menu lists them. */
+export const THEMES = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Laptop },
+] as const;
+
 /**
- * The sidebar footer: a GitHub link and the shortcuts list, with a
- * "Powered by openstatus" line. Delete it along with the rest of
+ * The sidebar footer: a theme selector, a GitHub link and the shortcuts list,
+ * with a "Powered by openstatus" line. Delete it along with the rest of
  * `app/example` — or keep whatever is useful in your own footer slot.
  */
 export function Footer() {
@@ -76,14 +86,51 @@ export function Footer() {
           href="https://github.com/openstatusHQ/data-table-filters"
           target="_blank"
           rel="noreferrer"
-          className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+          className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
         >
           <Github />
           <span className="sr-only">View on GitHub</span>
         </a>
+        <ThemeMenu />
         <ShortcutsMenu />
       </div>
     </div>
+  );
+}
+
+/**
+ * Reads and writes the theme through `next-themes`. The `<ThemeProvider
+ * attribute="class">` it needs is in `layout.tsx`, next to the other providers
+ * the example mounts. The menu items only render once the menu opens, which is
+ * after hydration, so `theme` being undefined on the server costs nothing.
+ */
+function ThemeMenu() {
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
+      >
+        <Sun className="dark:hidden" />
+        <Moon className="hidden dark:block" />
+        <span className="sr-only">Select theme</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Theme</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={theme ?? "system"}
+          onValueChange={setTheme}
+        >
+          {THEMES.map(({ value, label, icon: Icon }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <Icon />
+              {label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -91,7 +138,7 @@ function ShortcutsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+        className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
       >
         <Keyboard />
         <span className="sr-only">Keyboard shortcuts</span>
