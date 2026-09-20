@@ -1,4 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
+import { createSerializer, parseAsArrayOf, parseAsString } from "nuqs/server";
 import SuperJSON from "superjson";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -58,7 +59,9 @@ async function fetchUrlFor({
   pageParam,
   searchParamsSerializer = serializer,
   pagination,
+  search = { host: "example.com" },
 }: {
+  search?: Record<string, unknown>;
   skipMetaOnPagination?: boolean;
   pageParam: { page: unknown; _meta: boolean };
   searchParamsSerializer?: (search: Record<string, unknown>) => string;
@@ -77,7 +80,7 @@ async function fetchUrlFor({
     searchParamsSerializer,
     skipMetaOnPagination,
     ...(pagination ? { pagination } : {}),
-  })({ host: "example.com" });
+  })(search);
 
   // @ts-expect-error -- queryFn is invoked directly, without the query client
   await options.queryFn({ pageParam });
@@ -139,6 +142,25 @@ describe("createDataTableQueryOptions — meta skipping", () => {
       searchParamsSerializer: () => "",
     });
     expect(url).toMatch(/\/api\?_meta=false$/);
+  });
+});
+
+describe("createDataTableQueryOptions — request url", () => {
+  const nuqsSerializer = createSerializer({
+    level: parseAsArrayOf(parseAsString),
+    region: parseAsArrayOf(parseAsString),
+    host: parseAsString,
+  }) as (search: Record<string, unknown>) => string;
+
+  // Regression: only the cache key was normalized, so every untouched array
+  // filter reached the request as an empty `key=` param.
+  it("drops empty array filters from the request", async () => {
+    const url = await fetchUrlFor({
+      pageParam: cursorParam(true),
+      searchParamsSerializer: nuqsSerializer,
+      search: { level: ["warning"], region: [], host: null },
+    });
+    expect(url).toMatch(/\/api\?level=warning$/);
   });
 });
 

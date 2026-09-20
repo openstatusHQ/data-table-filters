@@ -124,7 +124,9 @@ export function createDataTableQueryOptions<TData, TMeta>(
       _meta: true,
     };
 
-    // Normalize empty arrays to null for consistent serialization
+    // Normalize empty arrays to null. nuqs serializes `[]` as `key=` rather
+    // than dropping it, which splits the cache key from an unset filter and
+    // pads every request with one empty param per untouched filter.
     const normalized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(search)) {
       if (Array.isArray(value) && value.length === 0) {
@@ -146,7 +148,7 @@ export function createDataTableQueryOptions<TData, TMeta>(
       queryKey: [config.queryKeyPrefix, stableKey],
       queryFn: async ({ pageParam, signal }) => {
         const serialize = config.searchParamsSerializer({
-          ...pagination.applyPageParam(search, pageParam.page),
+          ...pagination.applyPageParam(normalized, pageParam.page),
           ...cleared,
         });
 
