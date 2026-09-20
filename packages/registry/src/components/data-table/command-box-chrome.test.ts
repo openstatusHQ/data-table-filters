@@ -80,6 +80,20 @@ describe("command box chrome", () => {
       expect(root).not.toMatch(/"[^"]*\brounded-/);
     });
 
+    // `Separator` sets its vertical height as `data-[orientation=vertical]:h-full`,
+    // which outranks a bare `h-3`. Once the footer hints wrap, a full-height
+    // rule makes its line as tall as the footer and pushes the rest out of view.
+    it(`${file} sizes its footer separators under the variant that wins`, () => {
+      const separators = [...markup.matchAll(/<Separator[^>]*>/g)].map(
+        ([tag]) => tag,
+      );
+      expect(separators.length).toBeGreaterThan(0);
+      for (const tag of separators) {
+        expect(tag).toContain("data-[orientation=vertical]:h-3");
+        expect(tag).not.toMatch(/[" ]h-\d/);
+      }
+    });
+
     it(`${file} hardcodes no box radius in its markup`, () => {
       const boxRadius = [...markup.matchAll(/\brounded-(lg|xl|2xl)\b/g)];
       expect(boxRadius).toEqual([]);
