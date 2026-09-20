@@ -13,16 +13,22 @@ import type { ResolvedColumn, TableSchemaDefinition } from "../types";
 /**
  * The checkbox option a display picks when the column supplied no
  * `component` of its own. A `level-indicator` column shows the same dot it
- * renders in its cells, so the filter sidebar reads like the table — which
+ * renders in its cells (after the label, clear of the checkbox), so the
+ * filter sidebar reads like the table — which
  * is why it is limited to the kinds whose cells draw the dot (`renderCell`
  * falls back to plain text for anything but a string).
  */
 function defaultFilterComponent(
   config: ResolvedColumn,
+  options?: Option[],
 ): ((props: Option) => JSX.Element | null) | undefined {
   if (config.display.type !== "level-indicator") return undefined;
   if (config.kind !== "enum" && config.kind !== "string") return undefined;
   const colorMap = config.display.colorMap;
+  // The dot follows the label, so reserve the longest label's width to keep
+  // the dots in one column. Options injected later (facets) get no reserve.
+  const longest = Math.max(0, ...(options ?? []).map((o) => o.label.length));
+  const labelMinWidth = longest > 0 ? `${longest}ch` : undefined;
   return function LevelOption({ label, value }: Option) {
     return (
       <DataTableCellLevelIndicator
@@ -30,6 +36,8 @@ function defaultFilterComponent(
         label={label}
         color={colorMap?.[String(value)]}
         showLabel
+        dotPosition="end"
+        labelMinWidth={labelMinWidth}
       />
     );
   };
@@ -99,7 +107,8 @@ export function generateFilterFields<TData>(
           type: "checkbox",
           options,
           component:
-            config.renderers.filterComponent ?? defaultFilterComponent(config),
+            config.renderers.filterComponent ??
+            defaultFilterComponent(config, options),
         });
         break;
       }

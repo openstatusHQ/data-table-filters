@@ -26,12 +26,24 @@ export function DataTableCellLevelIndicator({
   color: colorOverride,
   label = value,
   showLabel = false,
+  dotPosition = "start",
+  labelMinWidth,
 }: {
   value: string;
   color?: string;
   /** Text shown next to the dot. Defaults to the raw value. */
   label?: string;
   showLabel?: boolean;
+  /**
+   * Which side of the label the dot sits on. The filter sidebar puts it at the
+   * end: a mark right after the checkbox reads as a second checkbox.
+   */
+  dotPosition?: "start" | "end";
+  /**
+   * CSS min-width of the label, e.g. `"7ch"`. With the dot at the end, a list
+   * of options passes the width of its longest label so the dots line up.
+   */
+  labelMinWidth?: string;
 }) {
   const builtinColor = LEVEL_COLORS[value.toLowerCase()] ?? "bg-muted";
   const dot = (
@@ -63,8 +75,14 @@ export function DataTableCellLevelIndicator({
       className="inline-flex items-center gap-1.5"
       style={colorOverride ? { color: colorOverride } : undefined}
     >
-      {dot}
-      <span className="truncate font-normal">{label}</span>
+      {dotPosition === "start" ? dot : null}
+      <span
+        className="truncate font-normal"
+        style={labelMinWidth ? { minWidth: labelMinWidth } : undefined}
+      >
+        {label}
+      </span>
+      {dotPosition === "end" ? dot : null}
     </span>
   );
 }

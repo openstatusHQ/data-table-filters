@@ -34,15 +34,15 @@ export const filterFields = [
     defaultOpen: true,
     options: LEVELS.map((level) => ({ value: level, label: level })),
     component: (props: Option) => (
-      <div className="flex items-center justify-between gap-2 font-mono md:w-[106px]">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between gap-2 font-mono md:w-28">
+        <div className="text-foreground/70 capitalize">{props.value}</div>
+        <div className="flex items-center gap-2">
           <DataTableColumnLevelIndicator
             value={props.value as (typeof _LEVELS)[number]}
           />
-          <div className="text-foreground/70 capitalize">{props.value}</div>
-        </div>
-        <div className="text-muted-foreground/70 text-xs">
-          {getLevelLabel(props.value as (typeof _LEVELS)[number])}
+          <div className="text-muted-foreground/70 text-xs">
+            {getLevelLabel(props.value as (typeof _LEVELS)[number])}
+          </div>
         </div>
       </div>
     ),

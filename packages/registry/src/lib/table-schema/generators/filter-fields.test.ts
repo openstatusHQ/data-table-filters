@@ -1,3 +1,4 @@
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { col } from "../col";
 import type { TableSchemaDefinition } from "../types";
@@ -107,6 +108,25 @@ describe("generateFilterFields", () => {
       // Plain enums keep the plain label.
       expect(method.component).toBeUndefined();
     }
+  });
+
+  it("puts the swatch after the label, at the longest label's width", () => {
+    const schema: TableSchemaDefinition = {
+      level: col
+        .enum(["error", "warning", "info"] as const)
+        .label("Level")
+        .display("level-indicator"),
+    };
+    const [level] = generateFilterFields(schema);
+    if (level.type !== "checkbox" || !level.component) {
+      throw new Error("expected a checkbox field with a component");
+    }
+    const html = renderToStaticMarkup(
+      level.component({ label: "info", value: "info" }),
+    );
+    // dots line up in one column however short the label is
+    expect(html).toContain("min-width:7ch");
+    expect(html.indexOf("bg-info")).toBeGreaterThan(html.indexOf(">info<"));
   });
 
   it("gives no swatch to a kind whose cells fall back to text", () => {

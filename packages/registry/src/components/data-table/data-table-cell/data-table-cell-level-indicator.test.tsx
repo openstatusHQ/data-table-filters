@@ -35,4 +35,30 @@ describe("DataTableCellLevelIndicator", () => {
     expect(html).not.toContain("bg-success");
     expect(html).toContain("background-color:#ff00ff");
   });
+
+  it("puts the dot before the label by default", () => {
+    const html = renderToStaticMarkup(
+      <DataTableCellLevelIndicator value="info" showLabel />,
+    );
+    expect(html.indexOf("bg-info")).toBeLessThan(html.indexOf(">info<"));
+  });
+
+  it('puts the dot after the label with dotPosition="end"', () => {
+    const html = renderToStaticMarkup(
+      <DataTableCellLevelIndicator value="info" showLabel dotPosition="end" />,
+    );
+    expect(html.indexOf("bg-info")).toBeGreaterThan(html.indexOf(">info<"));
+  });
+
+  it("reserves a label width so end dots line up across options", () => {
+    const html = renderToStaticMarkup(
+      <DataTableCellLevelIndicator
+        value="info"
+        showLabel
+        dotPosition="end"
+        labelMinWidth="7ch"
+      />,
+    );
+    expect(html).toContain("min-width:7ch");
+  });
 });
