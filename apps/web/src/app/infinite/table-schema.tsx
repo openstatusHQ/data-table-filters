@@ -47,7 +47,7 @@ export const tableSchema = createTableSchema({
             <div className="flex items-center gap-2">
               <div
                 className={cn(
-                  "h-2.5 w-2.5 rounded-[2px]",
+                  "size-3.5 rounded-sm",
                   getLevelColor(value).bg,
                 )}
               />
