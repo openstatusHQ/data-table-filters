@@ -1,16 +1,40 @@
-# data-table-filters
+<div align="center">
+  <a href="https://data-table.openstatus.dev">
+    <img src="https://data-table.openstatus.dev/assets/data-table-infinite.png" alt="data-table-filters: an infinite-scroll log table with faceted filters" width="800">
+  </a>
+  <h1>data-table-filters</h1>
+  <p><strong>Filterable, infinite-scroll data tables for React and shadcn/ui, installed as source you own.</strong></p>
 
-Data tables for React and shadcn/ui: faceted filters, sorting, infinite scroll, and a row detail sheet. Installed as source with the shadcn CLI, so the code is yours to change.
+<a href="https://github.com/openstatusHQ/data-table-filters/actions/workflows/ci.yml"><img src="https://github.com/openstatusHQ/data-table-filters/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml"><img src="https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml/badge.svg" alt="Registry install"></a>
+<a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+<a href="https://github.com/openstatusHQ/data-table-filters"><img src="https://img.shields.io/github/stars/openstatusHQ/data-table-filters?style=social" alt="GitHub stars"></a>
 
-![Data Table with Infinite Scroll](https://data-table.openstatus.dev/assets/data-table-infinite.png)
+<a href="https://data-table.openstatus.dev">Website</a> •
+<a href="https://data-table.openstatus.dev/docs">Documentation</a> •
+<a href="https://data-table.openstatus.dev/docs/quick-start">Quick Start</a> •
+<a href="https://data-table.openstatus.dev/infinite">Live Demo</a>
 
-One `createTableSchema` definition drives the columns, the filter controls, the row sheet, the Drizzle route handler, and the MCP tool schema. When the rows live in Postgres, filtering, faceted counts, and cursor pagination run in SQL. Built for the openstatus dashboard and used there in production.
+<p align="center">
+  <a href="https://vercel.com/open-source-program">
+    <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge-2026.svg" />
+  </a>
+</p>
+<sub>Built by <a href="https://www.openstatus.dev">openstatus</a>, and used in production in the openstatus dashboard.</sub>
+</div>
 
-Visit [data-table.openstatus.dev](https://data-table.openstatus.dev) to learn more. Read the [Docs](https://data-table.openstatus.dev/docs) for full documentation.
 
-## Install
 
-[![Registry install](https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml/badge.svg)](https://github.com/openstatusHQ/data-table-filters/actions/workflows/registry-install.yml) — the Quick Start below is installed into a fresh Next.js app on each shadcn library, Base UI and Radix, and typechecked nightly against the latest shadcn CLI.
+## Why data-table-filters?
+
+- **One schema, everything generated.** A single `createTableSchema` definition drives the columns, filter controls, row detail sheet, Drizzle route handler, and MCP tool schema.
+- **Filtering that scales.** Faceted filters (checkbox, input, slider, timerange), sorting, infinite scroll, and virtualization. With Postgres, filtering, facet counts, and cursor pagination run in SQL.
+- **You own the code.** Blocks install as source through the shadcn CLI, so you change what you need. Works with both Base UI and Radix.
+- **Bring your own store.** Keep filter state in the URL (nuqs), zustand, memory, or your own adapter.
+- **AI-ready.** Natural-language filtering, an MCP endpoint for agents, and a Claude Code plugin that sets the table up for you.
+- **Tested against the real CLI.** CI installs the blocks into fresh Next.js apps and typechecks them on every registry change and nightly.
+
+## Quick Start
 
 > **Prerequisite.** Works on either shadcn library: the CLI default, Base UI (`npx shadcn@latest init -d`), or Radix (`npx shadcn@latest init -b radix -p lyra`). CI installs into both and typechecks them on every registry change and nightly.
 
@@ -49,6 +73,8 @@ pnpm dlx shadcn@latest init @data-table-filters/data-table-example-infinite --na
 Requires pnpm (`npm i -g pnpm`); `npx` and `npm run dev` work the same if you prefer npm.
 
 From `create-next-app` to a green `next build` this takes about 30 seconds on a clean machine. See the [Quick Start](https://data-table.openstatus.dev/docs/quick-start) for the full walkthrough, and add any block below as you need it.
+
+## Blocks
 
 | Block                          | Install                                            | What it adds                                                                                                               |
 | ------------------------------ | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -179,22 +205,38 @@ Or implement the `StoreAdapter` interface for a custom solution. See the [Docs](
 - [recharts](https://recharts.org)
 - [dnd-kit](https://dndkit.com)
 
-## Getting Started
+## Documentation
 
-No environment variable required for the default examples. For the Drizzle example, set `DATABASE_URL` to a PostgreSQL connection string.
+Full documentation lives at [data-table.openstatus.dev/docs](https://data-table.openstatus.dev/docs):
+
+- [Quick Start](https://data-table.openstatus.dev/docs/quick-start)
+- [For AI Agents](https://data-table.openstatus.dev/docs/agents)
+- [Block catalog](https://data-table.openstatus.dev/r/index.md)
+
+## Contributing
+
+Contributions are welcome. To run the docs site and demos locally:
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [localhost:3000](http://localhost:3000). No environment variables are needed for the default examples; the Drizzle example needs `DATABASE_URL` set to a PostgreSQL connection string.
 
-## Want more?
+Before opening a PR, run `pnpm format`, `pnpm lint`, `pnpm typecheck`, and `pnpm test`. Rebuild the registry with `pnpm registry:build` if you touched `packages/registry/src/`.
 
-If you are looking for specific use-cases or like what we are building and want to hire us, feel free write us to [hire@openstatus.dev](mailto:hire@openstatus.dev) or book a call via [cal.com](https://cal.com/team/openstatus/30min).
+## Built by openstatus
+
+data-table-filters is built and maintained by [openstatus](https://www.openstatus.dev), the open-source uptime monitoring and status page platform. It powers the tables in the openstatus dashboard.
+
+Looking for a specific use case, or want to hire us? Write to [hire@openstatus.dev](mailto:hire@openstatus.dev) or [book a call](https://cal.com/team/openstatus/30min). You can also [sponsor openstatus](https://github.com/sponsors/openstatusHQ) on GitHub.
 
 ## Credits
 
 - [sadmann17](https://x.com/sadmann17) for the dope `<Sortable />` component around `@dnd-kit` (see [sortable.sadmn.com](https://sortable.sadmn.com))
 - [shelwin\_](https://x.com/shelwin_) for the draggable chart inspiration (see [zoom-chart-demo.vercel.app](https://zoom-chart-demo.vercel.app))
+
+## License
+
+[MIT](./LICENSE) © [openstatus](https://www.openstatus.dev)
