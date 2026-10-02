@@ -23,8 +23,6 @@
 <sub>Built by <a href="https://www.openstatus.dev">openstatus</a>, and used in production in the openstatus dashboard.</sub>
 </div>
 
-
-
 ## Why data-table-filters?
 
 - **One schema, everything generated.** A single `createTableSchema` definition drives the columns, filter controls, row detail sheet, Drizzle route handler, and MCP tool schema.
