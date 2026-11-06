@@ -338,7 +338,6 @@ Pass a function instead of a value when the manifest depends on the request (per
 ```tsx
 <DataTableRemote
   manifestEndpoint="/logs/api/schema" // data endpoint defaults to this minus /schema
-  searchParamsSerializer={searchParamsSerializer}
   initialManifest={snapshot} // optional — skips the round trip before first paint
   transport={{ headers: async () => ({ authorization: await token() }) }}
   renderers={{ pathname: { cell: (v) => <PathnameCell value={String(v)} /> } }}
@@ -351,7 +350,10 @@ Key points:
 - **Renderers do not serialize.** Named displays (`badge`, `bar`, `status-code`, …) travel as data; use `applyRenderers` / the `renderers` prop for the rest. The descriptor is untouched, so the schema still round-trips.
 - **The manifest is untrusted.** Bounded columns and actions; action `href`s restricted to the page's origin unless allow-listed via `allowedActionOrigins`.
 - **Snapshot to avoid the round trip.** `pullManifestModule(url)` writes a typed module; pass it as `initialManifest`. It still revalidates at runtime.
-- **Verify an endpoint** with `runEndpointConformance({ url, manifest })` and `formatConformanceReport`.
+- **The query string is derived from the manifest.** `searchParamsSerializer` is optional; pass it only when the app already has one. A filterable column keyed `cursor`, `direction`, `size`, `sort`, `uuid`, `live` (or the pagination strategy's own key, e.g. `offset`) loses its filter with a console warning.
+- **Slots can read the resolved manifest.** `commandSlot` and `toolbarActions` take a node or a function of `{ manifest, filterSchema, tableId, refresh, fetchPreviousPage? }`; `sheetSlot` receives the same context as its second argument.
+- **Actions are the host's to draw.** The block does not depend on `data-table-actions`. Wrap it in `DataTableActionsProvider` with `manifest.actions`, pass `extraColumns={[createActionsColumn()]}` (a stable array) and put `DataTableActionsBar` in `floatingBarSlot`. Do this only for a manifest you serve yourself.
+- **Verify an endpoint** with `runEndpointConformance({ url, manifest })` and `formatConformanceReport`. `size` is a target: a group of rows sharing one timestamp cursor value may exceed it.
 
 ## Troubleshooting
 

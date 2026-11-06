@@ -132,8 +132,13 @@ The query string for the data endpoint is derived from the manifest: column
 filters are written the way the URL state writes them (`?latency=100-3000`,
 `?sort=date.desc`), and the pagination strategy's own keys (`cursor`,
 `direction`, `offset`, `size`) are passed through. Pass `searchParamsSerializer`
-when you already have one built from a schema in your app — the examples below
-do, and either form works.
+when you already have one built from a schema in your app.
+
+Some keys already mean something in that query string: `cursor`, `direction`,
+`size`, `sort`, `uuid` and `live`, plus the pagination strategy's own (`offset`
+for `offsetPagination`). A filterable column with one of those keys keeps its
+column and loses its filter, with a console warning, because the filter would
+share a parameter with the table's own state and never apply.
 
 ### Why it is two components
 
@@ -243,7 +248,6 @@ headers, credentials, and how the body is parsed. See
 <DataTableRemote
   manifestEndpoint="https://api.example.com/logs/schema"
   dataEndpoint="/logs"
-  searchParamsSerializer={searchParamsSerializer}
   transport={{
     baseUrl: "https://api.example.com",
     // A function, so a token is read fresh per request rather than captured
@@ -266,7 +270,6 @@ import { manifest } from "./manifest"; // a build-time snapshot
 
 <DataTableRemote
   manifestEndpoint="/logs/api/schema"
-  searchParamsSerializer={searchParamsSerializer}
   initialManifest={manifest}
   transport={{ parseResponse: schemaJsonParser(manifest.schema) }}
 />;
@@ -332,7 +335,6 @@ draw yourself, by key, and every other column stays declarative.
 ```tsx
 <DataTableRemote
   manifestEndpoint="/logs/api/schema"
-  searchParamsSerializer={searchParamsSerializer}
   renderers={{
     pathname: { cell: (value) => <PathnameCell value={String(value)} /> },
     timing: { sheetComponent: (row) => <TimingPhases row={row} /> },
@@ -353,7 +355,6 @@ Anything a manifest cannot describe is a slot:
 ```tsx
 <DataTableRemote
   manifestEndpoint="/logs/api/schema"
-  searchParamsSerializer={searchParamsSerializer}
   loadingSlot={<Skeleton />}
   errorSlot={(error) => <TableError error={error} />}
   chartSlot={(data, config) =>
@@ -439,8 +440,9 @@ if (!report.ok) process.exit(1);
 
 It checks that the endpoint answers, that the shape matches, that `size` is
 honoured (a group of rows sharing one cursor value may exceed it, since it
-cannot be split across pages), that every row carries the `primaryKey` and those keys are unique,
-that it computes the facets it claims, that a second page differs from the first
+cannot be split across pages), that every row carries the `primaryKey` and
+those keys are unique, that it computes the facets it claims, that a second
+page differs from the first
 — the check that catches an endpoint silently ignoring `cursor`, which is an
 infinite scroll that never advances — that `direction=prev` works when declared,
 and that an unknown query parameter is ignored.
@@ -458,5 +460,6 @@ manifest URL it is given. It starts on `/drizzle/api/schema` — the manifest th
 is an in-memory array served as plain JSON with an inferred schema, offset
 paging and no chart or live mode. Paste the manifest URL of your own endpoint
 (it needs CORS headers) and use **Inspect** to run `runEndpointConformance`
-against it in the browser. Row actions are drawn for the logs endpoint the way the
-section above describes, and never for a manifest from another host.
+against it in the browser. When the logs endpoint advertises actions — see the
+[Actions demo](/docs/actions#demo) for when it does — they are drawn the way
+the section above describes, and never for a manifest from another host.
