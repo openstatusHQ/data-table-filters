@@ -341,12 +341,24 @@ control — see [Headless Tables](/docs/headless#trust-boundary).
 
 ## Demo
 
-The [/drizzle](/drizzle) demo declares `acknowledge` (error → warning) and
-`delete`. In development they are on by default against your own database.
-The public site runs against a shared database, so there writes are opt-in:
-set `ALLOW_DEMO_ACTIONS=1` and the list endpoint starts advertising actions;
-otherwise `POST /drizzle/api/actions/*` answers 403 and the UI renders no
-buttons (`ALLOW_DEMO_ACTIONS=0` forces that locally too).
+The [/drizzle](/drizzle) demo declares two actions:
 
-[/headless](/headless) renders the same two actions from the manifest alone —
-see [Headless Tables](/docs/headless#capabilities) for the wiring.
+| Action        | What it does                    |
+| ------------- | ------------------------------- |
+| `acknowledge` | Turns an error row into warning |
+| `delete`      | Removes the row                 |
+
+Whether they are on depends on where the demo runs:
+
+| Where           | Default | To change it           |
+| --------------- | ------- | ---------------------- |
+| Development     | On      | `ALLOW_DEMO_ACTIONS=0` |
+| The public site | Off     | `ALLOW_DEMO_ACTIONS=1` |
+
+The public site shares one database, which is why writes are off there.
+
+When actions are off, the list endpoint does not advertise them, the UI
+renders no buttons, and `POST /drizzle/api/actions/*` answers 403.
+
+[/headless](/headless) renders the same two actions from the manifest alone.
+See [Headless Tables](/docs/headless#capabilities) for the wiring.
