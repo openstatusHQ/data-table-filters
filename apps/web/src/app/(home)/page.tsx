@@ -620,6 +620,9 @@ function Examples() {
           <Link href="/drizzle">Drizzle ORM (Postgres)</Link>
         </li>
         <li>
+          <Link href="/headless">Headless (Rendered from an Endpoint)</Link>
+        </li>
+        <li>
           <Link href="/builder">Table Builder</Link>
         </li>
         <li>

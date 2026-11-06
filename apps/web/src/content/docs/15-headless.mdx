@@ -118,21 +118,22 @@ cannot identify.
 "use client";
 
 import { DataTableRemote } from "@/components/data-table/data-table-remote";
-import { searchParamsSerializer } from "./search-params";
 
 export function Client() {
-  return (
-    <DataTableRemote
-      manifestEndpoint="/logs/api/schema"
-      searchParamsSerializer={searchParamsSerializer}
-    />
-  );
+  return <DataTableRemote manifestEndpoint="/logs/api/schema" />;
 }
 ```
 
 The data endpoint defaults to the manifest URL with a trailing `/schema`
 stripped, so `/logs/api/schema` pairs with `/logs/api`. Set `dataEndpoint`
 explicitly when they do not line up.
+
+The query string for the data endpoint is derived from the manifest: column
+filters are written the way the URL state writes them (`?latency=100-3000`,
+`?sort=date.desc`), and the pagination strategy's own keys (`cursor`,
+`direction`, `offset`, `size`) are passed through. Pass `searchParamsSerializer`
+when you already have one built from a schema in your app — the examples below
+do, and either form works.
 
 ### Why it is two components
 
@@ -166,6 +167,11 @@ to degrade — it rendered empty filters and a blank count.
 Every capability defaults to **off**. A table that renders no chart against a
 server that has one is a missing feature; a table that renders a chart against a
 server that has none is a broken screen.
+
+`actions` is declared and validated, but `DataTableRemote` does not draw an
+action column or a bulk bar from it yet. The descriptors in the manifest are
+there for a host that renders them with the
+[`data-table-actions`](/docs/actions) block.
 
 Use `facetedColumns` when the server can only facet some columns:
 
@@ -313,6 +319,27 @@ Anything a manifest cannot describe is a slot:
 />
 ```
 
+`commandSlot` and `toolbarActions` take a node, or a function of what only
+exists once the manifest has resolved — the filter schema a command palette
+parses against, `refresh`, and `fetchPreviousPage`:
+
+```tsx
+<DataTableRemote
+  manifestEndpoint="/logs/api/schema"
+  commandSlot={({ filterSchema, tableId }) => (
+    <DataTableFilterCommand schema={filterSchema} tableId={tableId} />
+  )}
+  toolbarActions={({ refresh }) => <DataTableRefreshButton onClick={refresh} />}
+/>
+```
+
+`fetchPreviousPage` is what a live-mode toggle calls on an interval; it is left
+out of the context when the endpoint cannot page backwards, so the toggle has
+nothing to render from.
+
+`sheetSlot` receives the same context as its second argument, which is where
+the manifest's `rowLabel` comes from for a sheet title.
+
 Row styling is a slot on purpose. It is presentation policy that varies per app
 against the same data, and encoding conditional CSS in a JSON manifest would
 mean inventing a rules language for one caller. The manifest says what a row
@@ -373,5 +400,11 @@ contract itself.
 
 ## Demo
 
-The [/drizzle](/drizzle) route serves a real manifest at
-`/drizzle/api/schema`, describing its own capabilities, chart and actions.
+[/headless](/headless) is a page with no schema of its own: it renders whatever
+manifest URL it is given. It starts on `/drizzle/api/schema` — the manifest the
+[/drizzle](/drizzle) route serves about its own capabilities, chart and actions
+— and has a second endpoint to switch to, `/headless/api/orders/schema`, which
+is an in-memory array served as plain JSON with an inferred schema, offset
+paging and no chart or live mode. Paste the manifest URL of your own endpoint
+(it needs CORS headers) and use **Inspect** to run `runEndpointConformance`
+against it in the browser.

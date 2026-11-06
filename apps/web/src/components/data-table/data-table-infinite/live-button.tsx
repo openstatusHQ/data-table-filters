@@ -1,6 +1,5 @@
 "use client";
 
-import type { FilterState } from "@/app/infinite/schema";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
@@ -17,13 +16,26 @@ interface LiveButtonProps {
   fetchPreviousPage?: (
     options?: FetchPreviousPageOptions | undefined,
   ) => Promise<unknown>;
+  /**
+   * The timestamp column live mode runs along. Turning live mode on clears its
+   * filter, and filtering on it turns live mode off.
+   */
+  columnId?: string;
 }
 
-export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
-  const live = useFilterState<FilterState, FilterState["live"]>((s) => s.live);
-  const date = useFilterState<FilterState, FilterState["date"]>((s) => s.date);
-  const sort = useFilterState<FilterState, FilterState["sort"]>((s) => s.sort);
-  const { setFilters } = useFilterActions<FilterState>();
+// The button only touches `live`, `sort` and one timestamp column, whichever
+// table it sits in — so the state is read loosely rather than against one
+// table's schema.
+type LiveState = Record<string, unknown>;
+
+export function LiveButton({
+  fetchPreviousPage,
+  columnId = "date",
+}: LiveButtonProps) {
+  const live = useFilterState<LiveState, boolean>((s) => s.live === true);
+  const date = useFilterState<LiveState, unknown>((s) => s[columnId]);
+  const sort = useFilterState<LiveState, unknown>((s) => s.sort);
+  const { setFilters } = useFilterActions<LiveState>();
   const { table } = useDataTable();
   useHotKey(handleClick, "j");
 
@@ -50,7 +62,8 @@ export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
   // NOTE: live is intentionally NOT in deps - we only want to reset live when date/sort changes,
   // not when live itself changes (which would cause immediate reset on toggle)
   React.useEffect(() => {
-    const reset = ((date?.length && date.length > 0) || sort) && live;
+    const hasDate = Array.isArray(date) && date.length > 0;
+    const reset = (hasDate || sort) && live;
     if (reset) {
       setFilters({ live: undefined });
     }
@@ -59,10 +72,10 @@ export function LiveButton({ fetchPreviousPage }: LiveButtonProps) {
   function handleClick() {
     setFilters({
       live: !live,
-      date: undefined,
+      [columnId]: undefined,
       sort: undefined,
     });
-    table.getColumn("date")?.setFilterValue(undefined);
+    table.getColumn(columnId)?.setFilterValue(undefined);
     table.resetSorting();
   }
 
