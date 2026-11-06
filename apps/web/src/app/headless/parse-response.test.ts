@@ -22,6 +22,19 @@ describe("reviveListPayload", () => {
     expect(result.data[0].date).toBeInstanceOf(Date);
   });
 
+  it("revives a string date inside a SuperJSON envelope too", () => {
+    const stringDates = {
+      ...payload,
+      data: [{ id: "a", date: date.toISOString() }],
+    };
+    for (const body of [
+      SuperJSON.stringify(stringDates),
+      SuperJSON.serialize(stringDates),
+    ]) {
+      expect(reviveListPayload(body, ["date"]).data[0].date).toEqual(date);
+    }
+  });
+
   it("revives timestamp columns in plain JSON from the schema", () => {
     const plain = JSON.parse(JSON.stringify(payload));
     const result = reviveListPayload(plain, ["date"]);

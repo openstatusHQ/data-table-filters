@@ -63,6 +63,14 @@ export function parseManifestInput(input: string): ManifestTarget {
   if (value.includes("\\")) {
     return { ok: false, reason: "A URL cannot contain a backslash." };
   }
+  // They also strip tabs and line breaks before parsing, so `/<tab>/host` is
+  // `//host` too: another host, reached through what reads as a local path.
+  if (/[\u0000- \u007f]/.test(value)) {
+    return {
+      ok: false,
+      reason: "A URL cannot contain spaces or control characters.",
+    };
+  }
 
   if (value.startsWith("/")) {
     if (value.startsWith("//")) {
@@ -96,6 +104,17 @@ export function parseManifestInput(input: string): ManifestTarget {
   }
 
   return { ok: true, url: url.toString(), externalHost: url.host };
+}
+
+/**
+ * A manifest URL without its query string and fragment.
+ *
+ * The rows endpoint is derived from the manifest's path, and the table appends
+ * its own query string to it. Carrying `?v=2` across would leave `/schema` in
+ * place, since it is no longer the end of the URL, and produce a second `?`.
+ */
+export function withoutQuery(url: string): string {
+  return url.split(/[?#]/, 1)[0];
 }
 
 /** The page URL that renders a given manifest. */

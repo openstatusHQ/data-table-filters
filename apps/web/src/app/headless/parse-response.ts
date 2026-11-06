@@ -22,22 +22,27 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  *    body is a JSON *string* holding the SuperJSON envelope.
  * 2. `Response.json(SuperJSON.serialize(payload))` — the envelope as an object:
  *    `{ json, meta }`, and no `data` key of its own.
- * 3. Ordinary JSON. Timestamp columns arrive as ISO strings or epoch numbers
- *    and are revived to `Date` from the manifest's schema.
+ * 3. Ordinary JSON.
+ *
+ * Whichever it was, timestamp columns that are still ISO strings or epoch
+ * numbers afterwards are revived to `Date` from the manifest's schema.
  */
 export function reviveListPayload(
   body: unknown,
   timestampColumns: string[],
 ): ListPayload {
+  let payload: ListPayload;
   if (typeof body === "string") {
-    return SuperJSON.parse<ListPayload>(body);
-  }
-  if (isRecord(body) && "json" in body && !("data" in body)) {
-    return SuperJSON.deserialize<ListPayload>(
+    payload = SuperJSON.parse<ListPayload>(body);
+  } else if (isRecord(body) && "json" in body && !("data" in body)) {
+    payload = SuperJSON.deserialize<ListPayload>(
       body as unknown as Parameters<typeof SuperJSON.deserialize>[0],
     );
+  } else {
+    payload = body as ListPayload;
   }
-  const payload = body as ListPayload;
+  // After every branch, not only the plain one: an endpoint may wrap its
+  // payload in SuperJSON and still send its dates as strings.
   if (isRecord(payload) && Array.isArray(payload.data)) {
     for (const row of payload.data) {
       coerceRowTimestamps(row, timestampColumns);

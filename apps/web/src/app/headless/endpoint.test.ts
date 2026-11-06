@@ -5,6 +5,7 @@ import {
   parseManifestInput,
   tableIdFor,
   timeColumnKey,
+  withoutQuery,
 } from "./endpoint";
 
 describe("parseManifestInput", () => {
@@ -38,6 +39,15 @@ describe("parseManifestInput", () => {
     ["   ", "blank"],
     ["//evil.example.com/schema", "protocol-relative"],
     ["/\\evil.example.com/schema", "backslash read as a slash"],
+    // Regression: browsers strip these before parsing, leaving `//host`.
+    [
+      "/\t/evil.example.com/schema",
+      "tab stripped into a protocol-relative URL",
+    ],
+    ["/\n/evil.example.com/schema", "line break stripped the same way"],
+    ["/\r/evil.example.com/schema", "carriage return stripped the same way"],
+    ["/api/my schema", "space inside the path"],
+    ["https://exa\tmple.com/schema", "tab inside an absolute URL"],
     ["javascript:alert(1)", "script URL"],
     ["data:application/json,{}", "data URL"],
     ["blob:https://example.com/1", "blob URL"],
@@ -49,6 +59,20 @@ describe("parseManifestInput", () => {
     const result = parseManifestInput(input);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).not.toBe("");
+  });
+});
+
+describe("withoutQuery", () => {
+  it("drops the query string and the fragment", () => {
+    expect(withoutQuery("/logs/api/schema?v=2")).toBe("/logs/api/schema");
+    expect(withoutQuery("https://api.example.com/logs/schema?v=2#top")).toBe(
+      "https://api.example.com/logs/schema",
+    );
+    expect(withoutQuery("/logs/api/schema#top")).toBe("/logs/api/schema");
+  });
+
+  it("leaves a URL without either alone", () => {
+    expect(withoutQuery("/logs/api/schema")).toBe("/logs/api/schema");
   });
 });
 

@@ -200,7 +200,7 @@ describe("runEndpointConformance", () => {
       );
     });
 
-    it("reads the cursor value as epoch milliseconds or a Date as well", async () => {
+    it("reads the cursor and the cell as epoch milliseconds or a Date as well", async () => {
       for (const date of [TIED, new Date(TIED)]) {
         const report = await runEndpointConformance({
           url: "https://api.example.com/logs",
@@ -210,8 +210,8 @@ describe("runEndpointConformance", () => {
           parse: async () => ({
             data: tiedGroup(date),
             meta: {},
-            nextCursor: TIED,
-            prevCursor: TIED,
+            nextCursor: date,
+            prevCursor: date,
           }),
           fetch: endpoint().fetch,
         });
@@ -287,8 +287,35 @@ describe("runEndpointConformance", () => {
       expect(check(report, "size").status).toBe("fail");
     });
 
-    it("considers every column when the manifest names no timestamp column", async () => {
-      // A hand-written manifest need not state column kinds.
+    it("finds the cursor column under a dotted key the row carries literally", async () => {
+      // `createDrizzleHandler` projects `"timing.started"` as a flat property.
+      const dotted = createTableManifest({
+        schema: createTableSchema({
+          uuid: col.string().label("ID"),
+          "timing.started": col.timestamp().label("Started"),
+        }),
+        primaryKey: "uuid",
+      });
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: dotted,
+        size: 5,
+        fetch: endpoint({
+          rows: () =>
+            Array.from({ length: 6 }, (_, i) => ({
+              uuid: `id-${i}`,
+              "timing.started": new Date(TIED).toISOString(),
+            })),
+          nextCursor: TIED,
+        }).fetch,
+      });
+
+      expect(check(report, "size").status).toBe("pass");
+    });
+
+    it("gives no exemption when the manifest names no timestamp column", async () => {
+      // Guessing the cursor column from the rows would let any constant column
+      // that happens to equal `nextCursor` pass as a tie.
       const { schema, ...rest } = timed;
       const untyped = {
         ...rest,
@@ -306,8 +333,26 @@ describe("runEndpointConformance", () => {
         }).fetch,
       });
 
-      expect(check(report, "size").status).toBe("pass");
+      expect(check(report, "size").status).toBe("fail");
     });
+  });
+
+  it.each([
+    ["null", null],
+    ["a string", "nope"],
+    ["an array", [{ uuid: "a" }]],
+  ])("reports a body that is %s instead of throwing", async (_name, body) => {
+    // Regression: `null` is valid JSON, passed the "has a body" guard, and the
+    // next field read threw out of a function that promises not to.
+    const report = await runEndpointConformance({
+      url: "https://api.example.com/logs",
+      manifest: manifest(),
+      fetch: endpoint({ body: () => body }).fetch,
+    });
+
+    expect(check(report, "responds").status).toBe("pass");
+    expect(check(report, "response-shape").status).toBe("fail");
+    expect(report.ok).toBe(false);
   });
 
   it("catches rows missing the primary key", async () => {

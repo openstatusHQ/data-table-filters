@@ -85,12 +85,22 @@ describe("listOrders", () => {
   });
 
   it("filters a slider range inclusively", () => {
+    // Whole-number bounds that rows really sit on would be ideal, but prices
+    // are decimals and the slider parses integers, so compare against the
+    // rows the same inclusive range selects from the full list.
+    const all = listOrders({ size: "100" }).data;
+    const expected = all
+      .filter((row) => {
+        const price = row.price as number;
+        return price >= 100 && price <= 200;
+      })
+      .map((row) => row.order_id)
+      .sort();
+
     const page = listOrders({ price: "100-200", size: "100" });
-    expect(page.data.length).toBeGreaterThan(0);
-    for (const row of page.data) {
-      expect(row.price as number).toBeGreaterThanOrEqual(100);
-      expect(row.price as number).toBeLessThanOrEqual(200);
-    }
+    expect(page.data.map((row) => row.order_id).sort()).toEqual(expected);
+    expect(expected.length).toBeGreaterThan(0);
+    expect(expected.length).toBeLessThan(100);
   });
 
   it("filters a time range over ISO-string rows", () => {
@@ -103,6 +113,12 @@ describe("listOrders", () => {
 
     const page = listOrders({ ordered_at: `${from}-${to}`, size: "100" });
     expect(page.meta.filterRowCount).toBe(10);
+    expect(page.data).toHaveLength(10);
+    for (const row of page.data) {
+      const time = new Date(String(row.ordered_at)).getTime();
+      expect(time).toBeGreaterThanOrEqual(from);
+      expect(time).toBeLessThanOrEqual(to);
+    }
   });
 
   it("sorts", () => {

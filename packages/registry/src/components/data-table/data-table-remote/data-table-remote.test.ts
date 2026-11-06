@@ -14,6 +14,7 @@ import {
   defaultDataEndpoint,
   schemaIdentity,
   toColumnFilters,
+  withoutReservedFilters,
 } from "./data-table-remote";
 
 function manifestWith(keys: string[]): TableManifest {
@@ -191,5 +192,44 @@ describe("toColumnFilters", () => {
         level: ["error"],
       }),
     ).toEqual([{ id: "level", value: ["error"] }]);
+  });
+});
+
+describe("withoutReservedFilters", () => {
+  const schemaOf = (definition: Parameters<typeof createTableSchema>[0]) =>
+    createTableSchema(definition).toJSON();
+
+  it("returns the same schema when no filter collides", () => {
+    const schema = schemaOf({
+      // A column may be *named* `uuid`; it is only a filter on it that collides.
+      uuid: col.string().label("ID").notFilterable(),
+      host: col.string().label("Host").filterable("input"),
+    });
+    const warnings: string[] = [];
+    expect(withoutReservedFilters(schema, (m) => warnings.push(m))).toBe(
+      schema,
+    );
+    expect(warnings).toEqual([]);
+  });
+
+  it("drops the filter, keeps the column, and says so", () => {
+    // Regression: a filterable column keyed `uuid` shared its URL parameter
+    // with the open row, so its control rendered and never applied.
+    const schema = schemaOf({
+      uuid: col.string().label("ID").filterable("input"),
+      size: col.number().label("Size").filterable("slider", { min: 0, max: 9 }),
+      host: col.string().label("Host").filterable("input"),
+    });
+    const warnings: string[] = [];
+    const result = withoutReservedFilters(schema, (m) => warnings.push(m));
+
+    const filters = Object.fromEntries(
+      result.columns.map((column) => [column.key, column.filter?.type ?? null]),
+    );
+    expect(filters).toEqual({ uuid: null, size: null, host: "input" });
+    expect(warnings).toHaveLength(2);
+    expect(warnings[0]).toContain('"uuid"');
+    // The input is not mutated.
+    expect(schema.columns[0].filter).not.toBeNull();
   });
 });

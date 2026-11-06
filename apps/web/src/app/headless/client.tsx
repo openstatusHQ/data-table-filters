@@ -17,9 +17,11 @@ import { DataTableSheetDetails } from "@dtf/registry/components/data-table/data-
 import type { SheetField } from "@dtf/registry/components/data-table/types";
 import { useTableManifest } from "@dtf/registry/hooks/use-table-manifest";
 import {
+  isContractValid,
   opaqueCursorPagination,
   timestampCursorPagination,
   timestampKeys,
+  validateListResponse,
   type Transport,
 } from "@dtf/registry/lib/data-table";
 import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
@@ -33,6 +35,7 @@ import {
   headlessHref,
   tableIdFor,
   timeColumnKey,
+  withoutQuery,
   type ManifestTarget,
 } from "./endpoint";
 import { EndpointBar } from "./endpoint-bar";
@@ -122,7 +125,9 @@ function RemoteTable({
   manifest: TableManifest;
 }) {
   const [listError, setListError] = React.useState<string | null>(null);
-  const dataEndpoint = defaultDataEndpoint(url);
+  // The manifest URL may carry a query string; the rows URL is built from its
+  // path alone, and the table appends its own.
+  const dataEndpoint = defaultDataEndpoint(withoutQuery(url));
 
   const timestampColumns = React.useMemo(
     () => timestampKeys(manifest.schema),
@@ -134,15 +139,30 @@ function RemoteTable({
     [timestampColumns],
   );
 
+  // Requests overlap — a filter change starts one while the last is still in
+  // flight — and they settle in any order. Only the request started last may
+  // set the message, or a slow failure would overwrite a newer success.
+  const latestRequest = React.useRef(0);
+  const requestOf = React.useRef(new WeakMap<Response, number>());
+
   // The table renders a failed rows request as an empty table, which reads as
-  // "no results". The transport is where both ways of failing pass through — a
-  // non-2xx status and a body that does not parse — so it reports them.
-  const transport = React.useMemo<Transport<Row[], unknown>>(
-    () => ({
+  // "no results". The transport is where every way of failing passes through —
+  // a non-2xx status, a body that cannot be read, and a body in the wrong
+  // shape — so it reports them.
+  const { capabilities } = manifest;
+  const transport = React.useMemo<Transport<Row[], unknown>>(() => {
+    const report = (request: number, message: string | null) => {
+      if (request === latestRequest.current) setListError(message);
+    };
+
+    return {
       fetch: async (...args) => {
+        const request = ++latestRequest.current;
         try {
           const response = await fetch(...args);
-          setListError(
+          requestOf.current.set(response, request);
+          report(
+            request,
             response.ok
               ? null
               : `The rows request failed with ${response.status} ${response.statusText}`.trim(),
@@ -150,22 +170,38 @@ function RemoteTable({
           return response;
         } catch (error) {
           if (!(error instanceof DOMException && error.name === "AbortError")) {
-            setListError("The rows request did not complete.");
+            report(request, "The rows request did not complete.");
           }
           throw error;
         }
       },
       parseResponse: async (response) => {
+        const request =
+          requestOf.current.get(response) ?? latestRequest.current;
+
+        let payload: Awaited<ReturnType<typeof parse>>;
         try {
-          return await parse(response);
+          payload = await parse(response);
         } catch (error) {
-          setListError("The rows response is not valid JSON.");
+          report(request, "The rows response could not be read.");
           throw error;
         }
+
+        // A 200 in the wrong shape — `{ rows: [] }`, `null` — would otherwise
+        // render as an empty table with nothing to say why.
+        const issues = validateListResponse(payload, { capabilities });
+        if (!isContractValid(issues)) {
+          const issue = issues.find((item) => item.severity === "error");
+          const message = issue
+            ? `The rows response does not match the list contract: ${issue.message}.`
+            : "The rows response does not match the list contract.";
+          report(request, message);
+          throw new Error(message);
+        }
+        return payload;
       },
-    }),
-    [parse],
-  );
+    };
+  }, [parse, capabilities]);
 
   // Live mode pages backwards along a timestamp, so an endpoint that offers it
   // gets the timestamp cursor. Any other endpoint gets its own `nextCursor`

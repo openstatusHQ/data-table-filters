@@ -190,6 +190,17 @@ export async function runEndpointConformance(
         ),
   );
 
+  // A body that is not an object at all — `null`, a string, an array — has
+  // already failed the shape check above, and has nothing further to probe.
+  // Reading fields off it would throw, and this function promises not to.
+  if (
+    typeof base.payload !== "object" ||
+    base.payload === null ||
+    Array.isArray(base.payload)
+  ) {
+    return summarize(checks);
+  }
+
   const first = base.payload as {
     data?: unknown[];
     nextCursor?: unknown;
@@ -452,11 +463,14 @@ function toTime(value: unknown): number | null {
  * rows that silently go missing, which is the right choice and the one
  * `createDrizzleHandler` makes.
  *
- * The test is that every row carries the page's `nextCursor` in one column. An
- * endpoint ignoring `size` returns rows spread along the cursor, so it cannot
- * pass this by accident. Only `timestamp` columns are considered when the
- * manifest names any: an offset cursor of 50 over rows that all carry
- * `quantity: 50` is not a tie.
+ * The test is that every row carries the page's `nextCursor` in one timestamp
+ * column. An endpoint ignoring `size` returns rows spread along the cursor, so
+ * it cannot pass this by accident.
+ *
+ * Only columns the manifest calls `timestamp` are considered, and a manifest
+ * that names none gets no exemption. Guessing from the rows would let an offset
+ * cursor of 50 over rows that all carry `quantity: 50` pass as a tie, and a
+ * verifier that errs should err towards failing.
  */
 function isTiedGroup(
   rows: unknown[],
@@ -469,15 +483,8 @@ function isTiedGroup(
   const timestampKeys = manifest.schema.columns
     .filter((column) => column.kind === "timestamp")
     .map((column) => column.key);
-  const first = rows[0];
-  const candidates =
-    timestampKeys.length > 0
-      ? timestampKeys
-      : typeof first === "object" && first !== null
-        ? Object.keys(first)
-        : [];
 
-  return candidates.some((key) =>
+  return timestampKeys.some((key) =>
     rows.every((row) => toTime(readPath(row, key)) === cursor),
   );
 }
@@ -485,7 +492,11 @@ function isTiedGroup(
 /** Reads a possibly-dotted key path off a row. */
 function readPath(row: unknown, path: string): unknown {
   if (row === null || typeof row !== "object") return undefined;
-  if (!path.includes(".")) return (row as Record<string, unknown>)[path];
+  // A row may carry the dotted key literally — `createDrizzleHandler` projects
+  // `"timing.dns"` as a flat property — so the exact key wins before walking.
+  if (Object.hasOwn(row, path) || !path.includes(".")) {
+    return (row as Record<string, unknown>)[path];
+  }
   let current: unknown = row;
   for (const segment of path.split(".")) {
     if (current === null || typeof current !== "object") return undefined;

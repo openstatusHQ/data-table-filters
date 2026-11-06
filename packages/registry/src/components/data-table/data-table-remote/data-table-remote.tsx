@@ -14,6 +14,7 @@ import {
   getFacetedUniqueValues,
   getMetaPage,
   refreshDataTableQuery,
+  REQUEST_PARAMS,
   type BaseChartSchema,
   type PaginationStrategy,
   type Transport,
@@ -34,6 +35,7 @@ import {
   generateSheetFields,
   getDefaultColumnVisibility,
   type RendererOverrides,
+  type SchemaJSON,
   type TableChartConfig,
   type TableManifest,
 } from "@dtf/registry/lib/table-schema";
@@ -220,6 +222,36 @@ export function createRemoteSearchParamsSerializer(
   };
 }
 
+const RESERVED_PARAMS: ReadonlySet<string> = new Set(
+  Object.values(REQUEST_PARAMS),
+);
+
+/**
+ * Drop the filter of any column whose key is a reserved request parameter.
+ *
+ * A filter is written to the URL and to the request under its column key, and
+ * `cursor`, `direction`, `size`, `sort`, `uuid` and `live` already mean
+ * something there. A filterable column named `uuid` would share its parameter
+ * with the open row: the control would render and never apply. The column
+ * itself stays — it is only the filter that has nowhere to live — and the
+ * collision is reported rather than left to be discovered.
+ */
+export function withoutReservedFilters(
+  schema: SchemaJSON,
+  warn: (message: string) => void = () => {},
+): SchemaJSON {
+  let changed = false;
+  const columns = schema.columns.map((column) => {
+    if (!column.filter || !RESERVED_PARAMS.has(column.key)) return column;
+    changed = true;
+    warn(
+      `Dropped the filter on column ${JSON.stringify(column.key)}: the key is a reserved request parameter`,
+    );
+    return { ...column, filter: null };
+  });
+  return changed ? { ...schema, columns } : schema;
+}
+
 /**
  * State the table writes that is not a column filter: the sort, the row whose
  * detail is open, and live mode. They share the URL with the filters, so they
@@ -302,7 +334,11 @@ function RemoteTable({
   ...slots
 }: RemoteTableProps) {
   const definition = React.useMemo(() => {
-    const { definition: base } = createTableSchema.fromJSON(manifest.schema);
+    const { definition: base } = createTableSchema.fromJSON(
+      withoutReservedFilters(manifest.schema, (message) =>
+        console.warn(`[data-table-remote] ${message}`),
+      ),
+    );
     return renderers ? applyRenderers(base, renderers) : base;
   }, [manifest.schema, renderers]);
 
@@ -488,6 +524,10 @@ function RemoteTableQuery({
   const renderSlot = (slot: RemoteSlot | undefined) =>
     typeof slot === "function" ? slot(context) : slot;
 
+  const hasSelectColumn = manifest.schema.columns.some(
+    (column) => column.kind === "select",
+  );
+
   const sort = (search.sort ?? manifest.defaults?.sort) as
     | { id: string; desc: boolean }
     | null
@@ -500,9 +540,13 @@ function RemoteTableQuery({
       filterFields={dynamicFilterFields}
       defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
-      // Restores the open row from a shared link.
+      // Restores the open row from a shared link. Only where the selection
+      // *is* the open row: with a select column the sheet reads `uuid` itself,
+      // and seeding the selection would tick that row's checkbox instead.
       defaultRowSelection={
-        typeof search.uuid === "string" ? { [search.uuid]: true } : undefined
+        !hasSelectColumn && typeof search.uuid === "string"
+          ? { [search.uuid]: true }
+          : undefined
       }
       defaultColumnVisibility={defaultColumnVisibility}
       // A count the server said it does not compute is left undefined rather

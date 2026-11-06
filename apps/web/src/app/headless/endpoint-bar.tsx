@@ -187,12 +187,21 @@ function EndpointInspector({
   const [report, setReport] = React.useState<ConformanceReport | null>(null);
   const [running, setRunning] = React.useState(false);
 
+  const [runError, setRunError] = React.useState<string | null>(null);
+
   const run = async () => {
     setRunning(true);
+    setRunError(null);
     try {
       setReport(
         await runEndpointConformance({ url: dataEndpoint, manifest, parse }),
       );
+    } catch (error) {
+      // The kit records a failing endpoint as a failed check and does not
+      // throw; this is for whatever it did not foresee, so that a run which
+      // could not finish says so instead of leaving the old report in place.
+      setReport(null);
+      setRunError(error instanceof Error ? error.message : String(error));
     } finally {
       setRunning(false);
     }
@@ -275,7 +284,11 @@ function EndpointInspector({
               {report ? "Run again" : "Run checks"}
             </Button>
           </div>
-          {report ? (
+          {runError ? (
+            <p className="text-destructive text-xs" role="alert">
+              The checks could not run: {runError}
+            </p>
+          ) : report ? (
             <>
               <ul className="flex flex-col gap-1.5">
                 {report.checks.map((check) => (

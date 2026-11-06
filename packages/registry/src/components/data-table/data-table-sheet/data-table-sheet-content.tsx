@@ -42,7 +42,9 @@ export function sheetValueText(value: unknown): string | null {
     try {
       return JSON.stringify(value, null, 2);
     } catch {
-      return String(value);
+      // Circular, or holding a BigInt: say so rather than fall back to the
+      // "[object Object]" this function exists to avoid.
+      return "[unserializable]";
     }
   }
   return String(value);

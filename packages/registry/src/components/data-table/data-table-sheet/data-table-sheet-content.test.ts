@@ -34,6 +34,6 @@ describe("sheetValueText", () => {
   it("does not throw on a value JSON cannot write", () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
-    expect(sheetValueText(circular)).toBe("[object Object]");
+    expect(sheetValueText(circular)).toBe("[unserializable]");
   });
 });

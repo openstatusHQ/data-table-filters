@@ -32,8 +32,9 @@ export const REQUEST_PARAMS = {
   /** `"next"` (older) or `"prev"` (newer). Only sent when paging both ways. */
   direction: "direction",
   /**
-   * Page size. A target rather than a hard limit: rows sharing one cursor value
-   * cannot be split across pages, so such a group may exceed it.
+   * Page size. A target rather than a hard limit for a timestamp cursor: rows
+   * sharing one cursor value cannot be split across pages, so a page made of
+   * one such group may exceed it. Nothing else may.
    */
   size: "size",
   /** `"<columnKey>.<asc|desc>"` — see {@link SORT_DELIMITER}. */
