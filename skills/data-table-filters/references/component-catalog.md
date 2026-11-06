@@ -198,28 +198,34 @@ Renders a whole table from an API endpoint's manifest — columns, filters, shee
 ```tsx
 import { DataTableRemote } from "@/components/data-table/data-table-remote";
 
-<DataTableRemote
-  manifestEndpoint="/logs/api/schema"
-  searchParamsSerializer={searchParamsSerializer}
-/>;
+<DataTableRemote manifestEndpoint="/logs/api/schema" />;
 ```
 
-| Prop                        | Purpose                                                                     |
-| --------------------------- | --------------------------------------------------------------------------- |
-| `manifestEndpoint`          | `GET`s a `TableManifest` (required)                                         |
-| `dataEndpoint`              | Rows. Defaults to `manifestEndpoint` with a trailing `/schema` stripped     |
-| `transport`                 | Base URL, headers, credentials, response parsing                            |
-| `pagination`                | Cursor / opaque-cursor / offset strategy                                    |
-| `initialManifest`           | Build-time snapshot or server prefetch — skips the round trip               |
-| `renderers`                 | Renderer closures by column key, for what named displays cannot cover       |
-| `loadingSlot` / `errorSlot` | While the manifest is in flight, and when it fails                          |
-| `chartSlot`                 | `(chartData, config) => ReactNode`, only when the endpoint declares a chart |
-| `sheetSlot`                 | `(sheetFields) => ReactNode`                                                |
-| `getRowClassName`           | Per-row styling — presentation policy the manifest deliberately omits       |
+| Prop                             | Purpose                                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `manifestEndpoint`               | `GET`s a `TableManifest` (required)                                                                         |
+| `dataEndpoint`                   | Rows. Defaults to `manifestEndpoint` with a trailing `/schema` stripped                                     |
+| `transport`                      | Base URL, headers, credentials, response parsing                                                            |
+| `pagination`                     | Cursor / opaque-cursor / offset strategy                                                                    |
+| `searchParamsSerializer`         | Optional. The query string is derived from the manifest when omitted                                        |
+| `initialManifest`                | Build-time snapshot or server prefetch — skips the round trip                                               |
+| `renderers`                      | Renderer closures by column key, for what named displays cannot cover                                       |
+| `loadingSlot` / `errorSlot`      | While the manifest is in flight, and when it fails                                                          |
+| `chartSlot`                      | `(chartData, config) => ReactNode`, only when the endpoint declares a chart                                 |
+| `sheetSlot`                      | `(sheetFields, context) => ReactNode`                                                                       |
+| `commandSlot` / `toolbarActions` | A node, or `(context) => ReactNode` with `{ manifest, filterSchema, tableId, refresh, fetchPreviousPage? }` |
+| `floatingBarSlot`                | Bar shown while rows are selected, e.g. the actions bar                                                     |
+| `extraColumns`                   | Host columns appended after the manifest's, e.g. `createActionsColumn()`. Must be a stable array            |
+| `defaultColumnVisibility`        | Applied over the manifest's defaults, e.g. `{ actions: false }`                                             |
+| `getRowClassName`                | Per-row styling — presentation policy the manifest deliberately omits                                       |
 
 Server side: `createTableManifest({ schema, primaryKey, rowLabel?, capabilities, chart?, actions?, defaults? })` and `createTableManifestHandler(manifest | (request) => manifest)`.
 
 Capabilities (`facets`, `totalRowCount`, `filterRowCount`, `chart`, `backwardPagination`, `actions`) all default to **off**; the table degrades rather than rendering empty. Verify an endpoint with `runEndpointConformance({ url, manifest })`.
+
+The block does not draw actions itself. To draw them, install `data-table-actions`, wrap the table in `DataTableActionsProvider` with `manifest.actions`, and place `createActionsColumn()` through `extraColumns` and `DataTableActionsBar` through `floatingBarSlot` — only for a manifest you serve yourself.
+
+A filterable column keyed `cursor`, `direction`, `size`, `sort`, `uuid`, `live` or the pagination strategy's own key loses its filter with a console warning: those are request parameters already.
 
 ---
 

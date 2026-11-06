@@ -37,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/infinite",
     "/default",
     "/drizzle",
+    "/headless",
     "/builder",
     "/auto",
     "/light",

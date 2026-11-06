@@ -28,6 +28,10 @@ export const tableSchema = createTableSchema({
     .enum(LEVELS)
     .label("Level")
     .hideHeader()
+    // The named display is what the manifest carries: a table rendering this
+    // schema from `/drizzle/api/schema` draws the level as a dot rather than a
+    // badge cut off by the 37px column. The custom cell below still wins here.
+    .display("level-indicator")
     .display("custom", {
       cell: (value) => (
         <DataTableColumnLevelIndicator
@@ -84,6 +88,8 @@ export const tableSchema = createTableSchema({
   status: col
     .number()
     .label("Status")
+    // On the wire: see `level` above.
+    .display("status-code")
     .display("custom", {
       cell: (value) => <DataTableColumnStatusCode value={value as number} />,
     })
