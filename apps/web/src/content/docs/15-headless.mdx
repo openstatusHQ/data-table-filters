@@ -168,12 +168,25 @@ Every capability defaults to **off**. A table that renders no chart against a
 server that has one is a missing feature; a table that renders a chart against a
 server that has none is a broken screen.
 
-`DataTableRemote` does not draw actions itself, so a headless table does not
-have to install the [`data-table-actions`](/docs/actions) block. The manifest
-carries the validated descriptors and the host places that block's pieces:
-`extraColumns` takes the row menu, `floatingBarSlot` the bulk bar.
+`DataTableRemote` does not draw actions itself, so a headless table that has
+none does not install the [`data-table-actions`](/docs/actions) block. To draw
+them, install that block and place its pieces: the manifest carries the
+validated descriptors, `extraColumns` takes the row menu and `floatingBarSlot`
+the bulk bar.
 
 ```tsx
+"use client";
+
+import {
+  createActionsColumn,
+  DataTableActionsBar,
+  DataTableActionsProvider,
+} from "@/components/data-table/data-table-actions";
+import { DataTableFloatingBar } from "@/components/data-table/data-table-floating-bar";
+import { DataTableRemote } from "@/components/data-table/data-table-remote";
+import { useTableManifest } from "@/hooks/use-table-manifest";
+import { createRowAccessors } from "@/lib/table-schema";
+
 const actionColumns = [createActionsColumn()];
 
 export function Client() {

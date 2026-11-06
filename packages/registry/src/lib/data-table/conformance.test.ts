@@ -355,6 +355,26 @@ describe("runEndpointConformance", () => {
     expect(report.ok).toBe(false);
   });
 
+  it.each(["toString", "constructor", "meta.toString"])(
+    "does not take the inherited %s for a primary key",
+    async (primaryKey) => {
+      // Regression: every object has these, so rows with no such column passed
+      // the check — and would all have shared one id.
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: { ...manifest(), primaryKey },
+        fetch: endpoint({
+          rows: () => [
+            { uuid: "a", meta: {} },
+            { uuid: "b", meta: {} },
+          ],
+        }).fetch,
+      });
+
+      expect(check(report, "primary-key").status).toBe("fail");
+    },
+  );
+
   it("catches rows missing the primary key", async () => {
     const report = await runEndpointConformance({
       url: "https://api.example.com/logs",

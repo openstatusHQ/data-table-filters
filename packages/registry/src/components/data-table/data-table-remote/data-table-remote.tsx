@@ -253,14 +253,22 @@ const RESERVED_PARAMS: ReadonlySet<string> = new Set(
  * with the open row: the control would render and never apply. The column
  * itself stays — it is only the filter that has nowhere to live — and the
  * collision is reported rather than left to be discovered.
+ *
+ * `pageParamKeys` are the pagination strategy's own: `offset` for
+ * `offsetPagination`, or whatever a custom strategy named its cursor. They are
+ * cleared from the cache key and rewritten per page, so a filter under one of
+ * them would be overwritten before it reached the endpoint.
  */
 export function withoutReservedFilters(
   schema: SchemaJSON,
   warn: (message: string) => void = () => {},
+  pageParamKeys: readonly string[] = [],
 ): SchemaJSON {
   let changed = false;
   const columns = schema.columns.map((column) => {
-    if (!column.filter || !RESERVED_PARAMS.has(column.key)) return column;
+    const reserved =
+      RESERVED_PARAMS.has(column.key) || pageParamKeys.includes(column.key);
+    if (!column.filter || !reserved) return column;
     changed = true;
     warn(
       `Dropped the filter on column ${JSON.stringify(column.key)}: the key is a reserved request parameter`,
@@ -353,14 +361,17 @@ function RemoteTable({
   tableId = "remote",
   ...slots
 }: RemoteTableProps) {
+  const pageParamKeys = pagination?.pageParamKeys;
   const definition = React.useMemo(() => {
     const { definition: base } = createTableSchema.fromJSON(
-      withoutReservedFilters(manifest.schema, (message) =>
-        console.warn(`[data-table-remote] ${message}`),
+      withoutReservedFilters(
+        manifest.schema,
+        (message) => console.warn(`[data-table-remote] ${message}`),
+        pageParamKeys,
       ),
     );
     return renderers ? applyRenderers(base, renderers) : base;
-  }, [manifest.schema, renderers]);
+  }, [manifest.schema, renderers, pageParamKeys]);
 
   const columns = React.useMemo(
     () => [...generateColumns<RemoteRow>(definition), ...(extraColumns ?? [])],

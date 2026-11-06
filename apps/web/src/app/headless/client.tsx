@@ -229,14 +229,27 @@ function RemoteTable({
   const liveColumn = timeColumnKey(manifest);
   const tableId = tableIdFor(url);
 
+  // An absolute URL is treated as another host when it is parsed, which
+  // happens on the server and so without knowing this site's origin. Someone
+  // pasting this site's own endpoint in full is still looking at this site.
+  // This component only ever renders in the browser — it needs a manifest,
+  // and the manifest is fetched there — and anywhere else the answer is "no".
+  const servedHere = React.useMemo(() => {
+    if (externalHost === null) return true;
+    if (typeof window === "undefined") return false;
+    try {
+      return new URL(url).origin === window.location.origin;
+    } catch {
+      return false;
+    }
+  }, [externalHost, url]);
+
   // Actions POST row ids to a URL the manifest chose, and a root-relative one
   // resolves against this site. A manifest from another host could therefore
   // name this site's own action routes over its own rows, so actions are only
   // drawn for an endpoint this site serves.
   const actions =
-    externalHost === null && manifest.capabilities.actions
-      ? manifest.actions
-      : undefined;
+    servedHere && manifest.capabilities.actions ? manifest.actions : undefined;
   const hasActions = Boolean(actions?.length);
 
   const accessors = React.useMemo(
@@ -268,7 +281,7 @@ function RemoteTable({
           <EndpointBar
             header
             input={input}
-            externalHost={externalHost}
+            externalHost={servedHere ? null : externalHost}
             listError={listError}
             inspection={{ manifest, dataEndpoint, parse }}
           />

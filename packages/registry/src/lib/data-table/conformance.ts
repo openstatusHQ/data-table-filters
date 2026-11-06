@@ -494,12 +494,15 @@ function readPath(row: unknown, path: string): unknown {
   if (row === null || typeof row !== "object") return undefined;
   // A row may carry the dotted key literally — `createDrizzleHandler` projects
   // `"timing.dns"` as a flat property — so the exact key wins before walking.
-  if (Object.hasOwn(row, path) || !path.includes(".")) {
-    return (row as Record<string, unknown>)[path];
-  }
+  if (Object.hasOwn(row, path)) return (row as Record<string, unknown>)[path];
+  if (!path.includes(".")) return undefined;
   let current: unknown = row;
   for (const segment of path.split(".")) {
     if (current === null || typeof current !== "object") return undefined;
+    // Own data only. `row.toString` and `row.constructor` exist on every
+    // object, so reading them made a missing primary key look present — and
+    // identical on every row.
+    if (!Object.hasOwn(current, segment)) return undefined;
     current = (current as Record<string, unknown>)[segment];
   }
   return current;

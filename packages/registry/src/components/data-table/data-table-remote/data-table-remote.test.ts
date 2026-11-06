@@ -232,4 +232,31 @@ describe("withoutReservedFilters", () => {
     // The input is not mutated.
     expect(schema.columns[0].filter).not.toBeNull();
   });
+
+  it("drops a filter under one of the pagination strategy's keys", () => {
+    // `offsetPagination` rewrites `offset` on every page, so a filter written
+    // there would never reach the endpoint.
+    const schema = schemaOf({
+      offset: col
+        .number()
+        .label("Offset")
+        .filterable("slider", { min: 0, max: 9 }),
+      host: col.string().label("Host").filterable("input"),
+    });
+    expect(
+      withoutReservedFilters(schema).columns.map((column) =>
+        Boolean(column.filter),
+      ),
+    ).toEqual([true, true]);
+
+    const warnings: string[] = [];
+    const result = withoutReservedFilters(schema, (m) => warnings.push(m), [
+      "offset",
+    ]);
+    expect(result.columns.map((column) => Boolean(column.filter))).toEqual([
+      false,
+      true,
+    ]);
+    expect(warnings).toHaveLength(1);
+  });
 });
