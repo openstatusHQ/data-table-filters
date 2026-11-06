@@ -168,10 +168,48 @@ Every capability defaults to **off**. A table that renders no chart against a
 server that has one is a missing feature; a table that renders a chart against a
 server that has none is a broken screen.
 
-`actions` is declared and validated, but `DataTableRemote` does not draw an
-action column or a bulk bar from it yet. The descriptors in the manifest are
-there for a host that renders them with the
-[`data-table-actions`](/docs/actions) block.
+`DataTableRemote` does not draw actions itself, so a headless table does not
+have to install the [`data-table-actions`](/docs/actions) block. The manifest
+carries the validated descriptors and the host places that block's pieces:
+`extraColumns` takes the row menu, `floatingBarSlot` the bulk bar.
+
+```tsx
+const actionColumns = [createActionsColumn()];
+
+export function Client() {
+  const { data: manifest } = useTableManifest("/logs/api/schema");
+  if (!manifest) return null;
+  const { getRowId } = createRowAccessors(manifest);
+
+  return (
+    <DataTableActionsProvider
+      actions={manifest.actions}
+      getRowId={getRowId}
+      queryKeyPrefix="logs"
+    >
+      <DataTableRemote
+        manifestEndpoint="/logs/api/schema"
+        initialManifest={manifest}
+        tableId="logs"
+        extraColumns={actionColumns}
+        defaultColumnVisibility={{ actions: false }}
+        floatingBarSlot={
+          <DataTableFloatingBar>
+            {({ rows }) => <DataTableActionsBar rows={rows} />}
+          </DataTableFloatingBar>
+        }
+      />
+    </DataTableActionsProvider>
+  );
+}
+```
+
+`extraColumns` is appended after the manifest's columns and has to be a stable
+array. `defaultColumnVisibility` is applied over the manifest's defaults, which
+here keeps the menu column hidden until it is enabled from the view options.
+Draw actions only for a manifest you serve yourself: a root-relative action
+`href` resolves against the page's origin, whichever host the manifest came
+from.
 
 Use `facetedColumns` when the server can only facet some columns:
 
@@ -407,4 +445,5 @@ manifest URL it is given. It starts on `/drizzle/api/schema` — the manifest th
 is an in-memory array served as plain JSON with an inferred schema, offset
 paging and no chart or live mode. Paste the manifest URL of your own endpoint
 (it needs CORS headers) and use **Inspect** to run `runEndpointConformance`
-against it in the browser.
+against it in the browser. Row actions are drawn for the logs endpoint the way the
+section above describes, and never for a manifest from another host.

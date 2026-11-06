@@ -52,10 +52,18 @@ export function EndpointBar({
   externalHost,
   listError,
   inspection,
+  header = false,
   className,
 }: {
   /** The manifest URL as it was asked for. */
   input: string;
+  /**
+   * Render the row as the top strip of the table's main column: the height of
+   * the "Filters" header beside it, with a bottom border that continues that
+   * header's. It breaks out of the column's padding to span its full width, so
+   * it is only for the first child of the table's command slot.
+   */
+  header?: boolean;
   externalHost?: string | null;
   /** The last failure of the rows request, if it is failing. */
   listError?: string | null;
@@ -88,7 +96,16 @@ export function EndpointBar({
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <form
+        onSubmit={handleSubmit}
+        className={cn(
+          "flex items-center gap-2",
+          // The same box as the filter panel's header (`border-b p-2` around a
+          // 46px row), pulled out over the column's own `p-2`.
+          header &&
+            "border-border -mx-2 -mt-2 box-content h-[46px] border-b p-2",
+        )}
+      >
         <InputGroup className="min-w-0 flex-1 shadow-none">
           <InputGroupAddon>
             <InputGroupText className="font-mono text-xs">GET</InputGroupText>

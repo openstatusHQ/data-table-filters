@@ -39,11 +39,13 @@ import {
   type TableChartConfig,
   type TableManifest,
 } from "@dtf/registry/lib/table-schema";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import {
   useInfiniteQuery,
   useQueryClient,
   type FetchPreviousPageOptions,
 } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
 
 /**
@@ -51,8 +53,9 @@ import * as React from "react";
  *
  * Point it at a manifest URL and a list URL and it draws the columns, the
  * filters, the sheet and the counts — none of which it knows anything about at
- * build time. Row actions are not drawn yet: the manifest carries their
- * descriptors, and rendering them is left to the host.
+ * build time. Row actions are the host's to draw: the manifest carries their
+ * descriptors, and `extraColumns` and `floatingBarSlot` are where the actions
+ * block's column and bulk bar go.
  *
  * ## Why two components
  *
@@ -100,6 +103,21 @@ export type DataTableRemoteProps = {
    * declarative. See `applyRenderers`.
    */
   renderers?: RendererOverrides;
+  /**
+   * Columns appended after the manifest's.
+   *
+   * For a column that is not data: a row-actions menu
+   * (`createActionsColumn()` from the actions block), or a cell computed across
+   * several columns. A manifest describes columns of data, so these are the
+   * host's. Keep the array stable — a module constant — or the table rebuilds
+   * its columns on every render.
+   */
+  extraColumns?: ColumnDef<DataTableFeatures, RemoteRow>[];
+  /**
+   * Visibility defaults applied over the manifest's, by column id. This is how
+   * an extra column ships hidden until enabled from the view options.
+   */
+  defaultColumnVisibility?: Record<string, boolean>;
   /** Distinguishes this table's URL state and query cache from another's. */
   tableId?: string;
   /** Rendered while the manifest is in flight. */
@@ -330,6 +348,8 @@ function RemoteTable({
   pagination,
   searchParamsSerializer,
   renderers,
+  extraColumns,
+  defaultColumnVisibility: visibilityOverrides,
   tableId = "remote",
   ...slots
 }: RemoteTableProps) {
@@ -343,8 +363,8 @@ function RemoteTable({
   }, [manifest.schema, renderers]);
 
   const columns = React.useMemo(
-    () => generateColumns<RemoteRow>(definition),
-    [definition],
+    () => [...generateColumns<RemoteRow>(definition), ...(extraColumns ?? [])],
+    [definition, extraColumns],
   );
   const filterFields = React.useMemo(
     () => generateFilterFields<RemoteRow>(definition),
@@ -358,8 +378,9 @@ function RemoteTable({
     () => ({
       ...getDefaultColumnVisibility(definition),
       ...manifest.defaults?.columnVisibility,
+      ...visibilityOverrides,
     }),
-    [definition, manifest.defaults?.columnVisibility],
+    [definition, manifest.defaults?.columnVisibility, visibilityOverrides],
   );
 
   // Spliced in before the schema is created so `defaults` cannot disagree with

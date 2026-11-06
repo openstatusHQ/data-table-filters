@@ -4,8 +4,14 @@ import { Link } from "@/components/custom/link";
 import { LiveButton } from "@/components/data-table/data-table-infinite/live-button";
 import { Skeleton } from "@/components/data-table/data-table-infinite/skeleton";
 import { SocialsFooter } from "@/components/data-table/data-table-infinite/socials-footer";
+import {
+  createActionsColumn,
+  DataTableActionsBar,
+  DataTableActionsProvider,
+} from "@dtf/registry/components/data-table/data-table-actions";
 import { TimelineChart } from "@dtf/registry/components/data-table/data-table-chart/timeline-chart";
 import { DataTableFilterCommand } from "@dtf/registry/components/data-table/data-table-filter-command";
+import { DataTableFloatingBar } from "@dtf/registry/components/data-table/data-table-floating-bar";
 import { useDataTable } from "@dtf/registry/components/data-table/data-table-provider";
 import { DataTableRefreshButton } from "@dtf/registry/components/data-table/data-table-refresh-button";
 import {
@@ -42,6 +48,12 @@ import { EndpointBar } from "./endpoint-bar";
 import { reviveListPayload } from "./parse-response";
 
 type Row = Record<string, unknown>;
+
+// Module constants: the table's column and visibility options must not change
+// identity between renders. The menu column ships hidden, as on /drizzle, and
+// is enabled from the view options; the bulk bar is what a selection shows.
+const ACTION_COLUMNS = [createActionsColumn<Row>({ size: 37 })];
+const ACTIONS_HIDDEN = { actions: false };
 
 export function Client({
   input,
@@ -215,18 +227,46 @@ function RemoteTable({
   );
 
   const liveColumn = timeColumnKey(manifest);
+  const tableId = tableIdFor(url);
 
-  return (
+  // Actions POST row ids to a URL the manifest chose, and a root-relative one
+  // resolves against this site. A manifest from another host could therefore
+  // name this site's own action routes over its own rows, so actions are only
+  // drawn for an endpoint this site serves.
+  const actions =
+    externalHost === null && manifest.capabilities.actions
+      ? manifest.actions
+      : undefined;
+  const hasActions = Boolean(actions?.length);
+
+  const accessors = React.useMemo(
+    () => createRowAccessors<Row>(manifest),
+    [manifest],
+  );
+
+  const table = (
     <DataTableRemote
       manifestEndpoint={url}
       dataEndpoint={dataEndpoint}
       initialManifest={manifest}
       transport={transport}
       pagination={pagination}
-      tableId={tableIdFor(url)}
+      tableId={tableId}
+      {...(hasActions
+        ? {
+            extraColumns: ACTION_COLUMNS,
+            defaultColumnVisibility: ACTIONS_HIDDEN,
+            floatingBarSlot: (
+              <DataTableFloatingBar<Row>>
+                {({ rows }) => <DataTableActionsBar rows={rows} />}
+              </DataTableFloatingBar>
+            ),
+          }
+        : {})}
       commandSlot={({ filterSchema, tableId }) => (
         <>
           <EndpointBar
+            header
             input={input}
             externalHost={externalHost}
             listError={listError}
@@ -266,6 +306,21 @@ function RemoteTable({
         />
       }
     />
+  );
+
+  if (!hasActions) return table;
+
+  return (
+    <DataTableActionsProvider<Row>
+      actions={actions}
+      getRowId={accessors.getRowId}
+      {...(accessors.getRowLabel ? { getRowLabel: accessors.getRowLabel } : {})}
+      // The table's own query key prefix: every page under it is refetched
+      // once an action has landed.
+      queryKeyPrefix={tableId}
+    >
+      {table}
+    </DataTableActionsProvider>
   );
 }
 
