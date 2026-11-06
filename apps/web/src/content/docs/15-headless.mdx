@@ -453,13 +453,19 @@ contract itself.
 
 ## Demo
 
-[/headless](/headless) is a page with no schema of its own: it renders whatever
-manifest URL it is given. It starts on `/drizzle/api/schema` — the manifest the
-[/drizzle](/drizzle) route serves about its own capabilities, chart and actions
-— and has a second endpoint to switch to, `/headless/api/orders/schema`, which
-is an in-memory array served as plain JSON with an inferred schema, offset
-paging and no chart or live mode. Paste the manifest URL of your own endpoint
-(it needs CORS headers) and use **Inspect** to run `runEndpointConformance`
-against it in the browser. When the logs endpoint advertises actions — see the
-[Actions demo](/docs/actions#demo) for when it does — they are drawn the way
-the section above describes, and never for a manifest from another host.
+[/headless](/headless) has no schema of its own. It renders whatever manifest
+URL it is given, and ships with two to switch between:
+
+| Endpoint                      | What it is                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `/drizzle/api/schema`         | The [/drizzle](/drizzle) logs table: Postgres, facets, counts, chart, live mode |
+| `/headless/api/orders/schema` | An in-memory array as plain JSON: inferred schema, offset paging, no chart      |
+
+To try your own endpoint, paste its manifest URL. It needs CORS headers.
+
+**Inspect** lists what the endpoint declares and runs
+`runEndpointConformance` against it in the browser.
+
+Row actions show on the logs table when its endpoint advertises them (see the
+[Actions demo](/docs/actions#demo)). They are never drawn for a manifest from
+another host.
