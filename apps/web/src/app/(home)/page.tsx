@@ -222,7 +222,7 @@ function SEOContent() {
           </li>
           <li>
             <Link href="/docs/headless">Headless tables</Link> rendered from an
-            API endpoint&apos;s manifest
+            API endpoint’s manifest
           </li>
           <li>Virtualization for large datasets</li>
           <li>
