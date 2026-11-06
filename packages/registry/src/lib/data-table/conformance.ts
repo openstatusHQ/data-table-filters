@@ -46,7 +46,12 @@ export type ConformanceManifest = {
     backwardPagination?: boolean;
   };
   schema: {
-    columns: readonly { key: string; filter?: { type?: string } | null }[];
+    columns: readonly {
+      key: string;
+      /** `"timestamp"` marks a column the cursor may run along. */
+      kind?: string;
+      filter?: { type?: string } | null;
+    }[];
   };
 };
 
@@ -54,7 +59,7 @@ export type ConformanceCheck = {
   id: string;
   description: string;
   status: "pass" | "fail" | "skip";
-  /** Why it failed, or why it was skipped. */
+  /** Why it failed or was skipped, or what a pass let through. */
   detail?: string;
   issues?: ContractIssue[];
 };
@@ -194,15 +199,17 @@ export async function runEndpointConformance(
   // ── 2. `size` is honoured ────────────────────────────────────────────────
 
   if (Array.isArray(first.data)) {
+    const received = `asked for ${size}, received ${first.data.length}`;
     record(
       checks,
       first.data.length <= size
         ? pass("size", "honours the `size` parameter")
-        : fail(
-            "size",
-            "honours the `size` parameter",
-            `asked for ${size}, received ${first.data.length}`,
-          ),
+        : isTiedGroup(first.data, first.nextCursor, manifest)
+          ? {
+              ...pass("size", "honours the `size` parameter"),
+              detail: `${received}: one group of rows sharing the cursor value, returned whole`,
+            }
+          : fail("size", "honours the `size` parameter", received),
     );
   }
 
@@ -413,6 +420,66 @@ export async function runEndpointConformance(
   );
 
   return summarize(checks);
+}
+
+/** A cursor or a cell as epoch milliseconds, however the endpoint wrote it. */
+function toTime(value: unknown): number | null {
+  if (value instanceof Date) {
+    const time = value.getTime();
+    return Number.isNaN(time) ? null : time;
+  }
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "string" && value !== "") {
+    // A cursor that crossed the wire as text: `Date.parse("1700000000000")` is
+    // NaN, and `Date.parse("50")` is the year 1950.
+    if (/^-?\d+$/.test(value)) return Number(value);
+    const time = Date.parse(value);
+    return Number.isNaN(time) ? null : time;
+  }
+  return null;
+}
+
+/**
+ * Whether a page that came back larger than `size` is one group of rows that
+ * all sit on the cursor value.
+ *
+ * `size` exists so the table can ask for a page rather than the whole list, and
+ * the check exists to catch an endpoint that ignores it. A tied group is a
+ * different thing. With a cursor over a timestamp the next page is read with a
+ * strict `<`, so rows sharing the boundary value cannot be split across two
+ * pages — whichever half did not fit would never be returned by any page. An
+ * endpoint that keeps the group whole is choosing a page that is too long over
+ * rows that silently go missing, which is the right choice and the one
+ * `createDrizzleHandler` makes.
+ *
+ * The test is that every row carries the page's `nextCursor` in one column. An
+ * endpoint ignoring `size` returns rows spread along the cursor, so it cannot
+ * pass this by accident. Only `timestamp` columns are considered when the
+ * manifest names any: an offset cursor of 50 over rows that all carry
+ * `quantity: 50` is not a tie.
+ */
+function isTiedGroup(
+  rows: unknown[],
+  nextCursor: unknown,
+  manifest: ConformanceManifest,
+): boolean {
+  const cursor = toTime(nextCursor);
+  if (cursor === null || rows.length === 0) return false;
+
+  const timestampKeys = manifest.schema.columns
+    .filter((column) => column.kind === "timestamp")
+    .map((column) => column.key);
+  const first = rows[0];
+  const candidates =
+    timestampKeys.length > 0
+      ? timestampKeys
+      : typeof first === "object" && first !== null
+        ? Object.keys(first)
+        : [];
+
+  return candidates.some((key) =>
+    rows.every((row) => toTime(readPath(row, key)) === cursor),
+  );
 }
 
 /** Reads a possibly-dotted key path off a row. */

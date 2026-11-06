@@ -160,6 +160,156 @@ describe("runEndpointConformance", () => {
     expect(check(report, "size").detail).toContain("50");
   });
 
+  describe("a page larger than `size`", () => {
+    // What `createDrizzleHandler` does when one cursor value spans the whole
+    // page: the next page is read with a strict `<`, so cutting the group at
+    // `size` would drop the rest of it, and it returns the group whole.
+    const TIED = Date.parse("2026-11-06T12:30:24.312Z");
+    const timed = createTableManifest({
+      schema: createTableSchema({
+        uuid: col.string().label("ID"),
+        date: col.timestamp().label("Date"),
+        quantity: col.number().label("Quantity"),
+      }),
+      primaryKey: "uuid",
+    });
+    const tiedGroup = (date: unknown) =>
+      Array.from({ length: 6 }, (_, i) => ({
+        uuid: `id-${i}`,
+        date,
+        quantity: i,
+      }));
+
+    it("passes when it is one group of rows sharing the cursor value", async () => {
+      // Regression: the kit failed this repo's own Drizzle endpoint — six log
+      // rows are written per timestamp, and the default probe asks for five.
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: timed,
+        size: 5,
+        fetch: endpoint({
+          rows: () => tiedGroup(new Date(TIED).toISOString()),
+          nextCursor: TIED,
+        }).fetch,
+      });
+
+      expect(check(report, "size").status).toBe("pass");
+      expect(check(report, "size").detail).toContain("asked for 5, received 6");
+      expect(formatConformanceReport(report)).toContain(
+        "PASS  size: honours the `size` parameter",
+      );
+    });
+
+    it("reads the cursor value as epoch milliseconds or a Date as well", async () => {
+      for (const date of [TIED, new Date(TIED)]) {
+        const report = await runEndpointConformance({
+          url: "https://api.example.com/logs",
+          manifest: timed,
+          size: 5,
+          // A parser that revives dates, as the SuperJSON one does.
+          parse: async () => ({
+            data: tiedGroup(date),
+            meta: {},
+            nextCursor: TIED,
+            prevCursor: TIED,
+          }),
+          fetch: endpoint().fetch,
+        });
+        expect(check(report, "size").status).toBe("pass");
+      }
+    });
+
+    it("reads a cursor sent as a numeric string", async () => {
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: timed,
+        size: 5,
+        fetch: endpoint({
+          rows: () => tiedGroup(new Date(TIED).toISOString()),
+          nextCursor: String(TIED),
+        }).fetch,
+      });
+
+      expect(check(report, "size").status).toBe("pass");
+    });
+
+    it("fails when the rows do not share the cursor value", async () => {
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: timed,
+        size: 5,
+        fetch: endpoint({
+          rows: () =>
+            tiedGroup(null).map((row, i) => ({
+              ...row,
+              date: new Date(TIED - i * 1000).toISOString(),
+            })),
+          nextCursor: TIED - 5000,
+        }).fetch,
+      });
+
+      expect(check(report, "size").status).toBe("fail");
+      expect(check(report, "size").detail).toContain("asked for 5, received 6");
+    });
+
+    it("fails when there is no cursor for the rows to share", async () => {
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: timed,
+        size: 5,
+        fetch: endpoint({
+          rows: () => tiedGroup(new Date(TIED).toISOString()),
+          nextCursor: null,
+        }).fetch,
+      });
+
+      expect(check(report, "size").status).toBe("fail");
+    });
+
+    it("does not take a column that is not a timestamp for the cursor", async () => {
+      // An offset cursor of 50 and fifty rows that all happen to carry
+      // `quantity: 50` is an endpoint ignoring `size`, not a tied group.
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: timed,
+        size: 5,
+        fetch: endpoint({
+          rows: () =>
+            Array.from({ length: 50 }, (_, i) => ({
+              uuid: `id-${i}`,
+              date: new Date(TIED - i * 1000).toISOString(),
+              quantity: 50,
+            })),
+          nextCursor: 50,
+        }).fetch,
+      });
+
+      expect(check(report, "size").status).toBe("fail");
+    });
+
+    it("considers every column when the manifest names no timestamp column", async () => {
+      // A hand-written manifest need not state column kinds.
+      const { schema, ...rest } = timed;
+      const untyped = {
+        ...rest,
+        schema: {
+          columns: schema.columns.map(({ key, filter }) => ({ key, filter })),
+        },
+      };
+      const report = await runEndpointConformance({
+        url: "https://api.example.com/logs",
+        manifest: untyped,
+        size: 5,
+        fetch: endpoint({
+          rows: () => tiedGroup(new Date(TIED).toISOString()),
+          nextCursor: TIED,
+        }).fetch,
+      });
+
+      expect(check(report, "size").status).toBe("pass");
+    });
+  });
+
   it("catches rows missing the primary key", async () => {
     const report = await runEndpointConformance({
       url: "https://api.example.com/logs",

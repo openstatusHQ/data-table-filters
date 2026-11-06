@@ -360,7 +360,8 @@ if (!report.ok) process.exit(1);
 ```
 
 It checks that the endpoint answers, that the shape matches, that `size` is
-honoured, that every row carries the `primaryKey` and those keys are unique,
+honoured (a group of rows sharing one cursor value may exceed it, since it
+cannot be split across pages), that every row carries the `primaryKey` and those keys are unique,
 that it computes the facets it claims, that a second page differs from the first
 — the check that catches an endpoint silently ignoring `cursor`, which is an
 infinite scroll that never advances — that `direction=prev` works when declared,
