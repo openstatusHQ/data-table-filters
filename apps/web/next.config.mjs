@@ -54,6 +54,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/h",
+        destination: "/headless",
+        permanent: true,
+      },
+      {
         source: "/guide",
         destination: "/docs/introduction",
         permanent: true,

@@ -41,13 +41,13 @@ The reserved query parameters, and how a filter value is encoded, used to exist
 only implicitly inside the client's serializer. They are now written down as
 `REQUEST_PARAMS` and `FILTER_ENCODING`:
 
-| Parameter      | Meaning                                         |
-| -------------- | ----------------------------------------------- |
-| `cursor`       | Page cursor — epoch ms for the default strategy |
-| `direction`    | `next` (older) or `prev` (newer)                |
-| `size`         | Page size                                       |
-| `sort`         | `<columnKey>.<asc\|desc>`                       |
-| `uuid`, `live` | View state — these never narrow the result set  |
+| Parameter      | Meaning                                                           |
+| -------------- | ----------------------------------------------------------------- |
+| `cursor`       | Page cursor — epoch ms for the default strategy                   |
+| `direction`    | `next` (older) or `prev` (newer)                                  |
+| `size`         | Page size — a target, see [Cursor Pagination](#cursor-pagination) |
+| `sort`         | `<columnKey>.<asc\|desc>`                                         |
+| `uuid`, `live` | View state — these never narrow the result set                    |
 
 Every other parameter is a column key:
 
@@ -171,6 +171,7 @@ Cursor-based pagination (not offset) is used for infinite scroll. It's stable un
 - **Next page** (older rows): `WHERE date < cursor ORDER BY date DESC LIMIT size`
 - **Previous page** (newer rows, for live mode): `WHERE date > cursor ORDER BY date ASC LIMIT size` (then reverse the results)
 - Client sends `cursor` + `direction`, server returns `nextCursor` + `prevCursor`
+- `size` is a target, not a hard limit. Because the next page is read with a strict `<`, rows that share one cursor value cannot be split across two pages, so a page ends before such a group — or, when the group is longer than `size`, returns it whole. `createDrizzleHandler` does this, and `runEndpointConformance` accepts it.
 
 ### Chart Data
 

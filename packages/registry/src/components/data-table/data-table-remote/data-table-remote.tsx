@@ -13,14 +13,18 @@ import {
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
   getMetaPage,
+  refreshDataTableQuery,
+  REQUEST_PARAMS,
   type BaseChartSchema,
   type PaginationStrategy,
   type Transport,
 } from "@dtf/registry/lib/data-table";
 import { useNuqsAdapter } from "@dtf/registry/lib/store/adapters/nuqs";
+import { schemaToNuqsParsers } from "@dtf/registry/lib/store/adapters/nuqs/parser-bridge";
 import { useFilterState } from "@dtf/registry/lib/store/hooks/useFilterState";
 import { DataTableStoreProvider } from "@dtf/registry/lib/store/provider/DataTableStoreProvider";
 import { field } from "@dtf/registry/lib/store/schema";
+import type { SchemaDefinition } from "@dtf/registry/lib/store/schema/types";
 import {
   applyRenderers,
   createRowAccessors,
@@ -31,18 +35,27 @@ import {
   generateSheetFields,
   getDefaultColumnVisibility,
   type RendererOverrides,
+  type SchemaJSON,
   type TableChartConfig,
   type TableManifest,
 } from "@dtf/registry/lib/table-schema";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
+import {
+  useInfiniteQuery,
+  useQueryClient,
+  type FetchPreviousPageOptions,
+} from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
 
 /**
  * A data table that renders from an endpoint rather than from local code.
  *
  * Point it at a manifest URL and a list URL and it draws the columns, the
- * filters, the sheet, the counts and the row actions — none of which it knows
- * anything about at build time.
+ * filters, the sheet and the counts — none of which it knows anything about at
+ * build time. Row actions are the host's to draw: the manifest carries their
+ * descriptors, and `extraColumns` and `floatingBarSlot` are where the actions
+ * block's column and bulk bar go.
  *
  * ## Why two components
  *
@@ -69,8 +82,15 @@ export type DataTableRemoteProps = {
   /** Defaults to a bidirectional timestamp cursor. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pagination?: PaginationStrategy<any>;
-  /** Serializes filter state into a query string for the data endpoint. */
-  searchParamsSerializer: (search: Record<string, unknown>) => string;
+  /**
+   * Serializes filter state into a query string for the data endpoint.
+   *
+   * Optional: a serializer written ahead of time has to be built from a schema,
+   * and a table pointed at an endpoint does not have one until the manifest
+   * arrives. Left out, one is derived from the manifest — see
+   * `createRemoteSearchParamsSerializer`.
+   */
+  searchParamsSerializer?: (search: Record<string, unknown>) => string;
   /** A build-time snapshot or a server prefetch — skips the manifest round trip. */
   initialManifest?: TableManifest;
   manifestOptions?: Omit<UseTableManifestOptions, "initialManifest">;
@@ -83,6 +103,21 @@ export type DataTableRemoteProps = {
    * declarative. See `applyRenderers`.
    */
   renderers?: RendererOverrides;
+  /**
+   * Columns appended after the manifest's.
+   *
+   * For a column that is not data: a row-actions menu
+   * (`createActionsColumn()` from the actions block), or a cell computed across
+   * several columns. A manifest describes columns of data, so these are the
+   * host's. Keep the array stable — a module constant — or the table rebuilds
+   * its columns on every render.
+   */
+  extraColumns?: ColumnDef<DataTableFeatures, RemoteRow>[];
+  /**
+   * Visibility defaults applied over the manifest's, by column id. This is how
+   * an extra column ships hidden until enabled from the view options.
+   */
+  defaultColumnVisibility?: Record<string, boolean>;
   /** Distinguishes this table's URL state and query cache from another's. */
   tableId?: string;
   /** Rendered while the manifest is in flight. */
@@ -92,10 +127,32 @@ export type DataTableRemoteProps = {
   className?: string;
 } & RemoteSlots;
 
+/**
+ * What a slot can be built from once the manifest has resolved.
+ *
+ * The host renders `DataTableRemote` before any of this exists, so a slot that
+ * needs it — a command palette parsing against the filter schema, a live button
+ * that pages backwards — is a function of this context rather than a node.
+ */
+export type RemoteSlotContext = {
+  manifest: TableManifest;
+  /** The URL-state schema derived from the manifest's columns. */
+  filterSchema: SchemaDefinition;
+  tableId: string;
+  /** Reload the list from "now". See `refreshDataTableQuery`. */
+  refresh: () => Promise<void>;
+  /** Only when the endpoint declares `backwardPagination`. */
+  fetchPreviousPage?: (options?: FetchPreviousPageOptions) => Promise<unknown>;
+};
+
+type RemoteSlot =
+  | React.ReactNode
+  | ((context: RemoteSlotContext) => React.ReactNode);
+
 /** Host-supplied pieces the manifest cannot describe. */
 export type RemoteSlots = {
-  commandSlot?: React.ReactNode;
-  toolbarActions?: React.ReactNode;
+  commandSlot?: RemoteSlot;
+  toolbarActions?: RemoteSlot;
   footerSlot?: React.ReactNode;
   floatingBarSlot?: React.ReactNode;
   /**
@@ -106,7 +163,10 @@ export type RemoteSlots = {
     chartData: BaseChartSchema[],
     config: TableChartConfig | undefined,
   ) => React.ReactNode;
-  sheetSlot?: (fields: SheetField<RemoteRow>[]) => React.ReactNode;
+  sheetSlot?: (
+    fields: SheetField<RemoteRow>[],
+    context: RemoteSlotContext,
+  ) => React.ReactNode;
   /** Per-row styling, which no manifest field describes. */
   getRowClassName?: Parameters<
     typeof DataTableInfinite<RemoteRow>
@@ -116,6 +176,128 @@ export type RemoteSlots = {
 /** `/api/logs/schema` → `/api/logs`; anything else is returned unchanged. */
 export function defaultDataEndpoint(manifestEndpoint: string): string {
   return manifestEndpoint.replace(/\/schema\/?$/, "") || "/";
+}
+
+/** A value outside the schema: a page param the pagination strategy added. */
+function serializeLoose(value: unknown): string | null {
+  if (value instanceof Date) {
+    const time = value.getTime();
+    return Number.isNaN(time) ? null : String(time);
+  }
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+  return null;
+}
+
+/**
+ * A search-params serializer for a schema that is only known at runtime.
+ *
+ * Schema keys go through the same parsers the URL state uses, so the endpoint
+ * sees exactly what the address bar shows (`?latency=100-3000`,
+ * `?sort=date.desc`). Keys outside the schema are the pagination strategy's —
+ * `cursor`, `direction`, `offset`, `size` — and are written as plain values,
+ * with a `Date` as epoch milliseconds. An allow-list serializer would drop them
+ * and every page would be the first page.
+ *
+ * `null`, `undefined` and `[]` are omitted, which is what
+ * `createDataTableQueryOptions` relies on to clear a key.
+ */
+export function createRemoteSearchParamsSerializer(
+  schema: SchemaDefinition,
+): (search: Record<string, unknown>) => string {
+  const parsers = schemaToNuqsParsers(schema) as Record<
+    string,
+    { serialize?: (value: unknown) => string } | undefined
+  >;
+
+  return (search) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(search)) {
+      if (value === null || value === undefined) continue;
+      if (Array.isArray(value) && value.length === 0) continue;
+
+      const parser = Object.hasOwn(parsers, key) ? parsers[key] : undefined;
+      let serialized: string | null;
+      try {
+        serialized = parser?.serialize
+          ? parser.serialize(value)
+          : serializeLoose(value);
+      } catch {
+        // A value the parser cannot write is not a filter the endpoint could
+        // have read either.
+        continue;
+      }
+      if (serialized === null || serialized === "") continue;
+      params.set(key, serialized);
+    }
+    const query = params.toString();
+    return query ? `?${query}` : "";
+  };
+}
+
+const RESERVED_PARAMS: ReadonlySet<string> = new Set(
+  Object.values(REQUEST_PARAMS),
+);
+
+/**
+ * Drop the filter of any column whose key is a reserved request parameter.
+ *
+ * A filter is written to the URL and to the request under its column key, and
+ * `cursor`, `direction`, `size`, `sort`, `uuid` and `live` already mean
+ * something there. A filterable column named `uuid` would share its parameter
+ * with the open row: the control would render and never apply. The column
+ * itself stays — it is only the filter that has nowhere to live — and the
+ * collision is reported rather than left to be discovered.
+ *
+ * `pageParamKeys` are the pagination strategy's own: `offset` for
+ * `offsetPagination`, or whatever a custom strategy named its cursor. They are
+ * cleared from the cache key and rewritten per page, so a filter under one of
+ * them would be overwritten before it reached the endpoint.
+ */
+export function withoutReservedFilters(
+  schema: SchemaJSON,
+  warn: (message: string) => void = () => {},
+  pageParamKeys: readonly string[] = [],
+): SchemaJSON {
+  let changed = false;
+  const columns = schema.columns.map((column) => {
+    const reserved =
+      RESERVED_PARAMS.has(column.key) || pageParamKeys.includes(column.key);
+    if (!column.filter || !reserved) return column;
+    changed = true;
+    warn(
+      `Dropped the filter on column ${JSON.stringify(column.key)}: the key is a reserved request parameter`,
+    );
+    return { ...column, filter: null };
+  });
+  return changed ? { ...schema, columns } : schema;
+}
+
+/**
+ * State the table writes that is not a column filter: the sort, the row whose
+ * detail is open, and live mode. They share the URL with the filters, so they
+ * are part of the same schema, and they are left out wherever the filters are
+ * read back as filters.
+ */
+const VIEW_STATE_KEYS = ["sort", "uuid", "live"] as const;
+
+/** The filter state without the view state, as TanStack column filters. */
+export function toColumnFilters(
+  search: Record<string, unknown>,
+): { id: string; value: unknown }[] {
+  return Object.entries(search)
+    .filter(([id]) => !(VIEW_STATE_KEYS as readonly string[]).includes(id))
+    .map(([id, value]) => ({ id, value }))
+    .filter(({ value }) => {
+      if (value === null || value === undefined) return false;
+      if (Array.isArray(value) && value.length === 0) return false;
+      return true;
+    });
 }
 
 export function DataTableRemote({
@@ -174,17 +356,26 @@ function RemoteTable({
   pagination,
   searchParamsSerializer,
   renderers,
+  extraColumns,
+  defaultColumnVisibility: visibilityOverrides,
   tableId = "remote",
   ...slots
 }: RemoteTableProps) {
+  const pageParamKeys = pagination?.pageParamKeys;
   const definition = React.useMemo(() => {
-    const { definition: base } = createTableSchema.fromJSON(manifest.schema);
+    const { definition: base } = createTableSchema.fromJSON(
+      withoutReservedFilters(
+        manifest.schema,
+        (message) => console.warn(`[data-table-remote] ${message}`),
+        pageParamKeys,
+      ),
+    );
     return renderers ? applyRenderers(base, renderers) : base;
-  }, [manifest.schema, renderers]);
+  }, [manifest.schema, renderers, pageParamKeys]);
 
   const columns = React.useMemo(
-    () => generateColumns<RemoteRow>(definition),
-    [definition],
+    () => [...generateColumns<RemoteRow>(definition), ...(extraColumns ?? [])],
+    [definition, extraColumns],
   );
   const filterFields = React.useMemo(
     () => generateFilterFields<RemoteRow>(definition),
@@ -198,16 +389,36 @@ function RemoteTable({
     () => ({
       ...getDefaultColumnVisibility(definition),
       ...manifest.defaults?.columnVisibility,
+      ...visibilityOverrides,
     }),
-    [definition, manifest.defaults?.columnVisibility],
+    [definition, manifest.defaults?.columnVisibility, visibilityOverrides],
   );
 
-  // `sort` is spliced in before the schema is created so `defaults` cannot
-  // disagree with `definition` — the same ordering the builder needs.
+  // Spliced in before the schema is created so `defaults` cannot disagree with
+  // `definition` — the same ordering the builder needs.
+  //
+  // `uuid` is where a row click writes the detail row when the table has a
+  // select column, and `live` is the live-mode toggle. Neither is a column, so
+  // neither is in the manifest, and state written to a key the URL adapter has
+  // no parser for is dropped: without them the sheet never opens and a live
+  // button has nothing to flip. `live` is only declared when the endpoint can
+  // page backwards, which is the only way live mode gets new rows.
+  const backwardPagination = manifest.capabilities.backwardPagination;
   const filterSchema = React.useMemo(
-    () => generateFilterSchema(definition, { sort: field.sort() }),
-    [definition],
+    () =>
+      generateFilterSchema(definition, {
+        sort: field.sort(),
+        uuid: field.string(),
+        ...(backwardPagination ? { live: field.boolean().default(false) } : {}),
+      }),
+    [definition, backwardPagination],
   );
+
+  const derivedSerializer = React.useMemo(
+    () => createRemoteSearchParamsSerializer(filterSchema.definition),
+    [filterSchema],
+  );
+  const serializer = searchParamsSerializer ?? derivedSerializer;
 
   const adapter = useNuqsAdapter(filterSchema.definition, { id: tableId });
 
@@ -216,7 +427,7 @@ function RemoteTable({
       createDataTableQueryOptions<RemoteRow[], unknown>({
         queryKeyPrefix: tableId,
         apiEndpoint: dataEndpoint ?? defaultDataEndpoint(manifestEndpoint),
-        searchParamsSerializer,
+        searchParamsSerializer: serializer,
         ...(transport ? { transport } : {}),
         ...(pagination ? { pagination } : {}),
       }),
@@ -224,7 +435,7 @@ function RemoteTable({
       tableId,
       dataEndpoint,
       manifestEndpoint,
-      searchParamsSerializer,
+      serializer,
       transport,
       pagination,
     ],
@@ -238,6 +449,7 @@ function RemoteTable({
         filterFields={filterFields}
         sheetFields={sheetFields}
         defaultColumnVisibility={defaultColumnVisibility}
+        filterSchema={filterSchema.definition}
         queryOptions={queryOptions}
         tableId={tableId}
         {...slots}
@@ -252,6 +464,7 @@ type RemoteTableQueryProps = RemoteSlots & {
   filterFields: DataTableFilterField<RemoteRow>[];
   sheetFields: SheetField<RemoteRow>[];
   defaultColumnVisibility: Record<string, boolean>;
+  filterSchema: SchemaDefinition;
   queryOptions: ReturnType<
     typeof createDataTableQueryOptions<RemoteRow[], unknown>
   >;
@@ -265,8 +478,11 @@ function RemoteTableQuery({
   filterFields,
   sheetFields,
   defaultColumnVisibility,
+  filterSchema,
   queryOptions,
   tableId,
+  commandSlot,
+  toolbarActions,
   chartSlot,
   sheetSlot,
   getRowClassName,
@@ -283,6 +499,14 @@ function RemoteTableQuery({
     hasNextPage,
     fetchPreviousPage,
   } = useInfiniteQuery(queryOptions(search));
+
+  const queryClient = useQueryClient();
+  // Not the bare `refetch`: after live mode has prepended pages that restarts
+  // from a "prev" cursor and wipes the list.
+  const refresh = React.useCallback(
+    () => refreshDataTableQuery(queryClient, queryOptions(search)),
+    [queryClient, queryOptions, search],
+  );
 
   const flatData = React.useMemo(
     () => data?.pages?.flatMap((page) => page.data ?? []) ?? [],
@@ -307,16 +531,34 @@ function RemoteTableQuery({
     [filterFields, facets],
   );
 
-  const defaultColumnFilters = React.useMemo(() => {
-    const { sort: _sort, ...filters } = search;
-    return Object.entries(filters)
-      .map(([id, value]) => ({ id, value }))
-      .filter(({ value }) => {
-        if (value === null || value === undefined) return false;
-        if (Array.isArray(value) && value.length === 0) return false;
-        return true;
-      });
-  }, [search]);
+  const defaultColumnFilters = React.useMemo(
+    () => toColumnFilters(search),
+    [search],
+  );
+
+  const context = React.useMemo<RemoteSlotContext>(
+    () => ({
+      manifest,
+      filterSchema,
+      tableId,
+      refresh,
+      ...(capabilities.backwardPagination ? { fetchPreviousPage } : {}),
+    }),
+    [
+      manifest,
+      filterSchema,
+      tableId,
+      refresh,
+      capabilities.backwardPagination,
+      fetchPreviousPage,
+    ],
+  );
+  const renderSlot = (slot: RemoteSlot | undefined) =>
+    typeof slot === "function" ? slot(context) : slot;
+
+  const hasSelectColumn = manifest.schema.columns.some(
+    (column) => column.kind === "select",
+  );
 
   const sort = (search.sort ?? manifest.defaults?.sort) as
     | { id: string; desc: boolean }
@@ -330,6 +572,14 @@ function RemoteTableQuery({
       filterFields={dynamicFilterFields}
       defaultColumnFilters={defaultColumnFilters}
       defaultColumnSorting={sort ? [sort] : undefined}
+      // Restores the open row from a shared link. Only where the selection
+      // *is* the open row: with a select column the sheet reads `uuid` itself,
+      // and seeding the selection would tick that row's checkbox instead.
+      defaultRowSelection={
+        !hasSelectColumn && typeof search.uuid === "string"
+          ? { [search.uuid]: true }
+          : undefined
+      }
       defaultColumnVisibility={defaultColumnVisibility}
       // A count the server said it does not compute is left undefined rather
       // than rendered as a confident zero.
@@ -360,7 +610,11 @@ function RemoteTableQuery({
       {...(chartData && chartSlot
         ? { chartSlot: chartSlot(chartData, manifest.chart) }
         : {})}
-      {...(sheetSlot ? { sheetSlot: sheetSlot(sheetFields) } : {})}
+      {...(sheetSlot ? { sheetSlot: sheetSlot(sheetFields, context) } : {})}
+      {...(commandSlot ? { commandSlot: renderSlot(commandSlot) } : {})}
+      {...(toolbarActions
+        ? { toolbarActions: renderSlot(toolbarActions) }
+        : {})}
       tableId={tableId}
       {...slots}
     />

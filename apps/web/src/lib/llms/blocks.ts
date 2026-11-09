@@ -196,7 +196,7 @@ export const RECIPES: Recipe[] = [
   },
   {
     id: "headless-table",
-    docs: ["table-schema", "data-fetching"],
+    docs: ["headless", "table-schema", "data-fetching"],
     title: "Table pointed at an API endpoint",
     when: "The data and its endpoint are owned elsewhere, and the app should render whatever the endpoint describes without per-column code.",
     blocks: [

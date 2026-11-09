@@ -17,16 +17,64 @@ import type { SerializableDisplayConfig } from "@dtf/registry/lib/table-schema/t
 import type { DataTableFeatures } from "@dtf/registry/lib/table/features";
 import { cn } from "@dtf/registry/lib/utils";
 import { Table } from "@tanstack/react-table";
+import { Minus } from "lucide-react";
 import * as React from "react";
 import { DataTableFilterField, SheetField } from "../types";
 import { DataTableSheetRowAction } from "./data-table-sheet-row-action";
 import { SheetDetailsContentSkeleton } from "./data-table-sheet-skeleton";
 
+/**
+ * The text for a value no display knows how to draw, or `null` when there is
+ * nothing to show.
+ *
+ * `String(value)` was the fallback everywhere, which is right for a scalar and
+ * wrong for the two cases a schema that crossed the wire runs into: a column
+ * the endpoint sent as `null` printed the word "null", and a record column
+ * whose sheet component did not travel with the manifest printed
+ * "[object Object]".
+ */
+export function sheetValueText(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      // Circular, or holding a BigInt: say so rather than fall back to the
+      // "[object Object]" this function exists to avoid.
+      return "[unserializable]";
+    }
+  }
+  return String(value);
+}
+
+function renderSheetFallback(value: unknown): React.ReactNode {
+  const text = sheetValueText(value);
+  if (text === null) {
+    return (
+      <Minus
+        aria-label="No value"
+        className="text-muted-foreground/50 ml-auto size-4"
+      />
+    );
+  }
+  if (typeof value === "object" && !(value instanceof Date)) {
+    return (
+      <pre className="text-left text-xs break-all whitespace-pre-wrap">
+        {text}
+      </pre>
+    );
+  }
+  return text;
+}
+
 function renderSheetValue(
   rawValue: unknown,
   display?: SerializableDisplayConfig,
 ): React.ReactNode {
-  if (!display) return String(rawValue);
+  if (!display) return renderSheetFallback(rawValue);
   const colorMap = display.colorMap;
   switch (display.type) {
     case "timestamp": {
@@ -36,7 +84,7 @@ function renderSheetValue(
         typeof rawValue === "number" ? (
         <DataTableCellTimestamp date={rawValue} color={hex} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "number": {
@@ -44,7 +92,7 @@ function renderSheetValue(
       return typeof rawValue === "number" ? (
         <DataTableCellNumber value={rawValue} unit={display.unit} color={hex} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "bar": {
@@ -57,7 +105,7 @@ function renderSheetValue(
           color={colorMap?.[String(rawValue)]}
         />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "heatmap": {
@@ -69,7 +117,7 @@ function renderSheetValue(
           color={display.color}
         />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "boolean": {
@@ -77,14 +125,14 @@ function renderSheetValue(
       return typeof rawValue === "boolean" ? (
         <DataTableCellBoolean value={rawValue} color={hex} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "star": {
       return typeof rawValue === "boolean" ? (
         <DataTableCellStar value={rawValue} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "badge": {
@@ -105,7 +153,7 @@ function renderSheetValue(
       return typeof rawValue === "string" || typeof rawValue === "number" ? (
         <DataTableCellBadge value={rawValue} color={hex} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "code": {
@@ -113,7 +161,7 @@ function renderSheetValue(
       return typeof rawValue === "string" || typeof rawValue === "number" ? (
         <DataTableCellCode value={rawValue} color={hex} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "status-code": {
@@ -121,7 +169,7 @@ function renderSheetValue(
       return typeof rawValue === "number" ? (
         <DataTableCellStatusCode value={rawValue} color={hex} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "level-indicator": {
@@ -129,7 +177,7 @@ function renderSheetValue(
       return typeof rawValue === "string" ? (
         <DataTableCellLevelIndicator value={rawValue} color={hex} showLabel />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     case "text": {
@@ -137,11 +185,11 @@ function renderSheetValue(
       return typeof rawValue === "string" || typeof rawValue === "number" ? (
         <DataTableCellText value={rawValue} color={hex} />
       ) : (
-        String(rawValue)
+        renderSheetFallback(rawValue)
       );
     }
     default:
-      return String(rawValue);
+      return renderSheetFallback(rawValue);
   }
 }
 

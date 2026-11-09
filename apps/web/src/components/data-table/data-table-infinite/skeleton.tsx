@@ -9,8 +9,11 @@ import {
   TableRow,
 } from "@dtf/registry/components/custom/table";
 
-const chartBarsHeights = Array.from({ length: 40 }).map(
-  () => Math.random() * 30 + 15,
+// Deterministic on purpose: this renders on the server and again on the client
+// wherever a client component shows it while loading, and `Math.random()` gave
+// the two different heights — a hydration mismatch on every bar.
+const chartBarsHeights = Array.from({ length: 40 }).map((_, i) =>
+  Math.round(30 + 11 * Math.sin(i * 1.7) + 4 * Math.sin(i * 0.45)),
 );
 
 interface SkeletonProps {

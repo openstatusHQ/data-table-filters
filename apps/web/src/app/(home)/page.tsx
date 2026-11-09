@@ -220,6 +220,10 @@ function SEOContent() {
             </Link>{" "}
             via nuqs
           </li>
+          <li>
+            <Link href="/docs/headless">Headless tables</Link> rendered from an
+            API endpoint’s manifest
+          </li>
           <li>Virtualization for large datasets</li>
           <li>
             <Link href="/docs/features">Column pinning</Link>, row selection,
@@ -527,6 +531,16 @@ const changelog: {
   description: React.ReactNode;
 }[] = [
   {
+    date: new Date("11-06-2026"),
+    description: (
+      <>
+        New <Link href="/headless">headless example</Link>: paste a manifest URL
+        and the table renders that endpoint. See the{" "}
+        <Link href="/docs/headless">docs</Link>
+      </>
+    ),
+  },
+  {
     date: new Date("03-16-2026"),
     description: (
       <>
@@ -618,6 +632,9 @@ function Examples() {
         </li>
         <li>
           <Link href="/drizzle">Drizzle ORM (Postgres)</Link>
+        </li>
+        <li>
+          <Link href="/headless">Headless (Rendered from an Endpoint)</Link>
         </li>
         <li>
           <Link href="/builder">Table Builder</Link>
