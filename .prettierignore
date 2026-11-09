@@ -10,3 +10,7 @@ plans/
 
 # Managed by pnpm
 pnpm-lock.yaml
+
+# apps/video recordings and renders
+apps/video/public/recording
+apps/video/out
