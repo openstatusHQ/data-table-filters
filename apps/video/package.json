@@ -1,0 +1,26 @@
+{
+  "name": "video",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Remotion promo for the headless table, over a walkthrough recorded from the local web app",
+  "scripts": {
+    "record": "node scripts/record.mjs",
+    "studio": "remotion studio",
+    "render": "remotion render Headless out/headless.mp4",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.536",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.536"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "19.2.7",
+    "typescript": "^5",
+    "@dtf/tsconfig": "workspace:*",
+    "vitest": "^4.1.10"
+  }
+}

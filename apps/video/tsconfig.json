@@ -1,0 +1,11 @@
+{
+  "extends": "@dtf/tsconfig/base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "incremental": false,
+    "paths": {
+      "@fonts/geist/*": ["../web/node_modules/geist/dist/fonts/*"]
+    }
+  },
+  "include": ["src", "remotion.config.ts"]
+}

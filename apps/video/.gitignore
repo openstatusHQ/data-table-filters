@@ -1,0 +1,3 @@
+# scripts/record.mjs output and renders: regenerate, do not commit
+public/recording/
+out/
